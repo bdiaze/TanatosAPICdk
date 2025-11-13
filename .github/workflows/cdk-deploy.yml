@@ -51,7 +51,7 @@ jobs:
               run: npm install -g aws-cdk
               
             - name: Instalar .NET EF
-              run: dotnet tool install --global dotnet-ef --version 9.0.11
+              run: dotnet tool install --global dotnet-ef --version ${{ vars.VERSION_DOTNET_EF }}
               
             - name: .NET Restore
               run: dotnet restore
