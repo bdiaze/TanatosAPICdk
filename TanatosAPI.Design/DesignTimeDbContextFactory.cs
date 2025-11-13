@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TanatosAPI.Entities.CompiledModels;
 using TanatosAPI.Entities.Contexts;
 
 namespace TanatosAPI.Design {
@@ -17,7 +18,7 @@ namespace TanatosAPI.Design {
         //     dotnet ef migrations remove --project TanatosAPI --startup-project TanatosAPI.Design --context TanatosDbContext
         //     dotnet ef migrations script --idempotent --project TanatosAPI --startup-project TanatosAPI.Design --context TanatosDbContext --output MigrationScripts.sql
         // Compiled Models: 
-        //     dotnet ef dbcontext optimize --project TanatosAPI --startup-project TanatosAPI.Design --context TanatosDbContext --output-dir Entities/CompiledModels
+        //     dotnet ef dbcontext optimize --nativeaot --project TanatosAPI --startup-project TanatosAPI.Design --context TanatosDbContext --output-dir Entities/CompiledModels
         public TanatosDbContext CreateDbContext(string[] args) {
             string basePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "TanatosAPI");
 
