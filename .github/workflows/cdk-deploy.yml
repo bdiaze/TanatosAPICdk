@@ -53,6 +53,9 @@ jobs:
             - name: Instalar .NET EF
               run: dotnet tool install --global dotnet-ef
               
+            - name: .NET Restore
+              run: dotnet restore
+              
             - name: Publish .NET Initial Creation Lambda
               working-directory: ${{ vars.INITIAL_CREATION_DIRECTORY }}
               run: dotnet publish /p:PublishDir=../publish /p:PublishReadyToRun=true -r linux-arm64 --no-self-contained
