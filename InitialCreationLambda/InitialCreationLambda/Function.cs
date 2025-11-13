@@ -48,7 +48,7 @@ public class Function
         string secretArnConnectionString = Environment.GetEnvironmentVariable("SECRET_ARN_CONNECTION_STRING") ?? throw new ArgumentNullException("SECRET_ARN_CONNECTION_STRING");
         string appName = Environment.GetEnvironmentVariable("APP_NAME") ?? throw new ArgumentNullException("APP_NAME");
         string appSchemaName = Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new ArgumentNullException("APP_SCHEMA_NAME");
-        string migrationEFBundle = Environment.GetEnvironmentVariable("MIGRATION_EFBUNDLE") ?? throw new ArgumentNullException("MIGRATION_EFBUNDLE");
+        string migrationScript = Environment.GetEnvironmentVariable("MIGRATION_SCRIPT") ?? throw new ArgumentNullException("MIGRATION_SCRIPT");
 
         if (appSchemaName.Contains('"')) {
             throw new Exception($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Error con el nombre del schema para app \"{appName}\" - Caracteres invalidos...");
@@ -122,7 +122,7 @@ public class Function
             // Se aplica la migración de EFCore...
             LambdaLogger.Log($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Se inicia migracion EFCore del modelo de datos...");
             try {
-                string script = File.ReadAllText(migrationEFBundle);
+                string script = File.ReadAllText(migrationScript);
                 using NpgsqlCommand cmd = new(script, conn);
                 cmd.ExecuteNonQuery();
             } catch (Exception ex) {

@@ -7,14 +7,15 @@ namespace TanatosAPI.Entities.Models {
         [Required]
         [Column("id")]
         [Key]
-        public long Id { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+        public required long Id { get; set; }
 
         [Required]
         [Column("nombre")]
-        public string Nombre { get; set; }
+        public required string Nombre { get; set; }
 
         [Required]
         [Column("vigente")]
-        public bool Vigente { get; set; }
+        public required bool Vigente { get; set; }
     }
 }

@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Routing.Constraints;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TanatosAPI.Entities.CompiledModels;
 using TanatosAPI.Entities.Contexts;
 using TanatosAPI.Helpers;
 
@@ -82,6 +83,7 @@ builder.Services.AddDbContextPool<TanatosDbContext>((serviceProvider, options) =
     }
 
     options.UseNpgsql(connectionString);
+    options.UseModel(TanatosDbContextModel.Instance);
 });
 
 var app = builder.Build();

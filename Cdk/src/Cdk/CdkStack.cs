@@ -39,7 +39,7 @@ namespace Cdk
             string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new ArgumentNullException("APP_SCHEMA_NAME");
             string initialCreationHandler = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_HANDLER") ?? throw new ArgumentNullException("INITIAL_CREATION_HANDLER");
             string initialCreationPublishZip = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_PUBLISH_ZIP") ?? throw new ArgumentNullException("INITIAL_CREATION_PUBLISH_ZIP");
-            string migrationEFBundle = System.Environment.GetEnvironmentVariable("MIGRATION_EFBUNDLE") ?? throw new ArgumentNullException("MIGRATION_EFBUNDLE");
+            string migrationScript = System.Environment.GetEnvironmentVariable("MIGRATION_SCRIPT") ?? throw new ArgumentNullException("MIGRATION_SCRIPT");
 
             // Se obtiene la VPC y subnets...
             IVpc vpc = Vpc.FromLookup(this, $"{appName}Vpc", new VpcLookupOptions {
@@ -243,7 +243,7 @@ namespace Cdk
                     { "SECRET_ARN_CONNECTION_STRING", secretArnConnectionString },
                     { "APP_NAME", appName },
                     { "APP_SCHEMA_NAME", appSchemaName },
-                    { "MIGRATION_EFBUNDLE", migrationEFBundle }
+                    { "MIGRATION_SCRIPT", migrationScript }
                 },
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {

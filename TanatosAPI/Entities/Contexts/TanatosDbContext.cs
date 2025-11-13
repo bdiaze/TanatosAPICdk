@@ -11,9 +11,5 @@ namespace TanatosAPI.Entities.Contexts {
         public TanatosDbContext(DbContextOptions<TanatosDbContext> options) : base(options) { }
 
         public DbSet<TipoReceptorNotificacion> TipoReceptorNotificaciones { get; set; }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder) {
-            modelBuilder.UseIdentityAlwaysColumns();
-        }
     }
 }

@@ -31,7 +31,7 @@ jobs:
             APP_SCHEMA_NAME: ${{ vars.APP_SCHEMA_NAME }}
             INITIAL_CREATION_HANDLER: ${{ vars.INITIAL_CREATION_HANDLER }}
             INITIAL_CREATION_PUBLISH_ZIP: ${{ vars.INITIAL_CREATION_PUBLISH_ZIP }}
-            MIGRATION_EFBUNDLE: ${{ vars.MIGRATION_EFBUNDLE }}
+            MIGRATION_SCRIPT: ${{ vars.MIGRATION_SCRIPT }}
                         
         steps:
             - name: Checkout Repositorio
@@ -58,7 +58,7 @@ jobs:
               run: dotnet publish /p:PublishDir=../publish /p:PublishReadyToRun=true -r linux-arm64 --no-self-contained
               
             - name: Creación de bundle EF Migrations
-              run: dotnet ef migrations script --idempotent -o ${{ vars.INITIAL_CREATION_DIRECTORY }}/publish/${{ vars.MIGRATION_EFBUNDLE }} --project ${{ vars.PROJECT_NAME }}
+              run: dotnet ef migrations script --idempotent -o ${{ vars.INITIAL_CREATION_DIRECTORY }}/publish/${{ vars.MIGRATION_SCRIPT }} --project ${{ vars.PROJECT_NAME }}
               
             - name: Compress Publish Directory .NET Initial Creation Lambda
               working-directory: ${{ vars.INITIAL_CREATION_DIRECTORY }}/publish
