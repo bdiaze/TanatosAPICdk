@@ -61,7 +61,7 @@ jobs:
               run: dotnet publish /p:PublishDir=../publish /p:PublishReadyToRun=true -r linux-arm64 --no-self-contained
               
             - name: Creación de bundle EF Migrations
-              run: dotnet ef migrations script --idempotent -o ${{ vars.INITIAL_CREATION_DIRECTORY }}/publish/${{ vars.MIGRATION_SCRIPT }} --project ${{ vars.PROJECT_NAME }}
+              run: dotnet ef migrations script --idempotent -o ${{ vars.INITIAL_CREATION_DIRECTORY }}/publish/${{ vars.MIGRATION_SCRIPT }} --project ${{ vars.PROJECT_NAME }} --startup-project ${{ vars.PROJECT_NAME_DESIGN }}
               
             - name: Compress Publish Directory .NET Initial Creation Lambda
               working-directory: ${{ vars.INITIAL_CREATION_DIRECTORY }}/publish
