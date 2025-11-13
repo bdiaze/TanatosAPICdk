@@ -7,9 +7,12 @@ using Microsoft.OpenApi.Models;
 using System.Text.Json;
 using TanatosAPI.Endpoints;
 using TanatosAPI.Entities.Contexts;
+using TanatosAPI.Entities.Queries;
 using TanatosAPI.Helpers;
 
 var builder = WebApplication.CreateSlimBuilder(args);
+
+PreserveEFCoreForNativeAOT.Ensure();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {

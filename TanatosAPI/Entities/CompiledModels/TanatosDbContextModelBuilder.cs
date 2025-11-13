@@ -16,7 +16,7 @@ namespace TanatosAPI.Entities.CompiledModels
     public partial class TanatosDbContextModel
     {
         private TanatosDbContextModel()
-            : base(skipDetectChanges: false, modelId: new Guid("78751406-757c-4de5-9e19-7f336e80e516"), entityTypeCount: 1)
+            : base(skipDetectChanges: false, modelId: new Guid("04c2447c-7888-48d4-bb32-09cb39c07d81"), entityTypeCount: 1)
         {
         }
 
