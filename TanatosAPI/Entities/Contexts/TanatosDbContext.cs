@@ -6,6 +6,7 @@ using TanatosAPI.Helpers;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TanatosAPI.Entities.Contexts {
+    // Solo usar el context para migrations del modelo de base de datos
     public class TanatosDbContext : DbContext {
 
         public TanatosDbContext(DbContextOptions<TanatosDbContext> options) : base(options) { }

@@ -1,9 +1,7 @@
 ﻿using Amazon.Lambda.Core;
-using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
-using TanatosAPI.Entities.Contexts;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Queries;
+using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
     public static class TipoReceptorNotificacionEndpoints {
@@ -15,15 +13,14 @@ namespace TanatosAPI.Endpoints {
         }
 
         private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-            routes.MapPost("/", async (TipoReceptorNotificacion entrada, IHostEnvironment environment, TanatosDbContext dbContext) => {
+            routes.MapPost("/", async (TipoReceptorNotificacion entrada, IHostEnvironment environment, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
-                    TipoReceptorNotificacion? existente = await TipoReceptorNotificacionQueries.GetByIdAsync(dbContext, entrada.Id);
+                    TipoReceptorNotificacion? existente = await tipoReceptorNotificacionDao.ObtenerPorId(entrada.Id);
 
                     if (existente == null) {
-                        await dbContext.AddAsync(entrada);
-                        await dbContext.SaveChangesAsync();
+                        await tipoReceptorNotificacionDao.Insertar(entrada);
                         existente = entrada;
                     }
 

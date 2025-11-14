@@ -7,12 +7,10 @@ using Microsoft.OpenApi.Models;
 using System.Text.Json;
 using TanatosAPI.Endpoints;
 using TanatosAPI.Entities.Contexts;
-using TanatosAPI.Entities.Queries;
 using TanatosAPI.Helpers;
+using TanatosAPI.Repositories;
 
 var builder = WebApplication.CreateSlimBuilder(args);
-
-PreserveEFCoreForNativeAOT.Ensure();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -46,46 +44,13 @@ builder.Services.AddSingleton<IAmazonSecretsManager>(sp => {
 #region Singleton Helpers
 builder.Services.AddSingleton<VariableEntornoHelper>();
 builder.Services.AddSingleton<SecretManagerHelper>();
+builder.Services.AddSingleton<ConnectionStringHelper>();
+builder.Services.AddSingleton<DatabaseConnectionHelper>();
 #endregion
 
-builder.Services.AddDbContextPool<TanatosDbContext>((serviceProvider, options) => {
-    IHostEnvironment env = serviceProvider.GetService<IHostEnvironment>()!;
-    IConfiguration config = serviceProvider.GetService<IConfiguration>()!;
-    VariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<VariableEntornoHelper>();
-    SecretManagerHelper secretManager = serviceProvider.GetRequiredService<SecretManagerHelper>();
-
-    string appName = variableEntorno.Obtener("APP_NAME");
-    Dictionary<string, string> secretConnectionString;
-    if (env.IsProduction()) {
-        secretConnectionString = JsonSerializer.Deserialize(
-            secretManager.ObtenerSecreto(variableEntorno.Obtener("SECRET_ARN_CONNECTION_STRING")).Result,
-            AppJsonSerializerContext.Default.DictionaryStringString
-        )!;
-    } else {
-        secretConnectionString = [];
-        secretConnectionString.Add("Host", config["ConnectionStrings:Host"]!);
-        secretConnectionString.Add("Port", config["ConnectionStrings:Port"]!);
-        secretConnectionString.Add($"{appName}Database", config["ConnectionStrings:Database"]!);
-        secretConnectionString.Add($"{appName}AppUsername", config["ConnectionStrings:User Id"]!);
-        secretConnectionString.Add($"{appName}AppPassword", config["ConnectionStrings:Password"]!);
-    }
-
-    string connectionString =
-        $"Server={secretConnectionString["Host"]};" +
-        $"Port={secretConnectionString["Port"]};" +
-        $"Database={secretConnectionString[$"{appName}Database"]};" +
-        $"User Id={secretConnectionString[$"{appName}AppUsername"]};" +
-        $"Password='{secretConnectionString[$"{appName}AppPassword"]}';";
-
-    if (env.IsProduction()) {
-        connectionString += "Ssl Mode=Require;";
-        connectionString += "Trust Server Certificate=true;";
-    }
-
-    options
-        .UseNpgsql(connectionString)
-        .UseModel(TanatosAPI.Entities.CompiledModels.TanatosDbContextModel.Instance);
-});
+#region Singleton DAO
+builder.Services.AddSingleton<TipoReceptorNotificacionDao>();
+#endregion
 
 var app = builder.Build();
 
