@@ -11,6 +11,24 @@ namespace TanatosAPI.Entities.Contexts {
 
         public TanatosDbContext(DbContextOptions<TanatosDbContext> options) : base(options) { }
 
-        public DbSet<TipoReceptorNotificacion> TipoReceptorNotificaciones { get; set; }
+        protected override void OnModelCreating(ModelBuilder modelBuilder) {
+            modelBuilder.Entity<DestinatarioNotificacion>()
+                .HasOne(o => o.TipoReceptorNotificacion)
+                .WithMany(c => c.DestinatariosNotificaciones)
+                .HasForeignKey(o => o.IdTipoReceptor)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+
+        public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
+
+        public DbSet<DestinatarioNotificacion> DestinatariosNotificaciones { get; set; }
+
+        public DbSet<CategoriaNorma> CategoriasNormas { get; set; }
+
+        public DbSet<TipoFiscalizador> TiposFiscalizadores { get; set; }
+
+        public DbSet<TipoPeriodicidad> TiposPeriodicidades { get; set; }
+
+        public DbSet<TipoUnidadTiempo> TiposUnidadesTiempo { get; set; }
     }
 }

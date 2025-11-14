@@ -11,7 +11,7 @@ namespace TanatosAPI.Repositories {
         public async Task<TipoReceptorNotificacion?> ObtenerPorId(long id) {
             await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
             return await connection.QueryFirstOrDefaultAsync<TipoReceptorNotificacion>(
-                "SELECT ID, NOMBRE, VIGENTE FROM TANATOS.TIPO_RECEPTOR_NOTIFICACION WHERE ID = @ID",
+				"SELECT ID, NOMBRE, VIGENCIA FROM TANATOS.TIPO_RECEPTOR_NOTIFICACION WHERE ID = @ID",
                 new { id }
             );
         }
@@ -19,8 +19,8 @@ namespace TanatosAPI.Repositories {
         public async Task Insertar(TipoReceptorNotificacion tipoReceptorNotificacion) {
             await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
             await connection.ExecuteAsync(
-                "INSERT INTO TANATOS.TIPO_RECEPTOR_NOTIFICACION(ID, NOMBRE, VIGENTE) VALUES (@ID, @NOMBRE, @VIGENTE)",
-                new { tipoReceptorNotificacion.Id, tipoReceptorNotificacion.Nombre, tipoReceptorNotificacion.Vigente }
+                "INSERT INTO TANATOS.TIPO_RECEPTOR_NOTIFICACION(ID, NOMBRE, VIGENCIA) VALUES (@ID, @NOMBRE, @VIGENCIA)",
+                new { tipoReceptorNotificacion.Id, tipoReceptorNotificacion.Nombre, tipoReceptorNotificacion.Vigencia }
             );
         }
 
