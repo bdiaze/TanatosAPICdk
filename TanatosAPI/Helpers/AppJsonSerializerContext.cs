@@ -4,9 +4,9 @@ using System.Text.Json.Serialization;
 using TanatosAPI.Entities.Models;
 
 namespace TanatosAPI.Helpers {
-    [JsonSerializable(typeof(APIGatewayProxyRequest))]
-    [JsonSerializable(typeof(APIGatewayProxyResponse))]
-    [JsonSerializable(typeof(ProblemDetails))]
+	[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
+	[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyResponse))]
+	[JsonSerializable(typeof(ProblemDetails))]
     [JsonSerializable(typeof(Dictionary<string, string>))]
     [JsonSerializable(typeof(TipoReceptorNotificacion))]
 	[JsonSerializable(typeof(List<TipoReceptorNotificacion>))]
