@@ -374,7 +374,7 @@ namespace Cdk
 					MaxAge = Duration.Days(10),
 				},
 				DisableExecuteApiEndpoint = true,
-				CreateDefaultStage = true,
+				CreateDefaultStage = false,
 			});
 
 			lambdaHttpApi.AddRoutes(new AddRoutesOptions {
@@ -390,26 +390,28 @@ namespace Cdk
 				),
 			});
 
-			CfnStage stage = (CfnStage)lambdaHttpApi.DefaultStage;
-			stage.AccessLogSettings = new CfnStage.AccessLogSettingsProperty {
-				DestinationArn = logGroupAccessLogs.LogGroupArn,
-				Format = "'{\"requestTime\":\"$context.requestTime\",\"requestId\":\"$context.requestId\",\"httpMethod\":\"$context.httpMethod\",\"path\":\"$context.path\",\"resourcePath\":\"$context.resourcePath\",\"status\":$context.status,\"responseLatency\":$context.responseLatency,\"xrayTraceId\":\"\",\"integrationRequestId\":\"$context.integration.requestId\",\"functionResponseStatus\":\"$context.integration.status\",\"integrationLatency\":\"$context.integration.latency\",\"integrationServiceStatus\":\"$context.integration.integrationStatus\",\"authorizeStatus\":\"\",\"authorizerStatus\":\"$context.authorizer.status\",\"authorizerLatency\":\"$context.authorizer.latency\",\"authorizerRequestId\":\"$context.authorizer.requestId\",\"ip\":\"$context.identity.sourceIp\",\"userAgent\":\"$context.identity.userAgent\",\"principalId\":\"$context.authorizer.principalId\"}'"
-			};
-
-            // Creación de la CfnApiMapping para el API Gateway...
-			IDomainName apiGatewayDomain = DomainName.FromDomainNameAttributes(this, $"{appName}APIDomainName", new DomainNameAttributes {
-				Name = domainName,
+			CfnStage stage = new(this, $"{appName}APIStage", new CfnStageProps { 
+				ApiId = lambdaHttpApi.ApiId,
+				StageName = "prod",
+				Description = $"Stage para produccion de la aplicacion {appName}",
+				AutoDeploy = true,
+				AccessLogSettings = new CfnStage.AccessLogSettingsProperty {
+					DestinationArn = logGroupAccessLogs.LogGroupArn,
+					Format = "'{\"requestTime\":\"$context.requestTime\",\"requestId\":\"$context.requestId\",\"httpMethod\":\"$context.httpMethod\",\"path\":\"$context.path\",\"resourcePath\":\"$context.resourcePath\",\"status\":$context.status,\"responseLatency\":$context.responseLatency,\"xrayTraceId\":\"\",\"integrationRequestId\":\"$context.integration.requestId\",\"functionResponseStatus\":\"$context.integration.status\",\"integrationLatency\":\"$context.integration.latency\",\"integrationServiceStatus\":\"$context.integration.integrationStatus\",\"authorizeStatus\":\"\",\"authorizerStatus\":\"$context.authorizer.status\",\"authorizerLatency\":\"$context.authorizer.latency\",\"authorizerRequestId\":\"$context.authorizer.requestId\",\"ip\":\"$context.identity.sourceIp\",\"userAgent\":\"$context.identity.userAgent\",\"principalId\":\"$context.authorizer.principalId\"}'"
+				},
 			});
 
-			_ = new ApiMapping(this, $"{appName}APIApiMapping", new ApiMappingProps {
-                DomainName = apiGatewayDomain,
+            // Creación de la CfnApiMapping para el API Gateway...
+			CfnApiMapping apiMapping = new(this, $"{appName}APIApiMapping", new CfnApiMappingProps {
+                DomainName = domainName,
                 ApiMappingKey = apiMappingKey,
-                Api = lambdaHttpApi,
-				Stage = lambdaHttpApi.DefaultStage,
+                ApiId = lambdaHttpApi.ApiId,
+				Stage = stage.StageName,
             });
-			           
-            // Se configura permisos para la ejecucíon de la Lambda desde el API Gateway...
-            ArnPrincipal arnPrincipal = new("apigateway.amazonaws.com");
+			apiMapping.Node.AddDependency(stage);
+
+			// Se configura permisos para la ejecucíon de la Lambda desde el API Gateway...
+			ArnPrincipal arnPrincipal = new("apigateway.amazonaws.com");
             Permission permission = new() {
                 Scope = this,
                 Action = "lambda:InvokeFunction",
