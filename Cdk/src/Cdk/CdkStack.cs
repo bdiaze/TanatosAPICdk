@@ -20,7 +20,9 @@ using System.Collections.Generic;
 using System.IO;
 using CfnStage = Amazon.CDK.AWS.Apigatewayv2.CfnStage;
 using CfnStageProps = Amazon.CDK.AWS.Apigatewayv2.CfnStageProps;
+using DomainNameAttributes = Amazon.CDK.AWS.Apigatewayv2.DomainNameAttributes;
 using HttpMethod = Amazon.CDK.AWS.Apigatewayv2.HttpMethod;
+using IDomainName = Amazon.CDK.AWS.Apigatewayv2.IDomainName;
 using StageOptions = Amazon.CDK.AWS.APIGateway.StageOptions;
 
 namespace Cdk
@@ -361,6 +363,7 @@ namespace Cdk
                 RemovalPolicy = RemovalPolicy.DESTROY
             });
 
+			// Creación del API Gateway HTTP API con integración a la lambda...
 			HttpApi lambdaHttpApi = new(this, $"{appName}APILambdaHttpApi", new HttpApiProps {
 				ApiName = $"{appName}API",
 				Description = $"HTTP API de {appName}",
@@ -371,6 +374,7 @@ namespace Cdk
 					MaxAge = Duration.Days(10),
 				},
 				DisableExecuteApiEndpoint = true,
+				CreateDefaultStage = true,
 			});
 
 			lambdaHttpApi.AddRoutes(new AddRoutesOptions {
@@ -378,31 +382,30 @@ namespace Cdk
 				Methods = [HttpMethod.ANY],
 				Integration = new HttpLambdaIntegration($"{appName}APIHttpLambdaIntegration", function),
 				Authorizer = new HttpJwtAuthorizer(
-					$"{appName}APIHttpJwtAuthorizer", 
-					$"https://cognito-idp.{regionAws}.amazonaws.com/{userPool.UserPoolId}", 
+					$"{appName}APIHttpJwtAuthorizer",
+					$"https://cognito-idp.{regionAws}.amazonaws.com/{userPool.UserPoolId}",
 					new HttpJwtAuthorizerProps {
 						JwtAudience = [userPoolClient.UserPoolClientId]
 					}
 				),
 			});
 
-			CfnStage stage = new(this, $"{appName}APIStage", new CfnStageProps { 
-				ApiId = lambdaHttpApi.ApiId,
-				StageName = "prod",
-				Description = $"Stage para produccion de la aplicacion {appName}",
-				AutoDeploy = true,
-				AccessLogSettings = new CfnStage.AccessLogSettingsProperty {
-					DestinationArn = logGroupAccessLogs.LogGroupArn,
-					Format = "'{\"requestTime\":\"$context.requestTime\",\"requestId\":\"$context.requestId\",\"httpMethod\":\"$context.httpMethod\",\"path\":\"$context.path\",\"resourcePath\":\"$context.resourcePath\",\"status\":$context.status,\"responseLatency\":$context.responseLatency,\"xrayTraceId\":\"\",\"integrationRequestId\":\"$context.integration.requestId\",\"functionResponseStatus\":\"$context.integration.status\",\"integrationLatency\":\"$context.integration.latency\",\"integrationServiceStatus\":\"$context.integration.integrationStatus\",\"authorizeStatus\":\"\",\"authorizerStatus\":\"$context.authorizer.status\",\"authorizerLatency\":\"$context.authorizer.latency\",\"authorizerRequestId\":\"$context.authorizer.requestId\",\"ip\":\"$context.identity.sourceIp\",\"userAgent\":\"$context.identity.userAgent\",\"principalId\":\"$context.authorizer.principalId\"}'"
-				},
-			});
+			CfnStage stage = (CfnStage)lambdaHttpApi.DefaultStage;
+			stage.AccessLogSettings = new CfnStage.AccessLogSettingsProperty {
+				DestinationArn = logGroupAccessLogs.LogGroupArn,
+				Format = "'{\"requestTime\":\"$context.requestTime\",\"requestId\":\"$context.requestId\",\"httpMethod\":\"$context.httpMethod\",\"path\":\"$context.path\",\"resourcePath\":\"$context.resourcePath\",\"status\":$context.status,\"responseLatency\":$context.responseLatency,\"xrayTraceId\":\"\",\"integrationRequestId\":\"$context.integration.requestId\",\"functionResponseStatus\":\"$context.integration.status\",\"integrationLatency\":\"$context.integration.latency\",\"integrationServiceStatus\":\"$context.integration.integrationStatus\",\"authorizeStatus\":\"\",\"authorizerStatus\":\"$context.authorizer.status\",\"authorizerLatency\":\"$context.authorizer.latency\",\"authorizerRequestId\":\"$context.authorizer.requestId\",\"ip\":\"$context.identity.sourceIp\",\"userAgent\":\"$context.identity.userAgent\",\"principalId\":\"$context.authorizer.principalId\"}'"
+			};
 
             // Creación de la CfnApiMapping para el API Gateway...
-            _ = new CfnApiMapping(this, $"{appName}APIApiMapping", new CfnApiMappingProps {
-                DomainName = domainName,
+			IDomainName apiGatewayDomain = DomainName.FromDomainNameAttributes(this, $"{appName}APIDomainName", new DomainNameAttributes {
+				Name = domainName,
+			});
+
+			_ = new ApiMapping(this, $"{appName}APIApiMapping", new ApiMappingProps {
+                DomainName = apiGatewayDomain,
                 ApiMappingKey = apiMappingKey,
-                ApiId = lambdaHttpApi.ApiId,
-                Stage = stage.StageName,
+                Api = lambdaHttpApi,
+				Stage = lambdaHttpApi.DefaultStage,
             });
 			           
             // Se configura permisos para la ejecucíon de la Lambda desde el API Gateway...
