@@ -202,7 +202,7 @@ namespace Cdk
 						}},
 						{ "form", new Dictionary<string, object> {
 							{ "logo", new Dictionary<string, object> {
-								{ "enabled", true }
+								// { "enabled", true }
 							}},
 						}},
 						{ "pageBackground", new Dictionary<string, object> {
@@ -272,48 +272,6 @@ namespace Cdk
 				Zone = hostedZone,
 				RecordName = cognitoCustomDomain,
 				Target = RecordTarget.FromAlias(new UserPoolDomainTarget(domain)),
-			});
-
-			_ = new StringParameter(this, $"{appName}StringParameterCognitoUserPoolId", new StringParameterProps {
-				ParameterName = $"/{appName}/Cognito/UserPoolId",
-				Description = $"Cognito UserPoolId de la aplicacion {appName}",
-				StringValue = userPool.UserPoolId,
-				Tier = ParameterTier.STANDARD,
-			});
-
-			_ = new StringParameter(this, $"{appName}StringParameterCognitoUserPoolClientId", new StringParameterProps {
-				ParameterName = $"/{appName}/Cognito/UserPoolClientId",
-				Description = $"User Pool Client ID de la aplicacion {appName}",
-				StringValue = userPoolClient.UserPoolClientId,
-				Tier = ParameterTier.STANDARD,
-			});
-
-			_ = new StringParameter(this, $"{appName}StringParameterCognitoRegion", new StringParameterProps {
-				ParameterName = $"/{appName}/Cognito/Region",
-				Description = $"Cognito Region de la aplicacion {appName}",
-				StringValue = regionAws,
-				Tier = ParameterTier.STANDARD,
-			});
-
-			_ = new StringParameter(this, $"{appName}StringParameterCognitoCallbacks", new StringParameterProps {
-				ParameterName = $"/{appName}/Cognito/Callbacks",
-				Description = $"Cognito callbacks de la aplicacion {appName}",
-				StringValue = String.Join(",", callbackUrls),
-				Tier = ParameterTier.STANDARD,
-			});
-
-			_ = new StringParameter(this, $"{appName}StringParameterCognitoLogouts", new StringParameterProps {
-				ParameterName = $"/{appName}/Cognito/Logouts",
-				Description = $"Cognito logouts de la aplicacion {appName}",
-				StringValue = String.Join(",", logoutUrls),
-				Tier = ParameterTier.STANDARD,
-			});
-
-			_ = new StringParameter(this, $"{appName}StringParameterCognitoBaseUrl", new StringParameterProps {
-				ParameterName = $"/{appName}/Cognito/BaseUrl",
-				Description = $"Cognito base URL de la aplicacion {appName}",
-				StringValue = domain.BaseUrl(),
-				Tier = ParameterTier.STANDARD,
 			});
 			#endregion
 
