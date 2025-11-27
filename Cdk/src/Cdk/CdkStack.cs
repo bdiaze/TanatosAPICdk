@@ -11,11 +11,16 @@ using Amazon.CDK.AWS.Logs;
 using Amazon.CDK.AWS.Route53;
 using Amazon.CDK.AWS.Route53.Targets;
 using Amazon.CDK.AWS.SSM;
+using Amazon.CDK.AwsApigatewayv2Authorizers;
+using Amazon.CDK.AwsApigatewayv2Integrations;
 using Amazon.CDK.CustomResources;
 using Constructs;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using CfnStage = Amazon.CDK.AWS.Apigatewayv2.CfnStage;
+using CfnStageProps = Amazon.CDK.AWS.Apigatewayv2.CfnStageProps;
+using HttpMethod = Amazon.CDK.AWS.Apigatewayv2.HttpMethod;
 using StageOptions = Amazon.CDK.AWS.APIGateway.StageOptions;
 
 namespace Cdk
@@ -356,37 +361,48 @@ namespace Cdk
                 RemovalPolicy = RemovalPolicy.DESTROY
             });
 
-			// Se crea authorizer para el apigateway...
-			CognitoUserPoolsAuthorizer cognitoUserPoolsAuthorizer = new(this, $"{appName}APIAuthorizer", new CognitoUserPoolsAuthorizerProps {
-				CognitoUserPools = [userPool],
-				AuthorizerName = $"{appName}APIAuthorizer",
+			HttpApi lambdaHttpApi = new(this, $"{appName}APILambdaHttpApi", new HttpApiProps {
+				ApiName = $"{appName}API",
+				Description = $"HTTP API de {appName}",
+				CorsPreflight = new CorsPreflightOptions {
+					AllowOrigins = allowedDomains.Split(","),
+					AllowMethods = [CorsHttpMethod.ANY],
+					AllowHeaders = ["*"],
+					MaxAge = Duration.Days(10),
+				},
+				DisableExecuteApiEndpoint = true,
 			});
 
-			// Creación de la LambdaRestApi...
-			LambdaRestApi lambdaRestApi = new(this, $"{appName}APILambdaRestApi", new LambdaRestApiProps {
-                Handler = function,
-                DefaultCorsPreflightOptions = new CorsOptions {
-                    AllowOrigins = allowedDomains.Split(","),
-                },
-                DeployOptions = new StageOptions {
-                    AccessLogDestination = new LogGroupLogDestination(logGroupAccessLogs),
-                    AccessLogFormat = AccessLogFormat.Custom("'{\"requestTime\":\"$context.requestTime\",\"requestId\":\"$context.requestId\",\"httpMethod\":\"$context.httpMethod\",\"path\":\"$context.path\",\"resourcePath\":\"$context.resourcePath\",\"status\":$context.status,\"responseLatency\":$context.responseLatency,\"xrayTraceId\":\"$context.xrayTraceId\",\"integrationRequestId\":\"$context.integration.requestId\",\"functionResponseStatus\":\"$context.integration.status\",\"integrationLatency\":\"$context.integration.latency\",\"integrationServiceStatus\":\"$context.integration.integrationStatus\",\"authorizeStatus\":\"$context.authorize.status\",\"authorizerStatus\":\"$context.authorizer.status\",\"authorizerLatency\":\"$context.authorizer.latency\",\"authorizerRequestId\":\"$context.authorizer.requestId\",\"ip\":\"$context.identity.sourceIp\",\"userAgent\":\"$context.identity.userAgent\",\"principalId\":\"$context.authorizer.principalId\"}'"),
-                    StageName = "prod",
-                    Description = $"Stage para produccion de la aplicacion {appName}",
-                },
-                RestApiName = $"{appName}API",
-                DefaultMethodOptions = new MethodOptions {
-					AuthorizationType = AuthorizationType.COGNITO,
-					Authorizer = cognitoUserPoolsAuthorizer
+			lambdaHttpApi.AddRoutes(new AddRoutesOptions {
+				Path = "/{proxy+}",
+				Methods = [HttpMethod.ANY],
+				Integration = new HttpLambdaIntegration($"{appName}APIHttpLambdaIntegration", function),
+				Authorizer = new HttpJwtAuthorizer(
+					$"{appName}APIHttpJwtAuthorizer", 
+					$"https://cognito-idp.{regionAws}.amazonaws.com/{userPool.UserPoolId}", 
+					new HttpJwtAuthorizerProps {
+						JwtAudience = [userPoolClient.UserPoolClientId]
+					}
+				),
+			});
+
+			CfnStage stage = new(this, $"{appName}APIStage", new CfnStageProps { 
+				ApiId = lambdaHttpApi.ApiId,
+				StageName = "prod",
+				Description = $"Stage para produccion de la aplicacion {appName}",
+				AutoDeploy = true,
+				AccessLogSettings = new CfnStage.AccessLogSettingsProperty {
+					DestinationArn = logGroupAccessLogs.LogGroupArn,
+					Format = "'{\"requestTime\":\"$context.requestTime\",\"requestId\":\"$context.requestId\",\"httpMethod\":\"$context.httpMethod\",\"path\":\"$context.path\",\"resourcePath\":\"$context.resourcePath\",\"status\":$context.status,\"responseLatency\":$context.responseLatency,\"xrayTraceId\":\"$context.xrayTraceId\",\"integrationRequestId\":\"$context.integration.requestId\",\"functionResponseStatus\":\"$context.integration.status\",\"integrationLatency\":\"$context.integration.latency\",\"integrationServiceStatus\":\"$context.integration.integrationStatus\",\"authorizeStatus\":\"$context.authorize.status\",\"authorizerStatus\":\"$context.authorizer.status\",\"authorizerLatency\":\"$context.authorizer.latency\",\"authorizerRequestId\":\"$context.authorizer.requestId\",\"ip\":\"$context.identity.sourceIp\",\"userAgent\":\"$context.identity.userAgent\",\"principalId\":\"$context.authorizer.principalId\"}'"
 				},
-            });
+			});
 
             // Creación de la CfnApiMapping para el API Gateway...
             _ = new CfnApiMapping(this, $"{appName}APIApiMapping", new CfnApiMappingProps {
                 DomainName = domainName,
                 ApiMappingKey = apiMappingKey,
-                ApiId = lambdaRestApi.RestApiId,
-                Stage = lambdaRestApi.DeploymentStage.StageName,
+                ApiId = lambdaHttpApi.ApiId,
+                Stage = stage.StageName,
             });
 			           
             // Se configura permisos para la ejecucíon de la Lambda desde el API Gateway...
@@ -395,7 +411,7 @@ namespace Cdk
                 Scope = this,
                 Action = "lambda:InvokeFunction",
                 Principal = arnPrincipal,
-                SourceArn = $"arn:aws:execute-api:{this.Region}:{this.Account}:{lambdaRestApi.RestApiId}/*/*/*",
+                SourceArn = $"arn:aws:execute-api:{this.Region}:{this.Account}:{lambdaHttpApi.ApiId}/*/*/*",
             };
             function.AddPermission($"{appName}APIPermission", permission);
             #endregion
