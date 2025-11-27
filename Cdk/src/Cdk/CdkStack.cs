@@ -392,7 +392,7 @@ namespace Cdk
 
 			CfnStage stage = new(this, $"{appName}APIStage", new CfnStageProps { 
 				ApiId = lambdaHttpApi.ApiId,
-				StageName = "$default",
+				StageName = "prod",
 				Description = $"Stage para produccion de la aplicacion {appName}",
 				AutoDeploy = true,
 				AccessLogSettings = new CfnStage.AccessLogSettingsProperty {
