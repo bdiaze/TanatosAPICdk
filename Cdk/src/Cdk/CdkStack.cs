@@ -8,6 +8,8 @@ using Amazon.CDK.AWS.EC2;
 using Amazon.CDK.AWS.IAM;
 using Amazon.CDK.AWS.Lambda;
 using Amazon.CDK.AWS.Logs;
+using Amazon.CDK.AWS.Route53;
+using Amazon.CDK.AWS.Route53.Targets;
 using Amazon.CDK.AWS.SSM;
 using Amazon.CDK.CustomResources;
 using Constructs;
@@ -29,6 +31,7 @@ namespace Cdk
 			string emailSubject = System.Environment.GetEnvironmentVariable("VERIFICATION_SUBJECT") ?? throw new ArgumentNullException("VERIFICATION_SUBJECT");
 			string emailBody = System.Environment.GetEnvironmentVariable("VERIFICATION_BODY") ?? throw new ArgumentNullException("VERIFICATION_BODY");
 
+			string cognitoDomainName = System.Environment.GetEnvironmentVariable("COGNITO_DOMAIN_NAME") ?? throw new ArgumentNullException("COGNITO_DOMAIN_NAME");
 			string cognitoCustomDomain = System.Environment.GetEnvironmentVariable("COGNITO_CUSTOM_DOMAIN") ?? throw new ArgumentNullException("COGNITO_CUSTOM_DOMAIN");
 			string arnCognitoCertificate = System.Environment.GetEnvironmentVariable("ARN_COGNITO_CERTIFICATE") ?? throw new ArgumentNullException("ARN_COGNITO_CERTIFICATE");
 
@@ -258,6 +261,17 @@ namespace Cdk
 					}
 				}).ToArray()
                 */
+			});
+
+			IHostedZone hostedZone = HostedZone.FromLookup(this, $"{appName}HostedZone", new HostedZoneProviderProps {
+				DomainName = cognitoDomainName
+			});
+
+			// Se crea record en hosted zone...
+			_ = new ARecord(this, $"{appName}LoginARecord", new ARecordProps {
+				Zone = hostedZone,
+				RecordName = cognitoCustomDomain,
+				Target = RecordTarget.FromAlias(new UserPoolDomainTarget(domain)),
 			});
 
 			_ = new StringParameter(this, $"{appName}StringParameterCognitoUserPoolId", new StringParameterProps {
