@@ -1,14 +1,19 @@
 using Amazon.CDK;
 using Amazon.CDK.AWS.APIGateway;
 using Amazon.CDK.AWS.Apigatewayv2;
+using Amazon.CDK.AWS.Batch;
+using Amazon.CDK.AWS.CertificateManager;
+using Amazon.CDK.AWS.Cognito;
 using Amazon.CDK.AWS.EC2;
 using Amazon.CDK.AWS.IAM;
 using Amazon.CDK.AWS.Lambda;
 using Amazon.CDK.AWS.Logs;
+using Amazon.CDK.AWS.SSM;
 using Amazon.CDK.CustomResources;
 using Constructs;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using StageOptions = Amazon.CDK.AWS.APIGateway.StageOptions;
 
 namespace Cdk
@@ -18,9 +23,20 @@ namespace Cdk
         internal CdkStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
             string appName = System.Environment.GetEnvironmentVariable("APP_NAME") ?? throw new ArgumentNullException("APP_NAME");
-            
-            // Para infraestructura...
-            string publishZip = System.Environment.GetEnvironmentVariable("PUBLISH_ZIP") ?? throw new ArgumentNullException("PUBLISH_ZIP");
+			string regionAws = System.Environment.GetEnvironmentVariable("REGION_AWS") ?? throw new ArgumentNullException("REGION_AWS");
+
+			// Para cognito...
+			string emailSubject = System.Environment.GetEnvironmentVariable("VERIFICATION_SUBJECT") ?? throw new ArgumentNullException("VERIFICATION_SUBJECT");
+			string emailBody = System.Environment.GetEnvironmentVariable("VERIFICATION_BODY") ?? throw new ArgumentNullException("VERIFICATION_BODY");
+
+			string cognitoCustomDomain = System.Environment.GetEnvironmentVariable("COGNITO_CUSTOM_DOMAIN") ?? throw new ArgumentNullException("COGNITO_CUSTOM_DOMAIN");
+			string arnCognitoCertificate = System.Environment.GetEnvironmentVariable("ARN_COGNITO_CERTIFICATE") ?? throw new ArgumentNullException("ARN_COGNITO_CERTIFICATE");
+
+			string[] callbackUrls = System.Environment.GetEnvironmentVariable("CALLBACK_URLS").Split(",") ?? throw new ArgumentNullException("CALLBACK_URLS");
+			string[] logoutUrls = System.Environment.GetEnvironmentVariable("LOGOUT_URLS").Split(",") ?? throw new ArgumentNullException("LOGOUT_URLS");
+
+			// Para infraestructura...
+			string publishZip = System.Environment.GetEnvironmentVariable("PUBLISH_ZIP") ?? throw new ArgumentNullException("PUBLISH_ZIP");
             string handler = System.Environment.GetEnvironmentVariable("HANDLER") ?? throw new ArgumentNullException("HANDLER");
             string timeout = System.Environment.GetEnvironmentVariable("TIMEOUT") ?? throw new ArgumentNullException("TIMEOUT");
             string memorySize = System.Environment.GetEnvironmentVariable("MEMORY_SIZE") ?? throw new ArgumentNullException("MEMORY_SIZE");
@@ -49,9 +65,247 @@ namespace Cdk
             ISubnet subnet1 = Subnet.FromSubnetId(this, $"{appName}Subnet1", privateWithInternetId1);
             ISubnet subnet2 = Subnet.FromSubnetId(this, $"{appName}Subnet2", privateWithInternetId2);
 
-            #region API
-            // Se crea security group para la lambda y se enlaza con security group de RDS...
-            SecurityGroup securityGroup = new(this, $"{appName}LambdaSecurityGroup", new SecurityGroupProps {
+			// Se busca certificado de cognito creado anteriormente...
+			ICertificate certificate = Certificate.FromCertificateArn(this, $"{appName}CognitoCertificate", arnCognitoCertificate);
+
+			#region Cognito
+			UserPool userPool = new(this, $"{appName}UserPool", new UserPoolProps {
+				UserPoolName = $"{appName}UserPool",
+				SelfSignUpEnabled = true,
+				SignInCaseSensitive = false,
+				UserVerification = new UserVerificationConfig {
+					EmailSubject = emailSubject,
+					EmailBody = emailBody,
+					EmailStyle = VerificationEmailStyle.CODE,
+				},
+				SignInAliases = new SignInAliases {
+					Username = false,
+					Email = true,
+				},
+				AutoVerify = new AutoVerifiedAttrs {
+					Email = true,
+				},
+				KeepOriginal = new KeepOriginalAttrs {
+					Email = true,
+				},
+				Mfa = Mfa.OPTIONAL,
+				MfaSecondFactor = new MfaSecondFactor {
+					Otp = true,
+				},
+				AccountRecovery = AccountRecovery.EMAIL_ONLY,
+				StandardAttributes = new StandardAttributes {
+					Email = new StandardAttribute {
+						Required = true,
+						Mutable = true,
+					},
+					GivenName = new StandardAttribute {
+						Required = true,
+						Mutable = true,
+					},
+					FamilyName = new StandardAttribute {
+						Required = true,
+						Mutable = true,
+					},
+				},
+				PasswordPolicy = new PasswordPolicy {
+					MinLength = 8,
+					RequireLowercase = true,
+					RequireUppercase = true,
+					RequireDigits = true,
+					RequireSymbols = false,
+				},
+				DeletionProtection = true,
+			});
+
+			UserPoolDomain domain = new(this, $"{appName}CognitoDomain", new UserPoolDomainProps {
+				UserPool = userPool,
+				CustomDomain = new CustomDomainOptions {
+					DomainName = cognitoCustomDomain,
+					Certificate = certificate,
+				},
+				ManagedLoginVersion = ManagedLoginVersion.NEWER_MANAGED_LOGIN,
+			});
+
+			UserPoolClient userPoolClient = new(this, $"{appName}UserPoolClient", new UserPoolClientProps {
+				UserPoolClientName = $"{appName}UserPoolClient",
+				UserPool = userPool,
+				GenerateSecret = false,
+				PreventUserExistenceErrors = true,
+				AuthFlows = new AuthFlow {
+					UserSrp = true,
+				},
+				SupportedIdentityProviders = [
+					UserPoolClientIdentityProvider.COGNITO
+                ],
+				OAuth = new OAuthSettings {
+					CallbackUrls = callbackUrls,
+					LogoutUrls = logoutUrls,
+					Flows = new OAuthFlows { AuthorizationCodeGrant = true },
+					Scopes = [OAuthScope.OPENID, OAuthScope.EMAIL, OAuthScope.PROFILE]
+				}
+			});
+
+			// string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.ico")));
+			// string base64FormLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FORM_LOGO.png")));
+
+			_ = new CfnManagedLoginBranding(this, $"{appName}ManagedLoginBranding", new CfnManagedLoginBrandingProps {
+				UserPoolId = userPool.UserPoolId,
+				ClientId = userPoolClient.UserPoolClientId,
+				ReturnMergedResources = true,
+				Settings = new Dictionary<string, object> {
+					{ "categories", new Dictionary<string, object> {
+						{ "form", new Dictionary<string, object> {
+							{ "languageSelector", new Dictionary<string, object> {
+								{ "enabled", true }
+							}}
+						}},
+						{ "global", new Dictionary<string, object> {
+							{ "colorSchemeMode", "LIGHT" }
+						}}
+					}},
+					{ "componentClasses", new Dictionary<string, object>{
+						{ "focusState", new Dictionary<string, object>{
+							{ "lightMode", new Dictionary<string, object> {
+								{ "borderColor", "0069d9ff" }
+							}}
+						}},
+						{ "input", new Dictionary<string, object>{
+							{ "lightMode", new Dictionary<string, object> {
+								{ "defaults", new Dictionary<string, object>{
+                                    // { "borderColor", "0069d9ff" }
+                                }},
+								{ "placeholderColor", "6c757dff" },
+							}}
+						}},
+						{ "inputLabel", new Dictionary<string, object>{
+							{ "lightMode", new Dictionary<string, object> {
+                                // { "textColor", "6c757dff" }
+                            }}
+						}},
+						{ "link", new Dictionary<string, object>{
+							{ "lightMode", new Dictionary<string, object> {
+								{ "defaults", new Dictionary<string, object>{
+									{ "textColor", "1b6ec2ff" }
+								}},
+								{ "hover", new Dictionary<string, object>{
+									{ "textColor", "0069d9ff" }
+								}},
+							}}
+						}}
+					}},
+					{ "components", new Dictionary<string, object>{
+						{ "favicon", new Dictionary<string, object> {
+							{ "enabledTypes", new string[1] { "ICO" }},
+						}},
+						{ "form", new Dictionary<string, object> {
+							{ "logo", new Dictionary<string, object> {
+								{ "enabled", true }
+							}},
+						}},
+						{ "pageBackground", new Dictionary<string, object> {
+							{ "image", new Dictionary<string, object> {
+								{ "enabled", false }
+							}},
+						}},
+						{ "pageText", new Dictionary<string, object> {
+							{ "lightMode", new Dictionary<string, object> {
+								{ "headingColor", "212529ff" },
+								{ "bodyColor", "212529ff" },
+								{ "descriptionColor", "212529ff" },
+							}},
+						}},
+						{ "primaryButton", new Dictionary<string, object> {
+							{ "lightMode", new Dictionary<string, object> {
+								{ "defaults", new Dictionary<string, object>{
+									{ "backgroundColor", "1b6ec2ff" },
+									{ "textColor", "ffffffff" }
+								}},
+								{ "hover", new Dictionary<string, object>{
+									{ "backgroundColor", "0069d9ff" },
+									{ "textColor", "ffffffff" }
+								}},
+							}},
+						}},
+						{ "secondaryButton", new Dictionary<string, object> {
+							{ "lightMode", new Dictionary<string, object> {
+								{ "defaults", new Dictionary<string, object>{
+									{ "backgroundColor", "ffffffff" },
+									{ "borderColor", "1b6ec2ff" },
+									{ "textColor", "1b6ec2ff" }
+								}},
+								{ "hover", new Dictionary<string, object>{
+									{ "backgroundColor", "f2f8fdff" },
+									{ "borderColor", "0069d9ff" },
+									{ "textColor", "0069d9ff" }
+								}},
+							}},
+						}}
+					}}
+				},
+                /*
+				Assets = (new List<CfnManagedLoginBranding.AssetTypeProperty>() {
+					new() {
+						Category = "FORM_LOGO",
+						ColorMode = "LIGHT",
+						Extension = "PNG",
+						Bytes = base64FormLogo,
+					},
+					new() {
+						Category = "FAVICON_ICO",
+						ColorMode = "LIGHT",
+						Extension = "ICO",
+						Bytes = base64Favicon,
+					}
+				}).ToArray()
+                */
+			});
+
+			_ = new StringParameter(this, $"{appName}StringParameterCognitoUserPoolId", new StringParameterProps {
+				ParameterName = $"/{appName}/Cognito/UserPoolId",
+				Description = $"Cognito UserPoolId de la aplicacion {appName}",
+				StringValue = userPool.UserPoolId,
+				Tier = ParameterTier.STANDARD,
+			});
+
+			_ = new StringParameter(this, $"{appName}StringParameterCognitoUserPoolClientId", new StringParameterProps {
+				ParameterName = $"/{appName}/Cognito/UserPoolClientId",
+				Description = $"User Pool Client ID de la aplicacion {appName}",
+				StringValue = userPoolClient.UserPoolClientId,
+				Tier = ParameterTier.STANDARD,
+			});
+
+			_ = new StringParameter(this, $"{appName}StringParameterCognitoRegion", new StringParameterProps {
+				ParameterName = $"/{appName}/Cognito/Region",
+				Description = $"Cognito Region de la aplicacion {appName}",
+				StringValue = regionAws,
+				Tier = ParameterTier.STANDARD,
+			});
+
+			_ = new StringParameter(this, $"{appName}StringParameterCognitoCallbacks", new StringParameterProps {
+				ParameterName = $"/{appName}/Cognito/Callbacks",
+				Description = $"Cognito callbacks de la aplicacion {appName}",
+				StringValue = String.Join(",", callbackUrls),
+				Tier = ParameterTier.STANDARD,
+			});
+
+			_ = new StringParameter(this, $"{appName}StringParameterCognitoLogouts", new StringParameterProps {
+				ParameterName = $"/{appName}/Cognito/Logouts",
+				Description = $"Cognito logouts de la aplicacion {appName}",
+				StringValue = String.Join(",", logoutUrls),
+				Tier = ParameterTier.STANDARD,
+			});
+
+			_ = new StringParameter(this, $"{appName}StringParameterCognitoBaseUrl", new StringParameterProps {
+				ParameterName = $"/{appName}/Cognito/BaseUrl",
+				Description = $"Cognito base URL de la aplicacion {appName}",
+				StringValue = domain.BaseUrl(),
+				Tier = ParameterTier.STANDARD,
+			});
+			#endregion
+
+			#region API
+			// Se crea security group para la lambda y se enlaza con security group de RDS...
+			SecurityGroup securityGroup = new(this, $"{appName}LambdaSecurityGroup", new SecurityGroupProps {
                 Vpc = vpc,
                 SecurityGroupName = $"{appName}APILambda",
                 Description = $"Security Group de {appName} API Lambda",
@@ -110,7 +364,11 @@ namespace Cdk
                 Environment = new Dictionary<string, string> {
                     { "APP_NAME", appName },
                     { "SECRET_ARN_CONNECTION_STRING", secretArnConnectionString },
-                },
+					{ "COGNITO_REGION", regionAws },
+					{ "COGNITO_BASE_URL", domain.BaseUrl() },
+					{ "COGNITO_USER_POOL_ID", userPool.UserPoolId },
+					{ "COGNITO_USER_POOL_CLIENT_ID", userPoolClient.UserPoolClientId },
+				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {
                     Subnets = [subnet1, subnet2]
@@ -126,8 +384,14 @@ namespace Cdk
                 RemovalPolicy = RemovalPolicy.DESTROY
             });
 
-            // Creación de la LambdaRestApi...
-            LambdaRestApi lambdaRestApi = new(this, $"{appName}APILambdaRestApi", new LambdaRestApiProps {
+			// Se crea authorizer para el apigateway...
+			CognitoUserPoolsAuthorizer cognitoUserPoolsAuthorizer = new(this, $"{appName}APIAuthorizer", new CognitoUserPoolsAuthorizerProps {
+				CognitoUserPools = [userPool],
+				AuthorizerName = $"{appName}APIAuthorizer",
+			});
+
+			// Creación de la LambdaRestApi...
+			LambdaRestApi lambdaRestApi = new(this, $"{appName}APILambdaRestApi", new LambdaRestApiProps {
                 Handler = function,
                 DefaultCorsPreflightOptions = new CorsOptions {
                     AllowOrigins = allowedDomains.Split(","),
@@ -140,37 +404,19 @@ namespace Cdk
                 },
                 RestApiName = $"{appName}API",
                 DefaultMethodOptions = new MethodOptions {
-                    ApiKeyRequired = true,
-                },
+					AuthorizationType = AuthorizationType.COGNITO,
+					Authorizer = cognitoUserPoolsAuthorizer
+				},
             });
 
             // Creación de la CfnApiMapping para el API Gateway...
-            CfnApiMapping apiMapping = new(this, $"{appName}APIApiMapping", new CfnApiMappingProps {
+            _ = new CfnApiMapping(this, $"{appName}APIApiMapping", new CfnApiMappingProps {
                 DomainName = domainName,
                 ApiMappingKey = apiMappingKey,
                 ApiId = lambdaRestApi.RestApiId,
                 Stage = lambdaRestApi.DeploymentStage.StageName,
             });
-
-            // Se crea Usage Plan para configurar API Key...
-            UsagePlan usagePlan = new(this, $"{appName}APIUsagePlan", new UsagePlanProps {
-                Name = $"{appName}APIUsagePlan",
-                Description = $"Usage Plan de {appName} API",
-                ApiStages = [
-                    new UsagePlanPerApiStage() {
-                        Api = lambdaRestApi,
-                        Stage = lambdaRestApi.DeploymentStage
-                    }
-                ],
-            });
-
-            // Se crea API Key...
-            ApiKey apiGatewayKey = new(this, $"{appName}APIKey", new ApiKeyProps {
-                ApiKeyName = $"{appName}APIKey",
-                Description = $"API Key de {appName}",
-            });
-            usagePlan.AddApiKey(apiGatewayKey);
-
+			           
             // Se configura permisos para la ejecucíon de la Lambda desde el API Gateway...
             ArnPrincipal arnPrincipal = new("apigateway.amazonaws.com");
             Permission permission = new() {

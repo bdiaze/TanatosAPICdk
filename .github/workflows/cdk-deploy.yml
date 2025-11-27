@@ -16,6 +16,14 @@ jobs:
             APP_NAME: ${{ vars.APP_NAME }}
             ACCOUNT_AWS: ${{ vars.ACCOUNT_AWS }}
             REGION_AWS: ${{ vars.REGION_AWS }}
+            
+            VERIFICATION_SUBJECT: ${{ vars.VERIFICATION_SUBJECT }}
+            VERIFICATION_BODY: ${{ vars.VERIFICATION_BODY }}
+            COGNITO_CUSTOM_DOMAIN: ${{ vars.COGNITO_CUSTOM_DOMAIN }}
+            ARN_COGNITO_CERTIFICATE: ${{ vars.ARN_COGNITO_CERTIFICATE }}
+            CALLBACK_URLS: ${{ vars.CALLBACK_URLS }}
+            LOGOUT_URLS: ${{ vars.LOGOUT_URLS }}
+            
             PUBLISH_ZIP: ${{ vars.PUBLISH_ZIP }}
             HANDLER: ${{ vars.HANDLER }}
             TIMEOUT: ${{ vars.TIMEOUT }}
@@ -26,8 +34,10 @@ jobs:
             PRIVATE_WITH_INTERNET_ID_1: ${{ vars.PRIVATE_WITH_INTERNET_ID_1 }}
             PRIVATE_WITH_INTERNET_ID_2: ${{ vars.PRIVATE_WITH_INTERNET_ID_2 }}
             RDS_SECURITY_GROUP_ID: ${{ vars.RDS_SECURITY_GROUP_ID }}
+            
             ALLOWED_DOMAINS: ${{ vars.ALLOWED_DOMAINS }}
             SECRET_ARN_CONNECTION_STRING: ${{ vars.SECRET_ARN_CONNECTION_STRING }}
+            
             APP_SCHEMA_NAME: ${{ vars.APP_SCHEMA_NAME }}
             INITIAL_CREATION_HANDLER: ${{ vars.INITIAL_CREATION_HANDLER }}
             INITIAL_CREATION_PUBLISH_ZIP: ${{ vars.INITIAL_CREATION_PUBLISH_ZIP }}
