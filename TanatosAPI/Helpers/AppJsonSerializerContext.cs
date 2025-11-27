@@ -9,6 +9,7 @@ namespace TanatosAPI.Helpers {
     [JsonSerializable(typeof(ProblemDetails))]
     [JsonSerializable(typeof(Dictionary<string, string>))]
     [JsonSerializable(typeof(TipoReceptorNotificacion))]
-    internal partial class AppJsonSerializerContext : JsonSerializerContext {
+	[JsonSerializable(typeof(List<TipoReceptorNotificacion>))]
+	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }
