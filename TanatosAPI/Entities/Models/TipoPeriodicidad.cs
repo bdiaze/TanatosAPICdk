@@ -3,6 +3,8 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TanatosAPI.Entities.Models {
+	[Table("tipo_periodicidad", Schema = "tanatos")]
+	[Comment("Tabla que contiene los tipos de periodicidad.")]
 	public class TipoPeriodicidad {
 		[Required]
 		[Column("id")]
@@ -24,5 +26,8 @@ namespace TanatosAPI.Entities.Models {
 		[Column("vigencia")]
 		[Comment("Vigencia del tipo de periodicidad.")]
 		public required bool Vigencia { get; set; }
+
+		public List<TemplateNorma>? TemplateNormas { get; set; }
+
 	}
 }

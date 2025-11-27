@@ -12,7 +12,7 @@ using TanatosAPI.Entities.Contexts;
 namespace TanatosAPI.Migrations
 {
     [DbContext(typeof(TanatosDbContext))]
-    [Migration("20251114215806_TablasTipo")]
+    [Migration("20251117132506_TablasTipo")]
     partial class TablasTipo
     {
         /// <inheritdoc />
@@ -187,7 +187,10 @@ namespace TanatosAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TiposPeriodicidades");
+                    b.ToTable("tipo_periodicidad", "tanatos", t =>
+                        {
+                            t.HasComment("Tabla que contiene los tipos de periodicidad.");
+                        });
                 });
 
             modelBuilder.Entity("TanatosAPI.Entities.Models.TipoReceptorNotificacion", b =>

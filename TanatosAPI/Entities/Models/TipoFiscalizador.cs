@@ -26,5 +26,7 @@ namespace TanatosAPI.Entities.Models {
 		[Column("vigencia")]
 		[Comment("Vigencia del tipo de fiscalizador.")]
 		public required bool Vigencia { get; set; }
+
+		public List<TemplateNormaFiscalizador>? TemplateNormasFiscalizador { get; set; }
 	}
 }

@@ -30,5 +30,7 @@ namespace TanatosAPI.Entities.Models {
 		[Column("vigencia")]
 		[Comment("Vigencia de la categoría.")]
 		public required bool Vigencia { get; set; }
+
+		public List<TemplateNorma>? TemplateNormas { get; set; } 
 	}
 }

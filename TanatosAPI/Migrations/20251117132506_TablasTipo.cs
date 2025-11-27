@@ -115,6 +115,22 @@ namespace TanatosAPI.Migrations
                 comment: "Tabla que contiene los tipos de fiscalizadores de las normas.");
 
             migrationBuilder.CreateTable(
+                name: "tipo_periodicidad",
+                schema: "tanatos",
+                columns: table => new
+                {
+                    id = table.Column<long>(type: "bigint", nullable: false, comment: "Identificador del tipo de periodicidad."),
+                    nombre = table.Column<string>(type: "text", nullable: false, comment: "Nombre del tipo de periodicidad."),
+                    descripcion = table.Column<string>(type: "text", nullable: true, comment: "Descripción del tipo de periodicidad."),
+                    vigencia = table.Column<bool>(type: "boolean", nullable: false, comment: "Vigencia del tipo de periodicidad.")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tipo_periodicidad", x => x.id);
+                },
+                comment: "Tabla que contiene los tipos de periodicidad.");
+
+            migrationBuilder.CreateTable(
                 name: "tipo_unidad_tiempo",
                 schema: "tanatos",
                 columns: table => new
@@ -129,20 +145,6 @@ namespace TanatosAPI.Migrations
                     table.PrimaryKey("PK_tipo_unidad_tiempo", x => x.id);
                 },
                 comment: "Tabla que contiene los tipos de unidades de tiempo.");
-
-            migrationBuilder.CreateTable(
-                name: "TiposPeriodicidades",
-                columns: table => new
-                {
-                    id = table.Column<long>(type: "bigint", nullable: false, comment: "Identificador del tipo de periodicidad."),
-                    nombre = table.Column<string>(type: "text", nullable: false, comment: "Nombre del tipo de periodicidad."),
-                    descripcion = table.Column<string>(type: "text", nullable: true, comment: "Descripción del tipo de periodicidad."),
-                    vigencia = table.Column<bool>(type: "boolean", nullable: false, comment: "Vigencia del tipo de periodicidad.")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TiposPeriodicidades", x => x.id);
-                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_destinatario_notificacion_id_tipo_receptor",
@@ -173,11 +175,12 @@ namespace TanatosAPI.Migrations
                 schema: "tanatos");
 
             migrationBuilder.DropTable(
-                name: "tipo_unidad_tiempo",
+                name: "tipo_periodicidad",
                 schema: "tanatos");
 
             migrationBuilder.DropTable(
-                name: "TiposPeriodicidades");
+                name: "tipo_unidad_tiempo",
+                schema: "tanatos");
 
             migrationBuilder.DropColumn(
                 name: "vigencia",

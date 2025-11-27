@@ -27,5 +27,7 @@ namespace TanatosAPI.Entities.Models {
 		[Column("vigencia")]
 		[Comment("Vigencia del tipo de unidad de tiempo.")]
 		public required bool Vigencia { get; set; }
+
+		public List<TemplateNormaNotificacion>? TemplateNormasNotificacion { get; set; }
 	}
 }
