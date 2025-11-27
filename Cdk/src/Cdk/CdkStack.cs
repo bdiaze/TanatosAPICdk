@@ -384,9 +384,7 @@ namespace Cdk
 				Authorizer = new HttpJwtAuthorizer(
 					$"{appName}APIHttpJwtAuthorizer",
 					$"https://cognito-idp.{regionAws}.amazonaws.com/{userPool.UserPoolId}",
-					new HttpJwtAuthorizerProps {
-						JwtAudience = [userPoolClient.UserPoolClientId]
-					}
+					new HttpJwtAuthorizerProps { }
 				),
 			});
 
