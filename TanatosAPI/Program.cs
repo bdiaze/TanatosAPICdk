@@ -21,7 +21,7 @@ builder.Services.Configure<RouteOptions>(options => {
     options.SetParameterPolicy<RegexInlineRouteConstraint>("regex");
 });
 
-builder.Services.AddAWSLambdaHosting(LambdaEventSource.RestApi, new SourceGeneratorLambdaJsonSerializer<AppJsonSerializerContext>());
+builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi, new SourceGeneratorLambdaJsonSerializer<AppJsonSerializerContext>());
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
