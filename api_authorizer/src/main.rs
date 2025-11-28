@@ -9,6 +9,7 @@ use lazy_static::lazy_static;
 use tokio::sync::{RwLock, RwLockWriteGuard};
 use std::time::{Duration, Instant, UNIX_EPOCH};
 use dotenvy::dotenv;
+use tracing_subscriber::fmt::time::ChronoUtc;
 
 // JWT - JWKS
 #[derive(Debug, Serialize, Deserialize)]
@@ -78,7 +79,7 @@ static INIT: std::sync::Once = std::sync::Once::new();
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     tracing_subscriber::fmt()
-        .json()
+        .with_timer(ChronoUtc::default())
         .with_max_level(tracing::Level::INFO)
         .init();
 
@@ -96,14 +97,13 @@ async fn authorizer_handler(event: LambdaEvent<AuthorizerRequest>) -> Result<Aut
     info!("Comenzando con autorizacion de evento...");
 
     // Se obtiene el access token...
-    let token = extract_token(&event.payload.headers)
-        .map_or_else(
-            || {
-                error!("No se encontro el access token");
-                Err("No se encontro el access token")
-            },
-            |t| Ok(t)
-        )?;
+    let token = match extract_token(&event.payload.headers) {
+        Some(t) => t,
+        None => {
+            error!("No se encontro el access token");
+            return Ok(deny("No se encontro el access token"));
+        }
+    };
 
     info!("Se extrae correctamente el token desde el evento...");
 
@@ -112,7 +112,13 @@ async fn authorizer_handler(event: LambdaEvent<AuthorizerRequest>) -> Result<Aut
     let pool_id: String = env::var("COGNITO_USER_POOL_ID")?;
 
     // Se obtiene el JWKS...
-    let jwks: Jwks = get_jwks(&region, &pool_id).await?;
+    let jwks: Jwks = match get_jwks(&region, &pool_id).await {
+        Ok(j) => j,
+        Err(err) => {
+            error!("Error obteniendo JWKS: {}", err);
+            return Ok(deny("No se pudo obtener JWKS"));
+        }
+    };
 
     info!("Se obtiene correctamente JWKS...");
 
@@ -131,7 +137,7 @@ async fn authorizer_handler(event: LambdaEvent<AuthorizerRequest>) -> Result<Aut
 
 fn extract_token(headers: &HashMap<String, String>) -> Option<&str> {
     // Se trata de extraer access token desde Authorization header...
-    if let Some(auth) = headers.get("Authorization") {
+    if let Some(auth) = headers.get("authorization") {
         if let Some(token) = auth.strip_prefix("Bearer ") {
             return Some(token);
         }
@@ -243,7 +249,7 @@ mod tests {
         dotenv().ok();
 
         let mut headers: HashMap<String, String> = HashMap::new();
-        headers.insert("Authorization".to_string(), format!("Bearer {}", env::var("TEST_TOKEN").expect("No se ha seteado un TEST_TOKEN")));
+        headers.insert("authorization".to_string(), format!("Bearer {}", env::var("TEST_TOKEN").expect("No se ha seteado un TEST_TOKEN")));
 
         let event: AuthorizerRequest = AuthorizerRequest { headers };
 
