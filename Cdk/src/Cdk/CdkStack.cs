@@ -14,6 +14,7 @@ using Amazon.CDK.AWS.SSM;
 using Amazon.CDK.AwsApigatewayv2Authorizers;
 using Amazon.CDK.AwsApigatewayv2Integrations;
 using Amazon.CDK.CustomResources;
+using Amazon.JSII.JsonModel.FileSystem;
 using Constructs;
 using System;
 using System.Collections.Generic;
@@ -44,6 +45,9 @@ namespace Cdk
 
 			string[] callbackUrls = System.Environment.GetEnvironmentVariable("CALLBACK_URLS").Split(",") ?? throw new ArgumentNullException("CALLBACK_URLS");
 			string[] logoutUrls = System.Environment.GetEnvironmentVariable("LOGOUT_URLS").Split(",") ?? throw new ArgumentNullException("LOGOUT_URLS");
+
+			// Para API Authorizer...
+			string apiAuthorizerPublishZip = System.Environment.GetEnvironmentVariable("API_AUTHORIZER_PUBLISH_ZIP") ?? throw new ArgumentNullException("API_AUTHORIZER_PUBLISH_ZIP");
 
 			// Para infraestructura...
 			string publishZip = System.Environment.GetEnvironmentVariable("PUBLISH_ZIP") ?? throw new ArgumentNullException("PUBLISH_ZIP");
@@ -285,6 +289,43 @@ namespace Cdk
 				Zone = hostedZone,
 				RecordName = cognitoCustomDomain,
 				Target = RecordTarget.FromAlias(new UserPoolDomainTarget(domain)),
+			});
+			#endregion
+
+			#region API Authorizer
+			// Creación de log group lambda...
+			LogGroup authorizerLogGroup = new(this, $"{appName}APIAuthorizerLogGroup", new LogGroupProps {
+				LogGroupName = $"/aws/lambda/{appName}APIAuthorizer/logs",
+				Retention = RetentionDays.ONE_MONTH,
+				RemovalPolicy = RemovalPolicy.DESTROY
+			});
+
+			// Creación de role para la función lambda...
+			IRole authorizerRoleLambda = new Role(this, $"{appName}APIAuthorizerRole", new RoleProps {
+				RoleName = $"{appName}APIAuthorizerRole",
+				Description = $"Role para Lambda Authorizer de API {appName}",
+				AssumedBy = new ServicePrincipal("lambda.amazonaws.com"),
+				ManagedPolicies = [
+					ManagedPolicy.FromAwsManagedPolicyName("service-role/AWSLambdaVPCAccessExecutionRole"),
+					ManagedPolicy.FromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
+				],
+			});
+
+			Function authorizerFunction = new(this, $"{appName}APIAuthorizerFunction", new FunctionProps {
+				FunctionName = $"{appName}APIAuthorizer",
+				Description = $"API encargada de autorizar el acceso a la API de la aplicacion {appName}",
+				Runtime = Runtime.PROVIDED_AL2023,
+				Code = Code.FromAsset($"{apiAuthorizerPublishZip}"),
+				Timeout = Duration.Seconds(10),
+				MemorySize = 256,
+				Architecture = Architecture.X86_64,
+				LogGroup = authorizerLogGroup,
+				Environment = new Dictionary<string, string> {
+					{ "APP_NAME", appName },
+					{ "COGNITO_REGION", regionAws },
+					{ "COGNITO_USER_POOL_ID", userPool.UserPoolId },
+				},
+				Role = authorizerRoleLambda,
 			});
 			#endregion
 

@@ -25,6 +25,8 @@ jobs:
             CALLBACK_URLS: ${{ vars.CALLBACK_URLS }}
             LOGOUT_URLS: ${{ vars.LOGOUT_URLS }}
             
+            API_AUTHORIZER_PUBLISH_ZIP: ${{ vars.API_AUTHORIZER_PUBLISH_ZIP }}
+            
             PUBLISH_ZIP: ${{ vars.PUBLISH_ZIP }}
             HANDLER: ${{ vars.HANDLER }}
             TIMEOUT: ${{ vars.TIMEOUT }}
@@ -77,6 +79,13 @@ jobs:
             - name: Compress Publish Directory .NET Initial Creation Lambda
               working-directory: ${{ vars.INITIAL_CREATION_DIRECTORY }}/publish
               run: zip -r -q -T ./publish.zip ./*
+                        
+            - name: Build and Compress Rust API Authorizer
+              working-directory: ${{ vars.API_AUTHORIZER_DIRECTORY }}
+              run: |
+                cargo build --release --target x86_64-unknown-linux-gnu
+                cp target/x86_64-unknown-linux-gnu/release/${{ vars.API_AUTHORIZER_PROJECT_NAME }} ./bootstrap
+                zip ${{ vars.API_AUTHORIZER_PROJECT_NAME }}.zip bootstrap                   
                   
             - name: Publish .NET AoT Minimal API
               run: |
