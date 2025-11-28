@@ -80,6 +80,7 @@ static INIT: std::sync::Once = std::sync::Once::new();
 async fn main() -> Result<(), Error> {
     tracing_subscriber::fmt()
         .with_timer(ChronoUtc::default())
+        .with_ansi(false) 
         .with_max_level(tracing::Level::INFO)
         .init();
 

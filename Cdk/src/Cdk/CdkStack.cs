@@ -317,8 +317,8 @@ namespace Cdk
 				Runtime = Runtime.PROVIDED_AL2023,
 				Code = Code.FromAsset($"{apiAuthorizerPublishZip}"),
 				Handler = "bootstrap",
-				Timeout = Duration.Seconds(10),
-				MemorySize = 256,
+				Timeout = Duration.Seconds(5),
+				MemorySize = 128,
 				Architecture = Architecture.X86_64,
 				LogGroup = authorizerLogGroup,
 				Environment = new Dictionary<string, string> {
