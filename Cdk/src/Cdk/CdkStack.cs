@@ -130,7 +130,7 @@ namespace Cdk
 			_ = new UserPoolGroup(this, $"{appName}AdminUserGroup", new UserPoolGroupProps {
 				GroupName = "Admin",
 				UserPool = userPool,
-				Description = $"Administrador de la aplicación {appName}",
+				Description = $"Administrador de la aplicacion {appName}",
 			});
 
 			UserPoolDomain domain = new(this, $"{appName}CognitoDomain", new UserPoolDomainProps {
