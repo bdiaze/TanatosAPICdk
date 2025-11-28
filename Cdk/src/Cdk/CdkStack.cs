@@ -316,6 +316,7 @@ namespace Cdk
 				Description = $"API encargada de autorizar el acceso a la API de la aplicacion {appName}",
 				Runtime = Runtime.PROVIDED_AL2023,
 				Code = Code.FromAsset($"{apiAuthorizerPublishZip}"),
+				Handler = "bootstrap",
 				Timeout = Duration.Seconds(10),
 				MemorySize = 256,
 				Architecture = Architecture.X86_64,
