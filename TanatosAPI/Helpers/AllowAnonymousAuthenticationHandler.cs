@@ -13,8 +13,7 @@ namespace TanatosAPI.Helpers {
 						new ClaimsPrincipal(
 							new ClaimsIdentity(
 								[ 
-									new Claim("sub", "local-dev-user"),
-									new Claim("username", "local-dev-user"),
+									new Claim(ClaimTypes.NameIdentifier, "DevUser-1a07-4018-b2c3-3eea6b80b831"),
 									new Claim(ClaimTypes.Role, "Admin"),
 								], 
 								"AllowAnonymous"

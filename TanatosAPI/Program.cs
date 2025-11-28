@@ -62,8 +62,6 @@ if (builder.Environment.IsProduction()) {
 	string cognitoBaseUrl = Environment.GetEnvironmentVariable("COGNITO_BASE_URL") ?? throw new Exception($"No se ha configurado la variable de entorno COGNITO_BASE_URL.");
 	string cognitoUserPoolId = Environment.GetEnvironmentVariable("COGNITO_USER_POOL_ID") ?? throw new Exception($"No se ha configurado la variable de entorno COGNITO_USER_POOL_ID.");
 
-	JwtSecurityTokenHandler.DefaultInboundClaimTypeMap["cognito:groups"] = ClaimTypes.Role;
-
 	builder.Services
         .AddAuthentication("Bearer")
 		.AddJwtBearer("Bearer", options => {
@@ -74,6 +72,7 @@ if (builder.Environment.IsProduction()) {
 				ValidateIssuer = true,
 				ValidIssuer = cognitoBaseUrl,
 				ValidateAudience = false,
+				RoleClaimType = "cognito:groups",
 			};
 		});
 } else {
