@@ -428,12 +428,17 @@ namespace Cdk
 				Path = "/{proxy+}",
 				Methods = [HttpMethod.ANY],
 				Integration = new HttpLambdaIntegration($"{appName}APIHttpLambdaIntegration", function),
-				Authorizer = new HttpJwtAuthorizer(
-					$"{appName}APIHttpJwtAuthorizer",
-					$"https://cognito-idp.{regionAws}.amazonaws.com/{userPool.UserPoolId}",
-					new HttpJwtAuthorizerProps {
-						JwtAudience = [userPoolClient.UserPoolClientId]
-					}
+				Authorizer = new HttpLambdaAuthorizer(
+					$"{appName}APILambdaAuthorizer",
+					authorizerFunction,
+					new HttpLambdaAuthorizerProps {
+						ResponseTypes = [ HttpLambdaResponseType.SIMPLE ],
+						IdentitySource = [ 
+							"$request.header.Authorization",
+							"$request.cookie.accessToken"
+						],
+						ResultsCacheTtl = Duration.Seconds(0),
+					}	
 				),
 			});
 

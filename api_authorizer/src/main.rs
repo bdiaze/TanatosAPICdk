@@ -44,29 +44,9 @@ struct AuthorizerRequest {
 
 #[derive(Debug, Serialize)]
 struct AuthorizerResponse {
-    #[serde(rename = "principalId")]
-    principal_id: String,
-    #[serde(rename = "policyDocument")]
-    policy_document: PolicyDocument,
+    #[serde(rename = "isAuthorized")]
+    is_authorized: bool,
     context: HashMap<String, String>
-}
-
-#[derive(Debug, Serialize)]
-struct PolicyDocument {
-    #[serde(rename = "Version")]
-    version: String,
-    #[serde(rename = "Statement")]
-    statement: Vec<Statement>
-}
-
-#[derive(Debug, Serialize)]
-struct Statement {
-    #[serde(rename = "Action")]
-    action: String,
-    #[serde(rename = "Effect")]
-    effect: String,
-    #[serde(rename = "Resource")]
-    resource: String,
 }
 
 lazy_static! {
@@ -125,9 +105,9 @@ async fn authorizer_handler(event: LambdaEvent<AuthorizerRequest>) -> Result<Aut
 
     // Se valida token JWT
     match validate_jwt(token, &jwks, &region, &pool_id) {
-        Ok(claims) => {
+        Ok(_) => {
             info!("El token es valido...");
-            Ok(allow(&claims.sub))
+            Ok(allow())
         },
         Err(reason) => {
             error!("El token no es valido - Reason: {}", reason);
@@ -204,17 +184,9 @@ fn validate_jwt(token: &str, jwks: &Jwks, region: &str, pool_id: &str) -> Result
     Ok(token_data.claims)
 }
 
-fn allow(principal: &str) -> AuthorizerResponse {
+fn allow() -> AuthorizerResponse {
     AuthorizerResponse {
-        principal_id: principal.to_string(),
-        policy_document: PolicyDocument {
-            version: "2012-10-17".to_string(),
-            statement: vec![Statement {
-                action: "execute-api:Invoke".to_string(),
-                effect: "Allow".to_string(),
-                resource: "*".to_string(),
-            }],
-        },
+        is_authorized: true,
         context: HashMap::new()
     }
 }
@@ -224,15 +196,7 @@ fn deny(reason: &str) -> AuthorizerResponse {
     context.insert("reason".to_string(), reason.to_string());
 
     AuthorizerResponse {
-        principal_id: "unauthorized".to_string(),
-        policy_document: PolicyDocument {
-            version: "2012-10-17".to_string(),
-            statement: vec![Statement {
-                action: "execute-api:Invoke".to_string(),
-                effect: "Deny".to_string(),
-                resource: "*".to_string(),
-            }],
-        },
+        is_authorized: false,
         context,
     }
 }
