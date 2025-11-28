@@ -127,6 +127,12 @@ namespace Cdk
 				DeletionProtection = true,
 			});
 
+			_ = new UserPoolGroup(this, $"{appName}AdminUserGroup", new UserPoolGroupProps {
+				GroupName = "Admin",
+				UserPool = userPool,
+				Description = $"Administrador de la aplicación {appName}",
+			});
+
 			UserPoolDomain domain = new(this, $"{appName}CognitoDomain", new UserPoolDomainProps {
 				UserPool = userPool,
 				CustomDomain = new CustomDomainOptions {
@@ -346,7 +352,6 @@ namespace Cdk
 					{ "COGNITO_REGION", regionAws },
 					{ "COGNITO_BASE_URL", domain.BaseUrl() },
 					{ "COGNITO_USER_POOL_ID", userPool.UserPoolId },
-					{ "COGNITO_USER_POOL_CLIENT_ID", userPoolClient.UserPoolClientId },
 				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {

@@ -8,6 +8,7 @@ namespace TanatosAPI.Endpoints {
     public static class TipoReceptorNotificacionEndpoints {
         public static IEndpointRouteBuilder MapTipoReceptorNotificacionEndpoints(this IEndpointRouteBuilder routes) {
             RouteGroupBuilder group = routes.MapGroup("/TipoReceptorNotificacion");
+			group.MapObtenerVigentes();
             group.MapObtenerPorVigencia();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
@@ -16,7 +17,31 @@ namespace TanatosAPI.Endpoints {
 			return routes;
         }
 
-        private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
+		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/", async (IHostEnvironment environment, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					List<TipoReceptorNotificacion> retorno = await tipoReceptorNotificacionDao.ObtenerPorVigencia(true);
+
+					LambdaLogger.Log(
+						$"[GET] - [TipoReceptorNotificacion] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de los tipos de receptores de notificación vigentes - Cant. Registros: {retorno.Count}.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [TipoReceptorNotificacion] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener los tipos de receptores de notificación vigentes. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization().WithOpenApi();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
             routes.MapGet("/PorVigencia/{vigencia}", async (bool vigencia, IHostEnvironment environment, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -35,7 +60,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).WithOpenApi();
+			}).RequireAuthorization("Admin").WithOpenApi();
 
 			return routes;
 		}
@@ -64,7 +89,7 @@ namespace TanatosAPI.Endpoints {
                         $"{ex}");
                     return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
                 }
-            }).WithOpenApi();
+            }).RequireAuthorization("Admin").WithOpenApi();
 
             return routes;
         }
@@ -93,7 +118,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).WithOpenApi();
+			}).RequireAuthorization("Admin").WithOpenApi();
 
 			return routes;
 		}
@@ -121,7 +146,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).WithOpenApi();
+			}).RequireAuthorization("Admin").WithOpenApi();
 
 			return routes;
 		}
