@@ -433,10 +433,7 @@ namespace Cdk
 					authorizerFunction,
 					new HttpLambdaAuthorizerProps {
 						ResponseTypes = [ HttpLambdaResponseType.SIMPLE ],
-						IdentitySource = [ 
-							"$request.header.authorization",
-							"$request.header.cookie"
-						],
+						IdentitySource = [],
 						ResultsCacheTtl = Duration.Seconds(0),
 					}	
 				),
