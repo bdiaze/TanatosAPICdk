@@ -2,6 +2,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.SecretsManager;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Routing.Constraints;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -56,6 +57,10 @@ builder.Services.AddSingleton<DatabaseConnectionHelper>();
 #region Singleton DAO
 builder.Services.AddSingleton<TipoReceptorNotificacionDao>();
 #endregion
+
+builder.Services
+	.AddDataProtection()
+	.DisableAutomaticKeyGeneration();
 
 if (builder.Environment.IsProduction()) {
 	string cognitoRegion = Environment.GetEnvironmentVariable("COGNITO_REGION") ?? throw new Exception($"No se ha configurado la variable de entorno COGNITO_REGION.");
