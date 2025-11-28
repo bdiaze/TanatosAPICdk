@@ -72,6 +72,7 @@ if (builder.Environment.IsProduction()) {
 				ValidateIssuer = true,
 				ValidIssuer = cognitoBaseUrl,
 				ValidateAudience = false,
+				NameClaimType = ClaimTypes.NameIdentifier,
 				RoleClaimType = "cognito:groups",
 			};
 		});

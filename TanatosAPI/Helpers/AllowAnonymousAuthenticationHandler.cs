@@ -7,6 +7,7 @@ using System.Text.Encodings.Web;
 namespace TanatosAPI.Helpers {
 	public class AllowAnonymousAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder) {
 		protected override Task<AuthenticateResult> HandleAuthenticateAsync() {
+			// Se crean claims para usuario local de desarrollo...
 			return Task.FromResult(AuthenticateResult.Success(
 				new AuthenticationTicket(
 					new ClaimsPrincipal(
@@ -15,12 +16,14 @@ namespace TanatosAPI.Helpers {
 								[ 
 									new Claim(ClaimTypes.NameIdentifier, "DevUser-1a07-4018-b2c3-3eea6b80b831"),
 									new Claim(ClaimTypes.Role, "Admin"),
-								], 
-								"AllowAnonymous"
+								],
+								Scheme.Name,
+								ClaimTypes.NameIdentifier,
+								ClaimTypes.Role
 							)
 						)
-					), 
-					"AllowAnonymous"
+					),
+					Scheme.Name
 				)
 			));
 		}

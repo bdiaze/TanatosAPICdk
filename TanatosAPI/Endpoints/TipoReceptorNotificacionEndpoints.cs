@@ -8,7 +8,6 @@ namespace TanatosAPI.Endpoints {
     public static class TipoReceptorNotificacionEndpoints {
         public static IEndpointRouteBuilder MapTipoReceptorNotificacionEndpoints(this IEndpointRouteBuilder routes) {
             RouteGroupBuilder group = routes.MapGroup("/TipoReceptorNotificacion");
-			group.MapObtenerClaims();
 			group.MapObtenerVigentes();
             group.MapObtenerPorVigencia();
 			group.MapCrearEndpoint();
@@ -17,17 +16,6 @@ namespace TanatosAPI.Endpoints {
 
 			return routes;
         }
-
-		private static IEndpointRouteBuilder MapObtenerClaims(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Claims", async (HttpContext ctx) => {
-				return Results.Ok(ctx.User.Claims
-					.Select(c => $"{c.Type} : {c.Value}")
-					.ToList()
-				);
-			}).RequireAuthorization().WithOpenApi();
-
-			return routes;
-		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
 			routes.MapGet("/", async (IHostEnvironment environment, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
