@@ -383,6 +383,13 @@ namespace Cdk
 			});
 
 			lambdaHttpApi.AddRoutes(new AddRoutesOptions {
+				Path = "/public/{proxy+}",
+				Methods = new[] { HttpMethod.ANY },
+				Integration = new HttpLambdaIntegration($"{appName}APIHttpLambdaIntegration", function),
+				Authorizer = new HttpNoneAuthorizer(),
+			});
+
+			lambdaHttpApi.AddRoutes(new AddRoutesOptions {
 				Path = "/{proxy+}",
 				Methods = [HttpMethod.ANY],
 				Integration = new HttpLambdaIntegration($"{appName}APIHttpLambdaIntegration", function),
