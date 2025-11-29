@@ -429,7 +429,7 @@ namespace Cdk
 				Methods = [HttpMethod.ANY],
 				Integration = new HttpLambdaIntegration($"{appName}APIHttpLambdaIntegration", function),
 				Authorizer = new HttpLambdaAuthorizer(
-					$"{appName}APILambdaAuthorizer",
+					$"{appName}APILambdaAuthorizer2",
 					authorizerFunction,
 					new HttpLambdaAuthorizerProps {
 						ResponseTypes = [ HttpLambdaResponseType.IAM ],
