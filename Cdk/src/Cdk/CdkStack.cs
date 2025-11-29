@@ -432,7 +432,7 @@ namespace Cdk
 					$"{appName}APILambdaAuthorizer",
 					authorizerFunction,
 					new HttpLambdaAuthorizerProps {
-						ResponseTypes = [ HttpLambdaResponseType.SIMPLE ],
+						ResponseTypes = [ HttpLambdaResponseType.IAM ],
 						IdentitySource = [],
 						ResultsCacheTtl = Duration.Seconds(0),
 					}	

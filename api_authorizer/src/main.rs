@@ -38,15 +38,37 @@ struct Jwk {
 // Lambda Authorizer
 #[derive(Deserialize)]
 struct AuthorizerRequest {
+    #[serde(rename = "routeArn")]
+    route_arn: String,
     #[serde(default)]
     headers: HashMap<String, String>,
 }
 
 #[derive(Debug, Serialize)]
 struct AuthorizerResponse {
-    #[serde(rename = "isAuthorized")]
-    is_authorized: bool,
+    #[serde(rename = "principalId")]
+    principal_id: String,
+    #[serde(rename = "policyDocument")]
+    policy_document: PolicyDocument,
     context: HashMap<String, String>
+}
+
+#[derive(Debug, Serialize)]
+struct PolicyDocument {
+    #[serde(rename = "Version")]
+    version: String,
+    #[serde(rename = "Statement")]
+    statement: Vec<Statement>
+}
+
+#[derive(Debug, Serialize)]
+struct Statement {
+    #[serde(rename = "Action")]
+    action: String,
+    #[serde(rename = "Effect")]
+    effect: String,
+    #[serde(rename = "Resource")]
+    resource: String,
 }
 
 lazy_static! {
@@ -105,9 +127,9 @@ async fn authorizer_handler(event: LambdaEvent<AuthorizerRequest>) -> Result<Aut
 
     // Se valida token JWT
     match validate_jwt(token, &jwks, &region, &pool_id) {
-        Ok(_) => {
+        Ok(claims) => {
             info!("El token es valido...");
-            Ok(allow())
+            Ok(allow(&event.payload.route_arn, &claims.sub))
         },
         Err(reason) => {
             error!("El token no es valido - Reason: {}", reason);
@@ -184,9 +206,17 @@ fn validate_jwt(token: &str, jwks: &Jwks, region: &str, pool_id: &str) -> Result
     Ok(token_data.claims)
 }
 
-fn allow() -> AuthorizerResponse {
+fn allow(route_arn: &str, principal_id: &str) -> AuthorizerResponse {
     AuthorizerResponse {
-        is_authorized: true,
+        principal_id: principal_id.to_string(),
+        policy_document: PolicyDocument {
+            version: "2012-10-17".to_string(),
+            statement: vec![Statement {
+                action: "execute-api:Invoke".to_string(),
+                effect: "Allow".to_string(),
+                resource: route_arn.to_string(),
+            }],
+        },
         context: HashMap::new()
     }
 }
@@ -196,7 +226,15 @@ fn deny(reason: &str) -> AuthorizerResponse {
     context.insert("reason".to_string(), reason.to_string());
 
     AuthorizerResponse {
-        is_authorized: false,
+        principal_id: "unauthorized".to_string(),
+        policy_document: PolicyDocument {
+            version: "2012-10-17".to_string(),
+            statement: vec![Statement {
+                action: "execute-api:Invoke".to_string(),
+                effect: "Deny".to_string(),
+                resource: "*".to_string(),
+            }],
+        },
         context,
     }
 }
@@ -216,7 +254,10 @@ mod tests {
         let mut headers: HashMap<String, String> = HashMap::new();
         headers.insert("authorization".to_string(), format!("Bearer {}", env::var("TEST_TOKEN").expect("No se ha seteado un TEST_TOKEN")));
 
-        let event: AuthorizerRequest = AuthorizerRequest { headers };
+        let event: AuthorizerRequest = AuthorizerRequest { 
+            headers,
+            route_arn: env::var("TEST_ROUTE_ARN").expect("No se ha seteado un TEST_ROUTE_ARN")
+        };
 
         let context: Context = Context::default();
         let lambda_event: LambdaEvent<AuthorizerRequest> = lambda_runtime::LambdaEvent::new(event, context);
@@ -232,7 +273,10 @@ mod tests {
         let mut headers: HashMap<String, String> = HashMap::new();
         headers.insert("cookie".to_string(), format!("access_token={}; Path=/; HttpOnly", env::var("TEST_TOKEN").expect("No se ha seteado un TEST_TOKEN")));
 
-        let event: AuthorizerRequest = AuthorizerRequest { headers };
+        let event: AuthorizerRequest = AuthorizerRequest { 
+            headers,
+            route_arn: env::var("TEST_ROUTE_ARN").expect("No se ha seteado un TEST_ROUTE_ARN")
+        };
 
         let context: Context = Context::default();
         let lambda_event: LambdaEvent<AuthorizerRequest> = lambda_runtime::LambdaEvent::new(event, context);
