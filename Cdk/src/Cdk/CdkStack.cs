@@ -44,6 +44,9 @@ namespace Cdk
 
 			string[] callbackUrls = System.Environment.GetEnvironmentVariable("CALLBACK_URLS").Split(",") ?? throw new ArgumentNullException("CALLBACK_URLS");
 			string[] logoutUrls = System.Environment.GetEnvironmentVariable("LOGOUT_URLS").Split(",") ?? throw new ArgumentNullException("LOGOUT_URLS");
+			string accessTokenValidityMinutes = System.Environment.GetEnvironmentVariable("ACCESS_TOKEN_VALIDITY_MINUTES") ?? throw new ArgumentNullException("ACCESS_TOKEN_VALIDITY_MINUTES");
+			string idTokenValidityMinutes = System.Environment.GetEnvironmentVariable("ID_TOKEN_VALIDITY_MINUTES") ?? throw new ArgumentNullException("ID_TOKEN_VALIDITY_MINUTES");
+			string refreshTokenValidityMinutes = System.Environment.GetEnvironmentVariable("REFRESH_TOKEN_VALIDITY_MINUTES") ?? throw new ArgumentNullException("REFRESH_TOKEN_VALIDITY_MINUTES");
 
 			// Para infraestructura...
 			string publishZip = System.Environment.GetEnvironmentVariable("PUBLISH_ZIP") ?? throw new ArgumentNullException("PUBLISH_ZIP");
@@ -158,7 +161,10 @@ namespace Cdk
 					LogoutUrls = logoutUrls,
 					Flows = new OAuthFlows { AuthorizationCodeGrant = true },
 					Scopes = [OAuthScope.OPENID, OAuthScope.EMAIL, OAuthScope.PROFILE]
-				}
+				},
+				AccessTokenValidity = Duration.Minutes(double.Parse(accessTokenValidityMinutes)),
+				IdTokenValidity = Duration.Minutes(double.Parse(idTokenValidityMinutes)),
+				RefreshTokenValidity = Duration.Minutes(double.Parse(refreshTokenValidityMinutes))
 			});
 
 			// string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.ico")));
@@ -352,6 +358,9 @@ namespace Cdk
 					{ "COGNITO_REGION", regionAws },
 					{ "COGNITO_BASE_URL", domain.BaseUrl() },
 					{ "COGNITO_USER_POOL_ID", userPool.UserPoolId },
+					{ "COGNITO_USER_POOL_CLIENT_ID", userPoolClient.UserPoolClientId },
+					{ "COGNITO_CALLBACK_URLS", string.Join(',', callbackUrls) },
+					{ "COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES", refreshTokenValidityMinutes }
 				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {
