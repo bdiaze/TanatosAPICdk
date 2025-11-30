@@ -31,10 +31,22 @@ builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi, new SourceGenera
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
-    c.SwaggerDoc("v1", new OpenApiInfo {
-        Title = "API Tánatos - Minimal API AoT",
-        Version = "v1"
-    });
+	c.SwaggerDoc("v1", new OpenApiInfo {
+		Title = "API Tánatos - Minimal API AoT",
+		Version = "v1"
+	});
+
+	c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
+		Name = "Authorization",
+		Description = "JWT Authorization header usando el esquema Bearer.\r\n\r\n" +
+					  "Ejemplo: \"Bearer eyJhbGciOi...\"",
+		In = ParameterLocation.Header,
+		Type = SecuritySchemeType.Http,
+		Scheme = "bearer",
+		BearerFormat = "JWT"
+	});
+
+	c.OperationFilter<AuthApplyOperationFilter>();
 });
 
 #region Singleton AWS Services
@@ -58,34 +70,48 @@ builder.Services.AddSingleton<DatabaseConnectionHelper>();
 builder.Services.AddSingleton<TipoReceptorNotificacionDao>();
 #endregion
 
-builder.Services
-	.AddDataProtection()
-	.DisableAutomaticKeyGeneration();
-
-if (builder.Environment.IsProduction()) {
-	string cognitoRegion = Environment.GetEnvironmentVariable("COGNITO_REGION") ?? throw new Exception($"No se ha configurado la variable de entorno COGNITO_REGION.");
-	string cognitoBaseUrl = Environment.GetEnvironmentVariable("COGNITO_BASE_URL") ?? throw new Exception($"No se ha configurado la variable de entorno COGNITO_BASE_URL.");
-	string cognitoUserPoolId = Environment.GetEnvironmentVariable("COGNITO_USER_POOL_ID") ?? throw new Exception($"No se ha configurado la variable de entorno COGNITO_USER_POOL_ID.");
-
-	builder.Services
-        .AddAuthentication("Bearer")
-		.AddJwtBearer("Bearer", options => {
-			options.Authority = cognitoBaseUrl;
-			options.MetadataAddress = $"https://cognito-idp.{cognitoRegion}.amazonaws.com/{cognitoUserPoolId}/.well-known/openid-configuration";
-			options.SaveToken = true;
-			options.TokenValidationParameters = new TokenValidationParameters {
-				ValidateIssuer = true,
-				ValidIssuer = cognitoBaseUrl,
-				ValidateAudience = false,
-				NameClaimType = ClaimTypes.NameIdentifier,
-				RoleClaimType = "cognito:groups",
-			};
-		});
+string cognitoRegion;
+string cognitoBaseUrl;
+string cognitoUserPoolId;
+if (builder.Environment.IsDevelopment()) {
+	cognitoRegion = builder.Configuration[$"VariableEntorno:COGNITO_REGION"] ?? throw new Exception($"Debes agregar el atributo VariableEntorno > COGNITO_REGION en el archivo appsettings.Development.json para ejecutar localmente.");
+	cognitoBaseUrl = builder.Configuration[$"VariableEntorno:COGNITO_BASE_URL"] ?? throw new Exception($"Debes agregar el atributo VariableEntorno > COGNITO_BASE_URL en el archivo appsettings.Development.json para ejecutar localmente.");
+	cognitoUserPoolId = builder.Configuration[$"VariableEntorno:COGNITO_USER_POOL_ID"] ?? throw new Exception($"Debes agregar el atributo VariableEntorno > COGNITO_USER_POOL_ID en el archivo appsettings.Development.json para ejecutar localmente.");
 } else {
-	builder.Services
-		.AddAuthentication("AllowAnonymous")
-		.AddScheme<AuthenticationSchemeOptions, AllowAnonymousAuthenticationHandler>("AllowAnonymous", options => { });
+	cognitoRegion = Environment.GetEnvironmentVariable("COGNITO_REGION") ?? throw new Exception($"No se ha configurado la variable de entorno COGNITO_REGION.");
+	cognitoBaseUrl = Environment.GetEnvironmentVariable("COGNITO_BASE_URL") ?? throw new Exception($"No se ha configurado la variable de entorno COGNITO_BASE_URL.");
+	cognitoUserPoolId = Environment.GetEnvironmentVariable("COGNITO_USER_POOL_ID") ?? throw new Exception($"No se ha configurado la variable de entorno COGNITO_USER_POOL_ID.");
 }
+
+builder.Services
+	.AddAuthentication("Bearer")
+	.AddJwtBearer("Bearer", options => {
+		options.Authority = cognitoBaseUrl;
+		options.MetadataAddress = $"https://cognito-idp.{cognitoRegion}.amazonaws.com/{cognitoUserPoolId}/.well-known/openid-configuration";
+		options.SaveToken = true;
+		options.TokenValidationParameters = new TokenValidationParameters {
+			ValidateIssuer = true,
+			ValidIssuer = cognitoBaseUrl,
+			ValidateAudience = false,
+			NameClaimType = ClaimTypes.NameIdentifier,
+			RoleClaimType = ClaimTypes.Role,
+		};
+		options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents {
+			OnTokenValidated = context => {
+				if (context.Principal!.Identity is not ClaimsIdentity identity) {
+					return Task.CompletedTask;
+				}
+
+				List<Claim> groupClaims = identity.FindAll("cognito:groups").ToList();
+				foreach (Claim claim in groupClaims) {
+					identity.AddClaim(new Claim(ClaimTypes.Role, claim.Value));
+					identity.RemoveClaim(claim);
+				}
+
+				return Task.CompletedTask;
+			}
+		};
+	});
 
 builder.Services.AddAuthorizationBuilder()
 	.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
@@ -101,6 +127,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapTipoReceptorNotificacionEndpoints();
+app.MapAuthEndpoints();
 
 app.Run();
 

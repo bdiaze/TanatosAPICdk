@@ -1,6 +1,8 @@
 ﻿using Amazon.Lambda.Core;
 using System;
 using System.Diagnostics;
+using System.Security.Claims;
+using System.Security.Principal;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Repositories;
 
@@ -18,7 +20,7 @@ namespace TanatosAPI.Endpoints {
         }
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/", async (IHostEnvironment environment, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
