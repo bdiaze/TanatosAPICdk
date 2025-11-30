@@ -46,6 +46,8 @@ namespace TanatosAPI.Endpoints {
 						{ "code_verifier", entrada.CodeVerifier }
 					};
 
+					LambdaLogger.Log("Parametros: " + JsonSerializer.Serialize(parametros, AppJsonSerializerContext.Default.IDictionaryStringString));
+
 					using HttpClient client = new();
 					HttpRequestMessage request = new(HttpMethod.Post, baseUrl + "/oauth2/token") { 
 						Content = new FormUrlEncodedContent(parametros)
