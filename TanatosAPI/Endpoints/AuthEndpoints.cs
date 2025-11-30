@@ -31,11 +31,11 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string baseUrl = variableEntorno.Obtener("COGNITO_BASE_URL");
 
-					string redirectUri;
-					if (environment.IsProduction()) {
-						redirectUri = variableEntorno.Obtener("COGNITO_CALLBACK_URLS").Split(',').Where(s => !s.Contains("localhost")).First();
-					} else {
+					string redirectUri = variableEntorno.Obtener("COGNITO_CALLBACK_URLS").Split(',').Where(s => !s.Contains("localhost")).First();
+					string apiMapping = $"/{variableEntorno.Obtener("API_GATEWAY_MAPPING_KEY")}";
+					if (environment.IsDevelopment()) {
 						redirectUri = variableEntorno.Obtener("COGNITO_CALLBACK_URLS").Split(',').Where(s => s.Contains("localhost")).First();
+						apiMapping = "";
 					}
 
 					Dictionary<string, string> parametros = new() {
@@ -45,8 +45,6 @@ namespace TanatosAPI.Endpoints {
 						{ "code", entrada.Code },
 						{ "code_verifier", entrada.CodeVerifier }
 					};
-
-					LambdaLogger.Log("Parametros: " + JsonSerializer.Serialize(parametros, AppJsonSerializerContext.Default.IDictionaryStringString));
 
 					using HttpClient client = new();
 					HttpRequestMessage request = new(HttpMethod.Post, baseUrl + "/oauth2/token") { 
@@ -69,7 +67,7 @@ namespace TanatosAPI.Endpoints {
 					DateTimeOffset refreshExpiration = DateTimeOffset.UtcNow.AddMinutes(double.Parse(variableEntorno.Obtener("COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES")));
 
 					httpResponse.Cookies.Append("refresh_token", tokens["refresh_token"].ToString(), new CookieOptions {
-						Path = "/public/Auth/RefreshAccessToken",
+						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
 						IsEssential = true,
 						Expires = refreshExpiration,
 						HttpOnly = true,
@@ -79,7 +77,7 @@ namespace TanatosAPI.Endpoints {
 
 					string csrfToken = Guid.NewGuid().ToString("N");
 					httpResponse.Cookies.Append("csrf_token", csrfToken, new CookieOptions {
-						Path = "/public/Auth/RefreshAccessToken",
+						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
 						IsEssential = true,
 						Expires = refreshExpiration,
 						HttpOnly = false,

@@ -360,7 +360,8 @@ namespace Cdk
 					{ "COGNITO_USER_POOL_ID", userPool.UserPoolId },
 					{ "COGNITO_USER_POOL_CLIENT_ID", userPoolClient.UserPoolClientId },
 					{ "COGNITO_CALLBACK_URLS", string.Join(',', callbackUrls) },
-					{ "COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES", refreshTokenValidityMinutes }
+					{ "COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES", refreshTokenValidityMinutes },
+					{ "API_GATEWAY_MAPPING_KEY", apiMappingKey }
 				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {
