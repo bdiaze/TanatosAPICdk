@@ -385,7 +385,6 @@ namespace Cdk
 				CorsPreflight = new CorsPreflightOptions {
 					AllowOrigins = allowedDomains.Split(","),
 					AllowMethods = [
-						CorsHttpMethod.OPTIONS,
 						CorsHttpMethod.GET,
 						CorsHttpMethod.POST,
 						CorsHttpMethod.PUT,
@@ -401,14 +400,24 @@ namespace Cdk
 
 			lambdaHttpApi.AddRoutes(new AddRoutesOptions {
 				Path = "/public/{proxy+}",
-				Methods = [HttpMethod.OPTIONS, HttpMethod.ANY],
+				Methods = [
+					HttpMethod.GET,
+					HttpMethod.POST,
+					HttpMethod.PUT,
+					HttpMethod.DELETE
+				],
 				Integration = new HttpLambdaIntegration($"{appName}APIHttpLambdaIntegration", function),
 				Authorizer = new HttpNoneAuthorizer(),
 			});
 
 			lambdaHttpApi.AddRoutes(new AddRoutesOptions {
 				Path = "/{proxy+}",
-				Methods = [HttpMethod.OPTIONS, HttpMethod.ANY],
+				Methods = [
+					HttpMethod.GET,
+					HttpMethod.POST,
+					HttpMethod.PUT,
+					HttpMethod.DELETE
+				],
 				Integration = new HttpLambdaIntegration($"{appName}APIHttpLambdaIntegration", function),
 				Authorizer = new HttpJwtAuthorizer(
 					$"{appName}APIHttpJwtAuthorizer",
