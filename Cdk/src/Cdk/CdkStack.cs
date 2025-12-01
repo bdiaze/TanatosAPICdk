@@ -386,7 +386,10 @@ namespace Cdk
 					AllowOrigins = allowedDomains.Split(","),
 					AllowMethods = [
 						CorsHttpMethod.OPTIONS,
-						CorsHttpMethod.ANY					
+						CorsHttpMethod.GET,
+						CorsHttpMethod.POST,
+						CorsHttpMethod.PUT,
+						CorsHttpMethod.DELETE
 					],
 					AllowHeaders = ["*"],
 					MaxAge = Duration.Days(10),
