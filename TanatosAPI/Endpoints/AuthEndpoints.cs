@@ -208,6 +208,31 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
+					// Se valida CSRF Token...
+					if (!httpRequest.Headers.TryGetValue("X-CSRF-Token", out StringValues headerCsrf)) {
+						LambdaLogger.Log(
+							$"[POST] - [Auth] - [LimpiarAuthCookies] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No se incluyo header X-CSRF-Token.");
+
+						return Results.BadRequest();
+					}
+
+					if (!httpRequest.Cookies.TryGetValue("csrf_token", out string? cookieCsrf)) {
+						LambdaLogger.Log(
+							$"[POST] - [Auth] - [LimpiarAuthCookies] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No se incluyo cookie csrf_token.");
+
+						return Results.BadRequest();
+					}
+
+					if (string.IsNullOrEmpty(headerCsrf) || string.IsNullOrEmpty(cookieCsrf) || headerCsrf != cookieCsrf) {
+						LambdaLogger.Log(
+							$"[POST] - [Auth] - [LimpiarAuthCookies] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status401Unauthorized}] - " +
+							$"No coinciden los valores del header X-CSRF-Token con la cookie csrf_token.");
+
+						return Results.Unauthorized();
+					}
+
 					string apiMapping = $"/{variableEntorno.Obtener("API_GATEWAY_MAPPING_KEY")}";
 					if (environment.IsDevelopment()) {
 						apiMapping = "";
@@ -242,7 +267,16 @@ namespace TanatosAPI.Endpoints {
 					return Results.Problem($"Ocurrio un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 
-			}).RequireAuthorization().WithOpenApi();
+			}).AllowAnonymous().WithOpenApi(op => {
+				op.Parameters.Add(new Microsoft.OpenApi.Models.OpenApiParameter {
+					Name = "X-CSRF-Token",
+					In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+					Required = true,
+					Description = "Token CSRF"
+				});
+
+				return op;
+			});
 
 			return routes;
 		}
