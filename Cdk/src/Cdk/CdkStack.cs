@@ -392,6 +392,7 @@ namespace Cdk
 						CorsHttpMethod.DELETE
 					],
 					AllowHeaders = ["*"],
+					AllowCredentials = true,
 					MaxAge = Duration.Days(10),
 				},
 				DisableExecuteApiEndpoint = true,
