@@ -18,10 +18,7 @@ namespace TanatosAPI.Endpoints {
 			RouteGroupBuilder publicGroup = routes.MapGroup("/public/Auth");
 			publicGroup.MapObtenerAccessToken();
 			publicGroup.MapRefreshAccessToken();
-
-			// Endpoints autenticados
-			RouteGroupBuilder privateGroup = routes.MapGroup("/Auth");
-			privateGroup.MapLimpiarAuthCookies();
+			publicGroup.MapLimpiarAuthCookies();
 
 			return routes;
 		}
