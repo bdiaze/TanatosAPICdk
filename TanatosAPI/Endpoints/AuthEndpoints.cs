@@ -20,6 +20,8 @@ namespace TanatosAPI.Endpoints {
 			publicGroup.MapRefreshAccessToken();
 
 			// Endpoints autenticados
+			RouteGroupBuilder privateGroup = routes.MapGroup("/Auth");
+			privateGroup.MapLimpiarAuthCookies();
 
 			return routes;
 		}
@@ -197,6 +199,50 @@ namespace TanatosAPI.Endpoints {
 
 				return op;
 			});
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapLimpiarAuthCookies(this IEndpointRouteBuilder routes) {
+			routes.MapPost("/LimpiarAuthCookies", async (HttpRequest httpRequest, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string apiMapping = $"/{variableEntorno.Obtener("API_GATEWAY_MAPPING_KEY")}";
+					if (environment.IsDevelopment()) {
+						apiMapping = "";
+					}
+
+					httpResponse.Cookies.Delete("refresh_token", new CookieOptions {
+						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
+						IsEssential = true,
+						HttpOnly = true,
+						Secure = true,
+						SameSite = SameSiteMode.None
+					});
+
+					httpResponse.Cookies.Delete("csrf_token", new CookieOptions {
+						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
+						IsEssential = true,
+						HttpOnly = false,
+						Secure = true,
+						SameSite = SameSiteMode.None
+					});
+
+					LambdaLogger.Log(
+							$"[POST] - [Auth] - [LimpiarAuthCookies] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+							$"Se limpian exitosamente las cookies auth.");
+
+					return Results.Ok();
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[POST] - [Auth] - [LimpiarAuthCookies] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrio un error al limpiar las cookies auth. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrio un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+
+			}).RequireAuthorization().WithOpenApi();
 
 			return routes;
 		}
