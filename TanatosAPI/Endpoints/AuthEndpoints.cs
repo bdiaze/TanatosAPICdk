@@ -31,17 +31,24 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string baseUrl = variableEntorno.Obtener("COGNITO_BASE_URL");
 
-					string redirectUri = variableEntorno.Obtener("COGNITO_CALLBACK_URLS").Split(',').Where(s => !s.Contains("localhost")).First();
+					// Se valida que el redirect uri se encuentre entre los permitidos...
+					if (!variableEntorno.Obtener("COGNITO_CALLBACK_URLS").Split(',').Contains(entrada.RedirectUri)) {
+						LambdaLogger.Log(
+							$"[POST] - [Auth] - [ObtenerAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No es válido el RedirectUri recibido.");
+
+						Results.BadRequest();
+					}
+
 					string apiMapping = $"/{variableEntorno.Obtener("API_GATEWAY_MAPPING_KEY")}";
 					if (environment.IsDevelopment()) {
-						redirectUri = variableEntorno.Obtener("COGNITO_CALLBACK_URLS").Split(',').Where(s => s.Contains("localhost")).First();
 						apiMapping = "";
 					}
 
 					Dictionary<string, string> parametros = new() {
 						{ "grant_type", "authorization_code" },
 						{ "client_id", variableEntorno.Obtener("COGNITO_USER_POOL_CLIENT_ID") },
-						{ "redirect_uri", redirectUri },
+						{ "redirect_uri", entrada.RedirectUri },
 						{ "code", entrada.Code },
 						{ "code_verifier", entrada.CodeVerifier }
 					};
@@ -54,7 +61,7 @@ namespace TanatosAPI.Endpoints {
 					// Se obtienen los tokens...
 					HttpResponseMessage response = await client.SendAsync(request);
 					if (!response.IsSuccessStatusCode) {
-						throw new Exception($"Ocurrió un error al obtener token. Status Code: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+						throw new Exception($"Ocurrio un error al obtener token. Status Code: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
 					}
 
 					// Se arma salida de access token con su expires in...
@@ -87,15 +94,15 @@ namespace TanatosAPI.Endpoints {
 
 					LambdaLogger.Log(
 						$"[POST] - [Auth] - [ObtenerAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Obtención exitosa del access token.");
+						$"Obtencion exitosa del access token.");
 
 					return Results.Ok(retorno);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [Auth] - [ObtenerAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error al obtener access token. " +
+						$"Ocurrio un error al obtener access token. " +
 						$"{ex}");
-					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+					return Results.Problem($"Ocurrio un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 			}).AllowAnonymous().WithOpenApi();
 
@@ -109,19 +116,35 @@ namespace TanatosAPI.Endpoints {
 				try {
 					// Se valida CSRF Token...
 					if (!httpRequest.Headers.TryGetValue("X-CSRF-Token", out StringValues headerCsrf)) {
+						LambdaLogger.Log(
+							$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No se incluyo header X-CSRF-Token.");
+
 						return Results.BadRequest();
 					}
 
 					if (!httpRequest.Cookies.TryGetValue("csrf_token", out string? cookieCsrf)) {
+						LambdaLogger.Log(
+							$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No se incluyo cookie csrf_token.");
+
 						return Results.BadRequest();
 					}
 
 					if (string.IsNullOrEmpty(headerCsrf) || string.IsNullOrEmpty(cookieCsrf) || headerCsrf != cookieCsrf) {
+						LambdaLogger.Log(
+							$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status401Unauthorized}] - " +
+							$"No coinciden los valores del header X-CSRF-Token con la cookie csrf_token.");
+
 						return Results.Unauthorized();
 					}
 
 					// Se valida que venga el refresh token...
 					if (!httpRequest.Cookies.TryGetValue("refresh_token", out string? refreshToken)) {
+						LambdaLogger.Log(
+							$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No se incluyo cookie refresh_token.");
+
 						return Results.BadRequest();
 					}
 
@@ -141,7 +164,7 @@ namespace TanatosAPI.Endpoints {
 					// Se obtienen los tokens...
 					HttpResponseMessage response = await client.SendAsync(request);
 					if (!response.IsSuccessStatusCode) {
-						throw new Exception($"Ocurrió un error al refrescar token. Status Code: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+						throw new Exception($"Ocurrio un error al refrescar token. Status Code: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
 					}
 
 					// Se arma salida de access token con su expires in...
@@ -159,9 +182,9 @@ namespace TanatosAPI.Endpoints {
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error al refrescar el access token. " +
+						$"Ocurrio un error al refrescar el access token. " +
 						$"{ex}");
-					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+					return Results.Problem($"Ocurrio un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 
 			}).AllowAnonymous().WithOpenApi(op => {
