@@ -401,14 +401,14 @@ namespace Cdk
 
 			lambdaHttpApi.AddRoutes(new AddRoutesOptions {
 				Path = "/public/{proxy+}",
-				Methods = new[] { HttpMethod.ANY },
+				Methods = [HttpMethod.OPTIONS, HttpMethod.ANY],
 				Integration = new HttpLambdaIntegration($"{appName}APIHttpLambdaIntegration", function),
 				Authorizer = new HttpNoneAuthorizer(),
 			});
 
 			lambdaHttpApi.AddRoutes(new AddRoutesOptions {
 				Path = "/{proxy+}",
-				Methods = [HttpMethod.ANY],
+				Methods = [HttpMethod.OPTIONS, HttpMethod.ANY],
 				Integration = new HttpLambdaIntegration($"{appName}APIHttpLambdaIntegration", function),
 				Authorizer = new HttpJwtAuthorizer(
 					$"{appName}APIHttpJwtAuthorizer",
