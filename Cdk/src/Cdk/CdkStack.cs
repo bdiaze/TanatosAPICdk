@@ -384,7 +384,10 @@ namespace Cdk
 				Description = $"HTTP API de {appName}",
 				CorsPreflight = new CorsPreflightOptions {
 					AllowOrigins = allowedDomains.Split(","),
-					AllowMethods = [CorsHttpMethod.ANY],
+					AllowMethods = [
+						CorsHttpMethod.OPTIONS,
+						CorsHttpMethod.ANY					
+					],
 					AllowHeaders = ["*"],
 					MaxAge = Duration.Days(10),
 				},
