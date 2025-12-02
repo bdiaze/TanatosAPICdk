@@ -68,11 +68,7 @@ namespace TanatosAPI.Endpoints {
 
 					// Se arma salida de access token con su expires in...
 					Dictionary<string, JsonElement> tokens = JsonSerializer.Deserialize(await response.Content.ReadAsStringAsync(), AppJsonSerializerContext.Default.DictionaryStringJsonElement)!;
-					SalAuthObtenerAccessToken retorno = new() {
-						AccessToken = tokens["access_token"].ToString(),
-						ExpiresIn = tokens["expires_in"].GetInt32()
-					};
-
+					
 					DateTimeOffset refreshExpiration = DateTimeOffset.UtcNow.AddMinutes(double.Parse(variableEntorno.Obtener("COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES")));
 
 					httpResponse.Cookies.Append("refresh_token", tokens["refresh_token"].ToString(), new CookieOptions {
@@ -89,10 +85,17 @@ namespace TanatosAPI.Endpoints {
 						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
 						IsEssential = true,
 						Expires = refreshExpiration,
-						HttpOnly = false,
+						HttpOnly = true,
 						Secure = true,
 						SameSite = SameSiteMode.None
 					});
+
+					SalAuthObtenerAccessToken retorno = new() {
+						AccessToken = tokens["access_token"].ToString(),
+						ExpiresIn = tokens["expires_in"].GetInt32(),
+						CsrfToken = csrfToken,
+						CsrfTokenExpiration = refreshExpiration
+					};
 
 					LambdaLogger.Log(
 						$"[POST] - [Auth] - [ObtenerAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
@@ -171,7 +174,7 @@ namespace TanatosAPI.Endpoints {
 
 					// Se arma salida de access token con su expires in...
 					Dictionary<string, JsonElement> tokens = JsonSerializer.Deserialize(await response.Content.ReadAsStringAsync(), AppJsonSerializerContext.Default.DictionaryStringJsonElement)!;
-					SalAuthObtenerAccessToken retorno = new() {
+					SalAuthRefreshAccessToken retorno = new() {
 						AccessToken = tokens["access_token"].ToString(),
 						ExpiresIn = tokens["expires_in"].GetInt32()
 					};

@@ -15,6 +15,7 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(List<TipoReceptorNotificacion>))]
 	[JsonSerializable(typeof(EntAuthObtenerAccessToken))]
 	[JsonSerializable(typeof(SalAuthObtenerAccessToken))]
+	[JsonSerializable(typeof(SalAuthRefreshAccessToken))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }
