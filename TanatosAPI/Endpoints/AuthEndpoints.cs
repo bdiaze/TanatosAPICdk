@@ -76,7 +76,7 @@ namespace TanatosAPI.Endpoints {
 						Path = "/",
 						IsEssential = true,
 						Expires = refreshExpiration,
-						HttpOnly = true,
+						//HttpOnly = true,
 						//Secure = true,
 						SameSite = SameSiteMode.None
 					});
@@ -87,7 +87,7 @@ namespace TanatosAPI.Endpoints {
 						Path = "/",
 						IsEssential = true,
 						Expires = refreshExpiration,
-						HttpOnly = true,
+						//HttpOnly = true,
 						//Secure = true,
 						SameSite = SameSiteMode.None
 					});
