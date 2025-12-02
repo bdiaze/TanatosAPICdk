@@ -390,7 +390,7 @@ namespace Cdk
 						CorsHttpMethod.PUT,
 						CorsHttpMethod.DELETE
 					],
-					AllowHeaders = ["*"],
+					AllowHeaders = ["Content-Type", "X-CSRF-Token", "Authorization"],
 					AllowCredentials = true,
 					MaxAge = Duration.Days(10),
 				},
