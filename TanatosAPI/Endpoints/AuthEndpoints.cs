@@ -18,21 +18,10 @@ namespace TanatosAPI.Endpoints {
 			RouteGroupBuilder publicGroup = routes.MapGroup("/public/Auth");
 			publicGroup.MapObtenerAccessToken();
 			publicGroup.MapRefreshAccessToken();
-			publicGroup.MapPrueba();
 
 			// Endpoints autenticados
 			RouteGroupBuilder privateGroup = routes.MapGroup("/Auth");
 			privateGroup.MapLimpiarAuthCookies();
-
-			return routes;
-		}
-
-		private static IEndpointRouteBuilder MapPrueba(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/", async () => {
-				return new Dictionary<string, string>() {
-					{ "Hola", "Mundo" }
-				};
-			}).AllowAnonymous().WithOpenApi();
 
 			return routes;
 		}
@@ -238,7 +227,7 @@ namespace TanatosAPI.Endpoints {
 					httpResponse.Cookies.Delete("csrf_token", new CookieOptions {
 						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
 						IsEssential = true,
-						HttpOnly = false,
+						HttpOnly = true,
 						Secure = true,
 						SameSite = SameSiteMode.None
 					});
