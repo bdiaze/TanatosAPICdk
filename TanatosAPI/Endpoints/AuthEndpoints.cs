@@ -83,23 +83,21 @@ namespace TanatosAPI.Endpoints {
 					DateTimeOffset refreshExpiration = DateTimeOffset.UtcNow.AddMinutes(double.Parse(variableEntorno.Obtener("COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES")));
 
 					httpResponse.Cookies.Append("refresh_token", tokens["refresh_token"].ToString(), new CookieOptions {
-						// Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
-						Path = "/",
+						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
 						IsEssential = true,
 						Expires = refreshExpiration,
-						//HttpOnly = true,
-						//Secure = true,
+						HttpOnly = true,
+						Secure = true,
 						SameSite = SameSiteMode.None
 					});
 
 					string csrfToken = Guid.NewGuid().ToString("N");
 					httpResponse.Cookies.Append("csrf_token", csrfToken, new CookieOptions {
-						// Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
-						Path = "/",
+						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
 						IsEssential = true,
 						Expires = refreshExpiration,
-						//HttpOnly = true,
-						//Secure = true,
+						HttpOnly = true,
+						Secure = true,
 						SameSite = SameSiteMode.None
 					});
 
