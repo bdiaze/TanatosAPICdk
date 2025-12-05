@@ -18,6 +18,8 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
 
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
@@ -67,7 +69,17 @@ builder.Services.AddSingleton<DatabaseConnectionHelper>();
 #endregion
 
 #region Singleton DAO
+builder.Services.AddSingleton<CategoriaNormaDao>();
+builder.Services.AddSingleton<DestinatarioNotificacionDao>();
+builder.Services.AddSingleton<InscripcionTemplateDao>();
+builder.Services.AddSingleton<TemplateDao>();
+builder.Services.AddSingleton<TemplateNormaDao>();
+builder.Services.AddSingleton<TemplateNormaFiscalizadorDao>();
+builder.Services.AddSingleton<TemplateNormaNotificacionDao>();
+builder.Services.AddSingleton<TipoFiscalizadorDao>();
+builder.Services.AddSingleton<TipoPeriodicidadDao>();
 builder.Services.AddSingleton<TipoReceptorNotificacionDao>();
+builder.Services.AddSingleton<TipoUnidadTiempoDao>();
 #endregion
 
 string cognitoRegion;
@@ -127,6 +139,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapTipoReceptorNotificacionEndpoints();
+app.MapTipoUnidadTiempoEndpoints();
 app.MapAuthEndpoints();
 
 app.Run();

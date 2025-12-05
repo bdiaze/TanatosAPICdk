@@ -56,9 +56,9 @@ namespace TanatosAPI.Entities.Models {
         public DateTimeOffset? FechaEliminacion { get; set; }
 
         [Required]
-        [Column("vigente")]
+        [Column("vigencia")]
         [Comment("Vigencia del destinatario.")]
-        public required bool Vigente { get; set; }
+        public required bool Vigencia { get; set; }
 
         [ForeignKey(nameof(IdTipoReceptor))]
         public TipoReceptorNotificacion? TipoReceptorNotificacion { get; set; }

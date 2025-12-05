@@ -77,9 +77,9 @@ namespace TanatosAPI.Endpoints {
 					if (existente != null) {
 						LambdaLogger.Log(
 							$"[POST] - [TipoReceptorNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El tipo de receptor de notificación ya existe - ID: {entrada.Id}.");
+							$"Ya existe un tipo de receptor de notificación con ID {entrada.Id}.");
 
-						return Results.BadRequest("El tipo de receptor de notificación ya existe.");
+						return Results.BadRequest($"Ya existe un tipo de receptor de notificación con ID {entrada.Id}.");
 					}
 
                     await tipoReceptorNotificacionDao.Insertar(entrada);
@@ -112,9 +112,9 @@ namespace TanatosAPI.Endpoints {
 					if (existente == null) {
 						LambdaLogger.Log(
 							$"[PUT] - [TipoReceptorNotificacion] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El tipo de receptor de notificación no existe - ID: {entrada.Id}.");
+							$"No existe el tipo de receptor de notificación con ID {entrada.Id}.");
 
-						return Results.BadRequest("El tipo de receptor de notificación no existe.");
+						return Results.BadRequest($"No existe el tipo de receptor de notificación con ID {entrada.Id}.");
 					}
 
 					await tipoReceptorNotificacionDao.Actualizar(entrada);
@@ -147,9 +147,9 @@ namespace TanatosAPI.Endpoints {
 					if (existente == null) {
 						LambdaLogger.Log(
 							$"[DELETE] - [TipoReceptorNotificacion] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El tipo de receptor de notificación no existe - ID: {id}.");
+							$"No existe el tipo de receptor de notificación con ID {id}.");
 
-						return Results.BadRequest("El tipo de receptor de notificación no existe.");
+						return Results.BadRequest($"No existe el tipo de receptor de notificación con ID {id}.");
 					}
 
 					await tipoReceptorNotificacionDao.Eliminar(id);

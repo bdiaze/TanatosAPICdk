@@ -357,5 +357,20 @@ BEGIN
     VALUES ('20251117144252_TablasTemplates', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251205214630_CorreccionVigencia') THEN
+    ALTER TABLE tanatos.destinatario_notificacion RENAME COLUMN vigente TO vigencia;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251205214630_CorreccionVigencia') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20251205214630_CorreccionVigencia', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 

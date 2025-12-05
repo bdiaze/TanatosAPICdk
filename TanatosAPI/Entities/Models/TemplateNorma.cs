@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TanatosAPI.Entities.Models {
 	[Table("template_norma", Schema = "tanatos")]
 	[Comment("Tabla que contiene las normas asociadas a un template.")]
+	[Index(nameof(IdTemplate))]
 	public class TemplateNorma {
 		[Required]
 		[Column("id")]
