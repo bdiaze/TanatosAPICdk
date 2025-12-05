@@ -74,10 +74,16 @@ namespace TanatosAPI.Endpoints {
                 try {
                     TipoReceptorNotificacion? existente = await tipoReceptorNotificacionDao.ObtenerPorId(entrada.Id);
 
-					if (existente == null) {
-                        await tipoReceptorNotificacionDao.Insertar(entrada);
-						existente = entrada;
-                    }
+					if (existente != null) {
+						LambdaLogger.Log(
+							$"[POST] - [TipoReceptorNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El tipo de receptor de notificación ya existe - ID: {entrada.Id}.");
+
+						return Results.BadRequest("El tipo de receptor de notificación ya existe.");
+					}
+
+                    await tipoReceptorNotificacionDao.Insertar(entrada);
+					existente = entrada;
 
                     LambdaLogger.Log(
                         $"[POST] - [TipoReceptorNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
@@ -103,10 +109,16 @@ namespace TanatosAPI.Endpoints {
 				try {
 					TipoReceptorNotificacion? existente = await tipoReceptorNotificacionDao.ObtenerPorId(entrada.Id);
 
-					if (existente != null) {
-						await tipoReceptorNotificacionDao.Actualizar(entrada);
-						existente = entrada;
+					if (existente == null) {
+						LambdaLogger.Log(
+							$"[PUT] - [TipoReceptorNotificacion] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El tipo de receptor de notificación no existe - ID: {entrada.Id}.");
+
+						return Results.BadRequest("El tipo de receptor de notificación no existe.");
 					}
+
+					await tipoReceptorNotificacionDao.Actualizar(entrada);
+					existente = entrada;
 
 					LambdaLogger.Log(
 						$"[PUT] - [TipoReceptorNotificacion] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
@@ -132,9 +144,15 @@ namespace TanatosAPI.Endpoints {
 				try {
 					TipoReceptorNotificacion? existente = await tipoReceptorNotificacionDao.ObtenerPorId(id);
 
-					if (existente != null) {
-						await tipoReceptorNotificacionDao.Eliminar(id);
+					if (existente == null) {
+						LambdaLogger.Log(
+							$"[DELETE] - [TipoReceptorNotificacion] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El tipo de receptor de notificación no existe - ID: {id}.");
+
+						return Results.BadRequest("El tipo de receptor de notificación no existe.");
 					}
+
+					await tipoReceptorNotificacionDao.Eliminar(id);
 
 					LambdaLogger.Log(
 						$"[DELETE] - [TipoReceptorNotificacion] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
