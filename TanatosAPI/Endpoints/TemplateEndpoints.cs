@@ -27,10 +27,10 @@ namespace TanatosAPI.Endpoints {
 					Template? retorno = await templateDao.ObtenerPorId(id);
 					if (retorno == null) {
 						LambdaLogger.Log(
-							$"[GET] - [Template] - [Obtener] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"[GET] - [Template] - [Obtener] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status404NotFound}] - " +
 							$"No existe el template con ID {id}.");
 
-						return Results.BadRequest($"No existe el template con ID {id}.");
+						return Results.NotFound($"No existe el template con ID {id}.");
 					}
 
 					retorno.TemplateNormas = await templateNormaDao.ObtenerPorTemplate(retorno.Id);
