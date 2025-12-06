@@ -5,19 +5,17 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TanatosAPI.Entities.Models {
 	[Table("template_norma", Schema = "tanatos")]
 	[Comment("Tabla que contiene las normas asociadas a un template.")]
-	[Index(nameof(IdTemplate))]
+	[PrimaryKey(nameof(IdTemplate), nameof(IdNorma))]
 	public class TemplateNorma {
-		[Required]
-		[Column("id")]
-		[Key]
-		[DatabaseGenerated(DatabaseGeneratedOption.None)]
-		[Comment("Identificador de la norma asociada al template.")]
-		public required long Id { get; set; }
-
 		[Required]
 		[Column("id_template")]
 		[Comment("Identificador del template al que pertenece la norma.")]
 		public required long IdTemplate { get; set; }
+
+		[Required]
+		[Column("id_norma")]
+		[Comment("Identificador de la norma asociada al template.")]
+		public required long IdNorma { get; set; }
 
 		[Required]
 		[Column("nombre")]
@@ -52,5 +50,22 @@ namespace TanatosAPI.Entities.Models {
 		public List<TemplateNormaFiscalizador>? TemplateNormaFiscalizadores { get; set; }
 
 		public List<TemplateNormaNotificacion>? TemplateNormaNotificaciones { get; set; }
+
+		public override int GetHashCode() {
+			return HashCode.Combine(IdTemplate, IdNorma, Nombre, Descripcion, IdTipoPeriodicidad, Multa, IdCategoriaNorma);
+		}
+
+		public override bool Equals(object? obj) {
+			if (obj is not TemplateNorma other) {
+				return false;
+			}
+			return IdTemplate == other.IdTemplate &&
+					IdNorma == other.IdNorma &&
+					Nombre == other.Nombre &&
+					Descripcion == other.Descripcion &&
+					IdTipoPeriodicidad == other.IdTipoPeriodicidad &&
+					Multa == other.Multa &&
+					IdCategoriaNorma == other.IdCategoriaNorma;
+		}
 	}
 }

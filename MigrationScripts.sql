@@ -372,5 +372,143 @@ BEGIN
     VALUES ('20251205214630_CorreccionVigencia', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_fiscalizador DROP CONSTRAINT "FK_template_norma_fiscalizador_template_norma_id_template_norma";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_notificacion DROP CONSTRAINT "FK_template_norma_notificacion_template_norma_id_template_norma";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_notificacion DROP CONSTRAINT "PK_template_norma_notificacion";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_fiscalizador DROP CONSTRAINT "PK_template_norma_fiscalizador";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma DROP CONSTRAINT "PK_template_norma";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    DROP INDEX tanatos."IX_template_norma_id_template";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_notificacion DROP COLUMN id_template_norma;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_fiscalizador DROP COLUMN id_template_norma;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma RENAME COLUMN id TO id_norma;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_notificacion ADD id_template bigint NOT NULL DEFAULT 0;
+    COMMENT ON COLUMN tanatos.template_norma_notificacion.id_template IS 'Identificador del template al que pertenece la norma.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_notificacion ADD id_norma bigint NOT NULL DEFAULT 0;
+    COMMENT ON COLUMN tanatos.template_norma_notificacion.id_norma IS 'Identificador de la norma asociada al template.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_fiscalizador ADD id_template bigint NOT NULL DEFAULT 0;
+    COMMENT ON COLUMN tanatos.template_norma_fiscalizador.id_template IS 'Identificador del template al que pertenece la norma.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_fiscalizador ADD id_norma bigint NOT NULL DEFAULT 0;
+    COMMENT ON COLUMN tanatos.template_norma_fiscalizador.id_norma IS 'Identificador de la norma asociada al template.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_notificacion ADD CONSTRAINT "PK_template_norma_notificacion" PRIMARY KEY (id_template, id_norma, id_tipo_unidad_tiempo_antelacion, cant_antelacion);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_fiscalizador ADD CONSTRAINT "PK_template_norma_fiscalizador" PRIMARY KEY (id_template, id_norma, id_tipo_fiscalizador);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma ADD CONSTRAINT "PK_template_norma" PRIMARY KEY (id_template, id_norma);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_fiscalizador ADD CONSTRAINT "FK_template_norma_fiscalizador_template_norma_id_template_id_n~" FOREIGN KEY (id_template, id_norma) REFERENCES tanatos.template_norma (id_template, id_norma) ON DELETE RESTRICT;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma_notificacion ADD CONSTRAINT "FK_template_norma_notificacion_template_norma_id_template_id_n~" FOREIGN KEY (id_template, id_norma) REFERENCES tanatos.template_norma (id_template, id_norma) ON DELETE RESTRICT;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20251206192642_CambioPKTemplateNorma', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 

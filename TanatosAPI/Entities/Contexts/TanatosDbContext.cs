@@ -51,7 +51,7 @@ namespace TanatosAPI.Entities.Contexts {
             modelBuilder.Entity<TemplateNormaFiscalizador>()
                 .HasOne(o => o.TemplateNorma)
                 .WithMany(c => c.TemplateNormaFiscalizadores)
-                .HasForeignKey(o => o.IdTemplateNorma)
+                .HasForeignKey(o => new { o.IdTemplate, o.IdNorma })
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TemplateNormaFiscalizador>()
@@ -63,7 +63,7 @@ namespace TanatosAPI.Entities.Contexts {
             modelBuilder.Entity<TemplateNormaNotificacion>()
                 .HasOne(o => o.TemplateNorma)
                 .WithMany(c => c.TemplateNormaNotificaciones)
-                .HasForeignKey(o => o.IdTemplateNorma)
+                .HasForeignKey(o => new { o.IdTemplate, o.IdNorma })
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TemplateNormaNotificacion>()

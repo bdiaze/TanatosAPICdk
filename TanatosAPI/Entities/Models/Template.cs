@@ -37,5 +37,21 @@ namespace TanatosAPI.Entities.Models {
 		public List<TemplateNorma>? TemplateNormas { get; set; }
 
 		public List<InscripcionTemplate>? InscripcionesTemplate { get; set; }
+
+		public override int GetHashCode() {
+			return HashCode.Combine(Id, IdTemplatePadre, Nombre, Descripcion, Vigencia);
+		}
+
+		public override bool Equals(object? obj) {
+			if (obj is not Template other) {
+				return false;
+			}
+
+			return Id == other.Id &&
+					IdTemplatePadre == other.IdTemplatePadre &&
+					Nombre == other.Nombre &&
+					Descripcion == other.Descripcion &&
+					Vigencia == other.Vigencia;
+		}
 	}
 }
