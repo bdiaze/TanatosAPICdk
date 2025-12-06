@@ -138,6 +138,9 @@ if (app.Environment.IsDevelopment()) {
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapCategoriaNormaEndpoints();
+app.MapTipoFiscalizadorEndpoints();
+app.MapTipoPeriodicidadEndpoints();
 app.MapTipoReceptorNotificacionEndpoints();
 app.MapTipoUnidadTiempoEndpoints();
 app.MapAuthEndpoints();
