@@ -9,11 +9,51 @@ namespace TanatosAPI.Endpoints {
 	public static class TemplateEndpoints {
 		public static IEndpointRouteBuilder MapTemplateEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/Template");
+			group.MapObtener();
 			group.MapObtenerVigentes();
 			group.MapObtenerPorVigencia();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
 			group.MapEliminarEndpoint();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapObtener(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/{id}", async (long id, IHostEnvironment environment, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					Template? retorno = await templateDao.ObtenerPorId(id);
+					if (retorno == null) {
+						LambdaLogger.Log(
+							$"[GET] - [Template] - [Obtener] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No existe el template con ID {id}.");
+
+						return Results.BadRequest($"No existe el template con ID {id}.");
+					}
+
+					retorno.TemplateNormas = await templateNormaDao.ObtenerPorTemplate(retorno.Id);
+					List<TemplateNormaFiscalizador> fiscalizadores = await templateNormaFiscalizadorDao.ObtenerPorTemplateNorma(retorno.Id);
+					List<TemplateNormaNotificacion> notificaciones = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(retorno.Id);
+					foreach (TemplateNorma norma in retorno.TemplateNormas) {
+						norma.TemplateNormaFiscalizadores = [.. fiscalizadores.Where(f => f.IdTemplate == norma.IdTemplate && f.IdNorma == norma.IdNorma)];
+						norma.TemplateNormaNotificaciones = [.. notificaciones.Where(n => n.IdTemplate == norma.IdTemplate && n.IdNorma == norma.IdNorma)];	
+					}
+
+					LambdaLogger.Log(
+						$"[GET] - [Template] - [Obtener] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa del template con ID {id}.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Template] - [Obtener] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener el template con ID {id}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization().WithOpenApi();
 
 			return routes;
 		}
