@@ -6,6 +6,14 @@ using TanatosAPI.Helpers;
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class TemplateDao(DatabaseConnectionHelper connectionHelper) {
+		public async Task<Template?> ObtenerPorId(long idTemplate) {
+			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+			return await connection.QueryFirstOrDefaultAsync<Template>(
+				"SELECT ID, ID_TEMPLATE_PADRE, NOMBRE, DESCRIPCION, VIGENCIA FROM TANATOS.TEMPLATE WHERE ID = @IDTEMPLATE",
+				new { idTemplate }
+			);
+		}
+
 		public async Task<List<Template>> ObtenerPorVigencia(bool vigencia) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return [.. await connection.QueryAsync<Template>(
@@ -14,28 +22,51 @@ namespace TanatosAPI.Repositories {
 			)];
 		}
 
-		public async Task Insertar(Template item) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			await connection.ExecuteAsync(
-				"INSERT INTO TANATOS.TEMPLATE(ID, ID_TEMPLATE_PADRE, NOMBRE, DESCRIPCION, VIGENCIA) VALUES (@ID, @IDTEMPLATEPADRE, @NOMBRE, @DESCRIPCION, @VIGENCIA)",
-				new { item.Id, item.IdTemplatePadre, item.Nombre, item.Descripcion, item.Vigencia }
-			);
+		public async Task Insertar(Template item, NpgsqlTransaction? transaction = null) {
+			string query = "INSERT INTO TANATOS.TEMPLATE(ID, ID_TEMPLATE_PADRE, NOMBRE, DESCRIPCION, VIGENCIA) VALUES (@ID, @IDTEMPLATEPADRE, @NOMBRE, @DESCRIPCION, @VIGENCIA)";
+			DynamicParameters param = new();
+			param.Add("ID", item.Id);
+			param.Add("IDTEMPLATEPADRE", item.IdTemplatePadre);
+			param.Add("NOMBRE", item.Nombre);
+			param.Add("DESCRIPCION", item.Descripcion);
+			param.Add("VIGENCIA", item.Vigencia);
+
+			if (transaction?.Connection != null) {
+				await transaction!.Connection!.ExecuteAsync(query, param, transaction);
+			} else {
+				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+				await connection.ExecuteAsync(query, param);
+			}
 		}
 
-		public async Task Actualizar(Template item) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			await connection.ExecuteAsync(
-				"UPDATE TANATOS.TEMPLATE SET ID_TEMPLATE_PADRE = @IDTEMPLATEPADRE, NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, VIGENCIA = @VIGENCIA WHERE ID = @ID",
-				new { item.IdTemplatePadre, item.Nombre, item.Descripcion, item.Vigencia, item.Id }
-			);
+		public async Task Actualizar(Template item, NpgsqlTransaction? transaction = null) {
+			string query = "UPDATE TANATOS.TEMPLATE SET ID_TEMPLATE_PADRE = @IDTEMPLATEPADRE, NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, VIGENCIA = @VIGENCIA WHERE ID = @ID";
+			DynamicParameters param = new();
+			param.Add("IDTEMPLATEPADRE", item.IdTemplatePadre);
+			param.Add("NOMBRE", item.Nombre);
+			param.Add("DESCRIPCION", item.Descripcion);
+			param.Add("VIGENCIA", item.Vigencia);
+			param.Add("ID", item.Id);
+
+			if (transaction?.Connection != null) {
+				await transaction!.Connection!.ExecuteAsync(query, param, transaction);
+			} else {
+				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+				await connection.ExecuteAsync(query, param);
+			}
 		}
 
-		public async Task Eliminar(long id) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			await connection.ExecuteAsync(
-				"DELETE FROM TANATOS.TEMPLATE WHERE ID = @ID",
-				new { id }
-			);
+		public async Task Eliminar(long id, NpgsqlTransaction? transaction = null) {
+			string query = "DELETE FROM TANATOS.TEMPLATE WHERE ID = @ID";
+			DynamicParameters param = new();
+			param.Add("ID", id);
+
+			if (transaction?.Connection != null) {
+				await transaction!.Connection!.ExecuteAsync(query, param, transaction);
+			} else {
+				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+				await connection.ExecuteAsync(query, param);
+			}
 		}
 	}
 }
