@@ -1,0 +1,337 @@
+﻿using Amazon.Lambda.Core;
+using Npgsql;
+using System.Diagnostics;
+using TanatosAPI.Entities.Models;
+using TanatosAPI.Helpers;
+using TanatosAPI.Repositories;
+
+namespace TanatosAPI.Endpoints {
+	public static class TemplateEndpoints {
+		public static IEndpointRouteBuilder MapTemplateEndpoints(this IEndpointRouteBuilder routes) {
+			RouteGroupBuilder group = routes.MapGroup("/Template");
+			group.MapObtenerVigentes();
+			group.MapObtenerPorVigencia();
+			group.MapCrearEndpoint();
+			group.MapActualizarEndpoint();
+			group.MapEliminarEndpoint();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, TemplateDao templateDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					List<Template> retorno = await templateDao.ObtenerPorVigencia(true);
+
+					LambdaLogger.Log(
+						$"[GET] - [Template] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de los templates vigentes - Cant. Registros: {retorno.Count}.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Template] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener los templates vigentes. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization().WithOpenApi();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/PorVigencia/{vigencia}", async (bool vigencia, IHostEnvironment environment, TemplateDao templateDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					List<Template> retorno = await templateDao.ObtenerPorVigencia(vigencia);
+
+					LambdaLogger.Log(
+						$"[GET] - [Template] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de los templates por vigencia - Vigencia: {vigencia} - Cant. Registros: {retorno.Count}.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Template] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener los templates por vigencia - Vigencia: {vigencia}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Admin").WithOpenApi();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPost("/", async (Template entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					// Se valida que no exista un template con el mismo ID...
+					Template? existente = await templateDao.ObtenerPorId(entrada.Id);
+					if (existente != null) {
+						LambdaLogger.Log(
+							$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Ya existe un template con ID {entrada.Id}.");
+
+						return Results.BadRequest($"Ya existe un template con ID {entrada.Id}.");
+					}
+
+					// Se valida que todas las normas pertenezcan al template...
+					if (entrada.TemplateNormas != null && entrada.TemplateNormas.Any(tn => tn.IdTemplate != entrada.Id)) {
+						LambdaLogger.Log(
+							$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No todas las normas pertenecen al template con ID {entrada.Id}.");
+
+						return Results.BadRequest($"No todas las normas pertenecen al template con ID {entrada.Id}.");
+					}
+
+					// Se valida que todas las relaciones de fiscalizadores y notificaciones pertenezcan a sus respectivas normas...
+					foreach (TemplateNorma templateNorma in entrada.TemplateNormas ?? []) {
+						if (templateNorma.TemplateNormaFiscalizadores != null && templateNorma.TemplateNormaFiscalizadores.Any(tnf => tnf.IdTemplate != templateNorma.IdTemplate || tnf.IdNorma != templateNorma.IdNorma)) {
+							LambdaLogger.Log(
+								$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"No todos los fiscalizadores pertenecen a la norma con ID Norma {templateNorma.IdNorma}.");
+
+							return Results.BadRequest($"No todos los fiscalizadores pertenecen a la norma con ID Norma {templateNorma.IdNorma}.");
+						}
+
+						if (templateNorma.TemplateNormaNotificaciones != null && templateNorma.TemplateNormaNotificaciones.Any(tnn => tnn.IdTemplate != templateNorma.IdTemplate || tnn.IdNorma != templateNorma.IdNorma)) {
+							LambdaLogger.Log(
+								$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"No todas las notificaciones pertenecen a la norma con ID Norma {templateNorma.IdNorma}.");
+
+							return Results.BadRequest($"No todas las notificaciones pertenecen a la norma con ID Norma {templateNorma.IdNorma}.");
+						}
+					}
+
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+
+					try {
+						// Se graba la cabecera del template...
+						await templateDao.Insertar(entrada, transaction);
+						foreach (TemplateNorma templateNorma in entrada.TemplateNormas ?? []) {
+							// Se graba cada norma del template...
+							await templateNormaDao.Insertar(templateNorma, transaction);
+
+							foreach (TemplateNormaFiscalizador templateNormaFiscalizador in templateNorma.TemplateNormaFiscalizadores ?? []) {
+								// Se graba cada fiscalizador de la norma...
+								await templateNormaFiscalizadorDao.Insertar(templateNormaFiscalizador, transaction);
+							}
+
+							foreach (TemplateNormaNotificacion templateNormaNotificacion in templateNorma.TemplateNormaNotificaciones ?? []) {
+								// Se graba cada notificación de la norma...
+								await templateNormaNotificacionDao.Insertar(templateNormaNotificacion, transaction);
+							}
+						}
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
+
+					LambdaLogger.Log(
+						$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Creación exitosa del template - ID: {entrada.Id}.");
+
+					return Results.Ok(existente);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error en la creación del template - ID: {entrada.Id}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Admin").WithOpenApi();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					// Se valida que exista el template...
+					Template? existente = await templateDao.ObtenerPorId(entrada.Id);
+					if (existente == null) {
+						LambdaLogger.Log(
+							$"[PUT] - [Template] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No existe el template con ID {entrada.Id}.");
+
+						return Results.BadRequest($"No existe el template con ID {entrada.Id}.");
+					}
+
+					// Se valida que todas las normas pertenezcan al template...
+					if (entrada.TemplateNormas != null && entrada.TemplateNormas.Any(tn => tn.IdTemplate != entrada.Id)) {
+						LambdaLogger.Log(
+							$"[PUT] - [Template] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No todas las normas pertenecen al template con ID {entrada.Id}.");
+
+						return Results.BadRequest($"No todas las normas pertenecen al template con ID {entrada.Id}.");
+					}
+
+					// Se valida que todas las relaciones de fiscalizadores y notificaciones pertenezcan a sus respectivas normas...
+					foreach (TemplateNorma templateNormaEntrada in entrada.TemplateNormas ?? []) {
+						if (templateNormaEntrada.TemplateNormaFiscalizadores != null && templateNormaEntrada.TemplateNormaFiscalizadores.Any(tnf => tnf.IdTemplate != templateNormaEntrada.IdTemplate || tnf.IdNorma != templateNormaEntrada.IdNorma)) {
+							LambdaLogger.Log(
+								$"[PUT] - [Template] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"No todos los fiscalizadores pertenecen a la norma con ID Norma {templateNormaEntrada.IdNorma}.");
+
+							return Results.BadRequest($"No todos los fiscalizadores pertenecen a la norma con ID Norma {templateNormaEntrada.IdNorma}.");
+						}
+
+						if (templateNormaEntrada.TemplateNormaNotificaciones != null && templateNormaEntrada.TemplateNormaNotificaciones.Any(tnn => tnn.IdTemplate != templateNormaEntrada.IdTemplate || tnn.IdNorma != templateNormaEntrada.IdNorma)) {
+							LambdaLogger.Log(
+								$"[PUT] - [Template] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"No todas las notificaciones pertenecen a la norma con ID Norma {templateNormaEntrada.IdNorma}.");
+
+							return Results.BadRequest($"No todas las notificaciones pertenecen a la norma con ID Norma {templateNormaEntrada.IdNorma}.");
+						}
+					}
+
+					existente.TemplateNormas = await templateNormaDao.ObtenerPorTemplate(existente.Id);
+					List<TemplateNormaFiscalizador> fiscalizadoresExistentes = await templateNormaFiscalizadorDao.ObtenerPorTemplateNorma(existente.Id);
+					List<TemplateNormaNotificacion> notificacionesExistentes = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(existente.Id);
+					foreach (TemplateNorma normaExistente in existente.TemplateNormas) {
+						normaExistente.TemplateNormaFiscalizadores = [.. fiscalizadoresExistentes.Where(f => f.IdTemplate == normaExistente.IdTemplate && f.IdNorma == normaExistente.IdNorma)];
+						normaExistente.TemplateNormaNotificaciones = [.. notificacionesExistentes.Where(n => n.IdTemplate == normaExistente.IdTemplate && n.IdNorma == normaExistente.IdNorma)];	
+					}
+
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+
+					try {
+						// Se eliminan las normas que ya no existen...
+						foreach(TemplateNorma normaEliminar in existente.TemplateNormas.Except(entrada.TemplateNormas ?? [])) {
+							await templateNormaFiscalizadorDao.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, null, transaction);
+							await templateNormaNotificacionDao.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, null, null, transaction);
+							await templateNormaDao.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, transaction);
+						}
+
+						
+						foreach(TemplateNorma normaEntrada in entrada.TemplateNormas ?? []) {
+							TemplateNorma? normaExistente = existente.TemplateNormas.FirstOrDefault(tn => tn.IdTemplate == normaEntrada.IdTemplate && tn.IdNorma == normaEntrada.IdNorma);
+
+							if (normaExistente != null) {
+								// Se eliminan los fiscalizadores que ya no existen...
+								foreach (TemplateNormaFiscalizador fiscalizadorEliminar in normaExistente.TemplateNormaFiscalizadores?.Except(normaEntrada.TemplateNormaFiscalizadores ?? []) ?? []) {
+									await templateNormaFiscalizadorDao.Eliminar(fiscalizadorEliminar.IdTemplate, fiscalizadorEliminar.IdNorma, fiscalizadorEliminar.IdTipoFiscalizador, transaction);
+								}
+
+								// Se eliminan las notificaciones que ya no existen...
+								foreach (TemplateNormaNotificacion notificacionEliminar in normaExistente.TemplateNormaNotificaciones?.Except(normaEntrada.TemplateNormaNotificaciones ?? []) ?? []) {
+									await templateNormaNotificacionDao.Eliminar(notificacionEliminar.IdTemplate, notificacionEliminar.IdNorma, notificacionEliminar.IdTipoUnidadTiempoAntelacion, notificacionEliminar.CantAntelacion, transaction);
+								}
+
+								// Se agregan los fiscalizadores faltantes...
+								foreach (TemplateNormaFiscalizador fiscalizadorCrear in normaEntrada.TemplateNormaFiscalizadores?.Except(normaExistente.TemplateNormaFiscalizadores ?? []) ?? []) {
+									await templateNormaFiscalizadorDao.Insertar(fiscalizadorCrear, transaction);
+								}
+
+								// Se agregan las notificaciones faltantes...
+								foreach (TemplateNormaNotificacion notificacionCrear in normaEntrada.TemplateNormaNotificaciones?.Except(normaExistente.TemplateNormaNotificaciones ?? []) ?? []) {
+									await templateNormaNotificacionDao.Insertar(notificacionCrear, transaction);
+								}
+
+								// Si existen diferencias entre la norma existente y la de entrada, se actualiza...
+								if (!normaEntrada.Equals(normaExistente)) {
+									await templateNormaDao.Actualizar(normaEntrada, transaction);
+								}
+							} else {
+								// Se crea la norma que no existía...
+								await templateNormaDao.Insertar(normaEntrada, transaction);
+
+								foreach (TemplateNormaFiscalizador templateNormaFiscalizador in normaEntrada.TemplateNormaFiscalizadores ?? []) {
+									// Se graba cada fiscalizador de la norma...
+									await templateNormaFiscalizadorDao.Insertar(templateNormaFiscalizador, transaction);
+								}
+								foreach (TemplateNormaNotificacion templateNormaNotificacion in normaEntrada.TemplateNormaNotificaciones ?? []) {
+									// Se graba cada notificación de la norma...
+									await templateNormaNotificacionDao.Insertar(templateNormaNotificacion, transaction);
+								}
+							}
+						}
+
+						// Se actualiza el template si existen diferencias...
+						if (!entrada.Equals(existente)) {
+							await templateDao.Actualizar(entrada, transaction);
+						}
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
+
+					LambdaLogger.Log(
+						$"[PUT] - [Template] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Actualización exitosa de la categoría de norma - ID: {entrada.Id}.");
+
+					return Results.Ok(existente);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [Template] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error en la actualización de la categoría de norma - ID: {entrada.Id}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Admin").WithOpenApi();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					Template? existente = await templateDao.ObtenerPorId(id);
+
+					if (existente == null) {
+						LambdaLogger.Log(
+							$"[DELETE] - [Template] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No existe el template con ID {id}.");
+
+						return Results.BadRequest($"No existe el template con ID {id}.");
+					}
+
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+
+					try {
+						await templateNormaNotificacionDao.Eliminar(id, null, null, null, transaction);
+						await templateNormaFiscalizadorDao.Eliminar(id, null, null, transaction);
+						await templateNormaDao.Eliminar(id, null, transaction);
+						await templateDao.Eliminar(id, transaction);
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
+
+					LambdaLogger.Log(
+						$"[DELETE] - [Template] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Eliminación exitosa del template - ID: {id}.");
+
+					return Results.Ok();
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[DELETE] - [Template] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error en la eliminación del template - ID: {id}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Admin").WithOpenApi();
+
+			return routes;
+		}
+	}
+}

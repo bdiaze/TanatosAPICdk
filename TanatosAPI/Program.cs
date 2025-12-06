@@ -144,6 +144,7 @@ app.MapTipoPeriodicidadEndpoints();
 app.MapTipoReceptorNotificacionEndpoints();
 app.MapTipoUnidadTiempoEndpoints();
 app.MapAuthEndpoints();
+app.MapTemplateEndpoints();
 
 app.Run();
 
