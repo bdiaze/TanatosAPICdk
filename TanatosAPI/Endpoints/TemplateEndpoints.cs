@@ -176,6 +176,8 @@ namespace TanatosAPI.Endpoints {
 						throw;
 					}
 
+					existente = entrada;
+
 					LambdaLogger.Log(
 						$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Creación exitosa del template - ID: {entrada.Id}.");
@@ -309,6 +311,8 @@ namespace TanatosAPI.Endpoints {
 						await transaction.RollbackAsync();
 						throw;
 					}
+
+					existente = entrada;
 
 					LambdaLogger.Log(
 						$"[PUT] - [Template] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
