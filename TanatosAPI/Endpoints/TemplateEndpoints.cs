@@ -249,7 +249,7 @@ namespace TanatosAPI.Endpoints {
 
 					try {
 						// Se eliminan las normas que ya no existen...
-						foreach(TemplateNorma normaEliminar in existente.TemplateNormas.Except(entrada.TemplateNormas ?? [])) {
+						foreach(TemplateNorma normaEliminar in existente.TemplateNormas.Where(tne => (!entrada.TemplateNormas?.Any(tni => tni.IdTemplate == tne.IdTemplate && tni.IdNorma == tne.IdNorma)) ?? true)) {
 							await templateNormaFiscalizadorDao.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, null, transaction);
 							await templateNormaNotificacionDao.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, null, null, transaction);
 							await templateNormaDao.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, transaction);
