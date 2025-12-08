@@ -130,6 +130,15 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"No todas las normas pertenecen al template con ID {entrada.Id}.");
 					}
 
+					// Además se valida que no existan normas con el ID duplicado...
+					if (entrada.TemplateNormas != null && entrada.TemplateNormas.GroupBy(n => n.IdNorma).Any(g => g.Count() > 1)) {
+						LambdaLogger.Log(
+							$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Existen normas con el mismo ID, este debe ser único.");
+
+						return Results.BadRequest($"Existen normas con el mismo ID, este debe ser único.");
+					}
+
 					// Se valida que todas las relaciones de fiscalizadores y notificaciones pertenezcan a sus respectivas normas...
 					foreach (TemplateNorma templateNorma in entrada.TemplateNormas ?? []) {
 						if (templateNorma.TemplateNormaFiscalizadores != null && templateNorma.TemplateNormaFiscalizadores.Any(tnf => tnf.IdTemplate != templateNorma.IdTemplate || tnf.IdNorma != templateNorma.IdNorma)) {
@@ -217,6 +226,15 @@ namespace TanatosAPI.Endpoints {
 							$"No todas las normas pertenecen al template con ID {entrada.Id}.");
 
 						return Results.BadRequest($"No todas las normas pertenecen al template con ID {entrada.Id}.");
+					}
+
+					// Además se valida que no existan normas con el ID duplicado...
+					if (entrada.TemplateNormas != null && entrada.TemplateNormas.GroupBy(n => n.IdNorma).Any(g => g.Count() > 1)) {
+						LambdaLogger.Log(
+							$"[PUT] - [Template] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Existen normas con el mismo ID, este debe ser único.");
+
+						return Results.BadRequest($"Existen normas con el mismo ID, este debe ser único.");
 					}
 
 					// Se valida que todas las relaciones de fiscalizadores y notificaciones pertenezcan a sus respectivas normas...
