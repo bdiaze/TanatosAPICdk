@@ -41,11 +41,17 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/PorVigencia/{vigencia}", async (bool vigencia, IHostEnvironment environment, TipoFiscalizadorDao tipoFiscalizadorDao) => {
+			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, TipoFiscalizadorDao tipoFiscalizadorDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					List<TipoFiscalizador> retorno = await tipoFiscalizadorDao.ObtenerPorVigencia(vigencia);
+					bool? vig = vigencia?.Trim().ToLowerInvariant() switch {
+						"true" => true,
+						"false" => false,
+						_ => null
+					};
+
+					List<TipoFiscalizador> retorno = await tipoFiscalizadorDao.ObtenerPorVigencia(vig);
 
 					LambdaLogger.Log(
 						$"[GET] - [TipoFiscalizador] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +

@@ -16,10 +16,10 @@ namespace TanatosAPI.Repositories {
             );
         }
 
-        public async Task<List<TipoReceptorNotificacion>> ObtenerPorVigencia(bool vigencia) {
+        public async Task<List<TipoReceptorNotificacion>> ObtenerPorVigencia(bool? vigencia) {
             await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
             return [.. await connection.QueryAsync<TipoReceptorNotificacion>(
-                "SELECT ID, NOMBRE, VIGENCIA FROM TANATOS.TIPO_RECEPTOR_NOTIFICACION WHERE VIGENCIA = @VIGENCIA",
+				"SELECT ID, NOMBRE, VIGENCIA FROM TANATOS.TIPO_RECEPTOR_NOTIFICACION WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
                 new { vigencia }
 			)];
 

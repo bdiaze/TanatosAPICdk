@@ -14,10 +14,10 @@ namespace TanatosAPI.Repositories {
 			);
 		}
 
-		public async Task<List<TipoUnidadTiempo>> ObtenerPorVigencia(bool vigencia) {
+		public async Task<List<TipoUnidadTiempo>> ObtenerPorVigencia(bool? vigencia) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return [.. await connection.QueryAsync<TipoUnidadTiempo>(
-				"SELECT ID, NOMBRE, CANT_SEGUNDOS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO WHERE VIGENCIA = @VIGENCIA",
+				"SELECT ID, NOMBRE, CANT_SEGUNDOS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
 				new { vigencia }
 			)];
 		}

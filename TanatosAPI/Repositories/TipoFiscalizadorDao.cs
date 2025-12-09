@@ -14,10 +14,10 @@ namespace TanatosAPI.Repositories {
 			);
 		}
 
-		public async Task<List<TipoFiscalizador>> ObtenerPorVigencia(bool vigencia) {
+		public async Task<List<TipoFiscalizador>> ObtenerPorVigencia(bool? vigencia) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return [.. await connection.QueryAsync<TipoFiscalizador>(
-				"SELECT ID, NOMBRE, NOMBRE_CORTO, VIGENCIA FROM TANATOS.TIPO_FISCALIZADOR WHERE VIGENCIA = @VIGENCIA",
+				"SELECT ID, NOMBRE, NOMBRE_CORTO, VIGENCIA FROM TANATOS.TIPO_FISCALIZADOR WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
 				new { vigencia }
 			)];
 		}

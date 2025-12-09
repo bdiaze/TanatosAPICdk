@@ -41,11 +41,17 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/PorVigencia/{vigencia}", async (bool vigencia, IHostEnvironment environment, CategoriaNormaDao categoriaNormaDao) => {
+			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, CategoriaNormaDao categoriaNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					List<CategoriaNorma> retorno = await categoriaNormaDao.ObtenerPorVigencia(vigencia);
+					bool? vig = vigencia?.Trim().ToLowerInvariant() switch {
+						"true" => true,
+						"false" => false,
+						_ => null
+					};
+
+					List<CategoriaNorma> retorno = await categoriaNormaDao.ObtenerPorVigencia(vig);
 
 					LambdaLogger.Log(
 						$"[GET] - [CategoriaNorma] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +

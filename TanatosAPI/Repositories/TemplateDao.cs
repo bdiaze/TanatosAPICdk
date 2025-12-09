@@ -14,10 +14,10 @@ namespace TanatosAPI.Repositories {
 			);
 		}
 
-		public async Task<List<Template>> ObtenerPorVigencia(bool vigencia) {
+		public async Task<List<Template>> ObtenerPorVigencia(bool? vigencia) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return [.. await connection.QueryAsync<Template>(
-				"SELECT ID, ID_TEMPLATE_PADRE, NOMBRE, DESCRIPCION, VIGENCIA FROM TANATOS.TEMPLATE WHERE VIGENCIA = @VIGENCIA",
+				"SELECT ID, ID_TEMPLATE_PADRE, NOMBRE, DESCRIPCION, VIGENCIA FROM TANATOS.TEMPLATE WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
 				new { vigencia }
 			)];
 		}
