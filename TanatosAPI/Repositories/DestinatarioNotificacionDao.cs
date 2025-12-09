@@ -9,7 +9,7 @@ namespace TanatosAPI.Repositories {
 		public async Task<List<DestinatarioNotificacion>> ObtenerPorSub(string sub, bool vigencia = true) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return [.. await connection.QueryAsync<DestinatarioNotificacion>(
-				"SELECT ID, SUB, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, INTENTOS_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION WHERE SUB = @SUB AND VIGENCIA = @VIGENCIA",
+				"SELECT ID, SUB, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION WHERE SUB = @SUB AND VIGENCIA = @VIGENCIA",
 				new { sub, vigencia }
 			)];
 		}
@@ -17,10 +17,10 @@ namespace TanatosAPI.Repositories {
 		public async Task<long> Insertar(DestinatarioNotificacion item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return await connection.ExecuteScalarAsync<long>(
-				"INSERT INTO TANATOS.DESTINATARIO_NOTIFICACION(SUB, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, INTENTOS_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
-				"VALUES (@SUB, @IDTIPORECEPTOR, @DESTINO, @CODIGOVALIDACION, @INTENTOSVALIDACION, @VALIDADO, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
+				"INSERT INTO TANATOS.DESTINATARIO_NOTIFICACION(SUB, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
+				"VALUES (@SUB, @IDTIPORECEPTOR, @DESTINO, @CODIGOVALIDACION, @VALIDADO, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
 				"RETURNING ID",
-				new { item.Sub, item.IdTipoReceptor, item.Destino, item.CodigoValidacion, item.IntentosValidacion, item.Validado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia }
+				new { item.Sub, item.IdTipoReceptor, item.Destino, item.CodigoValidacion, item.Validado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia }
 			);
 		}
 
@@ -28,9 +28,9 @@ namespace TanatosAPI.Repositories {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			await connection.ExecuteAsync(
 				"UPDATE TANATOS.DESTINATARIO_NOTIFICACION SET SUB = @SUB, ID_TIPO_RECEPTOR = @IDTIPORECEPTOR, DESTINO = @DESTINO, CODIGO_VALIDACION = @CODIGOVALIDACION, " +
-				"INTENTOS_VALIDACION = @INTENTOSVALIDACION, VALIDADO = @VALIDADO, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
+				"VALIDADO = @VALIDADO, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
 				"WHERE ID = @ID",
-				new { item.Sub, item.IdTipoReceptor, item.Destino, item.CodigoValidacion, item.IntentosValidacion, item.Validado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia, item.Id }
+				new { item.Sub, item.IdTipoReceptor, item.Destino, item.CodigoValidacion, item.Validado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia, item.Id }
 			);
 		}
 

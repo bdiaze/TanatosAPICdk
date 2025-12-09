@@ -510,5 +510,27 @@ BEGIN
     VALUES ('20251206192642_CambioPKTemplateNorma', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251209230256_DestCodValidUnique') THEN
+    ALTER TABLE tanatos.destinatario_notificacion DROP COLUMN intentos_validacion;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251209230256_DestCodValidUnique') THEN
+    CREATE UNIQUE INDEX "IX_destinatario_notificacion_codigo_validacion" ON tanatos.destinatario_notificacion (codigo_validacion);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251209230256_DestCodValidUnique') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20251209230256_DestCodValidUnique', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 

@@ -7,6 +7,7 @@ namespace TanatosAPI.Entities.Models {
     [Comment("Tabla que contiene los destinatarios de las notificaciones de un usuario.")]
     [Index(nameof(Sub), nameof(IdTipoReceptor))]
     [Index(nameof(IdTipoReceptor))]
+    [Index(nameof(CodigoValidacion), IsUnique = true)]
     public class DestinatarioNotificacion {
         [Required]
         [Column("id")]
@@ -34,11 +35,6 @@ namespace TanatosAPI.Entities.Models {
         [Column("codigo_validacion")]
         [Comment("Código generado para validar que el destinatario se suscribe a la notificación.")]
         public required string CodigoValidacion { get; set; }
-
-        [Required]
-        [Column("intentos_validacion")]
-        [Comment("Cantidad de intentos de validar al destinatario.")]
-        public required short IntentosValidacion { get; set; }
 
         [Required]
         [Column("validado")]
