@@ -42,14 +42,13 @@ namespace TanatosAPI.Entities.Models {
         public required bool Validado { get; set; }
 
         [Required]
-        [Column("fecha_creacion")]
+        [Column("fecha_creacion", TypeName = "timestamp with time zone")]
         [Comment("Fecha en que se creó el destinatario.")]
-        public required DateTimeOffset FechaCreacion { get; set; }
+        public required DateTime FechaCreacion { get; set; }
 
-        [Required]
-        [Column("fecha_eliminacion")]
+        [Column("fecha_eliminacion", TypeName = "timestamp with time zone")]
         [Comment("Fecha en que se eliminó el destinatario.")]
-        public DateTimeOffset? FechaEliminacion { get; set; }
+        public DateTime? FechaEliminacion { get; set; }
 
         [Required]
         [Column("vigencia")]

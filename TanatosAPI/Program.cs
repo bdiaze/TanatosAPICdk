@@ -66,6 +66,7 @@ builder.Services.AddSingleton<VariableEntornoHelper>();
 builder.Services.AddSingleton<SecretManagerHelper>();
 builder.Services.AddSingleton<ConnectionStringHelper>();
 builder.Services.AddSingleton<DatabaseConnectionHelper>();
+builder.Services.AddSingleton<CrytoHelper>();
 #endregion
 
 #region Singleton DAO
@@ -145,6 +146,7 @@ app.MapTipoReceptorNotificacionEndpoints();
 app.MapTipoUnidadTiempoEndpoints();
 app.MapAuthEndpoints();
 app.MapTemplateEndpoints();
+app.MapDestinatarioNotificacionEndpoints();
 
 app.Run();
 

@@ -18,7 +18,11 @@ namespace TanatosAPI.Entities.Models {
         [Comment("Nombre del tipo de receptor de notificación.")]
         public required string Nombre { get; set; }
 
-        [Required]
+		[Column("regex_validacion")]
+		[Comment("Regex para validar el tipo de receptor.")]
+		public string? RegexValidacion { get; set; }
+
+		[Required]
         [Column("vigencia")]
         [Comment("Vigencia del tipo de receptor de notificación.")]
         public required bool Vigencia { get; set; }

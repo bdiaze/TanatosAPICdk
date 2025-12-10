@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TanatosAPI.Entities.Contexts;
@@ -11,9 +12,11 @@ using TanatosAPI.Entities.Contexts;
 namespace TanatosAPI.Migrations
 {
     [DbContext(typeof(TanatosDbContext))]
-    partial class TanatosDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251209235931_QuitaRequireFechaEliminacion")]
+    partial class QuitaRequireFechaEliminacion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -80,12 +83,12 @@ namespace TanatosAPI.Migrations
                         .HasColumnName("destino")
                         .HasComment("Destino de la notificación. Puede ser un correo o un número de Whatsapp.");
 
-                    b.Property<DateTime>("FechaCreacion")
+                    b.Property<DateTimeOffset>("FechaCreacion")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fecha_creacion")
                         .HasComment("Fecha en que se creó el destinatario.");
 
-                    b.Property<DateTime?>("FechaEliminacion")
+                    b.Property<DateTimeOffset?>("FechaEliminacion")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fecha_eliminacion")
                         .HasComment("Fecha en que se eliminó el destinatario.");
@@ -385,11 +388,6 @@ namespace TanatosAPI.Migrations
                         .HasColumnType("text")
                         .HasColumnName("nombre")
                         .HasComment("Nombre del tipo de receptor de notificación.");
-
-                    b.Property<string>("RegexValidacion")
-                        .HasColumnType("text")
-                        .HasColumnName("regex_validacion")
-                        .HasComment("Regex para validar el tipo de receptor.");
 
                     b.Property<bool>("Vigencia")
                         .HasColumnType("boolean")

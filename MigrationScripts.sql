@@ -532,5 +532,36 @@ BEGIN
     VALUES ('20251209230256_DestCodValidUnique', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251209235931_QuitaRequireFechaEliminacion') THEN
+    ALTER TABLE tanatos.destinatario_notificacion ALTER COLUMN fecha_eliminacion DROP NOT NULL;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251209235931_QuitaRequireFechaEliminacion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20251209235931_QuitaRequireFechaEliminacion', '9.0.11');
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251210002949_RegexValidacionTipoReceptor') THEN
+    ALTER TABLE tanatos.tipo_receptor_notificacion ADD regex_validacion text;
+    COMMENT ON COLUMN tanatos.tipo_receptor_notificacion.regex_validacion IS 'Regex para validar el tipo de receptor.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251210002949_RegexValidacionTipoReceptor') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20251210002949_RegexValidacionTipoReceptor', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 

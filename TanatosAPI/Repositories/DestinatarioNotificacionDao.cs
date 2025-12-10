@@ -14,6 +14,13 @@ namespace TanatosAPI.Repositories {
 			)];
 		}
 
+		public async Task<DestinatarioNotificacion?> ObtenerPorCodigoValidacion(string codigoValidacion) {
+			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+			return await connection.QueryFirstOrDefaultAsync<DestinatarioNotificacion>(
+				"SELECT ID, SUB, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION WHERE CODIGO_VALIDACION = @CODIGOVALIDACION",
+				new { codigoValidacion }
+			);
+		}
 		public async Task<long> Insertar(DestinatarioNotificacion item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return await connection.ExecuteScalarAsync<long>(
