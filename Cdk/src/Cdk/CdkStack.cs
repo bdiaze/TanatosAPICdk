@@ -63,9 +63,15 @@ namespace Cdk
             // Variables de entorno de la lambda...
             string secretArnConnectionString = System.Environment.GetEnvironmentVariable("SECRET_ARN_CONNECTION_STRING") ?? throw new ArgumentNullException("SECRET_ARN_CONNECTION_STRING");
             string allowedDomains = System.Environment.GetEnvironmentVariable("ALLOWED_DOMAINS") ?? throw new ArgumentNullException("ALLOWED_DOMAINS");
+			string arnParameterHermesApiUrl = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_HERMES_API_URL") ?? throw new ArgumentNullException("ARN_PARAMETER_HERMES_API_URL");
+			string arnParameterHermesApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_HERMES_API_KEY_ID") ?? throw new ArgumentNullException("ARN_PARAMETER_HERMES_API_KEY_ID");
+			string hermesDeNombre = System.Environment.GetEnvironmentVariable("HERMES_DE_NOMBRE") ?? throw new ArgumentNullException("HERMES_DE_NOMBRE");
+			string hermesDeCorreo = System.Environment.GetEnvironmentVariable("HERMES_DE_CORREO") ?? throw new ArgumentNullException("HERMES_DE_CORREO");
+			string hermesAsuntoCrearDestinatario = System.Environment.GetEnvironmentVariable("HERMES_ASUNTO_CREAR_DESTINATARIO") ?? throw new ArgumentNullException("HERMES_ASUNTO_CREAR_DESTINATARIO");
+			string hermesCuerpoCrearDestinatario = System.Environment.GetEnvironmentVariable("HERMES_CUERPO_CREAR_DESTINATARIO") ?? throw new ArgumentNullException("HERMES_CUERPO_CREAR_DESTINATARIO");
 
-            // Variables de entorno para la lambda de ejecución inicial...
-            string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new ArgumentNullException("APP_SCHEMA_NAME");
+			// Variables de entorno para la lambda de ejecución inicial...
+			string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new ArgumentNullException("APP_SCHEMA_NAME");
             string initialCreationHandler = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_HANDLER") ?? throw new ArgumentNullException("INITIAL_CREATION_HANDLER");
             string initialCreationPublishZip = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_PUBLISH_ZIP") ?? throw new ArgumentNullException("INITIAL_CREATION_PUBLISH_ZIP");
             string migrationScript = System.Environment.GetEnvironmentVariable("MIGRATION_SCRIPT") ?? throw new ArgumentNullException("MIGRATION_SCRIPT");
@@ -313,8 +319,13 @@ namespace Cdk
                 RemovalPolicy = RemovalPolicy.DESTROY
             });
 
-            // Creación de role para la función lambda...
-            IRole roleLambda = new Role(this, $"{appName}APILambdaRole", new RoleProps {
+			// Se obtienen parámetros usados por la lambda...
+			IStringParameter parameterHermesApiUrl = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterHermesApiUrl", arnParameterHermesApiUrl);
+			IStringParameter parameterHermesApiKeyId = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterHermesApiKeyId", arnParameterHermesApiKeyId);
+
+
+			// Creación de role para la función lambda...
+			IRole roleLambda = new Role(this, $"{appName}APILambdaRole", new RoleProps {
                 RoleName = $"{appName}APILambdaRole",
                 Description = $"Role para API Lambda de {appName}",
                 AssumedBy = new ServicePrincipal("lambda.amazonaws.com"),
@@ -335,15 +346,24 @@ namespace Cdk
                                     Resources = [
                                         secretArnConnectionString,
                                     ],
-                                })
-                            ]
+                                }),
+								new PolicyStatement(new PolicyStatementProps{
+									Sid = $"{appName}AccessToApiKey",
+									Actions = [
+										"apigateway:GET"
+									],
+									Resources = [
+										$"arn:aws:apigateway:{this.Region}::/apikeys/{parameterHermesApiKeyId.StringValue}",
+									],
+								}),
+							]
                         })
                     }
                 }
             });
 
-            // Creación de la función lambda...
-            Function function = new(this, $"{appName}APILambdaFunction", new FunctionProps {
+			// Creación de la función lambda...
+			Function function = new(this, $"{appName}APILambdaFunction", new FunctionProps {
                 Runtime = Runtime.DOTNET_8,
                 Handler = handler,
                 Code = Code.FromAsset(publishZip),
@@ -361,7 +381,13 @@ namespace Cdk
 					{ "COGNITO_USER_POOL_CLIENT_ID", userPoolClient.UserPoolClientId },
 					{ "COGNITO_CALLBACK_URLS", string.Join(',', callbackUrls) },
 					{ "COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES", refreshTokenValidityMinutes },
-					{ "API_GATEWAY_MAPPING_KEY", apiMappingKey }
+					{ "API_GATEWAY_MAPPING_KEY", apiMappingKey },
+					{ "HERMES_API_URL", parameterHermesApiUrl.StringValue },
+					{ "HERMES_API_KEY_ID", parameterHermesApiKeyId.StringValue },
+					{ "HERMES_DE_NOMBRE", hermesDeNombre },
+					{ "HERMES_DE_CORREO", hermesDeCorreo },
+					{ "HERMES_ASUNTO_CREAR_DESTINATARIO", hermesAsuntoCrearDestinatario },
+					{ "HERMES_CUERPO_CREAR_DESTINATARIO", hermesCuerpoCrearDestinatario },
 				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {

@@ -1,3 +1,4 @@
+using Amazon.APIGateway;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.SecretsManager;
@@ -59,11 +60,20 @@ builder.Services.AddSingleton<IAmazonSecretsManager>(sp => {
     };
     return new AmazonSecretsManagerClient(config);
 });
+builder.Services.AddSingleton<IAmazonAPIGateway>(sp => {
+	AmazonAPIGatewayConfig config = new() {
+		ConnectTimeout = TimeSpan.FromSeconds(5),
+		Timeout = TimeSpan.FromSeconds(25)
+	};
+	return new AmazonAPIGatewayClient(config);
+});
 #endregion
 
 #region Singleton Helpers
 builder.Services.AddSingleton<VariableEntornoHelper>();
 builder.Services.AddSingleton<SecretManagerHelper>();
+builder.Services.AddSingleton<ApiKeyHelper>();
+builder.Services.AddSingleton<HermesHelper>();
 builder.Services.AddSingleton<ConnectionStringHelper>();
 builder.Services.AddSingleton<DatabaseConnectionHelper>();
 builder.Services.AddSingleton<CrytoHelper>();
