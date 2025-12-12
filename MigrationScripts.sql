@@ -563,5 +563,29 @@ BEGIN
     VALUES ('20251210002949_RegexValidacionTipoReceptor', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251212025425_CaducidadFechaValidacionDestinatario') THEN
+    ALTER TABLE tanatos.destinatario_notificacion ADD fecha_caducidad_codigo_validacion timestamp with time zone NOT NULL DEFAULT (NOW() + INTERVAL '24 hours');
+    COMMENT ON COLUMN tanatos.destinatario_notificacion.fecha_caducidad_codigo_validacion IS 'Fecha en que caduca el código de validación.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251212025425_CaducidadFechaValidacionDestinatario') THEN
+    ALTER TABLE tanatos.destinatario_notificacion ADD fecha_validacion timestamp with time zone;
+    COMMENT ON COLUMN tanatos.destinatario_notificacion.fecha_validacion IS 'Fecha en que se validó el destinatario.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251212025425_CaducidadFechaValidacionDestinatario') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20251212025425_CaducidadFechaValidacionDestinatario', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 

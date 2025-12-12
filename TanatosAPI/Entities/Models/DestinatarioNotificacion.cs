@@ -36,7 +36,17 @@ namespace TanatosAPI.Entities.Models {
         [Comment("Código generado para validar que el destinatario se suscribe a la notificación.")]
         public required string CodigoValidacion { get; set; }
 
-        [Required]
+		[Required]
+		[Column("fecha_caducidad_codigo_validacion")]
+		[Comment("Fecha en que caduca el código de validación.")]
+		public required DateTime FechaCaducidadCodigoValidacion { get; set; }
+
+
+		[Column("fecha_validacion", TypeName = "timestamp with time zone")]
+		[Comment("Fecha en que se validó el destinatario.")]
+		public DateTime? FechaValidacion { get; set; }
+
+		[Required]
         [Column("validado")]
         [Comment("Identifica si el destinatario ya fue validado.")]
         public required bool Validado { get; set; }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using System.Text.Json;
+using TanatosAPI.Endpoints;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -18,7 +19,11 @@ namespace TanatosAPI.Entities.Contexts {
                 .HasForeignKey(o => o.IdTipoReceptor)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<InscripcionTemplate>()
+            modelBuilder.Entity<DestinatarioNotificacion>()
+                .Property(x => x.FechaCaducidadCodigoValidacion)
+                .HasDefaultValueSql($"NOW() + INTERVAL '{DestinatarioNotificacionEndpoints.HORAS_CADUCIDAD_CODIGO_VALIDACION} hours'");
+
+			modelBuilder.Entity<InscripcionTemplate>()
                 .HasOne(o => o.Template)
                 .WithMany(c => c.InscripcionesTemplate)
                 .HasForeignKey(o => o.IdTemplate)
