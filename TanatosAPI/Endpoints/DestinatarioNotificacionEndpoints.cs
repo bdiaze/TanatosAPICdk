@@ -1,6 +1,7 @@
 ﻿using Amazon.Lambda.Core;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -11,11 +12,16 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
 	public static class DestinatarioNotificacionEndpoints {
+		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
+
 		public static IEndpointRouteBuilder MapDestinatarioNotificacionEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/DestinatarioNotificacion");
 			group.MapObtenerVigentes();
 			group.MapCrearEndpoint();
 			group.MapEliminarEndpoint();
+
+			RouteGroupBuilder publicGroup = routes.MapGroup("/public/DestinatarioNotificacion");
+			publicGroup.MapValidarEndpoint();
 
 			return routes;
 		}
@@ -57,7 +63,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CrytoHelper cryptoHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
+			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CrytoHelper cryptoHelper, VariableEntornoHelper variableEntorno, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, HermesHelper hermesHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -106,11 +112,29 @@ namespace TanatosAPI.Endpoints {
 						IdTipoReceptor = entrada.IdTipoReceptor,
 						Destino = entrada.Destino,
 						CodigoValidacion = cryptoHelper.HashSHA256(codigoValidacion),
+						FechaCaducidadCodigoValidacion = DateTime.UtcNow.AddHours(HORAS_CADUCIDAD_CODIGO_VALIDACION),
 						Validado = false,
 						FechaCreacion = DateTime.UtcNow,
 						Vigencia = true
 					};
 					nuevoDestinatario.Id = await destinatarioNotificacionDao.Insertar(nuevoDestinatario);
+
+					// Se envía mensaje con el código de validación...
+					if (nuevoDestinatario.IdTipoReceptor == 1) {
+						await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+							De = new DireccionCorreo() { 
+								Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
+								Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
+							},
+							Para = [
+								new DireccionCorreo() { 
+									Correo = nuevoDestinatario.Destino
+								}
+							],
+							Asunto = variableEntorno.Obtener("HERMES_ASUNTO_CREAR_DESTINATARIO"),
+							Cuerpo = variableEntorno.Obtener("HERMES_CUERPO_CREAR_DESTINATARIO").Replace("[CODIGO_VALIDACION]", WebUtility.UrlEncode(codigoValidacion)),
+						});
+					}
 
 					SalDestinatarioNotificacion retorno = new() {
 						Id = nuevoDestinatario.Id,
@@ -170,6 +194,54 @@ namespace TanatosAPI.Endpoints {
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 			}).RequireAuthorization().WithOpenApi();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapValidarEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPost("/Validar/", async (IHostEnvironment environment, EntDestinatarioNotificacionValidar entrada, DestinatarioNotificacionDao destinatarioNotificacionDao, CrytoHelper cryptoHelper) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					DestinatarioNotificacion? destinatarioNotificacion = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(entrada.CodigoValidacion));
+
+					// Se valida que el código exista...
+					if (destinatarioNotificacion == null) {
+						LambdaLogger.Log(
+							$"[POST] - [DestinatarioNotificacion] - [Validar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status404NotFound}] - " +
+							$"Código ingresado no es válido");
+
+						return Results.NotFound("Código ingresado no es válido");
+					}
+
+					// Si el código aun no ha sido validado, se verifica la fecha de caducidad y se valida...
+					if (!destinatarioNotificacion.Validado) {
+						if (destinatarioNotificacion.FechaCaducidadCodigoValidacion < DateTime.UtcNow) {
+							LambdaLogger.Log(
+								$"[POST] - [DestinatarioNotificacion] - [Validar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"El código ingresado ya caducó");
+
+							return Results.BadRequest("El código ingresado ya caducó");
+						} else {
+							destinatarioNotificacion.Validado = true;
+							destinatarioNotificacion.FechaValidacion = DateTime.UtcNow;
+							await destinatarioNotificacionDao.Actualizar(destinatarioNotificacion);
+						}
+					}
+
+					LambdaLogger.Log(
+						$"[POST] - [DestinatarioNotificacion] - [Validar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Se valida exitosamente el destinatario de notificación.");
+
+					return Results.Ok();
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[POST] - [DestinatarioNotificacion] - [Validar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al validar el destinatario de notificación. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).AllowAnonymous().WithOpenApi();
 
 			return routes;
 		}

@@ -39,6 +39,9 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(EntDestinatarioNotificacionCrear))]
 	[JsonSerializable(typeof(SalDestinatarioNotificacion))]
 	[JsonSerializable(typeof(List<SalDestinatarioNotificacion>))]
+	[JsonSerializable(typeof(EntDestinatarioNotificacionValidar))]
+	[JsonSerializable(typeof(EntHermesCorreoEnviar))]
+	[JsonSerializable(typeof(SalHermesCorreoEnviar))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }
