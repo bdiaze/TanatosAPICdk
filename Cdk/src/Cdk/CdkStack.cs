@@ -356,6 +356,15 @@ namespace Cdk
 										$"arn:aws:apigateway:{this.Region}::/apikeys/{parameterHermesApiKeyId.StringValue}",
 									],
 								}),
+								new PolicyStatement(new PolicyStatementProps{
+									Sid = $"{appName}AccessToCognito",
+									Actions = [
+										"cognito-idp:GetUser"
+									],
+									Resources = [
+										"*",
+									],
+								}),
 							]
                         })
                     }
