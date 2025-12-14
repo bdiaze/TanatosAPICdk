@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TanatosAPI.Entities.Contexts;
@@ -11,9 +12,11 @@ using TanatosAPI.Entities.Contexts;
 namespace TanatosAPI.Migrations
 {
     [DbContext(typeof(TanatosDbContext))]
-    partial class TanatosDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251214144425_TablaNegocio")]
+    partial class TablaNegocio
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -219,8 +222,7 @@ namespace TanatosAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Sub", "Nombre")
-                        .IsUnique();
+                    b.HasIndex("Sub");
 
                     b.ToTable("negocio", "tanatos", t =>
                         {

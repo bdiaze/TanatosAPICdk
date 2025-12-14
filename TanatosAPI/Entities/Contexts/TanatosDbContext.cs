@@ -99,5 +99,7 @@ namespace TanatosAPI.Entities.Contexts {
         public DbSet<TemplateNormaFiscalizador> TemplatesNormasFiscalizadores { get; set; }
 
         public DbSet<TemplateNormaNotificacion> TemplatesNormasNotificaciones { get; set; }
+
+        public DbSet<Negocio> NEgocios { get; set; }
     }
 }
