@@ -41,5 +41,7 @@ namespace TanatosAPI.Entities.Models {
 		[Column("vigencia")]
 		[Comment("Vigencia del negocio.")]
 		public required bool Vigencia { get; set; }
+
+		public List<DestinatarioNotificacion>? DestinatariosNotificaciones { get; set; }
 	}
 }

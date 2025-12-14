@@ -76,6 +76,12 @@ namespace TanatosAPI.Entities.Contexts {
                 .WithMany(c => c.TemplateNormasNotificacion)
                 .HasForeignKey(o => o.IdTipoUnidadTiempoAntelacion)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DestinatarioNotificacion>()
+                .HasOne(o => o.Negocio)
+                .WithMany(c => c.DestinatariosNotificaciones)
+                .HasForeignKey(o => o.IdNegocio)
+                .OnDelete(DeleteBehavior.Restrict);
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }

@@ -6,18 +6,18 @@ using TanatosAPI.Helpers;
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class DestinatarioNotificacionDao(DatabaseConnectionHelper connectionHelper) {
-		public async Task<List<DestinatarioNotificacion>> ObtenerPorSub(string sub, bool vigencia = true) {
+		public async Task<List<DestinatarioNotificacion>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return [.. await connection.QueryAsync<DestinatarioNotificacion>(
-				"SELECT ID, SUB, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION WHERE SUB = @SUB AND VIGENCIA = @VIGENCIA",
-				new { sub, vigencia }
+				"SELECT ID, SUB, ID_NEGOCIO, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION WHERE SUB = @SUB AND (ID_NEGOCIO = @IDNEGOCIO OR @IDNEGOCIO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
+				new { sub, idNegocio, vigencia }
 			)];
 		}
 
 		public async Task<DestinatarioNotificacion?> ObtenerPorCodigoValidacion(string codigoValidacion) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return await connection.QueryFirstOrDefaultAsync<DestinatarioNotificacion>(
-				"SELECT ID, SUB, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION WHERE CODIGO_VALIDACION = @CODIGOVALIDACION",
+				"SELECT ID, SUB, ID_NEGOCIO, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION WHERE CODIGO_VALIDACION = @CODIGOVALIDACION",
 				new { codigoValidacion }
 			);
 		}
@@ -25,20 +25,20 @@ namespace TanatosAPI.Repositories {
 		public async Task<long> Insertar(DestinatarioNotificacion item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return await connection.ExecuteScalarAsync<long>(
-				"INSERT INTO TANATOS.DESTINATARIO_NOTIFICACION(SUB, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
-				"VALUES (@SUB, @IDTIPORECEPTOR, @DESTINO, @CODIGOVALIDACION, @FECHACADUCIDADCODIGOVALIDACION, @FECHAVALIDACION, @VALIDADO, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
+				"INSERT INTO TANATOS.DESTINATARIO_NOTIFICACION(SUB, ID_NEGOCIO, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
+				"VALUES (@SUB, @IDNEGOCIO, @IDTIPORECEPTOR, @DESTINO, @CODIGOVALIDACION, @FECHACADUCIDADCODIGOVALIDACION, @FECHAVALIDACION, @VALIDADO, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
 				"RETURNING ID",
-				new { item.Sub, item.IdTipoReceptor, item.Destino, item.CodigoValidacion, item.FechaCaducidadCodigoValidacion, item.FechaValidacion, item.Validado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia }
+				new { item.Sub, item.IdNegocio, item.IdTipoReceptor, item.Destino, item.CodigoValidacion, item.FechaCaducidadCodigoValidacion, item.FechaValidacion, item.Validado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia }
 			);
 		}
 
 		public async Task Actualizar(DestinatarioNotificacion item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			await connection.ExecuteAsync(
-				"UPDATE TANATOS.DESTINATARIO_NOTIFICACION SET SUB = @SUB, ID_TIPO_RECEPTOR = @IDTIPORECEPTOR, DESTINO = @DESTINO, CODIGO_VALIDACION = @CODIGOVALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION = @FECHACADUCIDADCODIGOVALIDACION, " +
+				"UPDATE TANATOS.DESTINATARIO_NOTIFICACION SET SUB = @SUB, ID_NEGOCIO = @IDNEGOCIO, ID_TIPO_RECEPTOR = @IDTIPORECEPTOR, DESTINO = @DESTINO, CODIGO_VALIDACION = @CODIGOVALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION = @FECHACADUCIDADCODIGOVALIDACION, " +
 				"FECHA_VALIDACION = @FECHAVALIDACION, VALIDADO = @VALIDADO, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
 				"WHERE ID = @ID",
-				new { item.Sub, item.IdTipoReceptor, item.Destino, item.CodigoValidacion, item.FechaCaducidadCodigoValidacion, item.FechaValidacion, item.Validado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia, item.Id }
+				new { item.Sub, item.IdNegocio, item.IdTipoReceptor, item.Destino, item.CodigoValidacion, item.FechaCaducidadCodigoValidacion, item.FechaValidacion, item.Validado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia, item.Id }
 			);
 		}
 	}

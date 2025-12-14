@@ -28,7 +28,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ClaimsPrincipal user, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
+			routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -36,7 +36,7 @@ namespace TanatosAPI.Endpoints {
 
 					List<TipoReceptorNotificacion> receptores = await tipoReceptorNotificacionDao.ObtenerPorVigencia(null);
 
-					List<SalDestinatarioNotificacion> retorno = [.. (await destinatarioNotificacionDao.ObtenerPorSub(sub, true))
+					List<SalDestinatarioNotificacion> retorno = [.. (await destinatarioNotificacionDao.ObtenerPorSub(sub, idNegocio, true))
 						.Select(d => new SalDestinatarioNotificacion() {
 							Id = d.Id,
 							IdTipoReceptor = d.IdTipoReceptor,
@@ -71,8 +71,8 @@ namespace TanatosAPI.Endpoints {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
 					// Se valida que el usuario no tenga otro destinatario igual...
-					List<DestinatarioNotificacion> destVigentes = await destinatarioNotificacionDao.ObtenerPorSub(sub, true);
-					if (destVigentes.Any(d => d.Sub == sub && d.IdTipoReceptor == entrada.IdTipoReceptor && d.Destino == entrada.Destino)) {
+					List<DestinatarioNotificacion> destVigentes = await destinatarioNotificacionDao.ObtenerPorSub(sub, entrada.IdNegocio, true);
+					if (destVigentes.Any(d => d.Sub == sub && d.IdNegocio == entrada.IdNegocio && d.IdTipoReceptor == entrada.IdTipoReceptor && d.Destino == entrada.Destino)) {
 						LambdaLogger.Log(
 							$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"Ya tienes registrado dicho destinatario.");
@@ -110,6 +110,7 @@ namespace TanatosAPI.Endpoints {
 					DestinatarioNotificacion nuevoDestinatario = new() { 
 						Id = 0,
 						Sub = sub,
+						IdNegocio = entrada.IdNegocio,
 						IdTipoReceptor = entrada.IdTipoReceptor,
 						Destino = entrada.Destino,
 						CodigoValidacion = cryptoHelper.HashSHA256(codigoValidacion),

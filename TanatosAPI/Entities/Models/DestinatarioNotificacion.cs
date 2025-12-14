@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TanatosAPI.Entities.Models {
     [Table("destinatario_notificacion", Schema = "tanatos")]
     [Comment("Tabla que contiene los destinatarios de las notificaciones de un usuario.")]
-    [Index(nameof(Sub), nameof(IdTipoReceptor))]
+    [Index(nameof(Sub), nameof(IdNegocio), nameof(IdTipoReceptor))]
     [Index(nameof(IdTipoReceptor))]
     [Index(nameof(CodigoValidacion), IsUnique = true)]
     public class DestinatarioNotificacion {
@@ -20,6 +20,11 @@ namespace TanatosAPI.Entities.Models {
         [Column("sub")]
         [Comment("Usuario al que pertenece el destinatario de notificación.")]
         public required string Sub { get; set; }
+
+		[Required]
+		[Column("id_negocio")]
+		[Comment("Identificador del negocio del usuario.")]
+		public required long IdNegocio { get; set; }
 
         [Required]
         [Column("id_tipo_receptor")]
@@ -67,5 +72,8 @@ namespace TanatosAPI.Entities.Models {
 
         [ForeignKey(nameof(IdTipoReceptor))]
         public TipoReceptorNotificacion? TipoReceptorNotificacion { get; set; }
+
+        [ForeignKey(nameof(IdNegocio))]
+		public Negocio? Negocio { get; set; }
     }
 }

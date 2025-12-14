@@ -648,5 +648,49 @@ BEGIN
     VALUES ('20251214150946_UniqueNegocio', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251214212505_RelacionNegocioDestinatario') THEN
+    DROP INDEX tanatos."IX_destinatario_notificacion_sub_id_tipo_receptor";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251214212505_RelacionNegocioDestinatario') THEN
+    ALTER TABLE tanatos.destinatario_notificacion ADD id_negocio bigint NOT NULL DEFAULT 0;
+    COMMENT ON COLUMN tanatos.destinatario_notificacion.id_negocio IS 'Identificador del negocio del usuario.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251214212505_RelacionNegocioDestinatario') THEN
+    CREATE INDEX "IX_destinatario_notificacion_id_negocio" ON tanatos.destinatario_notificacion (id_negocio);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251214212505_RelacionNegocioDestinatario') THEN
+    CREATE INDEX "IX_destinatario_notificacion_sub_id_negocio_id_tipo_receptor" ON tanatos.destinatario_notificacion (sub, id_negocio, id_tipo_receptor);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251214212505_RelacionNegocioDestinatario') THEN
+    ALTER TABLE tanatos.destinatario_notificacion ADD CONSTRAINT "FK_destinatario_notificacion_negocio_id_negocio" FOREIGN KEY (id_negocio) REFERENCES tanatos.negocio (id) ON DELETE RESTRICT;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251214212505_RelacionNegocioDestinatario') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20251214212505_RelacionNegocioDestinatario', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 
