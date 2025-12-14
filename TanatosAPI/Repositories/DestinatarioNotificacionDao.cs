@@ -21,6 +21,7 @@ namespace TanatosAPI.Repositories {
 				new { codigoValidacion }
 			);
 		}
+
 		public async Task<long> Insertar(DestinatarioNotificacion item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return await connection.ExecuteScalarAsync<long>(
@@ -38,14 +39,6 @@ namespace TanatosAPI.Repositories {
 				"FECHA_VALIDACION = @FECHAVALIDACION, VALIDADO = @VALIDADO, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
 				"WHERE ID = @ID",
 				new { item.Sub, item.IdTipoReceptor, item.Destino, item.CodigoValidacion, item.FechaCaducidadCodigoValidacion, item.FechaValidacion, item.Validado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia, item.Id }
-			);
-		}
-
-		public async Task Eliminar(long id) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			await connection.ExecuteAsync(
-				"DELETE FROM TANATOS.DESTINATARIO_NOTIFICACION WHERE ID = @ID",
-				new { id }
 			);
 		}
 	}
