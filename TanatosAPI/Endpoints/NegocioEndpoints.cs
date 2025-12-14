@@ -12,6 +12,7 @@ namespace TanatosAPI.Endpoints {
 			RouteGroupBuilder group = routes.MapGroup("/Negocio");
 			group.MapObtenerVigentes();
 			group.MapCrearEndpoint();
+			group.MapActualizarEndpoint();
 			group.MapEliminarEndpoint();
 
 			return routes;
@@ -94,6 +95,54 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[POST] - [Negocio] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error en la creación del negocio. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization().WithOpenApi();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPut("/", async (EntNegocioActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					entrada.Nombre = entrada.Nombre.Trim();
+					entrada.Direccion = entrada.Direccion?.Trim();
+
+					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+
+					Negocio? existente = (await negocioDao.ObtenerPorSub(sub, true)).FirstOrDefault(n => n.Id == entrada.Id);
+
+					if (existente == null) {
+						LambdaLogger.Log(
+							$"[PUT] - [Negocio] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No existe el negocio con ID {entrada.Id}.");
+
+						return Results.BadRequest($"No existe el negocio con ID {entrada.Id}.");
+					}
+
+					existente.Nombre = entrada.Nombre;
+					existente.Direccion = entrada.Direccion;
+
+					await negocioDao.Actualizar(existente);
+
+					SalNegocio retorno = new() {
+						Id = existente.Id,
+						Nombre = existente.Nombre,
+						Direccion = existente.Direccion,
+					};
+
+					LambdaLogger.Log(
+						$"[PUT] - [Negocio] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Actualización exitosa del negocio - ID: {entrada.Id}.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [Negocio] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error en la actualización del negocio - ID: {entrada.Id}. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
