@@ -11,6 +11,8 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(ProblemDetails))]
     [JsonSerializable(typeof(Dictionary<string, string>))]
 	[JsonSerializable(typeof(Dictionary<string, JsonElement>))]
+	[JsonSerializable(typeof(EntHermesCorreoEnviar))]
+	[JsonSerializable(typeof(SalHermesCorreoEnviar))]
 	[JsonSerializable(typeof(EntAuthObtenerAccessToken))]
 	[JsonSerializable(typeof(SalAuthObtenerAccessToken))]
 	[JsonSerializable(typeof(SalAuthRefreshAccessToken))]
@@ -40,8 +42,9 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(SalDestinatarioNotificacion))]
 	[JsonSerializable(typeof(List<SalDestinatarioNotificacion>))]
 	[JsonSerializable(typeof(EntDestinatarioNotificacionValidar))]
-	[JsonSerializable(typeof(EntHermesCorreoEnviar))]
-	[JsonSerializable(typeof(SalHermesCorreoEnviar))]
+	[JsonSerializable(typeof(EntNegocioCrear))]
+	[JsonSerializable(typeof(SalNegocio))]
+	[JsonSerializable(typeof(List<SalNegocio>))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }

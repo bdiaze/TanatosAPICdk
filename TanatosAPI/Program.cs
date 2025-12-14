@@ -100,6 +100,7 @@ builder.Services.AddSingleton<TipoFiscalizadorDao>();
 builder.Services.AddSingleton<TipoPeriodicidadDao>();
 builder.Services.AddSingleton<TipoReceptorNotificacionDao>();
 builder.Services.AddSingleton<TipoUnidadTiempoDao>();
+builder.Services.AddSingleton<NegocioDao>();
 #endregion
 
 string cognitoRegion;
@@ -166,6 +167,7 @@ app.MapTipoUnidadTiempoEndpoints();
 app.MapAuthEndpoints();
 app.MapTemplateEndpoints();
 app.MapDestinatarioNotificacionEndpoints();
+app.MapNegocioEndpoints();
 
 app.Run();
 
