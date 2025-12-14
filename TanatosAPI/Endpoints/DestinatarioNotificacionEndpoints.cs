@@ -152,7 +152,7 @@ namespace TanatosAPI.Endpoints {
 								Correo = nuevoDestinatario.Destino
 							}
 							],
-							Asunto = "¡[NOMBRE_USUARIO] te añadió como destinatario de notificaciones de su negocio [NOMBRE_NEGOCIO]!"
+							Asunto = "¡[NOMBRE_USUARIO] te añadió como destinatario de notificaciones de [NOMBRE_NEGOCIO]!"
 										.Replace("[NOMBRE_USUARIO]", atributosUsuario["given_name"])
 										.Replace("[NOMBRE_NEGOCIO]", negocio.Nombre),
 							Cuerpo = strTemplateCorreo
