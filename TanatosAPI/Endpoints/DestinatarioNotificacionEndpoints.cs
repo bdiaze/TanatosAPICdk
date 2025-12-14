@@ -1,4 +1,5 @@
 ﻿using Amazon.Lambda.Core;
+using Microsoft.AspNetCore.Authentication;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Net;
@@ -63,7 +64,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CrytoHelper cryptoHelper, VariableEntornoHelper variableEntorno, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, HermesHelper hermesHelper) => {
+			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CrytoHelper cryptoHelper, VariableEntornoHelper variableEntorno, CognitoHelper cognitoHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, HermesHelper hermesHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -121,18 +122,30 @@ namespace TanatosAPI.Endpoints {
 
 					// Se envía mensaje con el código de validación...
 					if (nuevoDestinatario.IdTipoReceptor == 1) {
+						Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
+
+						string strTemplateCorreo;
+						if (environment.IsProduction()) {
+							strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "ValidacionDestinatario.html"));
+						} else {
+							strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "ValidacionDestinatario.html"));
+						}
+
 						await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
-							De = new DireccionCorreo() { 
+							De = new DireccionCorreo() {
 								Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
 								Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
 							},
 							Para = [
-								new DireccionCorreo() { 
-									Correo = nuevoDestinatario.Destino
-								}
+								new DireccionCorreo() {
+								Correo = nuevoDestinatario.Destino
+							}
 							],
-							Asunto = variableEntorno.Obtener("HERMES_ASUNTO_CREAR_DESTINATARIO"),
-							Cuerpo = variableEntorno.Obtener("HERMES_CUERPO_CREAR_DESTINATARIO").Replace("[CODIGO_VALIDACION]", WebUtility.UrlEncode(codigoValidacion)),
+							Asunto = "¡[NOMBRE_USUARIO] te añadió como destinatario de notificaciones de su negocio!"
+										.Replace("[NOMBRE_USUARIO]", atributosUsuario["given_name"]),
+							Cuerpo = strTemplateCorreo
+										.Replace("[NOMBRE_USUARIO]", WebUtility.HtmlEncode(atributosUsuario["given_name"]))
+										.Replace("[CODIGO_VALIDACION]", WebUtility.UrlEncode(codigoValidacion)),
 						});
 					}
 
@@ -206,7 +219,7 @@ namespace TanatosAPI.Endpoints {
 					DestinatarioNotificacion? destinatarioNotificacion = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(entrada.CodigoValidacion));
 
 					// Se valida que el código exista...
-					if (destinatarioNotificacion == null) {
+					if (destinatarioNotificacion == null || !destinatarioNotificacion.Vigencia) {
 						LambdaLogger.Log(
 							$"[POST] - [DestinatarioNotificacion] - [Validar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status404NotFound}] - " +
 							$"Código ingresado no es válido");

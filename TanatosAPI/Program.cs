@@ -1,4 +1,5 @@
 using Amazon.APIGateway;
+using Amazon.CognitoIdentityProvider;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.SecretsManager;
@@ -67,12 +68,20 @@ builder.Services.AddSingleton<IAmazonAPIGateway>(sp => {
 	};
 	return new AmazonAPIGatewayClient(config);
 });
+builder.Services.AddSingleton<IAmazonCognitoIdentityProvider>(sp => {
+	AmazonCognitoIdentityProviderConfig config = new() {
+		ConnectTimeout = TimeSpan.FromSeconds(5),
+		Timeout = TimeSpan.FromSeconds(25)
+	};
+	return new AmazonCognitoIdentityProviderClient(config);
+});
 #endregion
 
 #region Singleton Helpers
 builder.Services.AddSingleton<VariableEntornoHelper>();
 builder.Services.AddSingleton<SecretManagerHelper>();
 builder.Services.AddSingleton<ApiKeyHelper>();
+builder.Services.AddSingleton<CognitoHelper>();
 builder.Services.AddSingleton<HermesHelper>();
 builder.Services.AddSingleton<ConnectionStringHelper>();
 builder.Services.AddSingleton<DatabaseConnectionHelper>();
@@ -125,7 +134,7 @@ builder.Services
 					return Task.CompletedTask;
 				}
 
-				List<Claim> groupClaims = identity.FindAll("cognito:groups").ToList();
+				List<Claim> groupClaims = [.. identity.FindAll("cognito:groups")];
 				foreach (Claim claim in groupClaims) {
 					identity.AddClaim(new Claim(ClaimTypes.Role, claim.Value));
 					identity.RemoveClaim(claim);

@@ -67,9 +67,7 @@ namespace Cdk
 			string arnParameterHermesApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_HERMES_API_KEY_ID") ?? throw new ArgumentNullException("ARN_PARAMETER_HERMES_API_KEY_ID");
 			string hermesDeNombre = System.Environment.GetEnvironmentVariable("HERMES_DE_NOMBRE") ?? throw new ArgumentNullException("HERMES_DE_NOMBRE");
 			string hermesDeCorreo = System.Environment.GetEnvironmentVariable("HERMES_DE_CORREO") ?? throw new ArgumentNullException("HERMES_DE_CORREO");
-			string hermesAsuntoCrearDestinatario = System.Environment.GetEnvironmentVariable("HERMES_ASUNTO_CREAR_DESTINATARIO") ?? throw new ArgumentNullException("HERMES_ASUNTO_CREAR_DESTINATARIO");
-			string hermesCuerpoCrearDestinatario = System.Environment.GetEnvironmentVariable("HERMES_CUERPO_CREAR_DESTINATARIO") ?? throw new ArgumentNullException("HERMES_CUERPO_CREAR_DESTINATARIO");
-
+			
 			// Variables de entorno para la lambda de ejecución inicial...
 			string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new ArgumentNullException("APP_SCHEMA_NAME");
             string initialCreationHandler = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_HANDLER") ?? throw new ArgumentNullException("INITIAL_CREATION_HANDLER");
@@ -395,8 +393,6 @@ namespace Cdk
 					{ "HERMES_API_KEY_ID", parameterHermesApiKeyId.StringValue },
 					{ "HERMES_DE_NOMBRE", hermesDeNombre },
 					{ "HERMES_DE_CORREO", hermesDeCorreo },
-					{ "HERMES_ASUNTO_CREAR_DESTINATARIO", hermesAsuntoCrearDestinatario },
-					{ "HERMES_CUERPO_CREAR_DESTINATARIO", hermesCuerpoCrearDestinatario },
 				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {
