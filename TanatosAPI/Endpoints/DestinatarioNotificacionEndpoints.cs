@@ -64,7 +64,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CrytoHelper cryptoHelper, VariableEntornoHelper variableEntorno, CognitoHelper cognitoHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, HermesHelper hermesHelper) => {
+			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CrytoHelper cryptoHelper, VariableEntornoHelper variableEntorno, CognitoHelper cognitoHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, NegocioDao negocioDao, HermesHelper hermesHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -99,6 +99,16 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El formato del destino no es válido.");
 					}
 
+					// Se valida que el negocio sea válido...
+					Negocio? negocio = (await negocioDao.ObtenerPorSub(sub)).FirstOrDefault(n => n.Id == entrada.IdNegocio);
+					if (negocio == null || !negocio.Vigencia) {
+						LambdaLogger.Log(
+							$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El negocio es inválido.");
+
+						return Results.BadRequest($"El negocio es inválido.");
+					}
+
 					// Se crea un código de validación...
 					string codigoValidacion = cryptoHelper.GenerarToken(12);
 					DestinatarioNotificacion? mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion));
@@ -110,7 +120,7 @@ namespace TanatosAPI.Endpoints {
 					DestinatarioNotificacion nuevoDestinatario = new() { 
 						Id = 0,
 						Sub = sub,
-						IdNegocio = entrada.IdNegocio,
+						IdNegocio = negocio.Id,
 						IdTipoReceptor = entrada.IdTipoReceptor,
 						Destino = entrada.Destino,
 						CodigoValidacion = cryptoHelper.HashSHA256(codigoValidacion),
@@ -142,10 +152,12 @@ namespace TanatosAPI.Endpoints {
 								Correo = nuevoDestinatario.Destino
 							}
 							],
-							Asunto = "¡[NOMBRE_USUARIO] te añadió como destinatario de notificaciones de su negocio!"
-										.Replace("[NOMBRE_USUARIO]", atributosUsuario["given_name"]),
+							Asunto = "¡[NOMBRE_USUARIO] te añadió como destinatario de notificaciones de su negocio [NOMBRE_NEGOCIO]!"
+										.Replace("[NOMBRE_USUARIO]", atributosUsuario["given_name"])
+										.Replace("[NOMBRE_NEGOCIO]", negocio.Nombre),
 							Cuerpo = strTemplateCorreo
 										.Replace("[NOMBRE_USUARIO]", WebUtility.HtmlEncode(atributosUsuario["given_name"]))
+										.Replace("[NOMBRE_NEGOCIO]", WebUtility.HtmlEncode(negocio.Nombre))
 										.Replace("[CODIGO_VALIDACION]", WebUtility.UrlEncode(codigoValidacion)),
 						});
 					}
