@@ -68,6 +68,8 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
+					entrada.Destino = entrada.Destino.Trim();
+
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
 					// Se valida que el usuario no tenga otro destinatario igual...

@@ -101,6 +101,7 @@ builder.Services.AddSingleton<TipoPeriodicidadDao>();
 builder.Services.AddSingleton<TipoReceptorNotificacionDao>();
 builder.Services.AddSingleton<TipoUnidadTiempoDao>();
 builder.Services.AddSingleton<NegocioDao>();
+builder.Services.AddSingleton<NormaSuscritaDao>();
 #endregion
 
 string cognitoRegion;
@@ -168,6 +169,7 @@ app.MapAuthEndpoints();
 app.MapTemplateEndpoints();
 app.MapDestinatarioNotificacionEndpoints();
 app.MapNegocioEndpoints();
+app.MapNormaSuscritaEndpoints();
 
 app.Run();
 
