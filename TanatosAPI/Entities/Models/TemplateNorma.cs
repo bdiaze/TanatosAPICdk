@@ -51,6 +51,8 @@ namespace TanatosAPI.Entities.Models {
 
 		public List<TemplateNormaNotificacion>? TemplateNormaNotificaciones { get; set; }
 
+		public List<NormaSuscrita>? NormasSuscritas { get; set; }
+
 		public override int GetHashCode() {
 			return HashCode.Combine(IdTemplate, IdNorma, Nombre, Descripcion, IdTipoPeriodicidad, Multa, IdCategoriaNorma);
 		}

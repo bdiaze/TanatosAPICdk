@@ -32,5 +32,7 @@ namespace TanatosAPI.Entities.Models {
 		public required bool Vigencia { get; set; }
 
 		public List<TemplateNorma>? TemplateNormas { get; set; } 
+
+		public List<NormaSuscrita>? NormasSuscritas { get; set; }
 	}
 }

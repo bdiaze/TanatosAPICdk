@@ -29,5 +29,7 @@ namespace TanatosAPI.Entities.Models {
 
 		public List<TemplateNorma>? TemplateNormas { get; set; }
 
+		public List<NormaSuscrita>? NormasSuscritas { get; set; }
+
 	}
 }

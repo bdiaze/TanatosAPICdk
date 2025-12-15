@@ -82,6 +82,30 @@ namespace TanatosAPI.Entities.Contexts {
                 .WithMany(c => c.DestinatariosNotificaciones)
                 .HasForeignKey(o => o.IdNegocio)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<NormaSuscrita>()
+                .HasOne(o => o.Negocio)
+                .WithMany(o => o.NormasSuscritas)
+                .HasForeignKey(o => o.IdNegocio)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<NormaSuscrita>()
+                .HasOne(o => o.CategoriaNorma)
+                .WithMany(o => o.NormasSuscritas)
+                .HasForeignKey(o => o.IdCategoriaNorma)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<NormaSuscrita>()
+                .HasOne(o => o.TipoPeriodicidad)
+                .WithMany(o => o.NormasSuscritas)
+                .HasForeignKey(o => o.IdTipoPeriodicidad)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<NormaSuscrita>()
+                .HasOne(o => o.TemplateNorma)
+                .WithMany(o => o.NormasSuscritas)
+                .HasForeignKey(o => new { o.IdTemplate, o.IdNorma })
+                .OnDelete(DeleteBehavior.Restrict);
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -106,6 +130,8 @@ namespace TanatosAPI.Entities.Contexts {
 
         public DbSet<TemplateNormaNotificacion> TemplatesNormasNotificaciones { get; set; }
 
-        public DbSet<Negocio> NEgocios { get; set; }
-    }
+        public DbSet<Negocio> Negocios { get; set; }
+
+        public DbSet<NormaSuscrita> NormasSuscritas { get; set; }
+		}
 }
