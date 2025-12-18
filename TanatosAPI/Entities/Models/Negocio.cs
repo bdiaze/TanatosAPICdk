@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TanatosAPI.Entities.Models {
 	[Table("negocio", Schema = "tanatos")]
 	[Comment("Tabla que contiene los negocios de un usuario.")]
-	[Index(nameof(Sub), nameof(Nombre), IsUnique = true)]
+	[Index(nameof(Sub), nameof(Nombre))]
 	public class Negocio {
 		[Required]
 		[Column("id")]

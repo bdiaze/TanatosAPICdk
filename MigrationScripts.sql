@@ -879,5 +879,27 @@ BEGIN
     VALUES ('20251218171902_TablaNotificacionesNormaSuscrita', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251218212856_RemoveUniqueNegocio') THEN
+    DROP INDEX tanatos."IX_negocio_sub_nombre";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251218212856_RemoveUniqueNegocio') THEN
+    CREATE INDEX "IX_negocio_sub_nombre" ON tanatos.negocio (sub, nombre);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251218212856_RemoveUniqueNegocio') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20251218212856_RemoveUniqueNegocio', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 
