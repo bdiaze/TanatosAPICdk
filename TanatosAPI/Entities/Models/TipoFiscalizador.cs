@@ -28,5 +28,7 @@ namespace TanatosAPI.Entities.Models {
 		public required bool Vigencia { get; set; }
 
 		public List<TemplateNormaFiscalizador>? TemplateNormasFiscalizador { get; set; }
+
+		public List<FiscalizadorNormaSuscrita>? FiscalizadoresNormaSuscrita { get; set; }
 	}
 }

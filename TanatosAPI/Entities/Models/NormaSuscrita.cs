@@ -100,5 +100,7 @@ namespace TanatosAPI.Entities.Models {
 		public Negocio? Negocio { get; set; }
 
 		public TemplateNorma? TemplateNorma { get; set; }
+
+		public List<FiscalizadorNormaSuscrita>? FiscalizadoresNormaSuscrita { get; set; }
 	}
 }
