@@ -12,6 +12,7 @@
 		public bool Editable { get; set; }
 		public required bool Activado { get; set; }
 		public SalTemplateNorma? TemplateNorma { get; set; }
+		public List<SalFiscalizadorNormaSuscrita>? Fiscalizadores { get; set; }
 	}
 
 	public class SalTemplateNorma {
@@ -22,5 +23,11 @@
 		public string? Multa { get; set; }
 		public required long IdCategoriaNorma { get; set; }
 		public string? NombreCategoriaNorma { get; set; }
+	}
+
+	public class SalFiscalizadorNormaSuscrita {
+		public long Id { get; set; }
+		public long IdTipoFiscalizador { get; set; }
+		public string? NombreTipoFiscalizador { get; set; }
 	}
 }

@@ -6,5 +6,10 @@
 		public required long IdTipoPeriodicidad { get; set; }
 		public string? Multa { get; set; }
 		public required long IdCategoriaNorma { get; set; }
+		public List<EntFiscalizadorNormaSuscritaCrear>? Fiscalizadores { get; set; }
+	}
+
+	public class EntFiscalizadorNormaSuscritaCrear {
+		public required long IdTipoFiscalizador { get; set; }
 	}
 }
