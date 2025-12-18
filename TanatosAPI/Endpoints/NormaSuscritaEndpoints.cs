@@ -295,9 +295,9 @@ namespace TanatosAPI.Endpoints {
 						IdCategoriaNorma = entrada.IdCategoriaNorma,
 						OrdenVisual = null,
 						Editable = true,
-						FechaActivacion = DateTime.UtcNow,
+						FechaActivacion = entrada.Activado ? DateTime.UtcNow : null,
 						FechaDesactivacion = null,
-						Activado = true,
+						Activado = entrada.Activado,
 						FechaCreacion = DateTime.UtcNow,
 						FechaEliminacion = null,
 						Vigencia = true
