@@ -102,6 +102,7 @@ builder.Services.AddSingleton<TipoReceptorNotificacionDao>();
 builder.Services.AddSingleton<TipoUnidadTiempoDao>();
 builder.Services.AddSingleton<NegocioDao>();
 builder.Services.AddSingleton<NormaSuscritaDao>();
+builder.Services.AddSingleton<FiscalizadorNormaSuscritaDao>();
 #endregion
 
 string cognitoRegion;
