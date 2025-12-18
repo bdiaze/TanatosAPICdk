@@ -29,5 +29,7 @@ namespace TanatosAPI.Entities.Models {
 		public required bool Vigencia { get; set; }
 
 		public List<TemplateNormaNotificacion>? TemplateNormasNotificacion { get; set; }
+
+		public List<NotificacionNormaSuscrita>? NotificacionesNormaSuscrita { get; set; }
 	}
 }
