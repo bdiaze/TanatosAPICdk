@@ -16,25 +16,80 @@ namespace TanatosAPI.Repositories {
 			)];
 		}
 
-		public async Task<long> Insertar(NormaSuscrita item) {
+		public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return await connection.ExecuteScalarAsync<long>(
-				"INSERT INTO TANATOS.NORMA_SUSCRITA(SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ORDEN_VISUAL, EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
-				"VALUES (@SUB, @IDNEGOCIO, @IDTEMPLATE, @IDNORMA, @NOMBRE, @DESCRIPCION, @IDTIPOPERIODICIDAD, @MULTA, @IDCATEGORIANORMA, @ORDENVISUAL, @EDITABLE, @FECHAACTIVACION, @FECHADESACTIVACION, @ACTIVADO, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
-				"RETURNING ID",
-				new { item.Sub, item.IdNegocio, item.IdTemplate, item.IdNorma, item.Nombre, item.Descripcion, item.IdTipoPeriodicidad, item.Multa, item.IdCategoriaNorma, item.OrdenVisual, item.Editable, item.FechaActivacion, item.FechaDesactivacion, item.Activado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia }
+			return await connection.QueryFirstOrDefaultAsync<NormaSuscrita>(
+				"SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ORDEN_VISUAL, " +
+				"EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NORMA_SUSCRITA " +
+				"WHERE ID = @IDNORMASUSCRITA",
+				new { idNormaSuscrita }
 			);
 		}
 
-		public async Task Actualizar(NormaSuscrita item) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			await connection.ExecuteAsync(
+		public async Task<long> Insertar(NormaSuscrita item, NpgsqlTransaction? transaction = null) {
+			string query =
+				"INSERT INTO TANATOS.NORMA_SUSCRITA(SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ORDEN_VISUAL, EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
+				"VALUES (@SUB, @IDNEGOCIO, @IDTEMPLATE, @IDNORMA, @NOMBRE, @DESCRIPCION, @IDTIPOPERIODICIDAD, @MULTA, @IDCATEGORIANORMA, @ORDENVISUAL, @EDITABLE, @FECHAACTIVACION, @FECHADESACTIVACION, @ACTIVADO, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
+				"RETURNING ID";
+			DynamicParameters param = new();
+			param.Add("SUB", item.Sub);
+			param.Add("IDNEGOCIO", item.IdNegocio);
+			param.Add("IDTEMPLATE", item.IdTemplate);
+			param.Add("IDNORMA", item.IdNorma);
+			param.Add("NOMBRE", item.Nombre);
+			param.Add("DESCRIPCION", item.Descripcion);
+			param.Add("IDTIPOPERIODICIDAD", item.IdTipoPeriodicidad);
+			param.Add("MULTA", item.Multa);
+			param.Add("IDCATEGORIANORMA", item.IdCategoriaNorma);
+			param.Add("ORDENVISUAL", item.OrdenVisual);
+			param.Add("EDITABLE", item.Editable);
+			param.Add("FECHAACTIVACION", item.FechaActivacion);
+			param.Add("FECHADESACTIVACION", item.FechaDesactivacion);
+			param.Add("ACTIVADO", item.Activado);
+			param.Add("FECHACREACION", item.FechaCreacion);
+			param.Add("FECHAELIMINACION", item.FechaEliminacion);
+			param.Add("VIGENCIA", item.Vigencia);
+
+			if (transaction?.Connection != null) {
+				return await transaction!.Connection!.ExecuteScalarAsync<long>(query, param, transaction);
+			} else {
+				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+				return await connection.ExecuteScalarAsync<long>(query, param);
+			}
+		}
+
+		public async Task Actualizar(NormaSuscrita item, NpgsqlTransaction? transaction = null) {
+			string query =
 				"UPDATE TANATOS.NORMA_SUSCRITA SET SUB = @SUB, ID_NEGOCIO = @IDNEGOCIO, ID_TEMPLATE = @IDTEMPLATE, ID_NORMA = @IDNORMA, NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, " +
 				"ID_TIPO_PERIODICIDAD = @IDTIPOPERIODICIDAD, MULTA = @MULTA, ID_CATEGORIA_NORMA = @IDCATEGORIANORMA, ORDEN_VISUAL = @ORDENVISUAL, EDITABLE = @EDITABLE, " +
 				"FECHA_ACTIVACION = @FECHAACTIVACION, FECHA_DESACTIVACION = @FECHADESACTIVACION, ACTIVADO = @ACTIVADO, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
-				"WHERE ID = @ID",
-				new { item.Sub, item.IdNegocio, item.IdTemplate, item.IdNorma, item.Nombre, item.Descripcion, item.IdTipoPeriodicidad, item.Multa, item.IdCategoriaNorma, item.OrdenVisual, item.Editable, item.FechaActivacion, item.FechaDesactivacion, item.Activado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia, item.Id }
-			);
+				"WHERE ID = @ID";
+			DynamicParameters param = new();
+			param.Add("SUB", item.Sub);
+			param.Add("IDNEGOCIO", item.IdNegocio);
+			param.Add("IDTEMPLATE", item.IdTemplate);
+			param.Add("IDNORMA", item.IdNorma);
+			param.Add("NOMBRE", item.Nombre);
+			param.Add("DESCRIPCION", item.Descripcion);
+			param.Add("IDTIPOPERIODICIDAD", item.IdTipoPeriodicidad);
+			param.Add("MULTA", item.Multa);
+			param.Add("IDCATEGORIANORMA", item.IdCategoriaNorma);
+			param.Add("ORDENVISUAL", item.OrdenVisual);
+			param.Add("EDITABLE", item.Editable);
+			param.Add("FECHAACTIVACION", item.FechaActivacion);
+			param.Add("FECHADESACTIVACION", item.FechaDesactivacion);
+			param.Add("ACTIVADO", item.Activado);
+			param.Add("FECHACREACION", item.FechaCreacion);
+			param.Add("FECHAELIMINACION", item.FechaEliminacion);
+			param.Add("VIGENCIA", item.Vigencia);
+			param.Add("ID", item.Id);
+
+			if (transaction?.Connection != null) {
+				await transaction!.Connection!.ExecuteAsync(query, param, transaction);
+			} else {
+				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+				await connection.ExecuteAsync(query, param);
+			}
 		}
 	}
 }
