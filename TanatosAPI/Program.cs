@@ -103,6 +103,7 @@ builder.Services.AddSingleton<TipoUnidadTiempoDao>();
 builder.Services.AddSingleton<NegocioDao>();
 builder.Services.AddSingleton<NormaSuscritaDao>();
 builder.Services.AddSingleton<FiscalizadorNormaSuscritaDao>();
+builder.Services.AddSingleton<NotificacionNormaSuscritaDao>();
 #endregion
 
 string cognitoRegion;

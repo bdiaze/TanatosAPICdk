@@ -94,7 +94,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorId(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/ObtenerPorId/{idNormaSuscrita}", async (long idNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, TipoFiscalizadorDao tipoFiscalizadorDao, TemplateNormaDao templateNormaDao) => {
+			routes.MapGet("/ObtenerPorId/{idNormaSuscrita}", async (long idNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TemplateNormaDao templateNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -118,6 +118,13 @@ namespace TanatosAPI.Endpoints {
 					List<TipoFiscalizador> fiscalizadores = [];
 					if (fiscalizadoresNormaSuscrita.Count > 0) {
 						fiscalizadores = await tipoFiscalizadorDao.ObtenerPorVigencia(null);
+					}
+
+					List<NotificacionNormaSuscrita> notificacionesNormaSuscrita = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(existente.Id);
+
+					List<TipoUnidadTiempo> unidadesTiempo = [];
+					if (notificacionesNormaSuscrita.Count > 0) {
+						unidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(null);
 					}
 
 					TemplateNorma? templateNorma = null;
@@ -151,6 +158,13 @@ namespace TanatosAPI.Endpoints {
 								IdTipoFiscalizador = fns.IdTipoFiscalizador,
 								NombreTipoFiscalizador = fiscalizadores.FirstOrDefault(ff => ff.Id == fns.IdTipoFiscalizador)?.Nombre
 							})
+						],
+						Notificaciones = [.. notificacionesNormaSuscrita.Select(nns => new SalNotificacionNormaSuscrita() {
+								Id = nns.Id,
+								IdTipoUnidadTiempoAntelacion = nns.IdTipoUnidadTiempoAntelacion,
+								NombreTipoUnidadTiempoAntelacion = unidadesTiempo.FirstOrDefault(ut => ut.Id == nns.IdTipoUnidadTiempoAntelacion)?.Nombre,
+								CantAntelacion = nns.CantAntelacion
+							})
 						]
 					};
 
@@ -172,7 +186,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntNormaSuscritaCrear entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao) => {
+			routes.MapPost("/", async (EntNormaSuscritaCrear entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -245,6 +259,29 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
+					List<TipoUnidadTiempo> tiposUnidadesTiempo = [];
+					// Se valida que las notificaciones sean válidas...
+					if (entrada.Notificaciones != null && entrada.Notificaciones.Count > 0) {
+						if (entrada.Notificaciones.GroupBy(n => new { n.IdTipoUnidadTiempoAntelacion, n.CantAntelacion}).Any(g => g.Count() > 1)) {
+							LambdaLogger.Log(
+								$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"Las notificaciones incluyen duplicados.");
+
+							return Results.BadRequest($"Las notificaciones incluyen duplicados.");
+						}
+
+						tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true);
+						foreach (EntNotificacionNormaSuscritaCrear notificacion in entrada.Notificaciones) {
+							if (!tiposUnidadesTiempo.Any(tut => tut.Id == notificacion.IdTipoUnidadTiempoAntelacion)) {
+								LambdaLogger.Log(
+									$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+									$"Una notificación es inválido.");
+
+								return Results.BadRequest($"Una notificación es inválido.");
+							}
+						}
+					}
+
 					NormaSuscrita nuevo = new() {
 						Id = 0,
 						Sub = sub,
@@ -267,6 +304,7 @@ namespace TanatosAPI.Endpoints {
 					};
 
 					List<FiscalizadorNormaSuscrita> fiscalizadoresNormaSuscrita = [];
+					List<NotificacionNormaSuscrita> notificacionesNormaSuscrita = [];
 
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
@@ -285,6 +323,21 @@ namespace TanatosAPI.Endpoints {
 
 							foreach(FiscalizadorNormaSuscrita fiscalizador in fiscalizadoresNormaSuscrita) {
 								fiscalizador.Id = await fiscalizadorNormaSuscritaDao.Insertar(fiscalizador, transaction);
+							}
+						}
+
+						if (entrada.Notificaciones != null) {
+							notificacionesNormaSuscrita = [.. entrada.Notificaciones.Select(n => new NotificacionNormaSuscrita {
+								Id = 0,
+								IdNormaSuscrita = nuevo.Id,
+								IdTipoUnidadTiempoAntelacion = n.IdTipoUnidadTiempoAntelacion,
+								CantAntelacion = n.CantAntelacion,
+								FechaCreacion = DateTime.UtcNow,
+								Vigencia = true
+							})];
+
+							foreach (NotificacionNormaSuscrita notificacion in notificacionesNormaSuscrita) {
+								notificacion.Id = await notificacionNormaSuscritaDao.Insertar(notificacion, transaction);
 							}
 						}
 
@@ -311,6 +364,12 @@ namespace TanatosAPI.Endpoints {
 							Id = fns.Id,
 							IdTipoFiscalizador = fns.IdTipoFiscalizador,
 							NombreTipoFiscalizador = tiposFiscalizadores.FirstOrDefault(tp => tp.Id == fns.IdTipoFiscalizador)?.Nombre
+						})],
+						Notificaciones = [.. notificacionesNormaSuscrita.Select(nns => new SalNotificacionNormaSuscrita {
+							Id = nns.Id,
+							IdTipoUnidadTiempoAntelacion = nns.IdTipoUnidadTiempoAntelacion,
+							NombreTipoUnidadTiempoAntelacion = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == nns.IdTipoUnidadTiempoAntelacion)?.Nombre,
+							CantAntelacion = nns.CantAntelacion
 						})]
 					};
 
@@ -332,7 +391,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (EntNormaSuscritaActualizar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao) => {
+			routes.MapPut("/", async (EntNormaSuscritaActualizar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -405,6 +464,29 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
+					List<TipoUnidadTiempo> tiposUnidadesTiempo = [];
+					// Se valida que las notificaciones sean válidas...
+					if (entrada.Notificaciones != null && entrada.Notificaciones.Count > 0) {
+						if (entrada.Notificaciones.GroupBy(n => new { n.IdTipoUnidadTiempoAntelacion, n.CantAntelacion }).Any(g => g.Count() > 1)) {
+							LambdaLogger.Log(
+								$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"Las notificaciones incluyen duplicados.");
+
+							return Results.BadRequest($"Las notificaciones incluyen duplicados.");
+						}
+
+						tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true);
+						foreach (EntNotificacionNormaSuscritaActualizar notificacion in entrada.Notificaciones) {
+							if (!tiposUnidadesTiempo.Any(tut => tut.Id == notificacion.IdTipoUnidadTiempoAntelacion)) {
+								LambdaLogger.Log(
+									$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+									$"Una notificación es inválido.");
+
+								return Results.BadRequest($"Una notificación es inválido.");
+							}
+						}
+					}
+
 					existente.Nombre = entrada.Nombre;
 					existente.Descripcion = entrada.Descripcion;
 					existente.IdTipoPeriodicidad = entrada.IdTipoPeriodicidad;
@@ -424,6 +506,7 @@ namespace TanatosAPI.Endpoints {
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
 					List<FiscalizadorNormaSuscrita>? fiscalizadoresExistentes = null;
+					List<NotificacionNormaSuscrita>? notificacionesExistentes = null;
 					try {
 						await normaSuscritaDao.Actualizar(existente, transaction);
 
@@ -438,7 +521,7 @@ namespace TanatosAPI.Endpoints {
 						}
 
 						// Se agregan los nuevos fiscalizadores...
-						if (entrada.Fiscalizadores != null) { 
+						if (entrada.Fiscalizadores != null) {
 							foreach (EntFiscalizadorNormaSuscritaActualizar fiscalizadorNuevo in entrada.Fiscalizadores) {
 								if (!fiscalizadoresExistentes.Any(fe => fe.IdTipoFiscalizador == fiscalizadorNuevo.IdTipoFiscalizador)) {
 									await fiscalizadorNormaSuscritaDao.Insertar(new FiscalizadorNormaSuscrita {
@@ -447,6 +530,32 @@ namespace TanatosAPI.Endpoints {
 										IdTipoFiscalizador = fiscalizadorNuevo.IdTipoFiscalizador,
 										FechaCreacion = DateTime.UtcNow,
 										Vigencia = true
+									}, transaction);
+								}
+							}
+						}
+
+						// Se eliminan las notificaciones existentes que no se incluyen en la entrada...
+						notificacionesExistentes = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(existente.Id, true);
+						foreach (NotificacionNormaSuscrita notificacionExistente in notificacionesExistentes) {
+							if (entrada.Notificaciones == null || !entrada.Notificaciones.Any(n => n.IdTipoUnidadTiempoAntelacion == notificacionExistente.IdTipoUnidadTiempoAntelacion && n.CantAntelacion == notificacionExistente.CantAntelacion)) {
+								notificacionExistente.FechaEliminacion = DateTime.UtcNow;
+								notificacionExistente.Vigencia = false;
+								await notificacionNormaSuscritaDao.Actualizar(notificacionExistente, transaction);
+							}
+						}
+
+						// Se agregan las nuevas notificaciones...
+						if (entrada.Notificaciones != null) {
+							foreach (EntNotificacionNormaSuscritaActualizar notificacionNueva in entrada.Notificaciones) {
+								if (!notificacionesExistentes.Any(ne => ne.IdTipoUnidadTiempoAntelacion == notificacionNueva.IdTipoUnidadTiempoAntelacion && ne.CantAntelacion == notificacionNueva.CantAntelacion)) {
+									await notificacionNormaSuscritaDao.Insertar(new NotificacionNormaSuscrita {
+										Id = 0,
+										IdNormaSuscrita = existente.Id,
+										IdTipoUnidadTiempoAntelacion = notificacionNueva.IdTipoUnidadTiempoAntelacion,
+										CantAntelacion = notificacionNueva.CantAntelacion,
+										FechaCreacion = DateTime.UtcNow,
+										Vigencia = true,
 									}, transaction);
 								}
 							}
@@ -461,6 +570,10 @@ namespace TanatosAPI.Endpoints {
 					fiscalizadoresExistentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(existente.Id, true);
 					if (fiscalizadoresExistentes.Count == 0) {
 						fiscalizadoresExistentes = null;
+					}
+					notificacionesExistentes = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(existente.Id, true);
+					if (notificacionesExistentes.Count == 0) {
+						notificacionesExistentes = null;
 					}
 
 					SalNormaSuscrita retorno = new() {
@@ -480,6 +593,12 @@ namespace TanatosAPI.Endpoints {
 							Id = fns.Id,
 							IdTipoFiscalizador = fns.IdTipoFiscalizador,
 							NombreTipoFiscalizador = tiposFiscalizadores.FirstOrDefault(tp => tp.Id == fns.IdTipoFiscalizador)?.Nombre
+						})],
+						Notificaciones = notificacionesExistentes == null ? null : [.. notificacionesExistentes.Select(nns => new SalNotificacionNormaSuscrita {
+							Id = nns.Id,
+							IdTipoUnidadTiempoAntelacion = nns.IdTipoUnidadTiempoAntelacion,
+							NombreTipoUnidadTiempoAntelacion = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == nns.IdTipoUnidadTiempoAntelacion)?.Nombre,
+							CantAntelacion = nns.CantAntelacion
 						})]
 					};
 

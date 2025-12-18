@@ -9,9 +9,15 @@
 		public required long IdCategoriaNorma { get; set; }
 		public required bool Activado { get; set; }
 		public List<EntFiscalizadorNormaSuscritaActualizar>? Fiscalizadores { get; set; }
+		public List<EntNotificacionNormaSuscritaActualizar>? Notificaciones { get; set; }
 	}
 
 	public class EntFiscalizadorNormaSuscritaActualizar {
 		public required long IdTipoFiscalizador { get; set; }
+	}
+
+	public class EntNotificacionNormaSuscritaActualizar {
+		public required long IdTipoUnidadTiempoAntelacion { get; set; }
+		public required int CantAntelacion { get; set; }
 	}
 }

@@ -7,9 +7,15 @@
 		public string? Multa { get; set; }
 		public required long IdCategoriaNorma { get; set; }
 		public List<EntFiscalizadorNormaSuscritaCrear>? Fiscalizadores { get; set; }
+		public List<EntNotificacionNormaSuscritaCrear>? Notificaciones { get; set; }
 	}
 
 	public class EntFiscalizadorNormaSuscritaCrear {
 		public required long IdTipoFiscalizador { get; set; }
+	}
+
+	public class EntNotificacionNormaSuscritaCrear {
+		public required long IdTipoUnidadTiempoAntelacion { get; set; }
+		public required int CantAntelacion { get; set; }
 	}
 }
