@@ -207,7 +207,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapLimpiarAuthCookies(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/LimpiarAuthCookies", async (HttpRequest httpRequest, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
+			routes.MapPost("/LimpiarAuthCookies", (HttpRequest httpRequest, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
