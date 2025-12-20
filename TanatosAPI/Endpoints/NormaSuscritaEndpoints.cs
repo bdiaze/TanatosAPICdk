@@ -94,7 +94,8 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorId(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/ObtenerPorId/{idNormaSuscrita}", async (long idNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TemplateNormaDao templateNormaDao) => {
+			routes.MapGet("/ObtenerPorId/{idNormaSuscrita}", async (long idNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TemplateNormaDao templateNormaDao) => {
+
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -132,6 +133,10 @@ namespace TanatosAPI.Endpoints {
 						templateNorma = (await templateNormaDao.ObtenerPorTemplate(existente.IdTemplate!.Value)).FirstOrDefault(tn => tn.IdNorma == existente.IdNorma);
 					}
 
+					HistorialNormaSuscrita? historialNormaSuscrita = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true))
+						.OrderBy(hns => hns.FechaVencimiento)
+						.FirstOrDefault();
+
 					SalNormaSuscrita retorno = new() {
 						Id = existente.Id,
 						Nombre = existente.Nombre,
@@ -165,7 +170,8 @@ namespace TanatosAPI.Endpoints {
 								NombreTipoUnidadTiempoAntelacion = unidadesTiempo.FirstOrDefault(ut => ut.Id == nns.IdTipoUnidadTiempoAntelacion)?.Nombre,
 								CantAntelacion = nns.CantAntelacion
 							})
-						]
+						],
+						ProximoVencimiento = historialNormaSuscrita?.FechaVencimiento,
 					};
 
 					LambdaLogger.Log(
@@ -186,7 +192,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntNormaSuscritaCrear entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapPost("/", async (EntNormaSuscritaCrear entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -282,6 +288,24 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
+					// Se valida que si la norma suscrita está activa, incluya una fecha de próximo vencimiento...
+					if (entrada.Activado && entrada.ProximoVencimiento == null) {
+						LambdaLogger.Log(
+							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Debe incluir la fecha de próximo vencimiento.");
+
+						return Results.BadRequest($"Debe incluir la fecha de próximo vencimiento.");
+					}
+
+					// Se valida que el próximo vencimiento sea una fecha futura...
+					if (entrada.Activado && entrada.ProximoVencimiento != null && entrada.ProximoVencimiento <= DateTime.UtcNow) {
+						LambdaLogger.Log(
+							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El próximo vencimiento debe ser una fecha futura.");
+
+						return Results.BadRequest($"El próximo vencimiento debe ser una fecha futura.");
+					}
+
 					NormaSuscrita nuevo = new() {
 						Id = 0,
 						Sub = sub,
@@ -341,6 +365,16 @@ namespace TanatosAPI.Endpoints {
 							}
 						}
 
+						if (entrada.Activado) {
+							await historialNormaSuscritaDao.Insertar(new HistorialNormaSuscrita {
+								Id = 0,
+								IdNormaSuscrita = nuevo.Id,
+								FechaVencimiento = entrada.ProximoVencimiento!.Value,
+								FechaCreacion = DateTime.UtcNow,
+								Vigencia = true
+							}, transaction);
+						}
+
 						await transaction.CommitAsync();
 					} catch {
 						await transaction.RollbackAsync();
@@ -370,7 +404,8 @@ namespace TanatosAPI.Endpoints {
 							IdTipoUnidadTiempoAntelacion = nns.IdTipoUnidadTiempoAntelacion,
 							NombreTipoUnidadTiempoAntelacion = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == nns.IdTipoUnidadTiempoAntelacion)?.Nombre,
 							CantAntelacion = nns.CantAntelacion
-						})]
+						})],
+						ProximoVencimiento = entrada.Activado ? entrada.ProximoVencimiento : null
 					};
 
 					LambdaLogger.Log(
@@ -391,7 +426,8 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (EntNormaSuscritaActualizar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapPut("/", async (EntNormaSuscritaActualizar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+				
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -487,6 +523,28 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
+					// Se valida que si la norma suscrita está activa, incluya una fecha de próximo vencimiento...
+					if (entrada.Activado && entrada.ProximoVencimiento == null) {
+						LambdaLogger.Log(
+							$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Debe incluir la fecha de próximo vencimiento.");
+
+						return Results.BadRequest($"Debe incluir la fecha de próximo vencimiento.");
+					}
+
+					HistorialNormaSuscrita? proximoVencimientoExistente = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true))
+						.OrderBy(hns => hns.FechaVencimiento)
+						.FirstOrDefault();
+
+					// En caso de estar modificando la fecha del próximo vencimiento, se valida que el próximo vencimiento sea una fecha futura...
+					if (entrada.Activado && proximoVencimientoExistente?.FechaVencimiento != entrada.ProximoVencimiento && entrada.ProximoVencimiento <= DateTime.UtcNow) {
+						LambdaLogger.Log(
+							$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El próximo vencimiento debe ser una fecha futura.");
+
+						return Results.BadRequest($"El próximo vencimiento debe ser una fecha futura.");
+					}
+
 					existente.Nombre = entrada.Nombre;
 					existente.Descripcion = entrada.Descripcion;
 					existente.IdTipoPeriodicidad = entrada.IdTipoPeriodicidad;
@@ -561,6 +619,32 @@ namespace TanatosAPI.Endpoints {
 							}
 						}
 
+						// En caso de que norma suscrita esté activa, se agrega historial en caso de que proximo vencimiento sea distinto al existente...
+						if (entrada.Activado) {
+							if (proximoVencimientoExistente?.FechaVencimiento != entrada.ProximoVencimiento) {
+								if (proximoVencimientoExistente != null) {
+									proximoVencimientoExistente.FechaEliminacion = DateTime.UtcNow;
+									proximoVencimientoExistente.Vigencia = false;
+									await historialNormaSuscritaDao.Actualizar(proximoVencimientoExistente, transaction);
+								}
+
+								await historialNormaSuscritaDao.Insertar(new HistorialNormaSuscrita {
+									Id = 0,
+									IdNormaSuscrita = existente.Id,
+									FechaVencimiento = entrada.ProximoVencimiento!.Value,
+									FechaCreacion = DateTime.UtcNow,
+									Vigencia = true
+								}, transaction);
+							}
+						// En caso de que norma suscrita esté inactiva, se elimina el próximo vencimiento existente...
+						} else {
+							if (proximoVencimientoExistente != null) {
+								proximoVencimientoExistente.FechaEliminacion = DateTime.UtcNow;
+								proximoVencimientoExistente.Vigencia = false;
+								await historialNormaSuscritaDao.Actualizar(proximoVencimientoExistente, transaction);
+							}
+						}
+
 						await transaction.CommitAsync();
 					} catch {
 						await transaction.RollbackAsync();
@@ -599,7 +683,8 @@ namespace TanatosAPI.Endpoints {
 							IdTipoUnidadTiempoAntelacion = nns.IdTipoUnidadTiempoAntelacion,
 							NombreTipoUnidadTiempoAntelacion = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == nns.IdTipoUnidadTiempoAntelacion)?.Nombre,
 							CantAntelacion = nns.CantAntelacion
-						})]
+						})],
+						ProximoVencimiento = entrada.Activado ? entrada.ProximoVencimiento : null
 					};
 
 					LambdaLogger.Log(

@@ -9,6 +9,7 @@
 		public required bool Activado { get; set; }
 		public List<EntFiscalizadorNormaSuscritaCrear>? Fiscalizadores { get; set; }
 		public List<EntNotificacionNormaSuscritaCrear>? Notificaciones { get; set; }
+		public DateTime? ProximoVencimiento { get; set; }
 	}
 
 	public class EntFiscalizadorNormaSuscritaCrear {

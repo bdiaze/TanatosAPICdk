@@ -14,6 +14,7 @@
 		public SalTemplateNorma? TemplateNorma { get; set; }
 		public List<SalFiscalizadorNormaSuscrita>? Fiscalizadores { get; set; }
 		public List<SalNotificacionNormaSuscrita>? Notificaciones { get; set; }
+		public DateTime? ProximoVencimiento { get; set; }
 	}
 
 	public class SalTemplateNorma {
