@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using TanatosAPI.Endpoints;
 using TanatosAPI.Entities.Models;
@@ -9,8 +10,9 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace TanatosAPI.Entities.Contexts {
     // Solo usar el context para migrations del modelo de base de datos
     public class TanatosDbContext : DbContext {
-
-        public TanatosDbContext(DbContextOptions<TanatosDbContext> options) : base(options) { }
+		[UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
+		[UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "<Pending>")]
+		public TanatosDbContext(DbContextOptions<TanatosDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) {
             modelBuilder.Entity<DestinatarioNotificacion>()
