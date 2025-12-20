@@ -20,8 +20,6 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
 
-Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);

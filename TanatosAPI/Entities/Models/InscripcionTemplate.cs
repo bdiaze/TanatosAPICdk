@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Dapper;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -8,25 +9,30 @@ namespace TanatosAPI.Entities.Models {
 	[PrimaryKey(nameof(Sub), nameof(IdTemplate))]
 	[Index(nameof(IdTemplate))]
 	public class InscripcionTemplate {
+		[UseColumnAttribute]
 		[Required]
 		[Column("sub")]
 		[Comment("Usuario al que está asociada la inscripción.")]
 		public required string Sub { get; set; }
 
+		[UseColumnAttribute]
 		[Required]
 		[Column("id_template")]
 		[Comment("Identificador del template al que está inscrito el usuario.")]
 		public required long IdTemplate { get; set; }
 
+		[UseColumnAttribute]
 		[Required]
 		[Column("fecha_activacion")]
 		[Comment("Fecha en que se activa la inscripción.")]
 		public required DateTimeOffset FechaActivacion { get; set; }
 
+		[UseColumnAttribute]
 		[Column("fecha_desactivacion")]
 		[Comment("Fecha en que se desactiva la inscripción.")]
 		public DateTimeOffset? FechaDesactivacion { get; set; }
 
+		[UseColumnAttribute]
 		[Required]
 		[Column("vigencia")]
 		[Comment("Vigencia de la inscripción.")]

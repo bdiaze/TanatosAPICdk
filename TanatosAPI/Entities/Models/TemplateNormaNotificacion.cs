@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Dapper;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -9,21 +10,25 @@ namespace TanatosAPI.Entities.Models {
 	[PrimaryKey(nameof(IdTemplate), nameof(IdNorma), nameof(IdTipoUnidadTiempoAntelacion), nameof(CantAntelacion))]
 	[Index(nameof(IdTipoUnidadTiempoAntelacion))]
 	public class TemplateNormaNotificacion {
+		[UseColumnAttribute]
 		[Required]
 		[Column("id_template")]
 		[Comment("Identificador del template al que pertenece la norma.")]
 		public required long IdTemplate { get; set; }
 
+		[UseColumnAttribute]
 		[Required]
 		[Column("id_norma")]
 		[Comment("Identificador de la norma asociada al template.")]
 		public required long IdNorma { get; set; }
 
+		[UseColumnAttribute]
 		[Required]
 		[Column("id_tipo_unidad_tiempo_antelacion")]
 		[Comment("Identificador del tipo de unidad de tiempo a usar para la notificación.")]
 		public required long IdTipoUnidadTiempoAntelacion { get; set; }
 
+		[UseColumnAttribute]
 		[Required]
 		[Column("cant_antelacion")]
 		[Comment("Cantidad de unidades de tiempo a usar para la notificación.")]
