@@ -31,6 +31,12 @@ namespace TanatosAPI.Entities.Contexts {
                 .HasForeignKey(o => o.IdTemplate)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<InscripcionTemplate>()
+                .HasOne(o => o.Negocio)
+                .WithMany(c => c.InscripcionesTemplates)
+                .HasForeignKey(o => o.IdNegocio)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Template>()
                 .HasOne(o => o.TemplatePadre)
                 .WithMany(c => c.TemplatesHijos)

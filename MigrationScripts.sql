@@ -948,5 +948,49 @@ BEGIN
     VALUES ('20251220132132_TablaHistorialNormaSuscrita', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251222133226_AgregaIdNegocioInscripcionTemplate') THEN
+    ALTER TABLE tanatos.inscripcion_template DROP CONSTRAINT "PK_inscripcion_template";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251222133226_AgregaIdNegocioInscripcionTemplate') THEN
+    ALTER TABLE tanatos.inscripcion_template ADD id_negocio bigint NOT NULL DEFAULT 0;
+    COMMENT ON COLUMN tanatos.inscripcion_template.id_negocio IS 'Identificador del negocio del usuario.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251222133226_AgregaIdNegocioInscripcionTemplate') THEN
+    ALTER TABLE tanatos.inscripcion_template ADD CONSTRAINT "PK_inscripcion_template" PRIMARY KEY (sub, id_negocio, id_template);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251222133226_AgregaIdNegocioInscripcionTemplate') THEN
+    CREATE INDEX "IX_inscripcion_template_id_negocio" ON tanatos.inscripcion_template (id_negocio);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251222133226_AgregaIdNegocioInscripcionTemplate') THEN
+    ALTER TABLE tanatos.inscripcion_template ADD CONSTRAINT "FK_inscripcion_template_negocio_id_negocio" FOREIGN KEY (id_negocio) REFERENCES tanatos.negocio (id) ON DELETE RESTRICT;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251222133226_AgregaIdNegocioInscripcionTemplate') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20251222133226_AgregaIdNegocioInscripcionTemplate', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 

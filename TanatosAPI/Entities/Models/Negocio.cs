@@ -53,5 +53,7 @@ namespace TanatosAPI.Entities.Models {
 		public List<DestinatarioNotificacion>? DestinatariosNotificaciones { get; set; }
 
 		public List<NormaSuscrita>? NormasSuscritas { get; set; }
+
+		public List<InscripcionTemplate>? InscripcionesTemplates { get; set; }
 	}
 }
