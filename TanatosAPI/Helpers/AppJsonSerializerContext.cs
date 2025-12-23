@@ -50,6 +50,10 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(EntNormaSuscritaActualizar))]
 	[JsonSerializable(typeof(SalNormaSuscrita))]
 	[JsonSerializable(typeof(List<SalNormaSuscrita>))]
+	[JsonSerializable(typeof(SalInscripcionTemplate))]
+	[JsonSerializable(typeof(List<SalInscripcionTemplate>))]
+	[JsonSerializable(typeof(EntInscripcionTemplateActivar))]
+	[JsonSerializable(typeof(EntInscripcionTemplateDesactivar))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }

@@ -171,6 +171,7 @@ app.MapTemplateEndpoints();
 app.MapDestinatarioNotificacionEndpoints();
 app.MapNegocioEndpoints();
 app.MapNormaSuscritaEndpoints();
+app.MapInscripcionTemplateEndpoints();
 
 app.Run();
 
