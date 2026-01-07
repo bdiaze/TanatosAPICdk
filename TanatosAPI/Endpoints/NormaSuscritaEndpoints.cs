@@ -21,7 +21,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, TemplateNormaDao templateNormaDao) => {
+			routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -45,6 +45,11 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
+					Dictionary<long, Template> templates = [];
+					if (normas.Any(n => n.IdTemplate != null)) {
+						templates = (await templateDao.ObtenerPorVigencia(null)).ToDictionary(p => p.Id, p => p);
+					}
+
 					List<SalNormaSuscrita> retorno = [.. normas.Select(n => {
 							TemplateNorma? templateNorma = null;
 							if (n.IdTemplate != null && n.IdNorma != null) {
@@ -64,6 +69,8 @@ namespace TanatosAPI.Endpoints {
 								Editable = n.Editable,
 								Activado = n.Activado,
 								TemplateNorma = (templateNorma == null) ? null : new SalTemplateNorma() {
+									IdTemplate = templateNorma.IdTemplate,
+									NombreTemplate = templates[templateNorma.IdTemplate].Nombre,
 									Nombre = templateNorma.Nombre,
 									Descripcion = templateNorma.Descripcion,
 									IdTipoPeriodicidad = templateNorma.IdTipoPeriodicidad,
@@ -94,7 +101,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorId(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/ObtenerPorId/{idNormaSuscrita}", async (long idNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TemplateNormaDao templateNormaDao) => {
+			routes.MapGet("/ObtenerPorId/{idNormaSuscrita}", async (long idNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
 
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -129,8 +136,10 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					TemplateNorma? templateNorma = null;
+					Template? template = null;
 					if (existente.IdTemplate != null && existente.IdNorma != null) {
 						templateNorma = (await templateNormaDao.ObtenerPorTemplate(existente.IdTemplate!.Value)).FirstOrDefault(tn => tn.IdNorma == existente.IdNorma);
+						template = await templateDao.ObtenerPorId(existente.IdTemplate.Value);
 					}
 
 					HistorialNormaSuscrita? historialNormaSuscrita = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true))
@@ -149,7 +158,9 @@ namespace TanatosAPI.Endpoints {
 						OrdenVisual = existente.OrdenVisual,
 						Editable = existente.Editable,
 						Activado = existente.Activado,
-						TemplateNorma = (templateNorma == null) ? null : new SalTemplateNorma() {
+						TemplateNorma = (template == null || templateNorma == null) ? null : new SalTemplateNorma() {
+							IdTemplate = template.Id,
+							NombreTemplate = template.Nombre,
 							Nombre = templateNorma.Nombre,
 							Descripcion = templateNorma.Descripcion,
 							IdTipoPeriodicidad = templateNorma.IdTipoPeriodicidad,

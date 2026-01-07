@@ -18,6 +18,8 @@
 	}
 
 	public class SalTemplateNorma {
+		public required long IdTemplate { get; set; }
+		public required string NombreTemplate { get; set; }
 		public required string Nombre { get; set; }
 		public string? Descripcion { get; set; }
 		public long? IdTipoPeriodicidad { get; set; }
