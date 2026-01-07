@@ -11,6 +11,7 @@ namespace TanatosAPI.Endpoints {
 			RouteGroupBuilder group = routes.MapGroup("/Template");
 			group.MapObtener();
 			group.MapObtenerVigentes();
+			group.MapObtenerVigentesConNormas();
 			group.MapObtenerPorVigencia();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
@@ -74,6 +75,34 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [Template] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener los templates vigentes. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization().WithOpenApi();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapObtenerVigentesConNormas(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/VigentesConNormas", async (IHostEnvironment environment, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					List<Template> retorno = await templateDao.ObtenerPorVigencia(true);
+
+					foreach (Template template in retorno) {
+						template.TemplateNormas = await templateNormaDao.ObtenerPorTemplate(template.Id);
+					}
+
+					LambdaLogger.Log(
+						$"[GET] - [Template] - [ObtenerVigentesConNormas] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de los templates vigentes con normas - Cant. Registros: {retorno.Count}.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Template] - [ObtenerVigentesConNormas] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener los templates vigentes con normas. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
