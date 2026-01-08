@@ -405,7 +405,7 @@ namespace TanatosAPI.Endpoints {
 						IdCategoriaNorma = nuevo.IdCategoriaNorma,
 						NombreCategoriaNorma = categoria?.Nombre,
 						OrdenVisual = nuevo.OrdenVisual,
-						Editable = nuevo.Editable,
+						Editable = true,
 						Activado = nuevo.Activado,
 						TemplateNorma = null,
 						Fiscalizadores = [.. fiscalizadoresNormaSuscrita.Select(fns => new SalFiscalizadorNormaSuscrita { 
