@@ -738,6 +738,15 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El usuario no posee una norma con ID {id}.");
 					}
 
+					// Se valida que la norma suscrita puede ser eliminada según marca de editable (no se deben eliminar normas suscritas generadas desde inscripción a templates)...
+					if (!existente.Editable) {
+						LambdaLogger.Log(
+							$"[DELETE] - [NormaSuscrita] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"La norma suscrita no es eliminable.");
+
+						return Results.BadRequest($"La norma suscrita no es eliminable.");
+					}
+
 					if (existente.Activado) {
 						existente.FechaDesactivacion = DateTime.UtcNow;
 						existente.Activado = false;
