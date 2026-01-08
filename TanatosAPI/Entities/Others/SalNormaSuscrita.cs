@@ -27,6 +27,8 @@
 		public string? Multa { get; set; }
 		public required long IdCategoriaNorma { get; set; }
 		public string? NombreCategoriaNorma { get; set; }
+		public List<SalFiscalizadorNormaSuscrita>? Fiscalizadores { get; set; }
+		public List<SalNotificacionNormaSuscrita>? Notificaciones { get; set; }
 	}
 
 	public class SalFiscalizadorNormaSuscrita {
