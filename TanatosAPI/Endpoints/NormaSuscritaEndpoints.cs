@@ -233,14 +233,17 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"La periodicidad es inválida.");
 					}
 
+					CategoriaNorma? categoria = null;
 					// Se valida que la categoría sea válida...
-					CategoriaNorma? categoria = await categoriaNormaDao.ObtenerPorId(entrada.IdCategoriaNorma);
-					if (categoria == null || !categoria.Vigencia) {
-						LambdaLogger.Log(
-							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"La categoría es inválida.");
+					if (entrada.IdCategoriaNorma != null) {
+						categoria = await categoriaNormaDao.ObtenerPorId(entrada.IdCategoriaNorma.Value);
+						if (categoria == null || !categoria.Vigencia) {
+							LambdaLogger.Log(
+								$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"La categoría es inválida.");
 
-						return Results.BadRequest($"La categoría es inválida.");
+							return Results.BadRequest($"La categoría es inválida.");
+						}
 					}
 
 					// Se valida que el negocio sea válido...
@@ -400,7 +403,7 @@ namespace TanatosAPI.Endpoints {
 						NombreTipoPeriodicidad = tipoPeriodicidad.Nombre,
 						Multa = nuevo.Multa,
 						IdCategoriaNorma = nuevo.IdCategoriaNorma,
-						NombreCategoriaNorma = categoria.Nombre,
+						NombreCategoriaNorma = categoria?.Nombre,
 						OrdenVisual = nuevo.OrdenVisual,
 						Editable = nuevo.Editable,
 						Activado = nuevo.Activado,
@@ -468,14 +471,17 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"La periodicidad es inválida.");
 					}
 
+					CategoriaNorma? categoria = null;
 					// Se valida que la categoría sea válida...
-					CategoriaNorma? categoria = await categoriaNormaDao.ObtenerPorId(entrada.IdCategoriaNorma);
-					if (categoria == null || !categoria.Vigencia) {
-						LambdaLogger.Log(
-							$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"La categoría es inválida.");
+					if (entrada.IdCategoriaNorma != null) {
+						categoria = await categoriaNormaDao.ObtenerPorId(entrada.IdCategoriaNorma.Value);
+						if (categoria == null || !categoria.Vigencia) {
+							LambdaLogger.Log(
+								$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"La categoría es inválida.");
 
-						return Results.BadRequest($"La categoría es inválida.");
+							return Results.BadRequest($"La categoría es inválida.");
+						}
 					}
 
 					// Se valida que el negocio sea válido...
@@ -679,7 +685,7 @@ namespace TanatosAPI.Endpoints {
 						NombreTipoPeriodicidad = tipoPeriodicidad.Nombre,
 						Multa = existente.Multa,
 						IdCategoriaNorma = existente.IdCategoriaNorma,
-						NombreCategoriaNorma = categoria.Nombre,
+						NombreCategoriaNorma = categoria?.Nombre,
 						OrdenVisual = existente.OrdenVisual,
 						Editable = existente.Editable,
 						Activado = existente.Activado,

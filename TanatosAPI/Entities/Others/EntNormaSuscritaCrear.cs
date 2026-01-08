@@ -5,7 +5,7 @@
 		public string? Descripcion { get; set; }
 		public required long IdTipoPeriodicidad { get; set; }
 		public string? Multa { get; set; }
-		public required long IdCategoriaNorma { get; set; }
+		public long? IdCategoriaNorma { get; set; }
 		public required bool Activado { get; set; }
 		public List<EntFiscalizadorNormaSuscritaCrear>? Fiscalizadores { get; set; }
 		public List<EntNotificacionNormaSuscritaCrear>? Notificaciones { get; set; }
