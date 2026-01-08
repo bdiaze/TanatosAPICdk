@@ -469,7 +469,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (EntNormaSuscritaActualizar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapPut("/", async(EntNormaSuscritaActualizar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) => {
 				
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -604,6 +604,49 @@ namespace TanatosAPI.Endpoints {
 						existente.FechaActivacion = DateTime.UtcNow;
 						existente.FechaDesactivacion = null;
 						existente.Activado = true;
+					}
+
+					// Se setean en null atributos que sean igual a template norma...
+					if (existente.IdTemplate != null && existente.IdNorma != null) {
+						TemplateNorma? templateNorma = (await templateNormaDao.ObtenerPorTemplate(existente.IdTemplate.Value)).FirstOrDefault(tn => tn.IdNorma == existente.IdNorma);
+
+						if (templateNorma?.Nombre == existente.Nombre) {
+							existente.Nombre = null;
+						}
+
+						if (templateNorma?.Descripcion == existente.Descripcion) {
+							existente.Descripcion = null;
+						}
+
+						if (templateNorma?.IdTipoPeriodicidad == existente.IdTipoPeriodicidad) {
+							existente.IdTipoPeriodicidad = null;
+						}
+
+						if (templateNorma?.Multa == existente.Multa) {
+							existente.Multa = null;
+						}
+
+						if (templateNorma?.IdCategoriaNorma == existente.IdCategoriaNorma) {
+							existente.IdCategoriaNorma = null;
+						}
+
+						// Se compararn los fiscalizadores...
+						List<TemplateNormaFiscalizador> templateNormaFiscalizadores = await templateNormaFiscalizadorDao.ObtenerPorTemplateNorma(existente.IdTemplate.Value, existente.IdNorma);
+						HashSet<long> setFiscalizadoresTemplate = [.. templateNormaFiscalizadores.Select(tf => tf.IdTipoFiscalizador)];
+						HashSet<long> setFiscalizadoresEntrada = [.. entrada.Fiscalizadores?.Select(f => f.IdTipoFiscalizador) ?? []];
+
+						if (setFiscalizadoresEntrada.SetEquals(setFiscalizadoresTemplate)) {
+							entrada.Fiscalizadores = null;
+						}
+
+						// Se comparan las notificaciones...
+						List<TemplateNormaNotificacion> templateNormaNotificaciones = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(existente.IdTemplate.Value, existente.IdNorma);
+						HashSet<(long, int)> setNotificacionesTemplate = [.. templateNormaNotificaciones.Select(tn => (tn.IdTipoUnidadTiempoAntelacion, tn.CantAntelacion))];
+						HashSet<(long, int)> setNotificacionesEntrada = [.. entrada.Notificaciones?.Select(n => (n.IdTipoUnidadTiempoAntelacion, n.CantAntelacion)) ?? []];
+
+						if (setNotificacionesEntrada.SetEquals(setNotificacionesTemplate)) {
+							entrada.Notificaciones = null;
+						}
 					}
 
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
