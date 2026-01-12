@@ -169,6 +169,7 @@ app.MapTipoPeriodicidadEndpoints();
 app.MapTipoReceptorNotificacionEndpoints();
 app.MapTipoUnidadTiempoEndpoints();
 app.MapTipoRubroEndpoints();
+app.MapTipoActividadEndpoints();
 app.MapAuthEndpoints();
 app.MapTemplateEndpoints();
 app.MapDestinatarioNotificacionEndpoints();
