@@ -168,6 +168,7 @@ app.MapTipoFiscalizadorEndpoints();
 app.MapTipoPeriodicidadEndpoints();
 app.MapTipoReceptorNotificacionEndpoints();
 app.MapTipoUnidadTiempoEndpoints();
+app.MapTipoRubroEndpoints();
 app.MapAuthEndpoints();
 app.MapTemplateEndpoints();
 app.MapDestinatarioNotificacionEndpoints();
