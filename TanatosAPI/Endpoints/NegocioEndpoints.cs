@@ -19,17 +19,26 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao) => {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao, TipoActividadDao tipoActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
-					List<SalNegocio> retorno = [.. (await negocioDao.ObtenerPorSub(sub))
+					List<Negocio> negocios = await negocioDao.ObtenerPorSub(sub, true);
+
+					List<TipoActividad> tiposActividades = [];
+					if (negocios.Count > 0) {
+						tiposActividades = await tipoActividadDao.ObtenerPorVigencia(null);
+					}
+
+					List<SalNegocio> retorno = [.. negocios
 						.Select(d => new SalNegocio() {
 							Id = d.Id,
 							Nombre = d.Nombre,
-							Direccion = d.Direccion
+							Direccion = d.Direccion,
+							IdTipoActividad = d.IdTipoActividad,
+							NombreTipoActividad = tiposActividades.FirstOrDefault(ta => ta.Id == d.IdTipoActividad)?.Nombre
 						})
 					];
 
@@ -51,7 +60,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntNegocioCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao) => {
+			routes.MapPost("/", async (EntNegocioCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao, TipoActividadDao tipoActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -70,11 +79,25 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"Ya tienes registrado dicho negocio.");
 					}
 
+					// Se valida que el tipo de actividad sea válido...
+					TipoActividad? tipoActividad = null;
+					if (entrada.IdTipoActividad != null) {
+						tipoActividad = await tipoActividadDao.ObtenerPorId(entrada.IdTipoActividad.Value);
+						if (tipoActividad == null || !tipoActividad.Vigencia) {
+							LambdaLogger.Log(
+							$"[POST] - [Negocio] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El tipo de actividad es inválido.");
+
+							return Results.BadRequest($"El tipo de actividad es inválido.");
+						}
+					}
+
 					Negocio nuevo = new() {
 						Id = 0,
 						Sub = sub,
 						Nombre = entrada.Nombre,
 						Direccion = entrada.Direccion,
+						IdTipoActividad = entrada.IdTipoActividad,
 						FechaCreacion = DateTime.UtcNow,
 						Vigencia = true
 					};
@@ -84,6 +107,8 @@ namespace TanatosAPI.Endpoints {
 						Id = nuevo.Id,
 						Nombre = nuevo.Nombre,
 						Direccion = nuevo.Direccion,
+						IdTipoActividad = nuevo.IdTipoActividad,
+						NombreTipoActividad = tipoActividad?.Nombre
 					};
 
 					LambdaLogger.Log(
@@ -104,7 +129,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (EntNegocioActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao) => {
+			routes.MapPut("/", async (EntNegocioActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao, TipoActividadDao tipoActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -113,8 +138,8 @@ namespace TanatosAPI.Endpoints {
 
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
+					// Se valida que el negocio a actualizar pertenezca al usuario y este vigente...
 					Negocio? existente = (await negocioDao.ObtenerPorSub(sub, true)).FirstOrDefault(n => n.Id == entrada.Id);
-
 					if (existente == null) {
 						LambdaLogger.Log(
 							$"[PUT] - [Negocio] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
@@ -123,8 +148,22 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"No existe el negocio con ID {entrada.Id}.");
 					}
 
+					// Se valida que el tipo de actividad sea válido...
+					TipoActividad? tipoActividad = null;
+					if (entrada.IdTipoActividad != null) {
+						tipoActividad = await tipoActividadDao.ObtenerPorId(entrada.IdTipoActividad.Value);
+						if (tipoActividad == null || !tipoActividad.Vigencia) {
+							LambdaLogger.Log(
+							$"[PUT] - [Negocio] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El tipo de actividad es inválido.");
+
+							return Results.BadRequest($"El tipo de actividad es inválido.");
+						}
+					}
+
 					existente.Nombre = entrada.Nombre;
 					existente.Direccion = entrada.Direccion;
+					existente.IdTipoActividad = entrada.IdTipoActividad;
 
 					await negocioDao.Actualizar(existente);
 
@@ -132,6 +171,8 @@ namespace TanatosAPI.Endpoints {
 						Id = existente.Id,
 						Nombre = existente.Nombre,
 						Direccion = existente.Direccion,
+						IdTipoActividad = existente.IdTipoActividad,
+						NombreTipoActividad = tipoActividad?.Nombre
 					};
 
 					LambdaLogger.Log(
@@ -158,7 +199,7 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
-					Negocio? existente = (await negocioDao.ObtenerPorSub(sub)).FirstOrDefault(d => d.Id == id);
+					Negocio? existente = (await negocioDao.ObtenerPorSub(sub, true)).FirstOrDefault(d => d.Id == id);
 
 					if (existente == null) {
 						LambdaLogger.Log(
