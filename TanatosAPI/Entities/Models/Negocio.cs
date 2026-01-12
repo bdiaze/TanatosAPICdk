@@ -34,6 +34,11 @@ namespace TanatosAPI.Entities.Models {
 		public string? Direccion { get; set; }
 
 		[UseColumnAttribute]
+		[Column("id_tipo_actividad")]
+		[Comment("Identificador de la actividad que efectúa el negocio.")]
+		public long? IdTipoActividad { get; set; }
+
+		[UseColumnAttribute]
 		[Required]
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
 		[Comment("Fecha en que se creó el negocio.")]
@@ -55,5 +60,8 @@ namespace TanatosAPI.Entities.Models {
 		public List<NormaSuscrita>? NormasSuscritas { get; set; }
 
 		public List<InscripcionTemplate>? InscripcionesTemplates { get; set; }
+
+		[ForeignKey(nameof(IdTipoActividad))]
+		public TipoActividad? TipoActividad { get; set; }
 	}
 }

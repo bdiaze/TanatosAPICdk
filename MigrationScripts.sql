@@ -992,5 +992,81 @@ BEGIN
     VALUES ('20251222133226_AgregaIdNegocioInscripcionTemplate', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260112193435_TablasRubroActividad') THEN
+    ALTER TABLE tanatos.negocio ADD id_tipo_actividad bigint;
+    COMMENT ON COLUMN tanatos.negocio.id_tipo_actividad IS 'Identificador de la actividad que efectúa el negocio.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260112193435_TablasRubroActividad') THEN
+    CREATE TABLE tanatos.tipo_rubro (
+        id bigint NOT NULL,
+        nombre text NOT NULL,
+        descripcion text,
+        vigencia boolean NOT NULL,
+        CONSTRAINT "PK_tipo_rubro" PRIMARY KEY (id)
+    );
+    COMMENT ON TABLE tanatos.tipo_rubro IS 'Tabla que contiene los rubros a los que puede pertenecer un negocio.';
+    COMMENT ON COLUMN tanatos.tipo_rubro.id IS 'Identificador del rubro.';
+    COMMENT ON COLUMN tanatos.tipo_rubro.nombre IS 'Nombre del rubro.';
+    COMMENT ON COLUMN tanatos.tipo_rubro.descripcion IS 'Descripción del rubro.';
+    COMMENT ON COLUMN tanatos.tipo_rubro.vigencia IS 'Vigencia del rubro.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260112193435_TablasRubroActividad') THEN
+    CREATE TABLE tanatos.tipo_actividad (
+        id bigint NOT NULL,
+        id_tipo_rubro bigint NOT NULL,
+        nombre text NOT NULL,
+        descripcion text,
+        vigencia boolean NOT NULL,
+        CONSTRAINT "PK_tipo_actividad" PRIMARY KEY (id),
+        CONSTRAINT "FK_tipo_actividad_tipo_rubro_id_tipo_rubro" FOREIGN KEY (id_tipo_rubro) REFERENCES tanatos.tipo_rubro (id) ON DELETE RESTRICT
+    );
+    COMMENT ON TABLE tanatos.tipo_actividad IS 'Tabla que contiene las actividades que puede hacer un negocio.';
+    COMMENT ON COLUMN tanatos.tipo_actividad.id IS 'Identificador de la actividad.';
+    COMMENT ON COLUMN tanatos.tipo_actividad.id_tipo_rubro IS 'Identificador del rubro al que pertenece la actividad.';
+    COMMENT ON COLUMN tanatos.tipo_actividad.nombre IS 'Nombre de la actividad.';
+    COMMENT ON COLUMN tanatos.tipo_actividad.descripcion IS 'Descripción de la actividad.';
+    COMMENT ON COLUMN tanatos.tipo_actividad.vigencia IS 'Vigencia de la actividad.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260112193435_TablasRubroActividad') THEN
+    CREATE INDEX "IX_negocio_id_tipo_actividad" ON tanatos.negocio (id_tipo_actividad);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260112193435_TablasRubroActividad') THEN
+    CREATE INDEX "IX_tipo_actividad_id_tipo_rubro" ON tanatos.tipo_actividad (id_tipo_rubro);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260112193435_TablasRubroActividad') THEN
+    ALTER TABLE tanatos.negocio ADD CONSTRAINT "FK_negocio_tipo_actividad_id_tipo_actividad" FOREIGN KEY (id_tipo_actividad) REFERENCES tanatos.tipo_actividad (id) ON DELETE RESTRICT;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260112193435_TablasRubroActividad') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260112193435_TablasRubroActividad', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 
