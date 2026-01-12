@@ -103,6 +103,8 @@ builder.Services.AddSingleton<NormaSuscritaDao>();
 builder.Services.AddSingleton<FiscalizadorNormaSuscritaDao>();
 builder.Services.AddSingleton<NotificacionNormaSuscritaDao>();
 builder.Services.AddSingleton<HistorialNormaSuscritaDao>();
+builder.Services.AddSingleton<TipoRubroDao>();
+builder.Services.AddSingleton<TipoActividadDao>();
 #endregion
 
 string cognitoRegion;
