@@ -22,7 +22,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtener(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/{id}", async (long id, IHostEnvironment environment, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) => {
+			routes.MapGet("/{id}", async (long id, IHostEnvironment environment, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -43,6 +43,8 @@ namespace TanatosAPI.Endpoints {
 						norma.TemplateNormaNotificaciones = [.. notificaciones.Where(n => n.IdTemplate == norma.IdTemplate && n.IdNorma == norma.IdNorma)];	
 					}
 
+					retorno.TemplateActividades = await templateActividadDao.ObtenerPorTemplate(retorno.Id);
+
 					LambdaLogger.Log(
 						$"[GET] - [Template] - [Obtener] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa del template con ID {id}.");
@@ -55,7 +57,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization().WithOpenApi();
+			}).RequireAuthorization("Admin").WithOpenApi();
 
 			return routes;
 		}
