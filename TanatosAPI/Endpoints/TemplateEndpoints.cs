@@ -12,6 +12,7 @@ namespace TanatosAPI.Endpoints {
 			group.MapObtener();
 			group.MapObtenerVigentes();
 			group.MapObtenerVigentesConNormas();
+			group.MapObtenerVigentesConNormasYRecomendacion();
 			group.MapObtenerPorVigencia();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
@@ -111,6 +112,37 @@ namespace TanatosAPI.Endpoints {
 			return routes;
 		}
 
+		private static IEndpointRouteBuilder MapObtenerVigentesConNormasYRecomendacion(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/VigentesConNormasYRecomendacion/{idTipoActividad}", async (long idTipoActividad, IHostEnvironment environment, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateActividadDao templateActividadDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					List<Template> retorno = await templateDao.ObtenerPorVigencia(true);
+					List<TemplateActividad> recomendacionesPorTipoActividad = await templateActividadDao.ObtenerPorActividad(idTipoActividad);
+
+					foreach (Template template in retorno) {
+						template.TemplateNormas = await templateNormaDao.ObtenerPorTemplate(template.Id);
+
+						template.TemplateActividades = [.. recomendacionesPorTipoActividad.Where(r => r.IdTemplate == template.Id && r.IdTipoActividad == idTipoActividad)];
+					}				
+
+					LambdaLogger.Log(
+						$"[GET] - [Template] - [ObtenerVigentesConNormasYRecomendacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de los templates vigentes con normas y recomendación - Cant. Registros: {retorno.Count}.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Template] - [ObtenerVigentesConNormasYRecomendacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener los templates vigentes con normas y recomendación. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization().WithOpenApi();
+
+			return routes;
+		}
+
 		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
 			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, TemplateDao templateDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
@@ -142,7 +174,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (Template entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) => {
+			routes.MapPost("/", async (Template entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -193,6 +225,15 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
+					// Se valida que todas las actividades pertenezcan al template...
+					if (entrada.TemplateActividades != null && entrada.TemplateActividades.Any(ta => ta.IdTemplate != entrada.Id)) {
+						LambdaLogger.Log(
+							$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No todas las actividades pertenecen al template con ID {entrada.Id}.");
+
+						return Results.BadRequest($"No todas las actividades pertenecen al template con ID {entrada.Id}.");
+					}
+
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
@@ -212,6 +253,11 @@ namespace TanatosAPI.Endpoints {
 								// Se graba cada notificación de la norma...
 								await templateNormaNotificacionDao.Insertar(templateNormaNotificacion, transaction);
 							}
+						}
+
+						// Se graba cada tipo de actividad...
+						foreach(TemplateActividad templateActividad in entrada.TemplateActividades ?? []) {
+							await templateActividadDao.Insertar(templateActividad, transaction);
 						}
 
 						await transaction.CommitAsync();
@@ -240,7 +286,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) => {
+			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -291,6 +337,15 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
+					// Se valida que todas las actividades pertenezcan al template...
+					if (entrada.TemplateActividades != null && entrada.TemplateActividades.Any(ta => ta.IdTemplate != entrada.Id)) {
+						LambdaLogger.Log(
+							$"[PUT] - [Template] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"No todas las actividades pertenecen al template con ID {entrada.Id}.");
+
+						return Results.BadRequest($"No todas las actividades pertenecen al template con ID {entrada.Id}.");
+					}
+
 					existente.TemplateNormas = await templateNormaDao.ObtenerPorTemplate(existente.Id);
 					List<TemplateNormaFiscalizador> fiscalizadoresExistentes = await templateNormaFiscalizadorDao.ObtenerPorTemplateNorma(existente.Id);
 					List<TemplateNormaNotificacion> notificacionesExistentes = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(existente.Id);
@@ -298,6 +353,8 @@ namespace TanatosAPI.Endpoints {
 						normaExistente.TemplateNormaFiscalizadores = [.. fiscalizadoresExistentes.Where(f => f.IdTemplate == normaExistente.IdTemplate && f.IdNorma == normaExistente.IdNorma)];
 						normaExistente.TemplateNormaNotificaciones = [.. notificacionesExistentes.Where(n => n.IdTemplate == normaExistente.IdTemplate && n.IdNorma == normaExistente.IdNorma)];	
 					}
+
+					existente.TemplateActividades = await templateActividadDao.ObtenerPorTemplate(existente.Id);
 
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
@@ -354,6 +411,16 @@ namespace TanatosAPI.Endpoints {
 							}
 						}
 
+						// Se eliminan las actividades que ya no existen...
+						foreach (TemplateActividad actividadEliminar in existente.TemplateActividades.Where(ta => (!entrada.TemplateActividades?.Any(ea => ea.IdTemplate == ta.IdTemplate && ea.IdTipoActividad == ta.IdTipoActividad)) ?? true)) {
+							await templateActividadDao.Eliminar(actividadEliminar.IdTemplate, actividadEliminar.IdTipoActividad, transaction);
+						}
+
+						// Se crean las nuevas actividades que no existen...
+						foreach (TemplateActividad actividadCrear in entrada.TemplateActividades?.Where(ea => !existente.TemplateActividades.Any(ta => ta.IdTemplate == ea.IdTemplate && ta.IdTipoActividad == ea.IdTipoActividad)) ?? []) {
+							await templateActividadDao.Insertar(actividadCrear, transaction);
+						}
+
 						// Se actualiza el template si existen diferencias...
 						if (!entrada.Equals(existente)) {
 							await templateDao.Actualizar(entrada, transaction);
@@ -385,7 +452,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -406,6 +473,7 @@ namespace TanatosAPI.Endpoints {
 						await templateNormaNotificacionDao.Eliminar(id, null, null, null, transaction);
 						await templateNormaFiscalizadorDao.Eliminar(id, null, null, transaction);
 						await templateNormaDao.Eliminar(id, null, transaction);
+						await templateActividadDao.Eliminar(id, null, transaction);
 						await templateDao.Eliminar(id, transaction);
 
 						await transaction.CommitAsync();
