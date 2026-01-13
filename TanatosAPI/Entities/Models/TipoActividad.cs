@@ -42,5 +42,7 @@ namespace TanatosAPI.Entities.Models {
 		public TipoRubro? TipoRubro { get; set; }
 
 		public List<Negocio>? Negocios { get; set; }
+
+		public List<TemplateActividad>? TemplatesActividad { get; set; }
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 using System.Text.Json;
 using TanatosAPI.Endpoints;
 using TanatosAPI.Entities.Models;
@@ -156,6 +157,18 @@ namespace TanatosAPI.Entities.Contexts {
                 .WithMany(o => o.Negocios)
                 .HasForeignKey(o => o.IdTipoActividad)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TemplateActividad>()
+                .HasOne(o => o.Template)
+                .WithMany(o => o.TemplateActividades)
+                .HasForeignKey(o => o.IdTemplate)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TemplateActividad>()
+                .HasOne(o => o.TipoActividad)
+                .WithMany(o => o.TemplatesActividad)
+                .HasForeignKey(o => o.IdTipoActividad)
+                .OnDelete(DeleteBehavior.Restrict);
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -193,5 +206,7 @@ namespace TanatosAPI.Entities.Contexts {
         public DbSet<TipoRubro> TiposRubros { get; set; }
 
         public DbSet<TipoActividad> TiposActividades { get; set; }
+
+		public DbSet<TemplateActividad> TemplatesActividades  { get; set; }
 	}
 }

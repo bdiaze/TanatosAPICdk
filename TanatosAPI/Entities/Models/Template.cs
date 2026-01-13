@@ -44,6 +44,8 @@ namespace TanatosAPI.Entities.Models {
 
 		public List<InscripcionTemplate>? InscripcionesTemplate { get; set; }
 
+		public List<TemplateActividad>? TemplateActividades { get; set; }
+
 		public override int GetHashCode() {
 			return HashCode.Combine(Id, IdTemplatePadre, Nombre, Descripcion, Vigencia);
 		}

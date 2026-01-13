@@ -1068,5 +1068,36 @@ BEGIN
     VALUES ('20260112193435_TablasRubroActividad', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260113192226_TablasTemplateActividad') THEN
+    CREATE TABLE tanatos.template_actividad (
+        id_template bigint NOT NULL,
+        id_tipo_actividad bigint NOT NULL,
+        CONSTRAINT "PK_template_actividad" PRIMARY KEY (id_template, id_tipo_actividad),
+        CONSTRAINT "FK_template_actividad_template_id_template" FOREIGN KEY (id_template) REFERENCES tanatos.template (id) ON DELETE RESTRICT,
+        CONSTRAINT "FK_template_actividad_tipo_actividad_id_tipo_actividad" FOREIGN KEY (id_tipo_actividad) REFERENCES tanatos.tipo_actividad (id) ON DELETE RESTRICT
+    );
+    COMMENT ON TABLE tanatos.template_actividad IS 'Tabla que contiene la recomendación de templates según tipo de actividad de un negocio.';
+    COMMENT ON COLUMN tanatos.template_actividad.id_template IS 'Identificador del template.';
+    COMMENT ON COLUMN tanatos.template_actividad.id_tipo_actividad IS 'Identificador del tipo de actividad del negocio.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260113192226_TablasTemplateActividad') THEN
+    CREATE INDEX "IX_template_actividad_id_tipo_actividad" ON tanatos.template_actividad (id_tipo_actividad);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260113192226_TablasTemplateActividad') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260113192226_TablasTemplateActividad', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 
