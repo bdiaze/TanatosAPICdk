@@ -94,6 +94,7 @@ builder.Services.AddSingleton<TemplateDao>();
 builder.Services.AddSingleton<TemplateNormaDao>();
 builder.Services.AddSingleton<TemplateNormaFiscalizadorDao>();
 builder.Services.AddSingleton<TemplateNormaNotificacionDao>();
+builder.Services.AddSingleton<TemplateActividadDao>();
 builder.Services.AddSingleton<TipoFiscalizadorDao>();
 builder.Services.AddSingleton<TipoPeriodicidadDao>();
 builder.Services.AddSingleton<TipoReceptorNotificacionDao>();
