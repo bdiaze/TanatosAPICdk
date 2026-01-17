@@ -173,7 +173,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapDesactivarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Desactivar", async (EntInscripcionTemplateDesactivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
+			routes.MapPost("/Desactivar", async (EntInscripcionTemplateDesactivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -202,6 +202,23 @@ namespace TanatosAPI.Endpoints {
 						foreach (NormaSuscrita normaSuscrita in normasSuscritas.Where(ns => ns.IdTemplate == entrada.IdTemplate)) {
 							normaSuscrita.FechaEliminacion = DateTime.UtcNow;
 							normaSuscrita.Vigencia = false;
+
+							if (normaSuscrita.Activado) {
+								normaSuscrita.FechaDesactivacion = DateTime.UtcNow;
+								normaSuscrita.Activado = false;
+
+								// Si la norma suscrita estaba activada, se elimina su próximo vencimiento existente...
+								HistorialNormaSuscrita? proximoVencimientoExistente = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true))
+									.OrderBy(hns => hns.FechaVencimiento)
+									.FirstOrDefault();
+								
+								if (proximoVencimientoExistente != null) {
+									proximoVencimientoExistente.FechaEliminacion = DateTime.UtcNow;
+									proximoVencimientoExistente.Vigencia = false;
+									await historialNormaSuscritaDao.Actualizar(proximoVencimientoExistente, transaction);
+								}
+							}
+
 							await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 						}
 
