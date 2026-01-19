@@ -26,7 +26,7 @@ namespace TanatosAPI.Entities.Contexts {
                 .Property(x => x.FechaCaducidadCodigoValidacion)
                 .HasDefaultValueSql($"NOW() + INTERVAL '{DestinatarioNotificacionEndpoints.HORAS_CADUCIDAD_CODIGO_VALIDACION} hours'");
 
-			modelBuilder.Entity<InscripcionTemplate>()
+            modelBuilder.Entity<InscripcionTemplate>()
                 .HasOne(o => o.Template)
                 .WithMany(c => c.InscripcionesTemplate)
                 .HasForeignKey(o => o.IdTemplate)
@@ -54,7 +54,7 @@ namespace TanatosAPI.Entities.Contexts {
                 .HasOne(o => o.TipoPeriodicidad)
                 .WithMany(c => c.TemplateNormas)
                 .HasForeignKey(o => o.IdTipoPeriodicidad)
-                .OnDelete(DeleteBehavior.Restrict); 
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TemplateNorma>()
                 .HasOne(o => o.CategoriaNorma)
@@ -169,6 +169,18 @@ namespace TanatosAPI.Entities.Contexts {
                 .WithMany(o => o.TemplatesActividad)
                 .HasForeignKey(o => o.IdTipoActividad)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<HistorialNotificacion>()
+                .HasOne(o => o.DestinatarioNotificacion)
+                .WithMany(o => o.HistorialNotificaciones)
+                .HasForeignKey(o => o.IdDestinatarioNotificacion)
+                .OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<HistorialNotificacion>()
+				.HasOne(o => o.HistorialNormaSuscrita)
+				.WithMany(o => o.HistorialNotificaciones)
+				.HasForeignKey(o => o.IdHistorialNormaSuscrita)
+				.OnDelete(DeleteBehavior.Restrict);
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -202,6 +214,8 @@ namespace TanatosAPI.Entities.Contexts {
         public DbSet<NotificacionNormaSuscrita> NotificacionesNormasSuscritas { get; set; }
 
         public DbSet<HistorialNormaSuscrita> HistorialesNormasSuscritas { get; set; }
+
+        public DbSet<HistorialNotificacion> HistorialNotificaciones { get; set; }
 
         public DbSet<TipoRubro> TiposRubros { get; set; }
 

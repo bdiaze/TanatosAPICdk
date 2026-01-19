@@ -50,7 +50,7 @@ namespace TanatosAPI.Entities.Models {
 
 		[UseColumnAttribute]
 		[Required]
-		[Column("fecha_caducidad_codigo_validacion")]
+		[Column("fecha_caducidad_codigo_validacion", TypeName = "timestamp with time zone")]
 		[Comment("Fecha en que caduca el código de validación.")]
 		public required DateTime FechaCaducidadCodigoValidacion { get; set; }
 
@@ -87,5 +87,7 @@ namespace TanatosAPI.Entities.Models {
 
         [ForeignKey(nameof(IdNegocio))]
 		public Negocio? Negocio { get; set; }
+
+        public List<HistorialNotificacion>? HistorialNotificaciones { get; set; }
     }
 }

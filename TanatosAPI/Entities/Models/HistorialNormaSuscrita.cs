@@ -53,5 +53,7 @@ namespace TanatosAPI.Entities.Models {
 
 		[ForeignKey(nameof(IdNormaSuscrita))]
 		public NormaSuscrita? NormaSuscrita { get; set; }
+
+		public List<HistorialNotificacion>? HistorialNotificaciones { get; set; }
 	}
 }
