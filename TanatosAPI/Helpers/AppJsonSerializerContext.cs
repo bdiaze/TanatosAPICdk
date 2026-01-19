@@ -13,6 +13,8 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(Dictionary<string, JsonElement>))]
 	[JsonSerializable(typeof(EntHermesCorreoEnviar))]
 	[JsonSerializable(typeof(SalHermesCorreoEnviar))]
+	[JsonSerializable(typeof(EntKairosIngresarProceso))]
+	[JsonSerializable(typeof(SalKairosIngresarProceso))]
 	[JsonSerializable(typeof(EntAuthObtenerAccessToken))]
 	[JsonSerializable(typeof(SalAuthObtenerAccessToken))]
 	[JsonSerializable(typeof(SalAuthRefreshAccessToken))]

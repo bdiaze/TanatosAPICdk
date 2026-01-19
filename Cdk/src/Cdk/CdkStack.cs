@@ -67,7 +67,10 @@ namespace Cdk
 			string arnParameterHermesApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_HERMES_API_KEY_ID") ?? throw new ArgumentNullException("ARN_PARAMETER_HERMES_API_KEY_ID");
 			string hermesDeNombre = System.Environment.GetEnvironmentVariable("HERMES_DE_NOMBRE") ?? throw new ArgumentNullException("HERMES_DE_NOMBRE");
 			string hermesDeCorreo = System.Environment.GetEnvironmentVariable("HERMES_DE_CORREO") ?? throw new ArgumentNullException("HERMES_DE_CORREO");
-			
+			string arnParameterKairosApiUrl = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_KAIROS_API_URL") ?? throw new ArgumentNullException("ARN_PARAMETER_KAIROS_API_URL");
+			string arnParameterKairosApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_KAIROS_API_KEY_ID") ?? throw new ArgumentNullException("ARN_PARAMETER_KAIROS_API_KEY_ID");
+
+
 			// Variables de entorno para la lambda de ejecución inicial...
 			string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new ArgumentNullException("APP_SCHEMA_NAME");
             string initialCreationHandler = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_HANDLER") ?? throw new ArgumentNullException("INITIAL_CREATION_HANDLER");
@@ -320,6 +323,8 @@ namespace Cdk
 			// Se obtienen parámetros usados por la lambda...
 			IStringParameter parameterHermesApiUrl = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterHermesApiUrl", arnParameterHermesApiUrl);
 			IStringParameter parameterHermesApiKeyId = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterHermesApiKeyId", arnParameterHermesApiKeyId);
+			IStringParameter parameterKairosApiUrl = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterKairosApiUrl", arnParameterKairosApiUrl);
+			IStringParameter parameterKairosApiKeyId = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterKairosApiKeyId", arnParameterKairosApiKeyId);
 
 
 			// Creación de role para la función lambda...
@@ -352,6 +357,7 @@ namespace Cdk
 									],
 									Resources = [
 										$"arn:aws:apigateway:{this.Region}::/apikeys/{parameterHermesApiKeyId.StringValue}",
+										$"arn:aws:apigateway:{this.Region}::/apikeys/{parameterKairosApiKeyId.StringValue}",
 									],
 								}),
 								new PolicyStatement(new PolicyStatementProps{
@@ -393,6 +399,8 @@ namespace Cdk
 					{ "HERMES_API_KEY_ID", parameterHermesApiKeyId.StringValue },
 					{ "HERMES_DE_NOMBRE", hermesDeNombre },
 					{ "HERMES_DE_CORREO", hermesDeCorreo },
+					{ "KAIROS_API_URL", parameterKairosApiUrl.StringValue },
+					{ "KAIROS_API_KEY_ID", parameterKairosApiKeyId.StringValue },
 				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {
