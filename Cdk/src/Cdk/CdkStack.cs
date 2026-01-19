@@ -69,7 +69,8 @@ namespace Cdk
 			string hermesDeCorreo = System.Environment.GetEnvironmentVariable("HERMES_DE_CORREO") ?? throw new ArgumentNullException("HERMES_DE_CORREO");
 			string arnParameterKairosApiUrl = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_KAIROS_API_URL") ?? throw new ArgumentNullException("ARN_PARAMETER_KAIROS_API_URL");
 			string arnParameterKairosApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_KAIROS_API_KEY_ID") ?? throw new ArgumentNullException("ARN_PARAMETER_KAIROS_API_KEY_ID");
-
+			string arnParameterNotificacionesLambdaArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_NOTIFICACIONES_LAMBDA_ARN") ?? throw new ArgumentNullException("ARN_PARAMETER_NOTIFICACIONES_LAMBDA_ARN");
+			string arnParameterNotificacionesEjecucionRoleArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_NOTIFICACIONES_EJECUCION_ROLE_ARN") ?? throw new ArgumentNullException("ARN_PARAMETER_NOTIFICACIONES_EJECUCION_ROLE_ARN");
 
 			// Variables de entorno para la lambda de ejecución inicial...
 			string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new ArgumentNullException("APP_SCHEMA_NAME");
@@ -325,7 +326,8 @@ namespace Cdk
 			IStringParameter parameterHermesApiKeyId = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterHermesApiKeyId", arnParameterHermesApiKeyId);
 			IStringParameter parameterKairosApiUrl = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterKairosApiUrl", arnParameterKairosApiUrl);
 			IStringParameter parameterKairosApiKeyId = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterKairosApiKeyId", arnParameterKairosApiKeyId);
-
+			IStringParameter parameterNotificacionesLambdaArn = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterNotificacionesLambdaArn", arnParameterNotificacionesLambdaArn);
+			IStringParameter parameterNotificacionesEjecucionRoleArn = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterNotificacionesEjecucionRoleArn", arnParameterNotificacionesEjecucionRoleArn);
 
 			// Creación de role para la función lambda...
 			IRole roleLambda = new Role(this, $"{appName}APILambdaRole", new RoleProps {
@@ -401,6 +403,8 @@ namespace Cdk
 					{ "HERMES_DE_CORREO", hermesDeCorreo },
 					{ "KAIROS_API_URL", parameterKairosApiUrl.StringValue },
 					{ "KAIROS_API_KEY_ID", parameterKairosApiKeyId.StringValue },
+					{ "NOTIFICACIONES_LAMBDA_ARN", parameterNotificacionesLambdaArn.StringValue },
+					{ "NOTIFICACIONES_EJECUCION_ROLE_ARN", parameterNotificacionesEjecucionRoleArn.StringValue },
 				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {
