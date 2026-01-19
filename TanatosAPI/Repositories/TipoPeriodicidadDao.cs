@@ -9,7 +9,7 @@ namespace TanatosAPI.Repositories {
 		public async Task<TipoPeriodicidad?> ObtenerPorId(long id) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return await connection.QueryFirstOrDefaultAsync<TipoPeriodicidad>(
-				"SELECT ID, NOMBRE, DESCRIPCION, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE ID = @ID",
+				"SELECT ID, NOMBRE, DESCRIPCION, CRON, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE ID = @ID",
 				new { id }
 			);
 		}
@@ -17,7 +17,7 @@ namespace TanatosAPI.Repositories {
 		public async Task<List<TipoPeriodicidad>> ObtenerPorVigencia(bool? vigencia) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return [.. await connection.QueryAsync<TipoPeriodicidad>(
-				"SELECT ID, NOMBRE, DESCRIPCION, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
+				"SELECT ID, NOMBRE, DESCRIPCION, CRON, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
 				new { vigencia }
 			)];
 		}
@@ -25,16 +25,16 @@ namespace TanatosAPI.Repositories {
 		public async Task Insertar(TipoPeriodicidad item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			await connection.ExecuteAsync(
-				"INSERT INTO TANATOS.TIPO_PERIODICIDAD(ID, NOMBRE, DESCRIPCION, VIGENCIA) VALUES (@ID, @NOMBRE, @DESCRIPCION, @VIGENCIA)",
-				new { item.Id, item.Nombre, item.Descripcion, item.Vigencia }
+				"INSERT INTO TANATOS.TIPO_PERIODICIDAD(ID, NOMBRE, DESCRIPCION, CRON, VIGENCIA) VALUES (@ID, @NOMBRE, @DESCRIPCION, @CRON, @VIGENCIA)",
+				new { item.Id, item.Nombre, item.Descripcion, item.Cron, item.Vigencia }
 			);
 		}
 
 		public async Task Actualizar(TipoPeriodicidad item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			await connection.ExecuteAsync(
-				"UPDATE TANATOS.TIPO_PERIODICIDAD SET NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, VIGENCIA = @VIGENCIA WHERE ID = @ID",
-				new { item.Nombre, item.Descripcion, item.Vigencia, item.Id }
+				"UPDATE TANATOS.TIPO_PERIODICIDAD SET NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, CRON = @CRON, VIGENCIA = @VIGENCIA WHERE ID = @ID",
+				new { item.Nombre, item.Descripcion, item.Cron, item.Vigencia, item.Id }
 			);
 		}
 
