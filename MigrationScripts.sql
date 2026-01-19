@@ -1099,5 +1099,21 @@ BEGIN
     VALUES ('20260113192226_TablasTemplateActividad', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260119172016_CronTipoPeriodicidad') THEN
+    ALTER TABLE tanatos.tipo_periodicidad ADD cron text;
+    COMMENT ON COLUMN tanatos.tipo_periodicidad.cron IS 'Cron del tipo de periodicidad.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260119172016_CronTipoPeriodicidad') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260119172016_CronTipoPeriodicidad', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 

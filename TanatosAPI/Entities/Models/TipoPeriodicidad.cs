@@ -27,6 +27,11 @@ namespace TanatosAPI.Entities.Models {
 		public string? Descripcion { get; set; }
 
 		[UseColumnAttribute]
+		[Column("cron")]
+		[Comment("Cron del tipo de periodicidad.")]
+		public string? Cron { get; set; }
+
+		[UseColumnAttribute]
 		[Required]
 		[Column("vigencia")]
 		[Comment("Vigencia del tipo de periodicidad.")]
