@@ -5,7 +5,7 @@ using TanatosAPI.Repositories;
 namespace TanatosAPI.Business {
 	public class FiscalizadorNormaSuscritaBcp(FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao) {
 		public async Task ActualizarPorNormaSuscrita(NormaSuscrita normaSuscrita, List<FiscalizadorNormaSuscrita> fiscalizadoresNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			List<FiscalizadorNormaSuscrita> fiscalizadoresExistentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true);
+			List<FiscalizadorNormaSuscrita> fiscalizadoresExistentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
 
 			// Se eliminan los fiscalizadores existentes que no se incluyen en la entrada...
 			foreach (FiscalizadorNormaSuscrita fiscalizadorExistente in fiscalizadoresExistentes) {
@@ -30,7 +30,7 @@ namespace TanatosAPI.Business {
 		}
 
 		public async Task EliminarPorNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
-			List<FiscalizadorNormaSuscrita> fiscalizadoresVigentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true);
+			List<FiscalizadorNormaSuscrita> fiscalizadoresVigentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
 			foreach (FiscalizadorNormaSuscrita fiscalizador in fiscalizadoresVigentes) {
 				fiscalizador.FechaEliminacion = DateTime.UtcNow;
 				fiscalizador.Vigencia = false;

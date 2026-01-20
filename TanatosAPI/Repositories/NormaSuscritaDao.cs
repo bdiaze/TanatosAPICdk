@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Npgsql;
+using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
@@ -16,14 +17,53 @@ namespace TanatosAPI.Repositories {
 			)];
 		}
 
-		public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return await connection.QueryFirstOrDefaultAsync<NormaSuscrita>(
+		public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			string query =
 				"SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ORDEN_VISUAL, " +
 				"EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NORMA_SUSCRITA " +
-				"WHERE ID = @IDNORMASUSCRITA",
-				new { idNormaSuscrita }
-			);
+				"WHERE ID = @IDNORMASUSCRITA";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+
+				command.Parameters.AddWithValue("IDNORMASUSCRITA", idNormaSuscrita);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				NormaSuscrita? retorno = null;
+
+				if (await reader.ReadAsync()) {
+					retorno = new NormaSuscrita {
+						Id = reader.GetInt64(0),
+						Sub = reader.GetString(1),
+						IdNegocio = reader.GetInt64(2),
+						IdTemplate = reader.IsDBNull(3) ? null : reader.GetInt64(3),
+						IdNorma = reader.IsDBNull(4) ? null : reader.GetInt64(4),
+						Nombre = reader.IsDBNull(5) ? null : reader.GetString(5),
+						Descripcion = reader.IsDBNull(6) ? null : reader.GetString(6),
+						IdTipoPeriodicidad = reader.IsDBNull(7) ? null : reader.GetInt64(7),
+						Multa = reader.IsDBNull(8) ? null : reader.GetString(8),
+						IdCategoriaNorma = reader.IsDBNull(9) ? null : reader.GetInt64(9),
+						OrdenVisual = reader.IsDBNull(10) ? null : reader.GetInt64(10),
+						Editable = reader.GetBoolean(11),
+						FechaActivacion = reader.IsDBNull(12) ? null : reader.GetDateTime(12),
+						FechaDesactivacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
+						Activado = reader.GetBoolean(14),
+						FechaCreacion = reader.IsDBNull(15) ? null : reader.GetDateTime(15),
+						FechaEliminacion = reader.IsDBNull(16) ? null : reader.GetDateTime(16),
+						Vigencia = reader.GetBoolean(17)
+					};
+				}
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
 		}
 
 		public async Task<long> Insertar(NormaSuscrita item, NpgsqlTransaction? transaction = null) {

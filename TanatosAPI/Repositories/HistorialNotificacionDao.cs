@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Npgsql;
 using System.Data;
+using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -8,13 +9,40 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class HistorialNotificacionDao(DatabaseConnectionHelper connectionHelper) {
-		public async Task<List<HistorialNotificacion>> ObtenerPorHistorial(long idHistorialNormaSuscrita, DateTime? fechaEjecucion = null) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return [.. await connection.QueryAsync<HistorialNotificacion>(
+		public async Task<List<HistorialNotificacion>> ObtenerPorHistorial(long idHistorialNormaSuscrita, DateTime? fechaEjecucion = null, NpgsqlTransaction? transaction = null) {
+			string query =
 				"SELECT ID, ID_HISTORIAL_NORMA_SUSCRITA, ID_DESTINATARIO_NOTIFICACION, FECHA_PROGRAMACION, FECHA_EJECUCION FROM TANATOS.HISTORIAL_NOTIFICACION " +
-				"WHERE ID_HISTORIAL_NORMA_SUSCRITA = @IDHISTORIALNORMASUSCRITA AND FECHA_EJECUCION IS NOT DISTINCT FROM @FECHAEJECUCION",
-				new { idHistorialNormaSuscrita, fechaEjecucion }
-			)];
+				"WHERE ID_HISTORIAL_NORMA_SUSCRITA = @IDHISTORIALNORMASUSCRITA AND FECHA_EJECUCION IS NOT DISTINCT FROM @FECHAEJECUCION";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+
+				command.Parameters.AddWithValue("IDHISTORIALNORMASUSCRITA", idHistorialNormaSuscrita);
+				command.Parameters.AddWithValue("FECHAEJECUCION", (object?)fechaEjecucion ?? DBNull.Value);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				List<HistorialNotificacion> retorno = [];
+
+				while (await reader.ReadAsync()) {
+					retorno.Add(new HistorialNotificacion {
+						Id = reader.GetInt64(0),
+						IdHistorialNormaSuscrita = reader.GetInt64(1),
+						IdDestinatarioNotificacion = reader.GetInt64(2),
+						FechaProgramacion = reader.GetDateTime(3),
+						FechaEjecucion = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
+					});
+				}
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
 		}
 
 		public async Task<long> Insertar(HistorialNotificacion item, NpgsqlTransaction? transaction = null) {

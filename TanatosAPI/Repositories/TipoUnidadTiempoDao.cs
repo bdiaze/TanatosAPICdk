@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Npgsql;
 using System.Data;
+using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -16,12 +17,38 @@ namespace TanatosAPI.Repositories {
 			);
 		}
 
-		public async Task<List<TipoUnidadTiempo>> ObtenerPorVigencia(bool? vigencia) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return [.. await connection.QueryAsync<TipoUnidadTiempo>(
-				"SELECT ID, NOMBRE, CANT_SEGUNDOS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
-				new { vigencia }
-			)];
+		public async Task<List<TipoUnidadTiempo>> ObtenerPorVigencia(bool? vigencia, NpgsqlTransaction? transaction = null) {
+			string query = 
+				"SELECT ID, NOMBRE, CANT_SEGUNDOS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO " +
+				"WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+
+				command.Parameters.AddWithValue("VIGENCIA", (object?)vigencia ?? DBNull.Value);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				List<TipoUnidadTiempo> retorno = [];
+
+				while (await reader.ReadAsync()) {
+					retorno.Add(new TipoUnidadTiempo {
+						Id = reader.GetInt64(0),
+						Nombre = reader.GetString(1),
+						CantSegundos = reader.GetInt64(2),
+						Vigencia = reader.GetBoolean(3)
+					});
+				}
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
 		}
 
 		public async Task Insertar(TipoUnidadTiempo item) {

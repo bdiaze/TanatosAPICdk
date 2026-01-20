@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Npgsql;
+using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -7,12 +8,48 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class DestinatarioNotificacionDao(DatabaseConnectionHelper connectionHelper) {
-		public async Task<List<DestinatarioNotificacion>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return [.. await connection.QueryAsync<DestinatarioNotificacion>(
-				"SELECT ID, SUB, ID_NEGOCIO, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION WHERE SUB = @SUB AND (ID_NEGOCIO = @IDNEGOCIO OR @IDNEGOCIO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
-				new { sub, idNegocio, vigencia }
-			)];
+		public async Task<List<DestinatarioNotificacion>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
+			string query =
+				"SELECT ID, SUB, ID_NEGOCIO, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION " +
+				"WHERE SUB = @SUB AND (ID_NEGOCIO = @IDNEGOCIO OR @IDNEGOCIO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+
+				command.Parameters.AddWithValue("SUB", sub);
+				command.Parameters.AddWithValue("IDNEGOCIO", (object?)idNegocio ?? DBNull.Value);
+				command.Parameters.AddWithValue("VIGENCIA", (object?)vigencia ?? DBNull.Value);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				List<DestinatarioNotificacion> retorno = [];
+
+				while (await reader.ReadAsync()) {
+					retorno.Add(new DestinatarioNotificacion {
+						Id = reader.GetInt64(0),
+						Sub = reader.GetString(1),
+						IdNegocio = reader.GetInt64(2),
+						IdTipoReceptor = reader.GetInt64(3),
+						Destino = reader.GetString(4),
+						CodigoValidacion = reader.GetString(5),
+						FechaCaducidadCodigoValidacion = reader.GetDateTime(6),
+						FechaValidacion = reader.IsDBNull(7) ? null : reader.GetDateTime(7),
+						Validado = reader.GetBoolean(8),
+						FechaCreacion = reader.GetDateTime(9),
+						FechaEliminacion = reader.IsDBNull(10) ? null : reader.GetDateTime(10),
+						Vigencia = reader.GetBoolean(11)
+					});
+				}
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
 		}
 
 		public async Task<DestinatarioNotificacion?> ObtenerPorCodigoValidacion(string codigoValidacion) {

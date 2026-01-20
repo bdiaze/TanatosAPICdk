@@ -9,8 +9,8 @@ namespace TanatosAPI.Business {
 			historialNormaSuscrita.Id = await historialNormaSuscritaDao.Insertar(historialNormaSuscrita, transaction);
 
 			// Se obtienen los destinatarios para crear los historiales de notificación...
-			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(historialNormaSuscrita.IdNormaSuscrita) ?? throw new Exception("Norma suscrita no encontrada");
-			List<DestinatarioNotificacion> destinatariosNotificaciones = await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true);
+			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(historialNormaSuscrita.IdNormaSuscrita, transaction) ?? throw new Exception("Norma suscrita no encontrada");
+			List<DestinatarioNotificacion> destinatariosNotificaciones = await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction);
 
 			List<TipoUnidadTiempo> tiposUnidadesTiempo = [];
 
@@ -18,14 +18,14 @@ namespace TanatosAPI.Business {
 			List<NotificacionNormaSuscrita> notificacionesNormaSuscrita = [];
 			List<TemplateNormaNotificacion> templateNormaNotificaciones = [];
 			if (destinatariosNotificaciones.Any(dn => dn.Validado)) {
-				notificacionesNormaSuscrita = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true);
+				notificacionesNormaSuscrita = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
 
 				if (notificacionesNormaSuscrita.Count == 0 && normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
-					templateNormaNotificaciones = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma);
+					templateNormaNotificaciones = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma, transaction);
 				}
 
 				if (notificacionesNormaSuscrita.Count > 0 || templateNormaNotificaciones.Count > 0) {
-					tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true);
+					tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true, transaction);
 				}
 			}
 
@@ -75,7 +75,7 @@ namespace TanatosAPI.Business {
 		}
 
 		public async Task EliminarPorNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
-			List<HistorialNormaSuscrita> historialesVigentes = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true);
+			List<HistorialNormaSuscrita> historialesVigentes = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true, transaction);
 			foreach (HistorialNormaSuscrita historial in historialesVigentes) {
 				historial.FechaEliminacion = DateTime.UtcNow;
 				historial.Vigencia = false;
