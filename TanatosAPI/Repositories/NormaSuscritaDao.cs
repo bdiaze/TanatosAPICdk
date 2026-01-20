@@ -16,20 +16,14 @@ namespace TanatosAPI.Repositories {
 			)];
 		}
 
-		public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			string query =
+		public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita) {
+			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+			return await connection.QueryFirstOrDefaultAsync<NormaSuscrita>(
 				"SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ORDEN_VISUAL, " +
 				"EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NORMA_SUSCRITA " +
-				"WHERE ID = @IDNORMASUSCRITA";
-			DynamicParameters param = new();
-			param.Add("IDNORMASUSCRITA", idNormaSuscrita);
-
-			if (transaction?.Connection != null) {
-				return await transaction!.Connection!.QueryFirstOrDefaultAsync<NormaSuscrita>(query, param, transaction);
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				return await connection.QueryFirstOrDefaultAsync<NormaSuscrita>(query, param);
-			}
+				"WHERE ID = @IDNORMASUSCRITA",
+				new { idNormaSuscrita }
+			);
 		}
 
 		public async Task<long> Insertar(NormaSuscrita item, NpgsqlTransaction? transaction = null) {

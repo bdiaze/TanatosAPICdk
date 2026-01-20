@@ -7,20 +7,12 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class TemplateNormaNotificacionDao(DatabaseConnectionHelper connectionHelper) {
-		public async Task<List<TemplateNormaNotificacion>> ObtenerPorTemplateNorma(long idTemplate, long? idNorma = null, NpgsqlTransaction? transaction = null) {
-			string query =
-				"SELECT ID_TEMPLATE, ID_NORMA, ID_TIPO_UNIDAD_TIEMPO_ANTELACION, CANT_ANTELACION FROM TANATOS.TEMPLATE_NORMA_NOTIFICACION " +
-				"WHERE ID_TEMPLATE = @IDTEMPLATE AND (ID_NORMA = @IDNORMA OR @IDNORMA IS NULL)";
-			DynamicParameters param = new();
-			param.Add("IDTEMPLATE", idTemplate);
-			param.Add("IDNORMA", idNorma);
-
-			if (transaction?.Connection != null) {
-				return [.. await transaction!.Connection!.QueryAsync<TemplateNormaNotificacion>(query, param, transaction)];
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				return [.. await connection.QueryAsync<TemplateNormaNotificacion>(query, param)];
-			}
+		public async Task<List<TemplateNormaNotificacion>> ObtenerPorTemplateNorma(long idTemplate, long? idNorma = null) {
+			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+			return [.. await connection.QueryAsync<TemplateNormaNotificacion>(
+				"SELECT ID_TEMPLATE, ID_NORMA, ID_TIPO_UNIDAD_TIEMPO_ANTELACION, CANT_ANTELACION FROM TANATOS.TEMPLATE_NORMA_NOTIFICACION WHERE ID_TEMPLATE = @IDTEMPLATE AND (ID_NORMA = @IDNORMA OR @IDNORMA IS NULL)",
+				new { idTemplate, idNorma }
+			)];
 		}
 
 		public async Task<List<TemplateNormaNotificacion>> ObtenerPorTipoUnidadTiempoAntelacion(long idTipoUnidadTiempoAntelacion) {

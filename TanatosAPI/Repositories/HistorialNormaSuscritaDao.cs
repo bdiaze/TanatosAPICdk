@@ -16,21 +16,13 @@ namespace TanatosAPI.Repositories {
 			)];
 		}
 
-		public async Task<List<HistorialNormaSuscrita>> ObtenerPorNormaSuscritaYFechaCompletitud(long idNormaSuscrita, DateTime? fechaCompletitud, bool vigencia = true, NpgsqlTransaction? transaction = null) {
-			string query =
+		public async Task<List<HistorialNormaSuscrita>> ObtenerPorNormaSuscritaYFechaCompletitud(long idNormaSuscrita, DateTime? fechaCompletitud, bool vigencia = true) {
+			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+			return [.. await connection.QueryAsync<HistorialNormaSuscrita>(
 				"SELECT ID, ID_NORMA_SUSCRITA, FECHA_VENCIMIENTO, FECHA_COMPLETITUD, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.HISTORIAL_NORMA_SUSCRITA " +
-				"WHERE ID_NORMA_SUSCRITA = @IDNORMASUSCRITA AND FECHA_COMPLETITUD IS NOT DISTINCT FROM @FECHACOMPLETITUD  AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
-			DynamicParameters param = new();
-			param.Add("IDNORMASUSCRITA", idNormaSuscrita);
-			param.Add("FECHACOMPLETITUD", fechaCompletitud);
-			param.Add("VIGENCIA", vigencia);
-
-			if (transaction?.Connection != null) {
-				return [.. await transaction!.Connection!.QueryAsync<HistorialNormaSuscrita>(query, param, transaction)];
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				return [.. await connection.QueryAsync<HistorialNormaSuscrita>(query, param)];
-			}
+				"WHERE ID_NORMA_SUSCRITA = @IDNORMASUSCRITA AND FECHA_COMPLETITUD IS NOT DISTINCT FROM @FECHACOMPLETITUD  AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
+				new { idNormaSuscrita, fechaCompletitud, vigencia }
+			)];
 		}
 
 		public async Task<long> Insertar(HistorialNormaSuscrita item, NpgsqlTransaction? transaction = null) {

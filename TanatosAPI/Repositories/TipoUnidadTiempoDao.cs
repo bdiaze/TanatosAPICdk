@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Npgsql;
+using System.Data;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -15,18 +16,12 @@ namespace TanatosAPI.Repositories {
 			);
 		}
 
-		public async Task<List<TipoUnidadTiempo>> ObtenerPorVigencia(bool? vigencia, NpgsqlTransaction? transaction = null) {
-			string query =
-				"SELECT ID, NOMBRE, CANT_SEGUNDOS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
-			DynamicParameters param = new();
-			param.Add("VIGENCIA", vigencia);
-
-			if (transaction?.Connection != null) {
-				return [.. await transaction!.Connection!.QueryAsync<TipoUnidadTiempo>(query, param, transaction)];
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				return [.. await connection.QueryAsync<TipoUnidadTiempo>(query, param)];
-			}
+		public async Task<List<TipoUnidadTiempo>> ObtenerPorVigencia(bool? vigencia) {
+			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+			return [.. await connection.QueryAsync<TipoUnidadTiempo>(
+				"SELECT ID, NOMBRE, CANT_SEGUNDOS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
+				new { vigencia }
+			)];
 		}
 
 		public async Task Insertar(TipoUnidadTiempo item) {

@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Npgsql;
+using System.Data;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -7,20 +8,13 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class HistorialNotificacionDao(DatabaseConnectionHelper connectionHelper) {
-		public async Task<List<HistorialNotificacion>> ObtenerPorHistorial(long idHistorialNormaSuscrita, DateTime? fechaEjecucion = null, NpgsqlTransaction? transaction = null) {
-			string query =
+		public async Task<List<HistorialNotificacion>> ObtenerPorHistorial(long idHistorialNormaSuscrita, DateTime? fechaEjecucion = null) {
+			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+			return [.. await connection.QueryAsync<HistorialNotificacion>(
 				"SELECT ID, ID_HISTORIAL_NORMA_SUSCRITA, ID_DESTINATARIO_NOTIFICACION, FECHA_PROGRAMACION, FECHA_EJECUCION FROM TANATOS.HISTORIAL_NOTIFICACION " +
-				"WHERE ID_HISTORIAL_NORMA_SUSCRITA = @IDHISTORIALNORMASUSCRITA AND FECHA_EJECUCION IS NOT DISTINCT FROM @FECHAEJECUCION";
-			DynamicParameters param = new();
-			param.Add("IDHISTORIALNORMASUSCRITA", idHistorialNormaSuscrita);
-			param.Add("FECHAEJECUCION", fechaEjecucion);
-
-			if (transaction?.Connection != null) {
-				return [.. await transaction!.Connection!.QueryAsync<HistorialNotificacion>(query, param, transaction)];
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				return [.. await connection.QueryAsync<HistorialNotificacion>(query, param)];
-			}
+				"WHERE ID_HISTORIAL_NORMA_SUSCRITA = @IDHISTORIALNORMASUSCRITA AND FECHA_EJECUCION IS NOT DISTINCT FROM @FECHAEJECUCION",
+				new { idHistorialNormaSuscrita, fechaEjecucion }
+			)];
 		}
 
 		public async Task<long> Insertar(HistorialNotificacion item, NpgsqlTransaction? transaction = null) {
