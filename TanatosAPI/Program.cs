@@ -12,6 +12,7 @@ using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
+using TanatosAPI.Business;
 using TanatosAPI.Endpoints;
 using TanatosAPI.Entities.Contexts;
 using TanatosAPI.Helpers;
@@ -100,13 +101,22 @@ builder.Services.AddSingleton<TipoFiscalizadorDao>();
 builder.Services.AddSingleton<TipoPeriodicidadDao>();
 builder.Services.AddSingleton<TipoReceptorNotificacionDao>();
 builder.Services.AddSingleton<TipoUnidadTiempoDao>();
+builder.Services.AddSingleton<TipoRubroDao>();
+builder.Services.AddSingleton<TipoActividadDao>();
 builder.Services.AddSingleton<NegocioDao>();
 builder.Services.AddSingleton<NormaSuscritaDao>();
 builder.Services.AddSingleton<FiscalizadorNormaSuscritaDao>();
 builder.Services.AddSingleton<NotificacionNormaSuscritaDao>();
 builder.Services.AddSingleton<HistorialNormaSuscritaDao>();
-builder.Services.AddSingleton<TipoRubroDao>();
-builder.Services.AddSingleton<TipoActividadDao>();
+builder.Services.AddSingleton<HistorialNotificacionDao>();
+#endregion
+
+#region Singleton BCP
+builder.Services.AddSingleton<NormaSuscritaBcp>();
+builder.Services.AddSingleton<HistorialNormaSuscritaBcp>();
+builder.Services.AddSingleton<HistorialNotificacionBcp>();
+builder.Services.AddSingleton<FiscalizadorNormaSuscritaBcp>();
+builder.Services.AddSingleton<NotificacionNormaSuscritaBcp>();
 #endregion
 
 string cognitoRegion;

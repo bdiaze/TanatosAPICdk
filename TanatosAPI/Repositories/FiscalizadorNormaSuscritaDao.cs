@@ -2,17 +2,25 @@
 using Npgsql;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class FiscalizadorNormaSuscritaDao(DatabaseConnectionHelper connectionHelper) {
-		public async Task<List<FiscalizadorNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, bool vigencia = true) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return [.. await connection.QueryAsync<FiscalizadorNormaSuscrita>(
+		public async Task<List<FiscalizadorNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, bool vigencia = true, NpgsqlTransaction? transaction = null) {
+			string query =
 				"SELECT ID, ID_NORMA_SUSCRITA, ID_TIPO_FISCALIZADOR, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.FISCALIZADOR_NORMA_SUSCRITA " +
-				"WHERE ID_NORMA_SUSCRITA = @IDNORMASUSCRITA AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
-				new { idNormaSuscrita, vigencia }
-			)];
+				"WHERE ID_NORMA_SUSCRITA = @IDNORMASUSCRITA AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
+			DynamicParameters param = new();
+			param.Add("IDNORMASUSCRITA", idNormaSuscrita);
+			param.Add("VIGENCIA", vigencia);
+
+			if (transaction?.Connection != null) {
+				return [.. await transaction!.Connection!.QueryAsync<FiscalizadorNormaSuscrita>(query, param, transaction)];
+			} else {
+				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+				return [.. await connection.QueryAsync<FiscalizadorNormaSuscrita>(query, param)];
+			}
 		}
 
 		public async Task<long> Insertar(FiscalizadorNormaSuscrita item, NpgsqlTransaction? transaction = null) {

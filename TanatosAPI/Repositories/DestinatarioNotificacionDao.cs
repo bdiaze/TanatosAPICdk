@@ -2,16 +2,26 @@
 using Npgsql;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class DestinatarioNotificacionDao(DatabaseConnectionHelper connectionHelper) {
-		public async Task<List<DestinatarioNotificacion>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return [.. await connection.QueryAsync<DestinatarioNotificacion>(
-				"SELECT ID, SUB, ID_NEGOCIO, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION WHERE SUB = @SUB AND (ID_NEGOCIO = @IDNEGOCIO OR @IDNEGOCIO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
-				new { sub, idNegocio, vigencia }
-			)];
+		public async Task<List<DestinatarioNotificacion>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
+			string query =
+				"SELECT ID, SUB, ID_NEGOCIO, ID_TIPO_RECEPTOR, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION " +
+				"WHERE SUB = @SUB AND (ID_NEGOCIO = @IDNEGOCIO OR @IDNEGOCIO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
+			DynamicParameters param = new();
+			param.Add("SUB", sub);
+			param.Add("IDNEGOCIO", idNegocio);
+			param.Add("VIGENCIA", vigencia);
+
+			if (transaction?.Connection != null) {
+				return [.. await transaction!.Connection!.QueryAsync<DestinatarioNotificacion>(query, param, transaction)];
+			} else {
+				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+				return [.. await connection.QueryAsync<DestinatarioNotificacion>(query, param)];
+			}
 		}
 
 		public async Task<DestinatarioNotificacion?> ObtenerPorCodigoValidacion(string codigoValidacion) {

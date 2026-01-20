@@ -2,17 +2,25 @@
 using Npgsql;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class NotificacionNormaSuscritaDao(DatabaseConnectionHelper connectionHelper) {
-		public async Task<List<NotificacionNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, bool vigencia = true) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return [.. await connection.QueryAsync<NotificacionNormaSuscrita>(
+		public async Task<List<NotificacionNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, bool vigencia = true, NpgsqlTransaction? transaction = null) {
+			string query =
 				"SELECT ID, ID_NORMA_SUSCRITA, ID_TIPO_UNIDAD_TIEMPO_ANTELACION, CANT_ANTELACION, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NOTIFICACION_NORMA_SUSCRITA " +
-				"WHERE ID_NORMA_SUSCRITA = @IDNORMASUSCRITA AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
-				new { idNormaSuscrita, vigencia }
-			)];
+				"WHERE ID_NORMA_SUSCRITA = @IDNORMASUSCRITA AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
+			DynamicParameters param = new();
+			param.Add("IDNORMASUSCRITA", idNormaSuscrita);
+			param.Add("VIGENCIA", vigencia);
+
+			if (transaction?.Connection != null) {
+				return [.. await transaction!.Connection!.QueryAsync<NotificacionNormaSuscrita>(query, param, transaction)];
+			} else {
+				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+				return [.. await connection.QueryAsync<NotificacionNormaSuscrita>(query, param)];
+			}
 		}
 
 		public async Task<long> Insertar(NotificacionNormaSuscrita item, NpgsqlTransaction? transaction = null) {
