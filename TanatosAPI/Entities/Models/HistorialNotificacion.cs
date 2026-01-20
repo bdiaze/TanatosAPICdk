@@ -28,6 +28,16 @@ namespace TanatosAPI.Entities.Models {
 		public required long IdDestinatarioNotificacion { get; set; }
 
 		[UseColumnAttribute]
+		[Column("id_tipo_unidad_tiempo_antelacion")]
+		[Comment("Identificador del tipo de unidad de tiempo correspondiente a la notificación.")]
+		public long? IdTipoUnidadTiempoAntelacion { get; set; }
+
+		[UseColumnAttribute]
+		[Column("cant_antelacion")]
+		[Comment("Cantidad de unidades de tiempo correspondientes a la notificación.")]
+		public int? CantAntelacion { get; set; }
+
+		[UseColumnAttribute]
 		[Required]
 		[Column("fecha_programacion", TypeName = "timestamp with time zone")]
 		[Comment("Fecha en que se programó el envío de la notificación.")]

@@ -1159,5 +1159,29 @@ BEGIN
     VALUES ('20260119232011_TablaHistorialNotificacion', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260120231545_ColumnsHistorialNotificacion') THEN
+    ALTER TABLE tanatos.historial_notificacion ADD cant_antelacion integer;
+    COMMENT ON COLUMN tanatos.historial_notificacion.cant_antelacion IS 'Cantidad de unidades de tiempo correspondientes a la notificación.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260120231545_ColumnsHistorialNotificacion') THEN
+    ALTER TABLE tanatos.historial_notificacion ADD id_tipo_unidad_tiempo_antelacion bigint;
+    COMMENT ON COLUMN tanatos.historial_notificacion.id_tipo_unidad_tiempo_antelacion IS 'Identificador del tipo de unidad de tiempo correspondiente a la notificación.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260120231545_ColumnsHistorialNotificacion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260120231545_ColumnsHistorialNotificacion', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 
