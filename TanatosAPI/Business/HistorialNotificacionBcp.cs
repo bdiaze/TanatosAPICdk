@@ -3,7 +3,7 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class HistorialNotificacionBcp(HistorialNotificacionDao historialNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNotificacionBcp historialNotificacionBcp) {
+	public class HistorialNotificacionBcp(HistorialNotificacionDao historialNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) {
 		public async Task ActualizarPorHistorialNormaSuscrita(HistorialNormaSuscrita historialNormaSuscrita, HashSet<(long IdDestinatarioNotificacion, long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> historialesNotificaciones, NpgsqlTransaction? transaction = null) {
 			List<HistorialNotificacion> historialNotificacionesExistentes = await historialNotificacionDao.ObtenerPorHistorial(historialNormaSuscrita.Id, null, true, transaction);
 			
@@ -28,7 +28,7 @@ namespace TanatosAPI.Business {
 							long segundosPrevios = historialNotificacion.CantAntelacion.Value * tipoUnidadTiempo.CantSegundos;
 							DateTime fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
 
-							await historialNotificacionBcp.Crear(
+							await Crear(
 								historialNormaSuscrita.Id,
 								historialNotificacion.IdDestinatarioNotificacion,
 								historialNotificacion.IdTipoUnidadTiempoAntelacion,
@@ -38,7 +38,14 @@ namespace TanatosAPI.Business {
 						}
 					// Si no viene la antelación, se programa para la fecha de vencimiento...
 					} else {
-						await Crear(historialNormaSuscrita.Id, historialNotificacion.IdDestinatarioNotificacion, null, null, historialNormaSuscrita.FechaVencimiento, transaction);
+						await Crear(
+							historialNormaSuscrita.Id, 
+							historialNotificacion.IdDestinatarioNotificacion, 
+							null, 
+							null, 
+							historialNormaSuscrita.FechaVencimiento,
+							transaction
+						);
 					}
 				}
 			}

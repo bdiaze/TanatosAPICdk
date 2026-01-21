@@ -1215,5 +1215,21 @@ BEGIN
     VALUES ('20260121144405_ColumnsMetadataHistorialNotificacion', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260121213826_ColumnProcesoNotificacionNormaSuscrita') THEN
+    ALTER TABLE tanatos.norma_suscrita ADD procesos_notificaciones jsonb;
+    COMMENT ON COLUMN tanatos.norma_suscrita.procesos_notificaciones IS 'Procesos de notificaciones asociados a la norma suscrita.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260121213826_ColumnProcesoNotificacionNormaSuscrita') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260121213826_ColumnProcesoNotificacionNormaSuscrita', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 

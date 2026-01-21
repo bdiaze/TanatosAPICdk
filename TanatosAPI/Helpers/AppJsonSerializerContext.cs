@@ -11,6 +11,7 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(ProblemDetails))]
     [JsonSerializable(typeof(Dictionary<string, string>))]
 	[JsonSerializable(typeof(Dictionary<string, JsonElement>))]
+	[JsonSerializable(typeof(List<Dictionary<string, JsonElement>>))]
 	[JsonSerializable(typeof(EntHermesCorreoEnviar))]
 	[JsonSerializable(typeof(SalHermesCorreoEnviar))]
 	[JsonSerializable(typeof(EntKairosIngresarProceso))]

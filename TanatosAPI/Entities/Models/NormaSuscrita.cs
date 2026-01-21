@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.Eventing.Reader;
+using System.Text.Json;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TanatosAPI.Entities.Models {
@@ -92,6 +93,11 @@ namespace TanatosAPI.Entities.Models {
 		[Column("activado")]
 		[Comment("Estado de activación de la norma.")]
 		public required bool Activado { get; set; }
+
+		[UseColumnAttribute]
+		[Column("procesos_notificaciones", TypeName = "jsonb")]
+		[Comment("Procesos de notificaciones asociados a la norma suscrita.")]
+		public List<Dictionary<string, JsonElement>>? ProcesosNotificaciones { get; set; }
 
 		[UseColumnAttribute]
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
