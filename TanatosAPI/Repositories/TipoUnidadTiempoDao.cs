@@ -9,12 +9,38 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class TipoUnidadTiempoDao(DatabaseConnectionHelper connectionHelper) {
-		public async Task<TipoUnidadTiempo?> ObtenerPorId(long id) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return await connection.QueryFirstOrDefaultAsync<TipoUnidadTiempo>(
-				"SELECT ID, NOMBRE, CANT_SEGUNDOS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO WHERE ID = @ID",
-				new { id }
-			);
+		public async Task<TipoUnidadTiempo?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
+			string query =
+				"SELECT ID, NOMBRE, CANT_SEGUNDOS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO " +
+				"WHERE ID = @ID";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+
+				command.Parameters.AddWithValue("ID", id);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				TipoUnidadTiempo? retorno = null;
+
+				if (await reader.ReadAsync()) {
+					retorno = new TipoUnidadTiempo {
+						Id = reader.GetInt64(0),
+						Nombre = reader.GetString(1),
+						CantSegundos = reader.GetInt64(2),
+						Vigencia = reader.GetBoolean(3)
+					};
+				}
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
 		}
 
 		public async Task<List<TipoUnidadTiempo>> ObtenerPorVigencia(bool? vigencia, NpgsqlTransaction? transaction = null) {
