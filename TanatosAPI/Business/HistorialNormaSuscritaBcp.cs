@@ -41,15 +41,7 @@ namespace TanatosAPI.Business {
 
 			// Se crean los historiales de notificación...
 			foreach (DestinatarioNotificacion destinatarioNotificacion in destinatariosNotificaciones) {
-				await historialNotificacionDao.Insertar(new HistorialNotificacion {
-					Id = 0,
-					IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
-					IdDestinatarioNotificacion = destinatarioNotificacion.Id,
-					FechaProgramacion = historialNormaSuscrita.FechaVencimiento,
-					FechaCreacion = DateTime.UtcNow,
-					FechaEliminacion = null,
-					Vigencia = true,
-				}, transaction);
+				await historialNotificacionBcp.Crear(historialNormaSuscrita.Id, destinatarioNotificacion.Id, null, null, historialNormaSuscrita.FechaVencimiento, transaction);
 
 				if (notificacionesNormaSuscrita.Count > 0) {
 					foreach (NotificacionNormaSuscrita notificacionNormaSuscrita in notificacionesNormaSuscrita) {
@@ -59,17 +51,14 @@ namespace TanatosAPI.Business {
 							long segundosPrevios = notificacionNormaSuscrita.CantAntelacion * unidadTiempo.CantSegundos;
 							DateTime fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
 
-							await historialNotificacionDao.Insertar(new HistorialNotificacion {
-								Id = 0,
-								IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
-								IdDestinatarioNotificacion = destinatarioNotificacion.Id,
-								IdTipoUnidadTiempoAntelacion = notificacionNormaSuscrita.IdTipoUnidadTiempoAntelacion,
-								CantAntelacion = notificacionNormaSuscrita.CantAntelacion,
-								FechaProgramacion = fechaProgramacion,
-								FechaCreacion = DateTime.UtcNow,
-								FechaEliminacion = null,
-								Vigencia = true,
-							}, transaction);
+							await historialNotificacionBcp.Crear(
+								historialNormaSuscrita.Id, 
+								destinatarioNotificacion.Id, 
+								notificacionNormaSuscrita.IdTipoUnidadTiempoAntelacion, 
+								notificacionNormaSuscrita.CantAntelacion, 
+								fechaProgramacion, 
+								transaction
+							);
 						}
 					}
 				} else if (templateNormaNotificaciones.Count > 0) {
@@ -80,17 +69,14 @@ namespace TanatosAPI.Business {
 							long segundosPrevios = templateNormaNotificacion.CantAntelacion * unidadTiempo.CantSegundos;
 							DateTime fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
 
-							await historialNotificacionDao.Insertar(new HistorialNotificacion {
-								Id = 0,
-								IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
-								IdDestinatarioNotificacion = destinatarioNotificacion.Id,
-								IdTipoUnidadTiempoAntelacion = templateNormaNotificacion.IdTipoUnidadTiempoAntelacion,
-								CantAntelacion = templateNormaNotificacion.CantAntelacion,
-								FechaProgramacion = fechaProgramacion,
-								FechaCreacion = DateTime.UtcNow,
-								FechaEliminacion = null,
-								Vigencia = true,
-							}, transaction);
+							await historialNotificacionBcp.Crear(
+								historialNormaSuscrita.Id,
+								destinatarioNotificacion.Id,
+								templateNormaNotificacion.IdTipoUnidadTiempoAntelacion,
+								templateNormaNotificacion.CantAntelacion,
+								fechaProgramacion,
+								transaction
+							);
 						}
 					}
 				}
@@ -104,7 +90,7 @@ namespace TanatosAPI.Business {
 				historial.Vigencia = false;
 				await historialNormaSuscritaDao.Actualizar(historial, transaction);
 
-				await historialNotificacionBcp.EliminarPorHistorialNormaSuscrita(historial, transaction);
+				await historialNotificacionBcp.EliminarPorHistorialNormaSuscrita(historial.Id, transaction);
 			}
 		}
 
@@ -140,7 +126,7 @@ namespace TanatosAPI.Business {
 						foreach (DestinatarioNotificacion destinatario in destinatariosNotificaciones) {
 							// Solo se crean las notificaciones que no existan aún...
 							if (!notificacionesVigentes.Any(nv => nv.IdDestinatarioNotificacion == destinatario.Id)) {
-								await historialNotificacionBcp.CrearPorHistorialNormaSuscritaYAntelacion(historial.Id, destinatario.Id, idTipoUnidadTiempoAntelacion, cantAntelacion, fechaProgramacion, transaction);
+								await historialNotificacionBcp.Crear(historial.Id, destinatario.Id, idTipoUnidadTiempoAntelacion, cantAntelacion, fechaProgramacion, transaction);
 							}
 						}
 					}
