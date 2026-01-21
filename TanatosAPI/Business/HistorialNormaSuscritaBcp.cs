@@ -1,10 +1,20 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Npgsql;
+using System.Formats.Asn1;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
 	public class HistorialNormaSuscritaBcp(HistorialNotificacionBcp historialNotificacionBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) {
+		public async Task ActualizarHistorialNotificacionPorNormaSuscrita(NormaSuscrita normaSuscrita, HashSet<(long idDestinatarioNotificacion, long IdTipoUnidadTiempoAntelacion, int CantAntelacion)> historialesNotificaciones, NpgsqlTransaction? transaction = null) {
+			List<HistorialNormaSuscrita> historialNormasSuscritasVigentes =  await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true, transaction);
+
+			foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormasSuscritasVigentes) {
+				await historialNotificacionBcp.ActualizarPorHistorialNormaSuscrita(historialNormaSuscrita, historialesNotificaciones, transaction);
+			}
+		}
+
+
 		public async Task Crear(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			historialNormaSuscrita.Id = await historialNormaSuscritaDao.Insertar(historialNormaSuscrita, transaction);
 
@@ -106,20 +116,33 @@ namespace TanatosAPI.Business {
 		}
 
 		public async Task CrearHistorialNotificacionesPorNormaSuscritaYAntelacion(long idNormaSuscrita, long idTipoUnidadTiempoAntelacion, int cantAntelacion, NpgsqlTransaction? transaction = null) {
+			// Se obtienen los historiales de norma suscrita que estén vigentes y no completados...
 			List<HistorialNormaSuscrita> historialesVigentes = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction);
 
 			// Se obtienen los destinatarios para crear los historiales de notificación...
 			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new Exception("Norma suscrita no encontrada");
 			List<DestinatarioNotificacion> destinatariosNotificaciones = [.. (await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).Where(dn => dn.Validado)];
 
+			// Se obtiene el tipo de unidad de tiempo para calcular la fecha de programación...
 			TipoUnidadTiempo? tipoUnidadTiempo = await tipoUnidadTiempoDao.ObtenerPorId(idTipoUnidadTiempoAntelacion, transaction);
+
 			if (tipoUnidadTiempo != null && tipoUnidadTiempo.Vigencia) {
+				// Por cada historial de norma suscrita, se crea el historial de notificación...
 				foreach (HistorialNormaSuscrita historial in historialesVigentes) {
+					// Se obtienen los historiales de notificación existentes, que estén vigentes y pertenezcan a la misma antelación...
+					List<HistorialNotificacion> notificacionesVigentes = [.. (await historialNotificacionDao.ObtenerPorHistorial(historial.Id, null, true, transaction)).Where(n => n.IdTipoUnidadTiempoAntelacion == idTipoUnidadTiempoAntelacion && n.CantAntelacion == cantAntelacion)];
+
 					long segundosPrevios = cantAntelacion * tipoUnidadTiempo.CantSegundos;
 					DateTime fechaProgramacion = historial.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
 
-					foreach (DestinatarioNotificacion destinatario in destinatariosNotificaciones) {
-						await historialNotificacionBcp.CrearPorHistorialNormaSuscritaYAntelacion(historial.Id, destinatario.Id, idTipoUnidadTiempoAntelacion, cantAntelacion, fechaProgramacion, transaction);
+					// Solo se programan las notificaciones cuya fecha de programación sea futura...
+					if (fechaProgramacion > DateTime.UtcNow) {
+						foreach (DestinatarioNotificacion destinatario in destinatariosNotificaciones) {
+							// Solo se crean las notificaciones que no existan aún...
+							if (!notificacionesVigentes.Any(nv => nv.IdDestinatarioNotificacion == destinatario.Id)) {
+								await historialNotificacionBcp.CrearPorHistorialNormaSuscritaYAntelacion(historial.Id, destinatario.Id, idTipoUnidadTiempoAntelacion, cantAntelacion, fechaProgramacion, transaction);
+							}
+						}
 					}
 				}
 			}

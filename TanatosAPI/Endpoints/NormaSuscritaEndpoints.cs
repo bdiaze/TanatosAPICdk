@@ -385,20 +385,12 @@ namespace TanatosAPI.Endpoints {
 					try {
 						nuevo.Id = await normaSuscritaDao.Insertar(nuevo, transaction);
 
-						await fiscalizadorNormaSuscritaBcp.ActualizarPorNormaSuscrita(nuevo, entrada.Fiscalizadores?.Select(f => new FiscalizadorNormaSuscrita {
-							Id = 0,
-							IdNormaSuscrita = 0,
-							IdTipoFiscalizador = f.IdTipoFiscalizador,
-							Vigencia = true,
-						}).ToList() ?? [], transaction);
+						await fiscalizadorNormaSuscritaBcp.ActualizarPorNormaSuscrita(nuevo, entrada.Fiscalizadores?.Select(f => f.IdTipoFiscalizador).ToHashSet() ?? [], transaction);
 
-						await notificacionNormaSuscritaBcp.ActualizarPorNormaSuscrita(nuevo, entrada.Notificaciones?.Select(n => new NotificacionNormaSuscrita {
-							Id = 0,
-							IdNormaSuscrita = 0,
-							IdTipoUnidadTiempoAntelacion = n.IdTipoUnidadTiempoAntelacion,
-							CantAntelacion = n.CantAntelacion,
-							Vigencia = true,
-						}).ToList() ?? [], transaction);
+						await notificacionNormaSuscritaBcp.ActualizarPorNormaSuscrita(nuevo, entrada.Notificaciones?.Select(n => (
+							n.IdTipoUnidadTiempoAntelacion,
+							n.CantAntelacion
+						)).ToHashSet() ?? [], transaction);
 
 						if (entrada.Activado) {
 							HistorialNormaSuscrita historialNormaSuscrita = new() {
@@ -665,20 +657,12 @@ namespace TanatosAPI.Endpoints {
 					try {
 						await normaSuscritaDao.Actualizar(existente, transaction);
 
-						await fiscalizadorNormaSuscritaBcp.ActualizarPorNormaSuscrita(existente, entrada.Fiscalizadores?.Select(f => new FiscalizadorNormaSuscrita { 
-							Id = 0,
-							IdNormaSuscrita = 0,
-							IdTipoFiscalizador = f.IdTipoFiscalizador,
-							Vigencia = true,
-						}).ToList() ?? [], transaction);
+						await fiscalizadorNormaSuscritaBcp.ActualizarPorNormaSuscrita(existente, entrada.Fiscalizadores?.Select(f => f.IdTipoFiscalizador).ToHashSet() ?? [], transaction);
 
-						await notificacionNormaSuscritaBcp.ActualizarPorNormaSuscrita(existente, entrada.Notificaciones?.Select(n => new NotificacionNormaSuscrita { 
-							Id = 0,
-							IdNormaSuscrita = 0,
-							IdTipoUnidadTiempoAntelacion = n.IdTipoUnidadTiempoAntelacion,
-							CantAntelacion = n.CantAntelacion,
-							Vigencia = true,
-						}).ToList() ?? [], transaction);
+						await notificacionNormaSuscritaBcp.ActualizarPorNormaSuscrita(existente, entrada.Notificaciones?.Select(n => (
+							n.IdTipoUnidadTiempoAntelacion, 
+							n.CantAntelacion
+						)).ToHashSet() ?? [], transaction);
 
 						// En caso de que norma suscrita esté activa, se agrega historial en caso de que proximo vencimiento sea distinto al existente...
 						if (entrada.Activado) {

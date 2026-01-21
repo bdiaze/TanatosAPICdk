@@ -4,12 +4,12 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
 	public class FiscalizadorNormaSuscritaBcp(FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao) {
-		public async Task ActualizarPorNormaSuscrita(NormaSuscrita normaSuscrita, List<FiscalizadorNormaSuscrita> fiscalizadoresNormaSuscrita, NpgsqlTransaction? transaction = null) {
+		public async Task ActualizarPorNormaSuscrita(NormaSuscrita normaSuscrita, HashSet<long> idTiposFiscalizadores, NpgsqlTransaction? transaction = null) {
 			List<FiscalizadorNormaSuscrita> fiscalizadoresExistentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
 
 			// Se eliminan los fiscalizadores existentes que no se incluyen en la entrada...
 			foreach (FiscalizadorNormaSuscrita fiscalizadorExistente in fiscalizadoresExistentes) {
-				if (!fiscalizadoresNormaSuscrita.Any(n => n.IdTipoFiscalizador == fiscalizadorExistente.IdTipoFiscalizador)) {
+				if (!idTiposFiscalizadores.Any(n => n == fiscalizadorExistente.IdTipoFiscalizador)) {
 					fiscalizadorExistente.FechaEliminacion = DateTime.UtcNow;
 					fiscalizadorExistente.Vigencia = false;
 					await fiscalizadorNormaSuscritaDao.Actualizar(fiscalizadorExistente, transaction);
@@ -17,14 +17,16 @@ namespace TanatosAPI.Business {
 			}
 
 			// Se agregan los nuevos fiscalizadores...
-			foreach (FiscalizadorNormaSuscrita fiscalizadorNuevo in fiscalizadoresNormaSuscrita) {
-				if (!fiscalizadoresExistentes.Any(fe => fe.IdTipoFiscalizador == fiscalizadorNuevo.IdTipoFiscalizador)) {
-					fiscalizadorNuevo.IdNormaSuscrita = normaSuscrita.Id;
-					fiscalizadorNuevo.FechaCreacion = DateTime.UtcNow;
-					fiscalizadorNuevo.FechaEliminacion = null;
-					fiscalizadorNuevo.Vigencia = true;
-
-					fiscalizadorNuevo.Id = await fiscalizadorNormaSuscritaDao.Insertar(fiscalizadorNuevo, transaction);
+			foreach (long idTipoFiscalizadorNuevo in idTiposFiscalizadores) {
+				if (!fiscalizadoresExistentes.Any(fe => fe.IdTipoFiscalizador == idTipoFiscalizadorNuevo)) {
+					await fiscalizadorNormaSuscritaDao.Insertar(new FiscalizadorNormaSuscrita {
+						Id = 0,
+						IdNormaSuscrita = normaSuscrita.Id,
+						IdTipoFiscalizador = idTipoFiscalizadorNuevo,
+						FechaCreacion = DateTime.UtcNow,
+						FechaEliminacion = null,
+						Vigencia = true
+					}, transaction);
 				}
 			}
 		}

@@ -6,23 +6,55 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class NotificacionNormaSuscritaBcp(NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaBcp historialNormaSuscritaBcp) {
-		public async Task ActualizarPorNormaSuscrita(NormaSuscrita normaSuscrita, List<NotificacionNormaSuscrita> notificacionesNormaSuscrita, NpgsqlTransaction? transaction = null) {
+	public class NotificacionNormaSuscritaBcp(NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, HistorialNotificacionBcp historialNotificacionBcp) {
+		public async Task ActualizarPorNormaSuscrita(NormaSuscrita normaSuscrita, HashSet<(long IdTipoUnidadTiempoAntelacion, int CantAntelacion)> notificacionesNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			List<NotificacionNormaSuscrita> notificacionesExistentes = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
-
-			// Se eliminan las notificaciones existentes que no se incluyen en la entrada...
+			
+			// Se eliminan las notificaciones normas existentes que no se incluyen en la entrada...
 			foreach (NotificacionNormaSuscrita notificacionExistente in notificacionesExistentes) {
 				if (!notificacionesNormaSuscrita.Any(n => n.IdTipoUnidadTiempoAntelacion == notificacionExistente.IdTipoUnidadTiempoAntelacion && n.CantAntelacion == notificacionExistente.CantAntelacion)) {
-					await Eliminar(notificacionExistente, transaction);
+					notificacionExistente.FechaEliminacion = DateTime.UtcNow;
+					notificacionExistente.Vigencia = false;
+
+					await notificacionNormaSuscritaDao.Actualizar(notificacionExistente, transaction);
 				}
 			}
 
-			// Se agregan las nuevas notificaciones...
-			foreach (NotificacionNormaSuscrita notificacionNueva in notificacionesNormaSuscrita) {
+			// Se agregan las nuevas notificaciones normas...
+			foreach ((long IdTipoUnidadTiempoAntelacion, int CantAntelacion) notificacionNueva in notificacionesNormaSuscrita) {
 				if (!notificacionesExistentes.Any(ne => ne.IdTipoUnidadTiempoAntelacion == notificacionNueva.IdTipoUnidadTiempoAntelacion && ne.CantAntelacion == notificacionNueva.CantAntelacion)) {
-					await Crear(normaSuscrita.Id, notificacionNueva.IdTipoUnidadTiempoAntelacion, notificacionNueva.CantAntelacion, transaction);
+					await notificacionNormaSuscritaDao.Insertar(new() {
+						Id = 0,
+						IdNormaSuscrita = normaSuscrita.Id,
+						IdTipoUnidadTiempoAntelacion = notificacionNueva.IdTipoUnidadTiempoAntelacion,
+						CantAntelacion = notificacionNueva.CantAntelacion,
+						FechaCreacion = DateTime.UtcNow,
+						FechaEliminacion = null,
+						Vigencia = true
+					}, transaction);
 				}
 			}
+
+			List<TemplateNormaNotificacion> notificacionesTemplate = [];
+			// Se obtienen la información del template...
+			if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
+				notificacionesTemplate = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma, transaction);
+			}
+
+			// Una vez se tienen actualizadas las notificaciones norma, se procede a actualizar los historiales de notificación...
+			List<DestinatarioNotificacion> destinatarios = [.. (await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).Where(d => d.Validado)];
+			HashSet<(long idDestinatarioNotificacion, long IdTipoUnidadTiempoAntelacion, int CantAntelacion)> historialNotificaciones = [];
+			foreach(DestinatarioNotificacion destinatario in destinatarios) {
+				foreach ((long IdTipoUnidadTiempoAntelacion, int CantAntelacion) notificacionNorma in notificacionesNormaSuscrita) {
+					historialNotificaciones.Add((destinatario.Id, notificacionNorma.IdTipoUnidadTiempoAntelacion, notificacionNorma.CantAntelacion));
+				}
+
+				foreach(TemplateNormaNotificacion templateNotificacion in notificacionesTemplate) {
+					historialNotificaciones.Add((destinatario.Id, templateNotificacion.IdTipoUnidadTiempoAntelacion, templateNotificacion.CantAntelacion));
+				}
+			}
+
+			await historialNormaSuscritaBcp.ActualizarHistorialNotificacionPorNormaSuscrita(normaSuscrita, historialNotificaciones, transaction);
 		}
 		
 		public async Task EliminarPorNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
@@ -32,34 +64,6 @@ namespace TanatosAPI.Business {
 				notificacion.Vigencia = false;
 				await notificacionNormaSuscritaDao.Actualizar(notificacion, transaction);
 			}
-		}
-
-		public async Task Eliminar(NotificacionNormaSuscrita notificacionNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			if (notificacionNormaSuscrita.Vigencia) {
-				notificacionNormaSuscrita.FechaEliminacion = DateTime.UtcNow;
-				notificacionNormaSuscrita.Vigencia = false;
-
-				await notificacionNormaSuscritaDao.Actualizar(notificacionNormaSuscrita, transaction);
-				await historialNormaSuscritaBcp.EliminarHistorialNotificacionesPorNormaSuscritaYAntelacion(notificacionNormaSuscrita.IdNormaSuscrita, notificacionNormaSuscrita.IdTipoUnidadTiempoAntelacion, notificacionNormaSuscrita.CantAntelacion, transaction);
-			}
-		}
-
-		public async Task Crear(long idNormaSuscrita, long idTipoUnidadTiempoAntelacion, int cantAntelacion, NpgsqlTransaction? transaction = null) {
-			NotificacionNormaSuscrita nuevo = new() {
-				Id = 0,
-				IdNormaSuscrita = idNormaSuscrita,
-				IdTipoUnidadTiempoAntelacion = idTipoUnidadTiempoAntelacion,
-				CantAntelacion = cantAntelacion,
-				FechaCreacion = DateTime.UtcNow,
-				FechaEliminacion = null,
-				Vigencia = true
-			};
-
-			nuevo.Id = await notificacionNormaSuscritaDao.Insertar(nuevo, transaction);
-
-
-
-			await historialNormaSuscritaBcp.CrearHistorialNotificacionesPorNormaSuscritaYAntelacion(nuevo.IdNormaSuscrita, nuevo.IdTipoUnidadTiempoAntelacion, nuevo.CantAntelacion, transaction);
 		}
 	}
 }
