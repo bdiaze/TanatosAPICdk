@@ -6,7 +6,7 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
 	public class HistorialNormaSuscritaBcp(HistorialNotificacionBcp historialNotificacionBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) {
-		public async Task ActualizarHistorialNotificacionPorNormaSuscrita(NormaSuscrita normaSuscrita, HashSet<(long idDestinatarioNotificacion, long IdTipoUnidadTiempoAntelacion, int CantAntelacion)> historialesNotificaciones, NpgsqlTransaction? transaction = null) {
+		public async Task ActualizarHistorialNotificacionPorNormaSuscrita(NormaSuscrita normaSuscrita, HashSet<(long idDestinatarioNotificacion, long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> historialesNotificaciones, NpgsqlTransaction? transaction = null) {
 			List<HistorialNormaSuscrita> historialNormasSuscritasVigentes =  await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true, transaction);
 
 			foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormasSuscritasVigentes) {

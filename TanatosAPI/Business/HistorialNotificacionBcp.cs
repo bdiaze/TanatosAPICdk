@@ -4,7 +4,7 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
 	public class HistorialNotificacionBcp(HistorialNotificacionDao historialNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) {
-		public async Task ActualizarPorHistorialNormaSuscrita(HistorialNormaSuscrita historialNormaSuscrita, HashSet<(long IdDestinatarioNotificacion, long IdTipoUnidadTiempoAntelacion, int CantAntelacion)> historialesNotificaciones, NpgsqlTransaction? transaction = null) {
+		public async Task ActualizarPorHistorialNormaSuscrita(HistorialNormaSuscrita historialNormaSuscrita, HashSet<(long IdDestinatarioNotificacion, long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> historialesNotificaciones, NpgsqlTransaction? transaction = null) {
 			List<HistorialNotificacion> historialNotificacionesExistentes = await historialNotificacionDao.ObtenerPorHistorial(historialNormaSuscrita.Id, null, true, transaction);
 			
 			// Se eliminan los historiales de notificaciones existentes que no se incluyen en la entrada...
@@ -20,21 +20,38 @@ namespace TanatosAPI.Business {
 			List<TipoUnidadTiempo> tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true, transaction);
 
 			// Se agregan los nuevos historiales de  notificaciones...
-			foreach ((long IdDestinatarioNotificacion, long IdTipoUnidadTiempoAntelacion, int CantAntelacion) historialNotificacion in historialesNotificaciones) {
+			foreach ((long IdDestinatarioNotificacion, long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion) historialNotificacion in historialesNotificaciones) {
 				if (!historialNotificacionesExistentes.Any(ne => ne.IdDestinatarioNotificacion == historialNotificacion.IdDestinatarioNotificacion && ne.IdTipoUnidadTiempoAntelacion == historialNotificacion.IdTipoUnidadTiempoAntelacion && ne.CantAntelacion == historialNotificacion.CantAntelacion)) {
 					
-					TipoUnidadTiempo? tipoUnidadTiempo = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == historialNotificacion.IdTipoUnidadTiempoAntelacion);
-					if (tipoUnidadTiempo != null) {
-						long segundosPrevios = historialNotificacion.CantAntelacion * tipoUnidadTiempo.CantSegundos;
-						DateTime fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
+					// Si viene la antelación, se calcula la fecha de programación y se registra...
+					if (historialNotificacion.IdTipoUnidadTiempoAntelacion != null && historialNotificacion.CantAntelacion != null) {
+						TipoUnidadTiempo? tipoUnidadTiempo = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == historialNotificacion.IdTipoUnidadTiempoAntelacion);
+						
+						if (tipoUnidadTiempo != null) {
+							long segundosPrevios = historialNotificacion.CantAntelacion.Value * tipoUnidadTiempo.CantSegundos;
+							DateTime fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
 
+							await historialNotificacionDao.Insertar(new() {
+								Id = 0,
+								IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
+								IdDestinatarioNotificacion = historialNotificacion.IdDestinatarioNotificacion,
+								IdTipoUnidadTiempoAntelacion = historialNotificacion.IdTipoUnidadTiempoAntelacion,
+								CantAntelacion = historialNotificacion.CantAntelacion,
+								FechaProgramacion = fechaProgramacion,
+								FechaCreacion = DateTime.UtcNow,
+								FechaEliminacion = null,
+								Vigencia = true
+							}, transaction);
+						}
+					// Si no viene la antelación, se programa para la fecha de vencimiento...
+					} else {
 						await historialNotificacionDao.Insertar(new() {
 							Id = 0,
 							IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
 							IdDestinatarioNotificacion = historialNotificacion.IdDestinatarioNotificacion,
-							IdTipoUnidadTiempoAntelacion = historialNotificacion.IdTipoUnidadTiempoAntelacion,
-							CantAntelacion = historialNotificacion.CantAntelacion,
-							FechaProgramacion = fechaProgramacion,
+							IdTipoUnidadTiempoAntelacion = null,
+							CantAntelacion = null,
+							FechaProgramacion = historialNormaSuscrita.FechaVencimiento,
 							FechaCreacion = DateTime.UtcNow,
 							FechaEliminacion = null,
 							Vigencia = true

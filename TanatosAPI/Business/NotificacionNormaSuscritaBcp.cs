@@ -36,15 +36,20 @@ namespace TanatosAPI.Business {
 			}
 
 			List<TemplateNormaNotificacion> notificacionesTemplate = [];
-			// Se obtienen la información del template...
-			if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
+			// Si el cliente no define sus propias notificaciones, se obtienen la información del template...
+			if (notificacionesNormaSuscrita.Count == 0 && normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
 				notificacionesTemplate = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma, transaction);
 			}
 
 			// Una vez se tienen actualizadas las notificaciones norma, se procede a actualizar los historiales de notificación...
 			List<DestinatarioNotificacion> destinatarios = [.. (await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).Where(d => d.Validado)];
-			HashSet<(long idDestinatarioNotificacion, long IdTipoUnidadTiempoAntelacion, int CantAntelacion)> historialNotificaciones = [];
-			foreach(DestinatarioNotificacion destinatario in destinatarios) {
+			HashSet<(long idDestinatarioNotificacion, long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> historialNotificaciones = [];
+
+			// Se añaden las notificaciones que son previas al vencimiento...
+			foreach (DestinatarioNotificacion destinatario in destinatarios) {
+				// Se añaden las notificaciones que se ejecutan en tiempo de vencimiento...
+				historialNotificaciones.Add((destinatario.Id, null, null));
+
 				foreach ((long IdTipoUnidadTiempoAntelacion, int CantAntelacion) notificacionNorma in notificacionesNormaSuscrita) {
 					historialNotificaciones.Add((destinatario.Id, notificacionNorma.IdTipoUnidadTiempoAntelacion, notificacionNorma.CantAntelacion));
 				}
