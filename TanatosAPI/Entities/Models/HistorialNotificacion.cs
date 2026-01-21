@@ -48,6 +48,23 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Fecha en que se ejecutó el envío de la notificación.")]
 		public DateTime? FechaEjecucion { get; set; }
 
+		[UseColumnAttribute]
+		[Required]
+		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
+		[Comment("Fecha en que se creó el registro.")]
+		public required DateTime FechaCreacion { get; set; }
+
+		[UseColumnAttribute]
+		[Column("fecha_eliminacion", TypeName = "timestamp with time zone")]
+		[Comment("Fecha en que se eliminó el registro.")]
+		public DateTime? FechaEliminacion { get; set; }
+
+		[UseColumnAttribute]
+		[Required]
+		[Column("vigencia")]
+		[Comment("Vigencia del registro.")]
+		public required bool Vigencia { get; set; }
+
 		[ForeignKey(nameof(IdHistorialNormaSuscrita))]
 		public HistorialNormaSuscrita? HistorialNormaSuscrita { get; set; }
 

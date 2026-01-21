@@ -1183,5 +1183,37 @@ BEGIN
     VALUES ('20260120231545_ColumnsHistorialNotificacion', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260121144405_ColumnsMetadataHistorialNotificacion') THEN
+    ALTER TABLE tanatos.historial_notificacion ADD fecha_creacion timestamp with time zone NOT NULL DEFAULT TIMESTAMPTZ '-infinity';
+    COMMENT ON COLUMN tanatos.historial_notificacion.fecha_creacion IS 'Fecha en que se creó el registro.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260121144405_ColumnsMetadataHistorialNotificacion') THEN
+    ALTER TABLE tanatos.historial_notificacion ADD fecha_eliminacion timestamp with time zone;
+    COMMENT ON COLUMN tanatos.historial_notificacion.fecha_eliminacion IS 'Fecha en que se eliminó el registro.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260121144405_ColumnsMetadataHistorialNotificacion') THEN
+    ALTER TABLE tanatos.historial_notificacion ADD vigencia boolean NOT NULL DEFAULT FALSE;
+    COMMENT ON COLUMN tanatos.historial_notificacion.vigencia IS 'Vigencia del registro.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260121144405_ColumnsMetadataHistorialNotificacion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260121144405_ColumnsMetadataHistorialNotificacion', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 

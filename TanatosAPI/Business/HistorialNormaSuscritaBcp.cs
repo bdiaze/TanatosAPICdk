@@ -35,7 +35,10 @@ namespace TanatosAPI.Business {
 					Id = 0,
 					IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
 					IdDestinatarioNotificacion = destinatarioNotificacion.Id,
-					FechaProgramacion = historialNormaSuscrita.FechaVencimiento
+					FechaProgramacion = historialNormaSuscrita.FechaVencimiento,
+					FechaCreacion = DateTime.UtcNow,
+					FechaEliminacion = null,
+					Vigencia = true,
 				}, transaction);
 
 				if (notificacionesNormaSuscrita.Count > 0) {
@@ -52,7 +55,10 @@ namespace TanatosAPI.Business {
 								IdDestinatarioNotificacion = destinatarioNotificacion.Id,
 								IdTipoUnidadTiempoAntelacion = notificacionNormaSuscrita.IdTipoUnidadTiempoAntelacion,
 								CantAntelacion = notificacionNormaSuscrita.CantAntelacion,
-								FechaProgramacion = fechaProgramacion
+								FechaProgramacion = fechaProgramacion,
+								FechaCreacion = DateTime.UtcNow,
+								FechaEliminacion = null,
+								Vigencia = true,
 							}, transaction);
 						}
 					}
@@ -70,7 +76,10 @@ namespace TanatosAPI.Business {
 								IdDestinatarioNotificacion = destinatarioNotificacion.Id,
 								IdTipoUnidadTiempoAntelacion = templateNormaNotificacion.IdTipoUnidadTiempoAntelacion,
 								CantAntelacion = templateNormaNotificacion.CantAntelacion,
-								FechaProgramacion = fechaProgramacion
+								FechaProgramacion = fechaProgramacion,
+								FechaCreacion = DateTime.UtcNow,
+								FechaEliminacion = null,
+								Vigencia = true,
 							}, transaction);
 						}
 					}
