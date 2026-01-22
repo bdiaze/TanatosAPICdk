@@ -1,17 +1,44 @@
 ﻿using Dapper;
+using Microsoft.AspNetCore.SignalR;
 using Npgsql;
+using System.Data.Common;
+using System.Text.Json;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class TipoPeriodicidadDao(DatabaseConnectionHelper connectionHelper) {
-		public async Task<TipoPeriodicidad?> ObtenerPorId(long id) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return await connection.QueryFirstOrDefaultAsync<TipoPeriodicidad>(
-				"SELECT ID, NOMBRE, DESCRIPCION, CRON, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE ID = @ID",
-				new { id }
-			);
+		public async Task<TipoPeriodicidad?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
+			string query = "SELECT ID, NOMBRE, DESCRIPCION, CRON, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE ID = @ID";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+				command.Parameters.AddWithValue("ID", id);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				TipoPeriodicidad? retorno = null;
+
+				if (await reader.ReadAsync()) {
+					retorno = new TipoPeriodicidad {
+						Id = reader.GetInt64(0),
+						Nombre = reader.GetString(1),
+						Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
+						Cron = reader.IsDBNull(3) ? null : reader.GetString(3),
+						Vigencia = reader.GetBoolean(4),
+					};
+				}
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
 		}
 
 		public async Task<List<TipoPeriodicidad>> ObtenerPorVigencia(bool? vigencia) {
