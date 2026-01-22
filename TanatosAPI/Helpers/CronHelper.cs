@@ -1,8 +1,23 @@
 ﻿using System.Text.RegularExpressions;
+using TimeZoneConverter;
 
 namespace TanatosAPI.Helpers {
 	public static class CronHelper {
-		public static string GenerarCronDesdeFecha(DateTime fecha, string? baseCron = null) {
+		public static string GenerarCronDesdeFecha(DateTime fecha, string? baseCron = null, string? timezone = "America/Santiago") {
+			if (timezone != null) {
+				// Nos aseguramos de que la fecha esté en UTC...
+				fecha = DateTime.SpecifyKind(fecha, DateTimeKind.Utc);
+
+				// Si estamos en Windows, convertimos la zona horaria de IANA a Windows...
+				if (OperatingSystem.IsWindows()) {
+					timezone = TZConvert.IanaToWindows(timezone);
+				}
+
+				TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+
+				fecha = TimeZoneInfo.ConvertTimeFromUtc(fecha, timeZoneInfo);
+			}
+
 			baseCron = baseCron?.Trim();
 			if (baseCron != null) baseCron = Regex.Replace(baseCron, @"\s+", " ");
 			baseCron ??= "MI HO DM MO ? YE";

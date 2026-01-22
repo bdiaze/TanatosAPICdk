@@ -104,9 +104,10 @@ namespace TanatosAPI.Business {
 					}
 
 					// Se crean los procesos programados que faltan...
-					string nombreProceso = $"{variableEntornoHelper.Obtener("APP_NAME")}-NormaSuscrita{idNormaSuscrita}";
 					foreach (string cronNuevo in crons) {
 						if (!cronsExistentes.Any(ce => ce == cronNuevo)) {
+							string nombreProceso = $"{variableEntornoHelper.Obtener("APP_NAME")} - NormaSuscrita {idNormaSuscrita} - Cron {cronNuevo}";
+
 							EntKairosParametrosProceso parametros = new() { 
 								IdNormaSuscrita = idNormaSuscrita,
 								Cron = cronNuevo,
