@@ -7,9 +7,15 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class ProcesoNotificacionBcp(VariableEntornoHelper variableEntornoHelper, KairosHelper kairosHelper, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) {
+	public class ProcesoNotificacionBcp(VariableEntornoHelper variableEntornoHelper, KairosHelper kairosHelper, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) {
 		public async Task ActualizarProgramacionProcesosNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) { 
 			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new Exception("Norma suscrita inválida");
+			TemplateNorma? templateNorma = null;
+			if (normaSuscrita.IdTipoPeriodicidad == null && normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
+				templateNorma = (await templateNormaDao.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
+			}
+
+
 			// Si la norma suscrita no está activada, se desprograman todas sus notificaciones...
 			if (!normaSuscrita.Activado) {
 				foreach (Dictionary<string, JsonElement> proceso in normaSuscrita.ProcesosNotificaciones ?? []) {
@@ -24,8 +30,8 @@ namespace TanatosAPI.Business {
 				await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 
 			// Si la norma suscrita está activada, se programan las notificaciones que no están programadas, y desprograman las que no son necesarias...
-			} else if (normaSuscrita.IdTipoPeriodicidad != null) {
-				TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId(normaSuscrita.IdTipoPeriodicidad.Value, transaction) ?? throw new Exception("Tipo periodicidad inválido");
+			} else if ((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) != null) {
+				TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad!).Value, transaction) ?? throw new Exception("Tipo periodicidad inválido");
 				
 				if (!string.IsNullOrWhiteSpace(tipoPeriodicidad.Cron)) {
 					// Se arma listado de las configuraciones de notificaciones previas...
