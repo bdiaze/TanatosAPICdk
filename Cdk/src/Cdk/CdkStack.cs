@@ -160,56 +160,56 @@ namespace Cdk
 			// Se crean scopes y resource server para userpoolclient de proceso de notificaciones...
 
 			ResourceServerScope scopeObligacionesRead = new(new ResourceServerScopeProps {
-				ScopeName = "obligaciones/read",
+				ScopeName = "obligaciones.read",
 				ScopeDescription = "Acceso de lectura a las obligaciones"
 			});
 			ResourceServerScope scopeObligacionesWrite = new(new ResourceServerScopeProps {
-				ScopeName = "obligaciones/write",
+				ScopeName = "obligaciones.write",
 				ScopeDescription = "Acceso de escritura a las obligaciones"
 			});
 
 			ResourceServerScope scopeTemplatesRead = new(new ResourceServerScopeProps {
-				ScopeName = "templates/read",
+				ScopeName = "templates.read",
 				ScopeDescription = "Acceso de lectura a los templates"
 			});
 			ResourceServerScope scopeTemplatesWrite = new(new ResourceServerScopeProps {
-				ScopeName = "templates/write",
+				ScopeName = "templates.write",
 				ScopeDescription = "Acceso de escritura a los templates"
 			});
 
 			ResourceServerScope scopeNegociosRead = new(new ResourceServerScopeProps {
-				ScopeName = "negocios/read",
+				ScopeName = "negocios.read",
 				ScopeDescription = "Acceso de lectura a los negocios"
 			});
 			ResourceServerScope scopeNegociosWrite = new(new ResourceServerScopeProps {
-				ScopeName = "negocios/write",
+				ScopeName = "negocios.write",
 				ScopeDescription = "Acceso de escritura a los negocios"
 			});
 
 			ResourceServerScope scopeNotificacionesRead = new(new ResourceServerScopeProps {
-				ScopeName = "notificaciones/read",
+				ScopeName = "notificaciones.read",
 				ScopeDescription = "Acceso de lectura a las notificaciones"
 			});
 			ResourceServerScope scopeNotificacionesWrite = new(new ResourceServerScopeProps {
-				ScopeName = "notificaciones/write",
+				ScopeName = "notificaciones.write",
 				ScopeDescription = "Acceso de escritura a las notificaciones"
 			});
 
 			ResourceServerScope scopeVencimientosRead = new(new ResourceServerScopeProps {
-				ScopeName = "vencimientos/read",
+				ScopeName = "vencimientos.read",
 				ScopeDescription = "Acceso de lectura a los vencimientos"
 			});
 			ResourceServerScope scopeVencimientosWrite = new(new ResourceServerScopeProps {
-				ScopeName = "vencimientos/write",
+				ScopeName = "vencimientos.write",
 				ScopeDescription = "Acceso de escritura a los vencimientos"
 			});
 
 			ResourceServerScope scopeSistemaRead = new(new ResourceServerScopeProps {
-				ScopeName = "sistema/read",
+				ScopeName = "sistema.read",
 				ScopeDescription = "Acceso de lectura a los parametros del sistema"
 			});
 			ResourceServerScope scopeSistemaWrite = new(new ResourceServerScopeProps {
-				ScopeName = "sistema/write",
+				ScopeName = "sistema.write",
 				ScopeDescription = "Acceso de escritura a los parametros del sistema"
 			});
 
