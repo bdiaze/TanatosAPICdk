@@ -18,6 +18,7 @@ using Constructs;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using CfnStage = Amazon.CDK.AWS.Apigatewayv2.CfnStage;
 using CfnStageProps = Amazon.CDK.AWS.Apigatewayv2.CfnStageProps;
 using DomainNameAttributes = Amazon.CDK.AWS.Apigatewayv2.DomainNameAttributes;
@@ -47,6 +48,9 @@ namespace Cdk
 			string accessTokenValidityMinutes = System.Environment.GetEnvironmentVariable("ACCESS_TOKEN_VALIDITY_MINUTES") ?? throw new ArgumentNullException("ACCESS_TOKEN_VALIDITY_MINUTES");
 			string idTokenValidityMinutes = System.Environment.GetEnvironmentVariable("ID_TOKEN_VALIDITY_MINUTES") ?? throw new ArgumentNullException("ID_TOKEN_VALIDITY_MINUTES");
 			string refreshTokenValidityMinutes = System.Environment.GetEnvironmentVariable("REFRESH_TOKEN_VALIDITY_MINUTES") ?? throw new ArgumentNullException("REFRESH_TOKEN_VALIDITY_MINUTES");
+
+			// Para proceso de notificación...
+			string notificacionesTokenValidityMinutes = System.Environment.GetEnvironmentVariable("NOTIFICACIONES_TOKEN_VALIDITY_MINUTES") ?? throw new ArgumentNullException("NOTIFICACIONES_TOKEN_VALIDITY_MINUTES");
 
 			// Para infraestructura...
 			string publishZip = System.Environment.GetEnvironmentVariable("PUBLISH_ZIP") ?? throw new ArgumentNullException("PUBLISH_ZIP");
@@ -153,6 +157,81 @@ namespace Cdk
 				ManagedLoginVersion = ManagedLoginVersion.NEWER_MANAGED_LOGIN,
 			});
 
+			// Se crean scopes y resource server para userpoolclient de proceso de notificaciones...
+
+			ResourceServerScope scopeObligacionesRead = new(new ResourceServerScopeProps {
+				ScopeName = "obligaciones/read",
+				ScopeDescription = "Acceso de lectura a las obligaciones"
+			});
+			ResourceServerScope scopeObligacionesWrite = new(new ResourceServerScopeProps {
+				ScopeName = "obligaciones/write",
+				ScopeDescription = "Acceso de escritura a las obligaciones"
+			});
+
+			ResourceServerScope scopeTemplatesRead = new(new ResourceServerScopeProps {
+				ScopeName = "templates/read",
+				ScopeDescription = "Acceso de lectura a los templates"
+			});
+			ResourceServerScope scopeTemplatesWrite = new(new ResourceServerScopeProps {
+				ScopeName = "templates/write",
+				ScopeDescription = "Acceso de escritura a los templates"
+			});
+
+			ResourceServerScope scopeNegociosRead = new(new ResourceServerScopeProps {
+				ScopeName = "negocios/read",
+				ScopeDescription = "Acceso de lectura a los negocios"
+			});
+			ResourceServerScope scopeNegociosWrite = new(new ResourceServerScopeProps {
+				ScopeName = "negocios/write",
+				ScopeDescription = "Acceso de escritura a los negocios"
+			});
+
+			ResourceServerScope scopeNotificacionesRead = new(new ResourceServerScopeProps {
+				ScopeName = "notificaciones/read",
+				ScopeDescription = "Acceso de lectura a las notificaciones"
+			});
+			ResourceServerScope scopeNotificacionesWrite = new(new ResourceServerScopeProps {
+				ScopeName = "notificaciones/write",
+				ScopeDescription = "Acceso de escritura a las notificaciones"
+			});
+
+			ResourceServerScope scopeVencimientosRead = new(new ResourceServerScopeProps {
+				ScopeName = "vencimientos/read",
+				ScopeDescription = "Acceso de lectura a los vencimientos"
+			});
+			ResourceServerScope scopeVencimientosWrite = new(new ResourceServerScopeProps {
+				ScopeName = "vencimientos/write",
+				ScopeDescription = "Acceso de escritura a los vencimientos"
+			});
+
+			ResourceServerScope scopeSistemaRead = new(new ResourceServerScopeProps {
+				ScopeName = "sistema/read",
+				ScopeDescription = "Acceso de lectura a los parametros del sistema"
+			});
+			ResourceServerScope scopeSistemaWrite = new(new ResourceServerScopeProps {
+				ScopeName = "sistema/write",
+				ScopeDescription = "Acceso de escritura a los parametros del sistema"
+			});
+
+
+			UserPoolResourceServer resourceServer =  userPool.AddResourceServer($"{appName}ResourceServer", new UserPoolResourceServerOptions { 
+				Identifier = "api",
+				Scopes = [
+					scopeObligacionesRead,
+					scopeObligacionesWrite,
+					scopeTemplatesRead,
+					scopeTemplatesWrite,
+					scopeNegociosRead,
+					scopeNegociosWrite,
+					scopeNotificacionesRead,
+					scopeNotificacionesWrite,
+					scopeVencimientosRead,
+					scopeVencimientosWrite,
+					scopeSistemaRead,
+					scopeSistemaWrite
+				]
+			});
+
 			UserPoolClient userPoolClient = new(this, $"{appName}UserPoolClient", new UserPoolClientProps {
 				UserPoolClientName = $"{appName}UserPoolClient",
 				UserPool = userPool,
@@ -168,11 +247,54 @@ namespace Cdk
 					CallbackUrls = callbackUrls,
 					LogoutUrls = logoutUrls,
 					Flows = new OAuthFlows { AuthorizationCodeGrant = true },
-					Scopes = [OAuthScope.OPENID, OAuthScope.EMAIL, OAuthScope.PROFILE]
+					Scopes = [
+						OAuthScope.OPENID, OAuthScope.EMAIL, OAuthScope.PROFILE,
+						OAuthScope.ResourceServer(resourceServer, scopeObligacionesRead),
+						OAuthScope.ResourceServer(resourceServer, scopeObligacionesWrite),
+						OAuthScope.ResourceServer(resourceServer, scopeTemplatesRead),
+						OAuthScope.ResourceServer(resourceServer, scopeTemplatesWrite),
+						OAuthScope.ResourceServer(resourceServer, scopeNegociosRead),
+						OAuthScope.ResourceServer(resourceServer, scopeNegociosWrite),
+						OAuthScope.ResourceServer(resourceServer, scopeNotificacionesRead),
+						OAuthScope.ResourceServer(resourceServer, scopeNotificacionesWrite),
+						OAuthScope.ResourceServer(resourceServer, scopeVencimientosRead),
+						OAuthScope.ResourceServer(resourceServer, scopeVencimientosWrite),
+						OAuthScope.ResourceServer(resourceServer, scopeSistemaRead),
+						OAuthScope.ResourceServer(resourceServer, scopeSistemaWrite),
+					]
 				},
 				AccessTokenValidity = Duration.Minutes(double.Parse(accessTokenValidityMinutes)),
 				IdTokenValidity = Duration.Minutes(double.Parse(idTokenValidityMinutes)),
 				RefreshTokenValidity = Duration.Minutes(double.Parse(refreshTokenValidityMinutes))
+			});
+
+			// Se crea userpoolclient a ser usado por aplicacion de notificaciones...
+			UserPoolClient notificacionesUserPoolClient = new(this, $"{appName}NotificacionesUserPoolClient", new UserPoolClientProps {
+				UserPoolClientName = $"{appName}NotificacionesUserPoolClient",
+				UserPool = userPool,
+				GenerateSecret = true,
+				AuthFlows = new AuthFlow {
+					AdminUserPassword = false,
+					UserPassword = false,
+					UserSrp = false,
+				},
+				SupportedIdentityProviders = [
+					UserPoolClientIdentityProvider.COGNITO
+				],
+				OAuth = new OAuthSettings {
+					Flows = new OAuthFlows { ClientCredentials = true },
+					Scopes = [
+						OAuthScope.ResourceServer(resourceServer, scopeObligacionesRead),
+						OAuthScope.ResourceServer(resourceServer, scopeTemplatesRead),
+						OAuthScope.ResourceServer(resourceServer, scopeNegociosRead),
+						OAuthScope.ResourceServer(resourceServer, scopeVencimientosRead),
+						OAuthScope.ResourceServer(resourceServer, scopeVencimientosWrite),
+						OAuthScope.ResourceServer(resourceServer, scopeNotificacionesRead),
+						OAuthScope.ResourceServer(resourceServer, scopeNotificacionesWrite),
+
+					]
+				},
+				AccessTokenValidity = Duration.Minutes(double.Parse(notificacionesTokenValidityMinutes))
 			});
 
 			// string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.ico")));
@@ -394,6 +516,7 @@ namespace Cdk
 					{ "COGNITO_BASE_URL", domain.BaseUrl() },
 					{ "COGNITO_USER_POOL_ID", userPool.UserPoolId },
 					{ "COGNITO_USER_POOL_CLIENT_ID", userPoolClient.UserPoolClientId },
+					{ "COGNITO_NOTIFICACIONES_USER_POOL_CLIENT_ID", notificacionesUserPoolClient.UserPoolClientId },
 					{ "COGNITO_CALLBACK_URLS", string.Join(',', callbackUrls) },
 					{ "COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES", refreshTokenValidityMinutes },
 					{ "API_GATEWAY_MAPPING_KEY", apiMappingKey },
@@ -466,7 +589,10 @@ namespace Cdk
 					$"{appName}APIHttpJwtAuthorizer",
 					$"https://cognito-idp.{regionAws}.amazonaws.com/{userPool.UserPoolId}",
 					new HttpJwtAuthorizerProps {
-						JwtAudience = [userPoolClient.UserPoolClientId]
+						JwtAudience = [
+							userPoolClient.UserPoolClientId,
+							notificacionesUserPoolClient.UserPoolClientId
+						]
 					}
 				),
 			});
