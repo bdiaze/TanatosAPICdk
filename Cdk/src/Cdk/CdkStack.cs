@@ -427,13 +427,13 @@ namespace Cdk
 
 
             // Se configuran parámetros para ser rescatados por consumidores...
-            Secret secret = new(this, $"{appName}NotificacionesUserPoolClientSecret", new SecretProps {
-                SecretName = $"/{appName}/Notificaciones/UserPoolClient",
-                Description = $"User pool client de Cognito para aplicacion de notificaciones {appName}",
+            _ = new Secret(this, $"{appName}Secret", new SecretProps {
+                SecretName = $"/{appName}",
+                Description = $"Secretos de la aplicacion de {appName}",
                 SecretObjectValue = new Dictionary<string, SecretValue> {
-                    { "base_url", SecretValue.UnsafePlainText(domain.BaseUrl()) },
-                    { "client_id", SecretValue.UnsafePlainText(notificacionesUserPoolClient.UserPoolClientId) },
-                    { "client_secret", notificacionesUserPoolClient.UserPoolClientSecret },
+                    { "CognitoBaseUrl", SecretValue.UnsafePlainText(domain.BaseUrl()) },
+                    { "NotificacionesUserPoolClientId", SecretValue.UnsafePlainText(notificacionesUserPoolClient.UserPoolClientId) },
+                    { "NotificacionesUserPoolClientSecret", notificacionesUserPoolClient.UserPoolClientSecret },
                 },
             });
 
