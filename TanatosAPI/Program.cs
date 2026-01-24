@@ -164,7 +164,19 @@ builder.Services
 	});
 
 builder.Services.AddAuthorizationBuilder()
-	.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+	.AddPolicy("Admin", policy => policy.RequireRole("Admin"))
+	.AddPolicy("Obligaciones.Read", policy => policy.RequireClaim("scope", "api/obligaciones.read"))
+	.AddPolicy("Obligaciones.Write", policy => policy.RequireClaim("scope", "api/obligaciones.write"))
+	.AddPolicy("Templates.Read", policy => policy.RequireClaim("scope", "api/templates.read"))
+	.AddPolicy("Templates.Write", policy => policy.RequireClaim("scope", "api/templates.write"))
+	.AddPolicy("Negocios.Read", policy => policy.RequireClaim("scope", "api/negocios.read"))
+	.AddPolicy("Negocios.Write", policy => policy.RequireClaim("scope", "api/negocios.write"))
+	.AddPolicy("Notificaciones.Read", policy => policy.RequireClaim("scope", "api/notificaciones.read"))
+	.AddPolicy("Notificaciones.Write", policy => policy.RequireClaim("scope", "api/notificaciones.write"))
+	.AddPolicy("Vencimientos.Read", policy => policy.RequireClaim("scope", "api/vencimientos.read"))
+	.AddPolicy("Vencimientos.Write", policy => policy.RequireClaim("scope", "api/vencimientos.write"))
+	.AddPolicy("Sistema.Read", policy => policy.RequireClaim("scope", "api/sistema.read"))
+	.AddPolicy("Sistema.Write", policy => policy.RequireClaim("scope", "api/sistema.write"));
 
 WebApplication app = builder.Build();
 
