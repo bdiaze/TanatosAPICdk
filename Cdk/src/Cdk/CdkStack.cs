@@ -10,6 +10,7 @@ using Amazon.CDK.AWS.Lambda;
 using Amazon.CDK.AWS.Logs;
 using Amazon.CDK.AWS.Route53;
 using Amazon.CDK.AWS.Route53.Targets;
+using Amazon.CDK.AWS.SecretsManager;
 using Amazon.CDK.AWS.SSM;
 using Amazon.CDK.AwsApigatewayv2Authorizers;
 using Amazon.CDK.AwsApigatewayv2Integrations;
@@ -24,6 +25,7 @@ using CfnStageProps = Amazon.CDK.AWS.Apigatewayv2.CfnStageProps;
 using DomainNameAttributes = Amazon.CDK.AWS.Apigatewayv2.DomainNameAttributes;
 using HttpMethod = Amazon.CDK.AWS.Apigatewayv2.HttpMethod;
 using IDomainName = Amazon.CDK.AWS.Apigatewayv2.IDomainName;
+using Secret = Amazon.CDK.AWS.SecretsManager.Secret;
 using StageOptions = Amazon.CDK.AWS.APIGateway.StageOptions;
 
 namespace Cdk
@@ -422,11 +424,24 @@ namespace Cdk
 				RecordName = cognitoCustomDomain,
 				Target = RecordTarget.FromAlias(new UserPoolDomainTarget(domain)),
 			});
-			#endregion
 
-			#region API
-			// Se crea security group para la lambda y se enlaza con security group de RDS...
-			SecurityGroup securityGroup = new(this, $"{appName}LambdaSecurityGroup", new SecurityGroupProps {
+
+            // Se configuran parámetros para ser rescatados por consumidores...
+            Secret secret = new(this, $"{appName}NotificacionesUserPoolClientSecret", new SecretProps {
+                SecretName = $"/{appName}/Notificaciones/UserPoolClient",
+                Description = $"User pool client de Cognito para aplicacion de notificaciones {appName}",
+                SecretObjectValue = new Dictionary<string, SecretValue> {
+                    { "base_url", SecretValue.UnsafePlainText(domain.BaseUrl()) },
+                    { "client_id", SecretValue.UnsafePlainText(notificacionesUserPoolClient.UserPoolClientId) },
+                    { "client_secret", notificacionesUserPoolClient.UserPoolClientSecret },
+                },
+            });
+
+            #endregion
+
+            #region API
+            // Se crea security group para la lambda y se enlaza con security group de RDS...
+            SecurityGroup securityGroup = new(this, $"{appName}LambdaSecurityGroup", new SecurityGroupProps {
                 Vpc = vpc,
                 SecurityGroupName = $"{appName}APILambda",
                 Description = $"Security Group de {appName} API Lambda",
@@ -626,6 +641,13 @@ namespace Cdk
                 SourceArn = $"arn:aws:execute-api:{this.Region}:{this.Account}:{lambdaHttpApi.ApiId}/*/*/*",
             };
             function.AddPermission($"{appName}APIPermission", permission);
+
+            _ = new StringParameter(this, $"{appName}StringParameterApiUrl", new StringParameterProps {
+                ParameterName = $"/{appName}/Api/Url",
+                Description = $"API URL de la aplicacion {appName}",
+                StringValue = $"https://{apiMapping.DomainName}/{apiMapping.ApiMappingKey}/",
+                Tier = ParameterTier.STANDARD,
+            });
             #endregion
 
             #region Initial Creation Lambda
