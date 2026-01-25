@@ -2,7 +2,7 @@
 using System.Text;
 
 namespace TanatosAPI.Helpers {
-	public class CrytoHelper {
+	public class CryptoHelper {
 		public string GenerarToken(int bytes = 32) {
 			return Convert.ToBase64String(RandomNumberGenerator.GetBytes(bytes));
 		}

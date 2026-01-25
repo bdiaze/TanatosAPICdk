@@ -85,7 +85,7 @@ builder.Services.AddSingleton<HermesHelper>();
 builder.Services.AddSingleton<KairosHelper>();
 builder.Services.AddSingleton<ConnectionStringHelper>();
 builder.Services.AddSingleton<DatabaseConnectionHelper>();
-builder.Services.AddSingleton<CrytoHelper>();
+builder.Services.AddSingleton<CryptoHelper>();
 #endregion
 
 #region Singleton DAO
@@ -165,18 +165,26 @@ builder.Services
 
 builder.Services.AddAuthorizationBuilder()
 	.AddPolicy("Admin", policy => policy.RequireRole("Admin"))
-	.AddPolicy("Obligaciones.Read", policy => policy.RequireClaim("scope", "api/obligaciones.read"))
-	.AddPolicy("Obligaciones.Write", policy => policy.RequireClaim("scope", "api/obligaciones.write"))
-	.AddPolicy("Templates.Read", policy => policy.RequireClaim("scope", "api/templates.read"))
-	.AddPolicy("Templates.Write", policy => policy.RequireClaim("scope", "api/templates.write"))
-	.AddPolicy("Negocios.Read", policy => policy.RequireClaim("scope", "api/negocios.read"))
-	.AddPolicy("Negocios.Write", policy => policy.RequireClaim("scope", "api/negocios.write"))
-	.AddPolicy("Notificaciones.Read", policy => policy.RequireClaim("scope", "api/notificaciones.read"))
-	.AddPolicy("Notificaciones.Write", policy => policy.RequireClaim("scope", "api/notificaciones.write"))
-	.AddPolicy("Vencimientos.Read", policy => policy.RequireClaim("scope", "api/vencimientos.read"))
-	.AddPolicy("Vencimientos.Write", policy => policy.RequireClaim("scope", "api/vencimientos.write"))
-	.AddPolicy("Sistema.Read", policy => policy.RequireClaim("scope", "api/sistema.read"))
-	.AddPolicy("Sistema.Write", policy => policy.RequireClaim("scope", "api/sistema.write"));
+	.AddPolicy("Obligaciones.Read.Self", policy => policy.RequireClaim("scope", "api/obligaciones.read.self"))
+	.AddPolicy("Obligaciones.Write.Self", policy => policy.RequireClaim("scope", "api/obligaciones.write.self"))
+	.AddPolicy("Negocios.Read.Self", policy => policy.RequireClaim("scope", "api/negocios.read.self"))
+	.AddPolicy("Negocios.Write.Self", policy => policy.RequireClaim("scope", "api/negocios.write.self"))
+	.AddPolicy("Vencimientos.Read.Self", policy => policy.RequireClaim("scope", "api/vencimientos.read.self"))
+	.AddPolicy("Vencimientos.Write.Self", policy => policy.RequireClaim("scope", "api/vencimientos.write.self"))
+	.AddPolicy("Templates.Read.Public", policy => policy.RequireClaim("scope", "api/templates.read.public"))
+	.AddPolicy("Sistema.Read.Public", policy => policy.RequireClaim("scope", "api/sistema.read.public"))
+	.AddPolicy("Obligaciones.Read.All", policy => policy.RequireClaim("scope", "api/obligaciones.read.all"))
+	.AddPolicy("Obligaciones.Write.All", policy => policy.RequireClaim("scope", "api/obligaciones.write.all"))
+	.AddPolicy("Negocios.Read.All", policy => policy.RequireClaim("scope", "api/negocios.read.all"))
+	.AddPolicy("Negocios.Write.All", policy => policy.RequireClaim("scope", "api/negocios.write.all"))
+	.AddPolicy("Vencimientos.Read.All", policy => policy.RequireClaim("scope", "api/vencimientos.read.all"))
+	.AddPolicy("Vencimientos.Write.All", policy => policy.RequireClaim("scope", "api/vencimientos.write.all"))
+	.AddPolicy("Templates.Read.All", policy => policy.RequireClaim("scope", "api/templates.read.all"))
+	.AddPolicy("Templates.Write.All", policy => policy.RequireClaim("scope", "api/templates.write.all"))
+	.AddPolicy("Sistema.Read.All", policy => policy.RequireClaim("scope", "api/sistema.read.all"))
+	.AddPolicy("Sistema.Write.All", policy => policy.RequireClaim("scope", "api/sistema.write.all"));
+
+
 
 WebApplication app = builder.Build();
 

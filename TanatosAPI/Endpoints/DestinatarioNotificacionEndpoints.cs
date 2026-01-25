@@ -64,7 +64,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CrytoHelper cryptoHelper, VariableEntornoHelper variableEntorno, CognitoHelper cognitoHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, NegocioDao negocioDao, HermesHelper hermesHelper) => {
+			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CryptoHelper cryptoHelper, VariableEntornoHelper variableEntorno, CognitoHelper cognitoHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, NegocioDao negocioDao, HermesHelper hermesHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -227,7 +227,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapValidarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Validar/", async (IHostEnvironment environment, EntDestinatarioNotificacionValidar entrada, DestinatarioNotificacionDao destinatarioNotificacionDao, CrytoHelper cryptoHelper) => {
+			routes.MapPost("/Validar/", async (IHostEnvironment environment, EntDestinatarioNotificacionValidar entrada, DestinatarioNotificacionDao destinatarioNotificacionDao, CryptoHelper cryptoHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
