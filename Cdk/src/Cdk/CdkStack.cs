@@ -159,79 +159,127 @@ namespace Cdk
 				ManagedLoginVersion = ManagedLoginVersion.NEWER_MANAGED_LOGIN,
 			});
 
-			// Se crean scopes y resource server para userpoolclient de proceso de notificaciones...
+            // Se crean scopes y resource server...
+			// Formato: <entidad>.<accion>.<alcance>
+			// Alcances:
+			//     - self: Datos del usuario
+			//     - all: Todos los datos del sistema
+			//     - public: Datos públicos / vigentes
+			// Acción:
+			//     - read: Lectura
+			//     - write: Crear, editar y borrar
 
-			ResourceServerScope scopeObligacionesRead = new(new ResourceServerScopeProps {
-				ScopeName = "obligaciones.read",
-				ScopeDescription = "Acceso de lectura a las obligaciones"
+            #region Self Scopes
+            ResourceServerScope scopeObligacionesReadSelf = new(new ResourceServerScopeProps {
+				ScopeName = "obligaciones.read.self",
+				ScopeDescription = "Acceso de lectura a las obligaciones del usuario"
 			});
-			ResourceServerScope scopeObligacionesWrite = new(new ResourceServerScopeProps {
-				ScopeName = "obligaciones.write",
-				ScopeDescription = "Acceso de escritura a las obligaciones"
-			});
+			ResourceServerScope scopeObligacionesWriteSelf = new(new ResourceServerScopeProps {
+				ScopeName = "obligaciones.write.self",
+				ScopeDescription = "Acceso de escritura a las obligaciones del usuario"
+            });
 
-			ResourceServerScope scopeTemplatesRead = new(new ResourceServerScopeProps {
-				ScopeName = "templates.read",
-				ScopeDescription = "Acceso de lectura a los templates"
-			});
-			ResourceServerScope scopeTemplatesWrite = new(new ResourceServerScopeProps {
-				ScopeName = "templates.write",
-				ScopeDescription = "Acceso de escritura a los templates"
-			});
+            ResourceServerScope scopeNegociosReadSelf = new(new ResourceServerScopeProps {
+                ScopeName = "negocios.read.self",
+                ScopeDescription = "Acceso de lectura a los negocios del usuario"
+            });
+            ResourceServerScope scopeNegociosWriteSelf = new(new ResourceServerScopeProps {
+                ScopeName = "negocios.write.self",
+                ScopeDescription = "Acceso de escritura a los negocios del usuario"
+            });
 
-			ResourceServerScope scopeNegociosRead = new(new ResourceServerScopeProps {
-				ScopeName = "negocios.read",
-				ScopeDescription = "Acceso de lectura a los negocios"
-			});
-			ResourceServerScope scopeNegociosWrite = new(new ResourceServerScopeProps {
-				ScopeName = "negocios.write",
-				ScopeDescription = "Acceso de escritura a los negocios"
-			});
+            ResourceServerScope scopeVencimientosReadSelf = new(new ResourceServerScopeProps {
+                ScopeName = "vencimientos.read.self",
+                ScopeDescription = "Acceso de lectura a los vencimientos del usuario"
+            });
+            ResourceServerScope scopeVencimientosWriteSelf = new(new ResourceServerScopeProps {
+                ScopeName = "vencimientos.write.self",
+                ScopeDescription = "Acceso de escritura a los vencimientos del usuario"
+            });
+            #endregion
 
-			ResourceServerScope scopeNotificacionesRead = new(new ResourceServerScopeProps {
-				ScopeName = "notificaciones.read",
-				ScopeDescription = "Acceso de lectura a las notificaciones"
-			});
-			ResourceServerScope scopeNotificacionesWrite = new(new ResourceServerScopeProps {
-				ScopeName = "notificaciones.write",
-				ScopeDescription = "Acceso de escritura a las notificaciones"
-			});
-
-			ResourceServerScope scopeVencimientosRead = new(new ResourceServerScopeProps {
-				ScopeName = "vencimientos.read",
-				ScopeDescription = "Acceso de lectura a los vencimientos"
-			});
-			ResourceServerScope scopeVencimientosWrite = new(new ResourceServerScopeProps {
-				ScopeName = "vencimientos.write",
-				ScopeDescription = "Acceso de escritura a los vencimientos"
+            #region Public Scopes
+            ResourceServerScope scopeTemplatesReadPublic = new(new ResourceServerScopeProps {
+				ScopeName = "templates.read.public",
+				ScopeDescription = "Acceso de lectura a los templates públicos"
 			});
 
-			ResourceServerScope scopeSistemaRead = new(new ResourceServerScopeProps {
-				ScopeName = "sistema.read",
-				ScopeDescription = "Acceso de lectura a los parametros del sistema"
-			});
-			ResourceServerScope scopeSistemaWrite = new(new ResourceServerScopeProps {
-				ScopeName = "sistema.write",
-				ScopeDescription = "Acceso de escritura a los parametros del sistema"
-			});
+			ResourceServerScope scopeSistemaReadPublic = new(new ResourceServerScopeProps {
+				ScopeName = "sistema.read.public",
+				ScopeDescription = "Acceso de lectura a los parametros públicos del sistema"
+            });
+            #endregion
+
+            #region All Scopes
+            ResourceServerScope scopeObligacionesReadAll = new(new ResourceServerScopeProps {
+                ScopeName = "obligaciones.read.all",
+                ScopeDescription = "Acceso de lectura a todas las obligaciones"
+            });
+            ResourceServerScope scopeObligacionesWriteAll = new(new ResourceServerScopeProps {
+                ScopeName = "obligaciones.write.all",
+                ScopeDescription = "Acceso de escritura a todas las obligaciones"
+            });
+
+            ResourceServerScope scopeNegociosReadAll = new(new ResourceServerScopeProps {
+                ScopeName = "negocios.read.all",
+                ScopeDescription = "Acceso de lectura a todos los negocios"
+            });
+            ResourceServerScope scopeNegociosWriteAll = new(new ResourceServerScopeProps {
+                ScopeName = "negocios.write.all",
+                ScopeDescription = "Acceso de escritura a todos los negocios"
+            });
+
+            ResourceServerScope scopeVencimientosReadAll = new(new ResourceServerScopeProps {
+                ScopeName = "vencimientos.read.all",
+                ScopeDescription = "Acceso de lectura a todos los vencimientos"
+            });
+            ResourceServerScope scopeVencimientosWriteAll = new(new ResourceServerScopeProps {
+                ScopeName = "vencimientos.write.all",
+                ScopeDescription = "Acceso de escritura a todos los vencimientos"
+            });
+
+            ResourceServerScope scopeTemplatesReadAll = new(new ResourceServerScopeProps {
+                ScopeName = "templates.read.all",
+                ScopeDescription = "Acceso de lectura a todos los templates"
+            });
+            ResourceServerScope scopeTemplatesWriteAll = new(new ResourceServerScopeProps {
+                ScopeName = "templates.write.all",
+                ScopeDescription = "Acceso de escritura a todos los templates"
+            });
+
+            ResourceServerScope scopeSistemaReadAll = new(new ResourceServerScopeProps {
+                ScopeName = "sistema.read.all",
+                ScopeDescription = "Acceso de lectura a todos los parametros del sistema"
+            });
+            ResourceServerScope scopeSistemaWriteAll = new(new ResourceServerScopeProps {
+                ScopeName = "sistema.write.all",
+                ScopeDescription = "Acceso de escritura a todos los parametros del sistema"
+            });
+            #endregion
 
 
-			UserPoolResourceServer resourceServer =  userPool.AddResourceServer($"{appName}ResourceServer", new UserPoolResourceServerOptions { 
+            UserPoolResourceServer resourceServer =  userPool.AddResourceServer($"{appName}ResourceServer", new UserPoolResourceServerOptions { 
 				Identifier = "api",
 				Scopes = [
-					scopeObligacionesRead,
-					scopeObligacionesWrite,
-					scopeTemplatesRead,
-					scopeTemplatesWrite,
-					scopeNegociosRead,
-					scopeNegociosWrite,
-					scopeNotificacionesRead,
-					scopeNotificacionesWrite,
-					scopeVencimientosRead,
-					scopeVencimientosWrite,
-					scopeSistemaRead,
-					scopeSistemaWrite
-				]
+					scopeObligacionesReadSelf,
+					scopeObligacionesWriteSelf,
+					scopeNegociosReadSelf,
+                    scopeNegociosWriteSelf,
+                    scopeVencimientosReadSelf,
+                    scopeVencimientosWriteSelf,
+                    scopeTemplatesReadPublic,
+                    scopeSistemaReadPublic,
+                    scopeObligacionesReadAll,
+                    scopeObligacionesWriteAll,
+                    scopeNegociosReadAll,
+                    scopeNegociosWriteAll,
+                    scopeVencimientosReadAll,
+                    scopeVencimientosWriteAll,
+                    scopeTemplatesReadAll,
+                    scopeTemplatesWriteAll,
+                    scopeSistemaReadAll,
+                    scopeSistemaWriteAll,
+                ]
 			});
 
 			UserPoolClient userPoolClient = new(this, $"{appName}UserPoolClient", new UserPoolClientProps {
@@ -251,18 +299,14 @@ namespace Cdk
 					Flows = new OAuthFlows { AuthorizationCodeGrant = true },
 					Scopes = [
 						OAuthScope.OPENID, OAuthScope.EMAIL, OAuthScope.PROFILE,
-						OAuthScope.ResourceServer(resourceServer, scopeObligacionesRead),
-						OAuthScope.ResourceServer(resourceServer, scopeObligacionesWrite),
-						OAuthScope.ResourceServer(resourceServer, scopeTemplatesRead),
-						OAuthScope.ResourceServer(resourceServer, scopeTemplatesWrite),
-						OAuthScope.ResourceServer(resourceServer, scopeNegociosRead),
-						OAuthScope.ResourceServer(resourceServer, scopeNegociosWrite),
-						OAuthScope.ResourceServer(resourceServer, scopeNotificacionesRead),
-						OAuthScope.ResourceServer(resourceServer, scopeNotificacionesWrite),
-						OAuthScope.ResourceServer(resourceServer, scopeVencimientosRead),
-						OAuthScope.ResourceServer(resourceServer, scopeVencimientosWrite),
-						OAuthScope.ResourceServer(resourceServer, scopeSistemaRead),
-						OAuthScope.ResourceServer(resourceServer, scopeSistemaWrite),
+						OAuthScope.ResourceServer(resourceServer, scopeObligacionesReadSelf),
+						OAuthScope.ResourceServer(resourceServer, scopeObligacionesWriteSelf),
+						OAuthScope.ResourceServer(resourceServer, scopeNegociosReadSelf),
+						OAuthScope.ResourceServer(resourceServer, scopeNegociosWriteSelf),
+						OAuthScope.ResourceServer(resourceServer, scopeVencimientosReadSelf),
+						OAuthScope.ResourceServer(resourceServer, scopeVencimientosWriteSelf),
+						OAuthScope.ResourceServer(resourceServer, scopeTemplatesReadPublic),
+						OAuthScope.ResourceServer(resourceServer, scopeSistemaReadPublic),
 					]
 				},
 				AccessTokenValidity = Duration.Minutes(double.Parse(accessTokenValidityMinutes)),
@@ -286,15 +330,13 @@ namespace Cdk
 				OAuth = new OAuthSettings {
 					Flows = new OAuthFlows { ClientCredentials = true },
 					Scopes = [
-						OAuthScope.ResourceServer(resourceServer, scopeObligacionesRead),
-						OAuthScope.ResourceServer(resourceServer, scopeTemplatesRead),
-						OAuthScope.ResourceServer(resourceServer, scopeNegociosRead),
-						OAuthScope.ResourceServer(resourceServer, scopeVencimientosRead),
-						OAuthScope.ResourceServer(resourceServer, scopeVencimientosWrite),
-						OAuthScope.ResourceServer(resourceServer, scopeNotificacionesRead),
-						OAuthScope.ResourceServer(resourceServer, scopeNotificacionesWrite),
+						OAuthScope.ResourceServer(resourceServer, scopeObligacionesReadAll),
+						OAuthScope.ResourceServer(resourceServer, scopeNegociosReadAll),
+						OAuthScope.ResourceServer(resourceServer, scopeVencimientosReadAll),
+						OAuthScope.ResourceServer(resourceServer, scopeVencimientosWriteAll),
+                        OAuthScope.ResourceServer(resourceServer, scopeTemplatesReadPublic),
 
-					]
+                    ]
 				},
 				AccessTokenValidity = Duration.Minutes(double.Parse(notificacionesTokenValidityMinutes))
 			});
