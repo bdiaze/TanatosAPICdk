@@ -10,7 +10,7 @@ namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class TipoPeriodicidadDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<TipoPeriodicidad?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
-			string query = "SELECT ID, NOMBRE, DESCRIPCION, CRON, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE ID = @ID";
+			string query = "SELECT ID, NOMBRE, DESCRIPCION, CRON, DELTA_DIAS, DELTA_MESES, DELTA_ANNOS, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE ID = @ID";
 
 			bool disposeConnection = transaction?.Connection == null;
 			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
@@ -29,7 +29,10 @@ namespace TanatosAPI.Repositories {
 						Nombre = reader.GetString(1),
 						Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
 						Cron = reader.IsDBNull(3) ? null : reader.GetString(3),
-						Vigencia = reader.GetBoolean(4),
+						DeltaDias = reader.IsDBNull(4) ? null : reader.GetInt32(4),
+						DeltaMeses = reader.IsDBNull(5) ? null : reader.GetInt32(5),
+                        DeltaAnnos = reader.IsDBNull(6) ? null : reader.GetInt32(6),
+                        Vigencia = reader.GetBoolean(7),
 					};
 				}
 
@@ -44,7 +47,7 @@ namespace TanatosAPI.Repositories {
 		public async Task<List<TipoPeriodicidad>> ObtenerPorVigencia(bool? vigencia) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return [.. await connection.QueryAsync<TipoPeriodicidad>(
-				"SELECT ID, NOMBRE, DESCRIPCION, CRON, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
+                "SELECT ID, NOMBRE, DESCRIPCION, CRON, DELTA_DIAS, DELTA_MESES, DELTA_ANNOS, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
 				new { vigencia }
 			)];
 		}
@@ -52,16 +55,16 @@ namespace TanatosAPI.Repositories {
 		public async Task Insertar(TipoPeriodicidad item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			await connection.ExecuteAsync(
-				"INSERT INTO TANATOS.TIPO_PERIODICIDAD(ID, NOMBRE, DESCRIPCION, CRON, VIGENCIA) VALUES (@ID, @NOMBRE, @DESCRIPCION, @CRON, @VIGENCIA)",
-				new { item.Id, item.Nombre, item.Descripcion, item.Cron, item.Vigencia }
+                "INSERT INTO TANATOS.TIPO_PERIODICIDAD(ID, NOMBRE, DESCRIPCION, CRON, DELTA_DIAS, DELTA_MESES, DELTA_ANNOS, VIGENCIA) VALUES (@ID, @NOMBRE, @DESCRIPCION, @CRON, @DELTADIAS, @DELTAMESES, @DELTAANNOS, @VIGENCIA)",
+				new { item.Id, item.Nombre, item.Descripcion, item.Cron, item.DeltaDias, item.DeltaMeses, item.DeltaAnnos, item.Vigencia }
 			);
 		}
 
 		public async Task Actualizar(TipoPeriodicidad item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			await connection.ExecuteAsync(
-				"UPDATE TANATOS.TIPO_PERIODICIDAD SET NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, CRON = @CRON, VIGENCIA = @VIGENCIA WHERE ID = @ID",
-				new { item.Nombre, item.Descripcion, item.Cron, item.Vigencia, item.Id }
+                "UPDATE TANATOS.TIPO_PERIODICIDAD SET NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, CRON = @CRON, DELTA_DIAS = @DELTADIAS, DELTA_MESES = @DELTAMESES, DELTA_ANNOS = @DELTAANNOS, VIGENCIA = @VIGENCIA WHERE ID = @ID",
+				new { item.Nombre, item.Descripcion, item.Cron, item.DeltaDias, item.DeltaMeses, item.DeltaAnnos, item.Vigencia, item.Id }
 			);
 		}
 

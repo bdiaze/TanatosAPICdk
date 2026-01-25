@@ -31,7 +31,22 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Cron del tipo de periodicidad.")]
 		public string? Cron { get; set; }
 
-		[UseColumnAttribute]
+        [UseColumnAttribute]
+        [Column("delta_dias")]
+        [Comment("Delta en días de la periodicidad.")]
+        public int? DeltaDias { get; set; }
+
+        [UseColumnAttribute]
+        [Column("delta_meses")]
+        [Comment("Delta en meses de la periodicidad.")]
+        public int? DeltaMeses { get; set; }
+
+        [UseColumnAttribute]
+        [Column("delta_annos")]
+        [Comment("Delta en años de la periodicidad.")]
+        public int? DeltaAnnos { get; set; }
+
+        [UseColumnAttribute]
 		[Required]
 		[Column("vigencia")]
 		[Comment("Vigencia del tipo de periodicidad.")]

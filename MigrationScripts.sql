@@ -1247,5 +1247,37 @@ BEGIN
     VALUES ('20260125163311_NombrePluralUnidadTiempo', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260125164127_DeltasPeriodicidad') THEN
+    ALTER TABLE tanatos.tipo_periodicidad ADD delta_annos integer;
+    COMMENT ON COLUMN tanatos.tipo_periodicidad.delta_annos IS 'Delta en años de la periodicidad.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260125164127_DeltasPeriodicidad') THEN
+    ALTER TABLE tanatos.tipo_periodicidad ADD delta_dias integer;
+    COMMENT ON COLUMN tanatos.tipo_periodicidad.delta_dias IS 'Delta en días de la periodicidad.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260125164127_DeltasPeriodicidad') THEN
+    ALTER TABLE tanatos.tipo_periodicidad ADD delta_meses integer;
+    COMMENT ON COLUMN tanatos.tipo_periodicidad.delta_meses IS 'Delta en meses de la periodicidad.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260125164127_DeltasPeriodicidad') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260125164127_DeltasPeriodicidad', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 
