@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
@@ -192,6 +193,7 @@ namespace TanatosAPI.Business {
 
 							// Se calcula la cantidad de tiempo faltante a vencimiento...
 							string? tiempoFaltante = null;
+							string? deLosProximos = null;
 							if (historialNotificacion.IdTipoUnidadTiempoAntelacion != null && historialNotificacion.CantAntelacion != null) {
                                 TipoUnidadTiempo? unidadTiempo = tiposUnidadesTiempo.FirstOrDefault(ut => ut.Id == historialNotificacion.IdTipoUnidadTiempoAntelacion);
 								if (unidadTiempo == null) {
@@ -200,6 +202,23 @@ namespace TanatosAPI.Business {
 
 								tiempoFaltante = $"{historialNotificacion.CantAntelacion} {unidadTiempo.Nombre.ToLower()}";
 								if (historialNotificacion.CantAntelacion > 1) tiempoFaltante += "s";
+
+								if (historialNotificacion.CantAntelacion > 1) {
+									if (historialNotificacion.IdTipoUnidadTiempoAntelacion == 1 ||
+										historialNotificacion.IdTipoUnidadTiempoAntelacion == 3) {
+                                        deLosProximos = $"de los próximos {historialNotificacion.CantAntelacion} {unidadTiempo.Nombre.ToLower()}s";
+                                    } else {
+                                        deLosProximos = $"de las próximas {historialNotificacion.CantAntelacion} {unidadTiempo.Nombre.ToLower()}s";
+                                    }
+                                } else {
+									if (historialNotificacion.IdTipoUnidadTiempoAntelacion == 1) {
+										deLosProximos = $"del próximo {unidadTiempo.Nombre.ToLower()}";
+                                    } else if (historialNotificacion.IdTipoUnidadTiempoAntelacion == 3) {
+										deLosProximos = $"de mañana";
+                                    } else {
+                                        deLosProximos = $"de la próxima {unidadTiempo.Nombre.ToLower()}";
+                                    }
+                                }
                             }
 
                             // Si el destinatario es email, se manda correo electrónico...
@@ -234,14 +253,15 @@ namespace TanatosAPI.Business {
                                     Cuerpo = strTemplateCorreo
                                                 .Replace("[NOMBRE_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Nombre ?? templateNorma?.Nombre ?? ""))
                                                 .Replace("[MULTA_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? ""))
-                                                .Replace("[TIEMPO_FALTANTE]", WebUtility.HtmlEncode(tiempoFaltante ?? "")),
+                                                .Replace("[TIEMPO_FALTANTE]", WebUtility.HtmlEncode(tiempoFaltante ?? ""))
+												.Replace("[DE_LOS_PROXIMOS]", WebUtility.HtmlEncode(deLosProximos ?? "")),
                                 });
 
 								historialNotificacion.FechaEjecucion = DateTime.UtcNow;
 								await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
                             }
                         }
-					}
+                    }
 				}
             }
 		}
