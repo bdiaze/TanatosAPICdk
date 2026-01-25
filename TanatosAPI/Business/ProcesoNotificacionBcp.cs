@@ -1,5 +1,7 @@
 ﻿using Npgsql;
+using System;
 using System.Diagnostics;
+using System.Net;
 using System.Text.Json;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
@@ -7,7 +9,7 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class ProcesoNotificacionBcp(VariableEntornoHelper variableEntornoHelper, KairosHelper kairosHelper, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) {
+	public class ProcesoNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) {
 		public async Task ActualizarProgramacionProcesosNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) { 
 			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new Exception("Norma suscrita inválida");
 			TemplateNorma? templateNorma = null;
@@ -148,5 +150,100 @@ namespace TanatosAPI.Business {
 				}				
 			}
 		}
-	}
+
+		public async Task ProcesarNotificacion(long idNormaSuscrita, string cron, bool programarSiguienteEjecucion, NpgsqlTransaction? transaction = null) {
+			// Se obtiene norma suscrita y/o template...
+			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new Exception("ID norma suscrita inválida");
+            TemplateNorma? templateNorma = null;
+            if (normaSuscrita.IdTipoPeriodicidad == null && normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
+                templateNorma = (await templateNormaDao.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
+            }
+
+			// Se obtienen destinatarios vigentes...
+            List<DestinatarioNotificacion> destinatariosVigentes = await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction);
+
+			// Se obtienen los tipos de unidades de tiempo...
+			List<TipoUnidadTiempo> tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true, transaction);
+
+            // Si tenemos tipo de periodicidad, se continua con las notificaciones...
+            if ((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) != null) {
+                TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad!).Value, transaction) ?? throw new Exception("Tipo periodicidad inválido");
+				if (!string.IsNullOrWhiteSpace(tipoPeriodicidad.Cron)) {
+					
+					// Se obtienen los historiales de norma suscrita que aún no se completan...
+					List<HistorialNormaSuscrita> historialNormaSuscritas = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction);
+					foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormaSuscritas) {
+						
+						// Se obtienen los historiales de notificación no ejecutados...
+						List<HistorialNotificacion> historialNotificaciones = await historialNotificacionDao.ObtenerPorHistorial(historialNormaSuscrita.Id, null, true, transaction);
+						foreach (HistorialNotificacion historialNotificacion in historialNotificaciones) {
+							
+							// Si el historial de notificación no corresponde al cron, se salta la notificación...
+							string cronProgramacion = CronHelper.GenerarCronDesdeFecha(historialNotificacion.FechaProgramacion, tipoPeriodicidad.Cron);
+							if (cronProgramacion != cron) {
+								continue;
+							}
+
+							// Se valida que el destinatario este vigente, si no lo esta entonces no se manda la notificación...
+							DestinatarioNotificacion? destinatario = destinatariosVigentes.FirstOrDefault(d => d.Id == historialNotificacion.IdDestinatarioNotificacion);
+							if (destinatario == null) {
+								continue;
+							}
+
+							// Se calcula la cantidad de tiempo faltante a vencimiento...
+							string? tiempoFaltante = null;
+							if (historialNotificacion.IdTipoUnidadTiempoAntelacion != null && historialNotificacion.CantAntelacion != null) {
+                                TipoUnidadTiempo? unidadTiempo = tiposUnidadesTiempo.FirstOrDefault(ut => ut.Id == historialNotificacion.IdTipoUnidadTiempoAntelacion);
+								if (unidadTiempo == null) {
+									continue;
+								}
+
+								tiempoFaltante = $"{historialNotificacion.CantAntelacion} {unidadTiempo.Nombre.ToLower()}";
+								if (historialNotificacion.CantAntelacion > 1) tiempoFaltante += "s";
+                            }
+
+                            // Si el destinatario es email, se manda correo electrónico...
+                            if (destinatario.IdTipoReceptor == 1) {
+                                string strTemplateCorreo;
+								if (tiempoFaltante != null) {
+                                    if (environment.IsProduction()) {
+                                        strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "NotificacionPrevia.html"));
+                                    } else {
+                                        strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "NotificacionPrevia.html"));
+                                    }
+                                } else {
+                                    if (environment.IsProduction()) {
+                                        strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "NormaVencida.html"));
+                                    } else {
+                                        strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "NormaVencida.html"));
+                                    }
+                                }
+
+                                await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+                                    De = new DireccionCorreo() {
+                                        Nombre = variableEntornoHelper.Obtener("HERMES_DE_NOMBRE"),
+                                        Correo = variableEntornoHelper.Obtener("HERMES_DE_CORREO"),
+                                    },
+                                    Para = [
+                                        new DireccionCorreo() {
+											Correo = destinatario.Destino
+										}
+                                    ],
+                                    Asunto = "¡Tu obligación vence en [TIEMPO_FALTANTE]!"
+                                                .Replace("[TIEMPO_FALTANTE]", tiempoFaltante ?? ""),
+                                    Cuerpo = strTemplateCorreo
+                                                .Replace("[NOMBRE_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Nombre ?? templateNorma?.Nombre ?? ""))
+                                                .Replace("[MULTA_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? ""))
+                                                .Replace("[TIEMPO_FALTANTE]", WebUtility.HtmlEncode(tiempoFaltante ?? "")),
+                                });
+
+								historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+								await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
+                            }
+                        }
+					}
+				}
+            }
+		}
+    }
 }

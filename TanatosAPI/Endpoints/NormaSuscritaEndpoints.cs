@@ -17,8 +17,9 @@ namespace TanatosAPI.Endpoints {
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
 			group.MapEliminarEndpoint();
+			group.MapProcesarNotificacionEndpoint();
 
-			return routes;
+            return routes;
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
@@ -806,5 +807,46 @@ namespace TanatosAPI.Endpoints {
 
 			return routes;
 		}
+
+		private static IEndpointRouteBuilder MapProcesarNotificacionEndpoint(this IEndpointRouteBuilder routes) {
+            routes.MapPost("/ProcesarNotificacion", async (EntKairosParametrosProceso entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ProcesoNotificacionBcp procesoNotificacionBcp) => {
+                Stopwatch stopwatch = Stopwatch.StartNew();
+
+                try {
+                    await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+                    await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+
+                    try {
+                        await procesoNotificacionBcp.ProcesarNotificacion(entrada.IdNormaSuscrita, entrada.Cron, entrada.ProgramarSiguienteEjecucion, transaction);
+						
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
+
+					LambdaLogger.Log(
+                        $"[POST] - [NormaSuscrita] - [ProcesarNotificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+                        $"Se procesó exitosamente la notificación - ID Norma Suscrita: {entrada.IdNormaSuscrita} - Cron: {entrada.Cron} - Programar Siguiente Ejecución: {entrada.ProgramarSiguienteEjecucion}.");
+
+                    return Results.Ok();
+                } catch (Exception ex) {
+                    LambdaLogger.Log(
+                        $"[POST] - [NormaSuscrita] - [ProcesarNotificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+                        $"Ocurrió un error al procesar notificación - ID Norma Suscrita: {entrada.IdNormaSuscrita} - Cron: {entrada.Cron} - Programar Siguiente Ejecución: {entrada.ProgramarSiguienteEjecucion}. " +
+                        $"{ex}");
+                    return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+                }
+            }).RequireAuthorization(
+                "Obligaciones.Read.All",
+                "Negocios.Read.All",
+                "Vencimientos.Read.All",
+                "Vencimientos.Write.All",
+                "Templates.Read.Public",
+                "Sistema.Read.Public"
+            ).WithOpenApi();
+
+            return routes;
+        }
 	}
 }
