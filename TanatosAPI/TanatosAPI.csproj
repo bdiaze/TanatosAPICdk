@@ -27,6 +27,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="TemplatesCorreos\NormaVencida.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TemplatesCorreos\NotificacionPrevia.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TemplatesCorreos\ValidacionDestinatario.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
