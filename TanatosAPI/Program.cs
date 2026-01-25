@@ -152,11 +152,22 @@ builder.Services
 					return Task.CompletedTask;
 				}
 
+				// Se reescriben los claims de cognito:groups...
 				List<Claim> groupClaims = [.. identity.FindAll("cognito:groups")];
 				foreach (Claim claim in groupClaims) {
 					identity.AddClaim(new Claim(ClaimTypes.Role, claim.Value));
 					identity.RemoveClaim(claim);
 				}
+
+				// Se desglosan los claims de scopes...
+				List<Claim> scopeClaims = [.. identity.FindAll("scope")];
+                List<string> scopes = [.. scopeClaims.SelectMany(c => c.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries)).Distinct(StringComparer.OrdinalIgnoreCase)];
+				foreach (Claim claim in scopeClaims) {
+                    identity.RemoveClaim(claim);
+                }
+				foreach(string scope in scopes) {
+                    identity.AddClaim(new Claim("scope", scope));
+                }
 
 				return Task.CompletedTask;
 			}
