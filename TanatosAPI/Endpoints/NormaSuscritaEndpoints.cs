@@ -255,13 +255,16 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					// Se valida que el tipo de periodicidad sea válido...
-					TipoPeriodicidad? tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId(entrada.IdTipoPeriodicidad);
-					if (tipoPeriodicidad == null || !tipoPeriodicidad.Vigencia) {
-						LambdaLogger.Log(
-							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"La periodicidad es inválida.");
+					TipoPeriodicidad? tipoPeriodicidad = null;
+                    if (entrada.IdTipoPeriodicidad != null) {
+						tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId(entrada.IdTipoPeriodicidad.Value);
+						if (tipoPeriodicidad == null || !tipoPeriodicidad.Vigencia) {
+							LambdaLogger.Log(
+								$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"La periodicidad es inválida.");
 
-						return Results.BadRequest($"La periodicidad es inválida.");
+							return Results.BadRequest($"La periodicidad es inválida.");
+						}
 					}
 
 					CategoriaNorma? categoria = null;
@@ -426,7 +429,7 @@ namespace TanatosAPI.Endpoints {
 						Nombre = nuevo.Nombre,
 						Descripcion = nuevo.Descripcion,
 						IdTipoPeriodicidad = nuevo.IdTipoPeriodicidad,
-						NombreTipoPeriodicidad = tipoPeriodicidad.Nombre,
+						NombreTipoPeriodicidad = tipoPeriodicidad?.Nombre,
 						Multa = nuevo.Multa,
 						IdCategoriaNorma = nuevo.IdCategoriaNorma,
 						NombreCategoriaNorma = categoria?.Nombre,
@@ -488,13 +491,16 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					// Se valida que el tipo de periodicidad sea válido...
-					TipoPeriodicidad? tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId(entrada.IdTipoPeriodicidad);
-					if (tipoPeriodicidad == null || !tipoPeriodicidad.Vigencia) {
-						LambdaLogger.Log(
-							$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"La periodicidad es inválida.");
+					TipoPeriodicidad? tipoPeriodicidad = null;
+                    if (entrada.IdTipoPeriodicidad != null) {
+						tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId(entrada.IdTipoPeriodicidad.Value);
+						if (tipoPeriodicidad == null || !tipoPeriodicidad.Vigencia) {
+							LambdaLogger.Log(
+								$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"La periodicidad es inválida.");
 
-						return Results.BadRequest($"La periodicidad es inválida.");
+							return Results.BadRequest($"La periodicidad es inválida.");
+						}
 					}
 
 					CategoriaNorma? categoria = null;
@@ -713,7 +719,7 @@ namespace TanatosAPI.Endpoints {
 						Nombre = existente.Nombre,
 						Descripcion = existente.Descripcion,
 						IdTipoPeriodicidad = existente.IdTipoPeriodicidad,
-						NombreTipoPeriodicidad = existente.IdTipoPeriodicidad == null ? null : tipoPeriodicidad.Nombre,
+						NombreTipoPeriodicidad = existente.IdTipoPeriodicidad == null ? null : tipoPeriodicidad?.Nombre,
 						Multa = existente.Multa,
 						IdCategoriaNorma = existente.IdCategoriaNorma,
 						NombreCategoriaNorma = existente.IdCategoriaNorma == null ? null : categoria?.Nombre,

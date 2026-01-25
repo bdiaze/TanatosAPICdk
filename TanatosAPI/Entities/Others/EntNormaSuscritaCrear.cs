@@ -3,7 +3,7 @@
 		public required long IdNegocio { get; set; }
 		public required string Nombre { get; set; }
 		public string? Descripcion { get; set; }
-		public required long IdTipoPeriodicidad { get; set; }
+		public long? IdTipoPeriodicidad { get; set; }
 		public string? Multa { get; set; }
 		public long? IdCategoriaNorma { get; set; }
 		public required bool Activado { get; set; }
