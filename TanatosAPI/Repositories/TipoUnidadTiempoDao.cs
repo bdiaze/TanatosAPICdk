@@ -11,7 +11,7 @@ namespace TanatosAPI.Repositories {
 	public class TipoUnidadTiempoDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<TipoUnidadTiempo?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
 			string query =
-				"SELECT ID, NOMBRE, CANT_SEGUNDOS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO " +
+				"SELECT ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO " +
 				"WHERE ID = @ID";
 
 			bool disposeConnection = transaction?.Connection == null;
@@ -30,8 +30,9 @@ namespace TanatosAPI.Repositories {
 					retorno = new TipoUnidadTiempo {
 						Id = reader.GetInt64(0),
 						Nombre = reader.GetString(1),
-						CantSegundos = reader.GetInt64(2),
-						Vigencia = reader.GetBoolean(3)
+						NombrePlural = reader.IsDBNull(2) ? null : reader.GetString(2),
+						CantSegundos = reader.GetInt64(3),
+						Vigencia = reader.GetBoolean(4)
 					};
 				}
 
@@ -44,8 +45,8 @@ namespace TanatosAPI.Repositories {
 		}
 
 		public async Task<List<TipoUnidadTiempo>> ObtenerPorVigencia(bool? vigencia, NpgsqlTransaction? transaction = null) {
-			string query = 
-				"SELECT ID, NOMBRE, CANT_SEGUNDOS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO " +
+			string query =
+                "SELECT ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO " +
 				"WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
 
 			bool disposeConnection = transaction?.Connection == null;
@@ -64,8 +65,9 @@ namespace TanatosAPI.Repositories {
 					retorno.Add(new TipoUnidadTiempo {
 						Id = reader.GetInt64(0),
 						Nombre = reader.GetString(1),
-						CantSegundos = reader.GetInt64(2),
-						Vigencia = reader.GetBoolean(3)
+                        NombrePlural = reader.IsDBNull(2) ? null : reader.GetString(2),
+                        CantSegundos = reader.GetInt64(3),
+						Vigencia = reader.GetBoolean(4)
 					});
 				}
 
@@ -80,16 +82,16 @@ namespace TanatosAPI.Repositories {
 		public async Task Insertar(TipoUnidadTiempo item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			await connection.ExecuteAsync(
-				"INSERT INTO TANATOS.TIPO_UNIDAD_TIEMPO(ID, NOMBRE, CANT_SEGUNDOS, VIGENCIA) VALUES (@ID, @NOMBRE, @CANTSEGUNDOS, @VIGENCIA)",
-				new { item.Id, item.Nombre, item.CantSegundos, item.Vigencia }
+                "INSERT INTO TANATOS.TIPO_UNIDAD_TIEMPO(ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, VIGENCIA) VALUES (@ID, @NOMBRE, @NOMBREPLURAL, @CANTSEGUNDOS, @VIGENCIA)",
+				new { item.Id, item.Nombre, item.NombrePlural, item.CantSegundos, item.Vigencia }
 			);
 		}
 
 		public async Task Actualizar(TipoUnidadTiempo item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			await connection.ExecuteAsync(
-				"UPDATE TANATOS.TIPO_UNIDAD_TIEMPO SET NOMBRE = @NOMBRE, CANT_SEGUNDOS = @CANTSEGUNDOS, VIGENCIA = @VIGENCIA WHERE ID = @ID",
-				new { item.Nombre, item.CantSegundos, item.Vigencia, item.Id }
+                "UPDATE TANATOS.TIPO_UNIDAD_TIEMPO SET NOMBRE = @NOMBRE, NOMBRE_PLURAL = @NOMBREPLURAL, CANT_SEGUNDOS = @CANTSEGUNDOS, VIGENCIA = @VIGENCIA WHERE ID = @ID",
+				new { item.Nombre, item.NombrePlural, item.CantSegundos, item.Vigencia, item.Id }
 			);
 		}
 

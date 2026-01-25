@@ -1231,5 +1231,21 @@ BEGIN
     VALUES ('20260121213826_ColumnProcesoNotificacionNormaSuscrita', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260125163311_NombrePluralUnidadTiempo') THEN
+    ALTER TABLE tanatos.tipo_unidad_tiempo ADD nombre_plural text;
+    COMMENT ON COLUMN tanatos.tipo_unidad_tiempo.nombre_plural IS 'Nombre plural del tipo de unidad de tiempo.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260125163311_NombrePluralUnidadTiempo') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260125163311_NombrePluralUnidadTiempo', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 

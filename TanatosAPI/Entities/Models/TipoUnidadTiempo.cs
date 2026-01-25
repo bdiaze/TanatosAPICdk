@@ -21,7 +21,12 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Nombre del tipo de unidad de tiempo.")]
 		public required string Nombre { get; set; }
 
-		[UseColumnAttribute]
+        [UseColumnAttribute]
+        [Column("nombre_plural")]
+        [Comment("Nombre plural del tipo de unidad de tiempo.")]
+        public string? NombrePlural { get; set; }
+
+        [UseColumnAttribute]
 		[Required]
 		[Column("cant_segundos")]
 		[Comment("Cantidad de segundos que representan a la unidad de tiempo.")]
