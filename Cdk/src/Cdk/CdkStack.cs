@@ -335,6 +335,7 @@ namespace Cdk
 						OAuthScope.ResourceServer(resourceServer, scopeVencimientosReadAll),
 						OAuthScope.ResourceServer(resourceServer, scopeVencimientosWriteAll),
                         OAuthScope.ResourceServer(resourceServer, scopeTemplatesReadPublic),
+                        OAuthScope.ResourceServer(resourceServer, scopeSistemaReadPublic),
 
                     ]
 				},
