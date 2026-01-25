@@ -155,7 +155,7 @@ namespace TanatosAPI.Business {
 			// Se obtiene norma suscrita y/o template...
 			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new Exception("ID norma suscrita inválida");
             TemplateNorma? templateNorma = null;
-            if (normaSuscrita.IdTipoPeriodicidad == null && normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
+            if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
                 templateNorma = (await templateNormaDao.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
             }
 
