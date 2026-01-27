@@ -49,6 +49,11 @@ namespace TanatosAPI.Entities.Models {
 		public DateTime? FechaEjecucion { get; set; }
 
 		[UseColumnAttribute]
+		[Column("hermes_queue_message_id")]
+		[Comment("ID del mensaje en la cola de envío de correo de Hermes.")]
+		public string? HermesQueueMessageId { get; set; }
+
+		[UseColumnAttribute]
 		[Required]
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
 		[Comment("Fecha en que se creó el registro.")]

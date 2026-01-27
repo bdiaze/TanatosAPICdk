@@ -1279,5 +1279,21 @@ BEGIN
     VALUES ('20260125164127_DeltasPeriodicidad', '9.0.11');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260127234100_ColumnHermesIdHistorialNotificacion') THEN
+    ALTER TABLE tanatos.historial_notificacion ADD hermes_queue_message_id text;
+    COMMENT ON COLUMN tanatos.historial_notificacion.hermes_queue_message_id IS 'ID del mensaje en la cola de envío de correo de Hermes.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260127234100_ColumnHermesIdHistorialNotificacion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260127234100_ColumnHermesIdHistorialNotificacion', '9.0.11');
+    END IF;
+END $EF$;
 COMMIT;
 
