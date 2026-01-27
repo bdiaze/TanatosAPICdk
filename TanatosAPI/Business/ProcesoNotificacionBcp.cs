@@ -10,7 +10,7 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class ProcesoNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) {
+	public class ProcesoNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) {
 		public async Task ActualizarProgramacionProcesosNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			List<string> procesosProgramados = [];
 			List<EntKairosIngresarProceso> procesosDesprogramados = [];
@@ -304,6 +304,32 @@ namespace TanatosAPI.Business {
                             }
                         }
                     }
+
+					if (programarSiguienteEjecucion) {
+						HistorialNormaSuscrita? ultimoHistorial = historialNormaSuscritas.OrderByDescending(hns => hns.FechaVencimiento).FirstOrDefault();
+						if (ultimoHistorial != null) {
+							DateTime proximoVencimiento = ultimoHistorial.FechaVencimiento;
+							if (tipoPeriodicidad.DeltaDias != null) {
+								proximoVencimiento = proximoVencimiento.AddDays(tipoPeriodicidad.DeltaDias.Value);
+							}
+							if (tipoPeriodicidad.DeltaMeses != null) {
+								proximoVencimiento = proximoVencimiento.AddMonths(tipoPeriodicidad.DeltaMeses.Value);
+							}
+							if (tipoPeriodicidad.DeltaAnnos != null) {
+								proximoVencimiento = proximoVencimiento.AddYears(tipoPeriodicidad.DeltaAnnos.Value);
+							}
+
+							HistorialNormaSuscrita historialNormaSuscrita = new() {
+								Id = 0,
+								IdNormaSuscrita = ultimoHistorial.IdNormaSuscrita,
+								FechaVencimiento = proximoVencimiento,
+								FechaCreacion = DateTime.UtcNow,
+								Vigencia = true
+							};
+
+							await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
+						}
+					}
 				}
             }
 		}
