@@ -281,7 +281,7 @@ namespace TanatosAPI.Business {
 
 								}
 
-                                await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+                                SalHermesCorreoEnviar response = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
                                     De = new DireccionCorreo() {
                                         Nombre = variableEntornoHelper.Obtener("HERMES_DE_NOMBRE"),
                                         Correo = variableEntornoHelper.Obtener("HERMES_DE_CORREO"),
@@ -300,6 +300,7 @@ namespace TanatosAPI.Business {
                                 });
 
 								historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+								historialNotificacion.HermesQueueMessageId = response.QueueMessageId;
 								await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
                             }
                         }
