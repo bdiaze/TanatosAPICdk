@@ -161,6 +161,7 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					HistorialNormaSuscrita? historialNormaSuscrita = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true))
+						.Where(hns => hns.FechaVencimiento >= DateTime.UtcNow)
 						.OrderBy(hns => hns.FechaVencimiento)
 						.FirstOrDefault();
 
