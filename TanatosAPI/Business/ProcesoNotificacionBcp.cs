@@ -263,19 +263,23 @@ namespace TanatosAPI.Business {
                             // Si el destinatario es email, se manda correo electrónico...
                             if (destinatario.IdTipoReceptor == 1) {
                                 string strTemplateCorreo;
+								string asunto;
 								if (tiempoFaltante != null) {
                                     if (environment.IsProduction()) {
                                         strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "NotificacionPrevia.html"));
                                     } else {
                                         strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "NotificacionPrevia.html"));
                                     }
+									asunto = "¡Tu obligación vence en [TIEMPO_FALTANTE]!";
                                 } else {
                                     if (environment.IsProduction()) {
                                         strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "NormaVencida.html"));
                                     } else {
                                         strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "NormaVencida.html"));
                                     }
-                                }
+									asunto = "¡Tu obligación venció!";
+
+								}
 
                                 await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
                                     De = new DireccionCorreo() {
@@ -287,8 +291,7 @@ namespace TanatosAPI.Business {
 											Correo = destinatario.Destino
 										}
                                     ],
-                                    Asunto = "¡Tu obligación vence en [TIEMPO_FALTANTE]!"
-                                                .Replace("[TIEMPO_FALTANTE]", tiempoFaltante ?? ""),
+                                    Asunto = asunto.Replace("[TIEMPO_FALTANTE]", tiempoFaltante ?? ""),
                                     Cuerpo = strTemplateCorreo
                                                 .Replace("[NOMBRE_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Nombre ?? templateNorma?.Nombre ?? ""))
                                                 .Replace("[MULTA_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? ""))
