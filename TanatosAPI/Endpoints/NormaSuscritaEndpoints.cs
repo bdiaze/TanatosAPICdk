@@ -243,7 +243,7 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
-					List<NormaSuscrita> normas = await normaSuscritaDao.ObtenerPorSub(sub, idNegocio, true);
+					List<NormaSuscrita> normas = [.. (await normaSuscritaDao.ObtenerPorSub(sub, idNegocio, true)).Where(n => n.Activado)];
 
 					List<TipoPeriodicidad> periodicidades = [];
 					List<CategoriaNorma> categorias = [];
