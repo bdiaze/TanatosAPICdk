@@ -236,7 +236,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerConVencimiento(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/ObtenerConVencimiento/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateNormaDao templateNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao) => {
+			routes.MapGet("/ObtenerConVencimiento/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao) => {
 
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -248,13 +248,21 @@ namespace TanatosAPI.Endpoints {
 					List<TipoPeriodicidad> periodicidades = [];
 					List<CategoriaNorma> categorias = [];
 					if (normas.Count > 0) {
-						periodicidades = await tipoPeriodicidadDao.ObtenerPorVigencia(null);
-						categorias = await categoriaNormaDao.ObtenerPorVigencia(null);
+						periodicidades = await tipoPeriodicidadDao.ObtenerPorVigencia(true);
+						categorias = await categoriaNormaDao.ObtenerPorVigencia(true);
 					}
 
+					List<Template>? templates =  null;
 					Dictionary<(long idTemplate, long idNorma), TemplateNorma> templateNormas = [];
 					foreach (long? idTemplate in normas.Where(n => n.IdTemplate != null).Select(n => n.IdTemplate).Distinct()) {
 						if (idTemplate != null) {
+							templates ??= await templateDao.ObtenerPorVigencia(true);
+							Template? template = templates.FirstOrDefault(t => t.Id == idTemplate);
+
+							if (template == null) {
+								continue;
+							}
+
 							foreach (TemplateNorma templateNorma in await templateNormaDao.ObtenerPorTemplate(idTemplate.Value)) {
 								templateNormas[(templateNorma.IdTemplate, templateNorma.IdNorma)] = templateNorma;
 							}
