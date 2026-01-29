@@ -1,6 +1,7 @@
 ﻿namespace TanatosAPI.Entities.Others {
 	public class SalNormaSuscritaObtenerConVencimiento {
 		public required DateTime FechaVencimiento { get; set; }
+		public required long IdNormaSuscrita { get; set; }
 		public string? NombreNorma { get; set; }
 		public string? DescripcionNorma { get; set; }
 		public string? MultaNorma { get; set; }
