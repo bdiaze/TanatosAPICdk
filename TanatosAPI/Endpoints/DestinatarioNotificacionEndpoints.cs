@@ -58,7 +58,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization().WithOpenApi();
+			}).RequireAuthorization("Negocios.Read.Self", "Sistema.Read.Public").WithOpenApi();
 
 			return routes;
 		}
@@ -183,7 +183,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization().WithOpenApi();
+			}).RequireAuthorization("Negocios.Write.Self").WithOpenApi();
 
 			return routes;
 		}
@@ -221,7 +221,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization().WithOpenApi();
+			}).RequireAuthorization("Negocios.Write.Self").WithOpenApi();
 
 			return routes;
 		}
