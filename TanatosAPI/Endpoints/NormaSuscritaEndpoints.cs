@@ -14,6 +14,7 @@ namespace TanatosAPI.Endpoints {
 			RouteGroupBuilder group = routes.MapGroup("/NormaSuscrita");
 			group.MapObtenerVigentes();
 			group.MapObtenerPorId();
+			group.MapObtenerConVencimiento();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
 			group.MapEliminarEndpoint();
@@ -226,6 +227,76 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerPorId] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener la norma suscrita por ID: {idNormaSuscrita}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Obligaciones.Read.Self", "Vencimientos.Read.Self", "Sistema.Read.Public", "Templates.Read.Public").WithOpenApi();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapObtenerConVencimiento(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/ObtenerConVencimiento/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateNormaDao templateNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao) => {
+
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+
+					List<NormaSuscrita> normas = await normaSuscritaDao.ObtenerPorSub(sub, idNegocio, true);
+
+					List<TipoPeriodicidad> periodicidades = [];
+					List<CategoriaNorma> categorias = [];
+					if (normas.Count > 0) {
+						periodicidades = await tipoPeriodicidadDao.ObtenerPorVigencia(null);
+						categorias = await categoriaNormaDao.ObtenerPorVigencia(null);
+					}
+
+					Dictionary<(long idTemplate, long idNorma), TemplateNorma> templateNormas = [];
+					foreach (long? idTemplate in normas.Where(n => n.IdTemplate != null).Select(n => n.IdTemplate).Distinct()) {
+						if (idTemplate != null) {
+							foreach (TemplateNorma templateNorma in await templateNormaDao.ObtenerPorTemplate(idTemplate.Value)) {
+								templateNormas[(templateNorma.IdTemplate, templateNorma.IdNorma)] = templateNorma;
+							}
+						}
+					}
+
+					List<SalNormaSuscritaObtenerConVencimiento> retorno = [];
+					foreach (NormaSuscrita normaSuscrita in normas) {
+						TemplateNorma? templateNorma = null;
+						if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
+							if (templateNormas.TryGetValue((normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma.Value), out TemplateNorma? templateNormaAux)) {
+								templateNorma = templateNormaAux;
+							}
+						}
+
+						CategoriaNorma? categoriaNorma = categorias.FirstOrDefault(c => c.Id == (normaSuscrita.IdCategoriaNorma ?? templateNorma?.IdCategoriaNorma));
+						TipoPeriodicidad? tipoPeriodicidad = periodicidades.FirstOrDefault(p => p.Id == (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad));
+
+						List<HistorialNormaSuscrita> historialesNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true);
+						foreach (HistorialNormaSuscrita historialNormaSuscrita in historialesNormaSuscrita) {
+							retorno.Add(new SalNormaSuscritaObtenerConVencimiento {
+								FechaVencimiento = historialNormaSuscrita.FechaVencimiento,
+								NombreNorma = normaSuscrita.Nombre ?? templateNorma?.Nombre,
+								DescripcionNorma = normaSuscrita.Descripcion ?? templateNorma?.Descripcion,
+								MultaNorma = normaSuscrita.Multa ?? templateNorma?.Multa,
+								IdCategoriaNorma = categoriaNorma?.Id,
+								NombreCategoriaNorma = categoriaNorma?.NombreCorto ?? categoriaNorma?.Nombre,
+								IdTipoPeriodicidad = tipoPeriodicidad?.Id,
+								NombreTipoPeriodicidad = tipoPeriodicidad?.Nombre,
+							});
+						}					
+					}									
+
+					LambdaLogger.Log(
+						$"[GET] - [NormaSuscrita] - [ObtenerConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de las normas suscritas con vencimiento por ID Negocio: {idNegocio} - Cant. Registros: {retorno.Count}.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [NormaSuscrita] - [ObtenerConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener las normas suscritas con vencimiento por ID Negocio: {idNegocio}. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
