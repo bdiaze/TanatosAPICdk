@@ -83,8 +83,13 @@ namespace TanatosAPI.Business {
 			}
 		}
 
-		public async Task EliminarPorNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+		public async Task EliminarPorNormaSuscrita(NormaSuscrita normaSuscrita, bool ignorarVencidos = false, NpgsqlTransaction? transaction = null) {
 			List<HistorialNormaSuscrita> historialesVigentes = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true, transaction);
+
+			if (ignorarVencidos) {
+				historialesVigentes = [.. historialesVigentes.Where(h => h.FechaVencimiento > DateTime.UtcNow)];
+			}
+
 			foreach (HistorialNormaSuscrita historial in historialesVigentes) {
 				historial.FechaEliminacion = DateTime.UtcNow;
 				historial.Vigencia = false;

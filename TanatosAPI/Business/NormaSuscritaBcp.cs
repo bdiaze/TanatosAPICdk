@@ -16,7 +16,7 @@ namespace TanatosAPI.Business {
 			await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 			await fiscalizadorNormaSuscritaBcp.EliminarPorNormaSuscrita(normaSuscrita, transaction);
 			await notificacionNormaSuscritaBcp.EliminarPorNormaSuscrita(normaSuscrita, transaction);
-			await historialNormaSuscritaBcp.EliminarPorNormaSuscrita(normaSuscrita, transaction);
+			await historialNormaSuscritaBcp.EliminarPorNormaSuscrita(normaSuscrita, false, transaction);
 		}
 	}
 }

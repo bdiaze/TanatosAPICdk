@@ -775,7 +775,7 @@ namespace TanatosAPI.Endpoints {
 						if (entrada.Activado) {
 							if (proximoVencimientoExistente?.FechaVencimiento != entrada.ProximoVencimiento) {
 								if (proximoVencimientoExistente != null) {
-									await historialNormaSuscritaBcp.EliminarPorNormaSuscrita(existente, transaction);
+									await historialNormaSuscritaBcp.EliminarPorNormaSuscrita(existente, true, transaction);
 								}
 
 								HistorialNormaSuscrita historialNormaSuscrita = new HistorialNormaSuscrita {
@@ -791,7 +791,7 @@ namespace TanatosAPI.Endpoints {
 						// En caso de que norma suscrita esté inactiva, se elimina el próximo vencimiento existente...
 						} else {
 							if (proximoVencimientoExistente != null) {
-								await historialNormaSuscritaBcp.EliminarPorNormaSuscrita(existente, transaction);
+								await historialNormaSuscritaBcp.EliminarPorNormaSuscrita(existente, false, transaction);
 							}
 						}
 
