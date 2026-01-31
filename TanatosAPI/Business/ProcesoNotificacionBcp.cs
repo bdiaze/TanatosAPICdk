@@ -310,13 +310,16 @@ namespace TanatosAPI.Business {
 					if (programarSiguienteEjecucion) {
 						HistorialNormaSuscrita? ultimoHistorial = historialNormaSuscritas.OrderByDescending(hns => hns.FechaVencimiento).FirstOrDefault();
 						if (ultimoHistorial != null) {
+							// Nos aseguramos de que la fecha esté en UTC...
+							DateTime vencimientoActual = DateTime.SpecifyKind(ultimoHistorial.FechaVencimiento, DateTimeKind.Utc);
+
 							// Se transforma la fecha de vencimiento actual a zona horaria de Chile...
 							string timezone = "America/Santiago";
 							if (OperatingSystem.IsWindows()) {
 								timezone = TZConvert.IanaToWindows(timezone);
 							}
 							TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
-							DateTime proximoVencimiento = TimeZoneInfo.ConvertTimeFromUtc(ultimoHistorial.FechaVencimiento, timeZoneInfo);
+							DateTime proximoVencimiento = TimeZoneInfo.ConvertTimeFromUtc(vencimientoActual, timeZoneInfo);
 
 							// Se añaden los deltas de la periodicidad...
 							if (tipoPeriodicidad.DeltaDias != null) {
@@ -330,7 +333,7 @@ namespace TanatosAPI.Business {
 							}
 
 							// Se convierte próximo vencimiento calculado a UTC...
-							proximoVencimiento = proximoVencimiento.ToUniversalTime();
+							proximoVencimiento = TimeZoneInfo.ConvertTimeToUtc(proximoVencimiento, timeZoneInfo);
 
 							// Se crea el próximo vencimiento...
 							HistorialNormaSuscrita historialNormaSuscrita = new() {
