@@ -8,6 +8,7 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
+using TimeZoneConverter;
 
 namespace TanatosAPI.Business {
 	public class ProcesoNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) {
@@ -309,7 +310,15 @@ namespace TanatosAPI.Business {
 					if (programarSiguienteEjecucion) {
 						HistorialNormaSuscrita? ultimoHistorial = historialNormaSuscritas.OrderByDescending(hns => hns.FechaVencimiento).FirstOrDefault();
 						if (ultimoHistorial != null) {
-							DateTime proximoVencimiento = ultimoHistorial.FechaVencimiento;
+							// Se transforma la fecha de vencimiento actual a zona horaria de Chile...
+							string timezone = "America/Santiago";
+							if (OperatingSystem.IsWindows()) {
+								timezone = TZConvert.IanaToWindows(timezone);
+							}
+							TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+							DateTime proximoVencimiento = TimeZoneInfo.ConvertTimeFromUtc(ultimoHistorial.FechaVencimiento, timeZoneInfo);
+
+							// Se añaden los deltas de la periodicidad...
 							if (tipoPeriodicidad.DeltaDias != null) {
 								proximoVencimiento = proximoVencimiento.AddDays(tipoPeriodicidad.DeltaDias.Value);
 							}
@@ -320,6 +329,10 @@ namespace TanatosAPI.Business {
 								proximoVencimiento = proximoVencimiento.AddYears(tipoPeriodicidad.DeltaAnnos.Value);
 							}
 
+							// Se convierte próximo vencimiento calculado a UTC...
+							proximoVencimiento = proximoVencimiento.ToUniversalTime();
+
+							// Se crea el próximo vencimiento...
 							HistorialNormaSuscrita historialNormaSuscrita = new() {
 								Id = 0,
 								IdNormaSuscrita = ultimoHistorial.IdNormaSuscrita,
