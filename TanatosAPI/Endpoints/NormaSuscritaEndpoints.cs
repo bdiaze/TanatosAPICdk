@@ -161,10 +161,18 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
-					HistorialNormaSuscrita? historialNormaSuscrita = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true))
-						.Where(hns => hns.FechaVencimiento >= DateTime.UtcNow)
-						.OrderBy(hns => hns.FechaVencimiento)
-						.FirstOrDefault();
+					List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true);
+					HistorialNormaSuscrita? historialNormaSuscrita;
+					if (vencimientos.Any(v => v.FechaVencimiento >= DateTime.UtcNow)) {
+						historialNormaSuscrita = vencimientos
+							.Where(hns => hns.FechaVencimiento >= DateTime.UtcNow)
+							.OrderBy(hns => hns.FechaVencimiento)
+							.FirstOrDefault();
+					} else {
+						historialNormaSuscrita = vencimientos
+							.OrderBy(hns => hns.FechaVencimiento)
+							.FirstOrDefault();
+					}
 
 					SalNormaSuscrita retorno = new() {
 						Id = existente.Id,
@@ -670,9 +678,18 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"Debe incluir la fecha de próximo vencimiento.");
 					}
 
-					HistorialNormaSuscrita? proximoVencimientoExistente = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true))
-						.OrderBy(hns => hns.FechaVencimiento)
-						.FirstOrDefault();
+					List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true);
+					HistorialNormaSuscrita? proximoVencimientoExistente;
+					if (vencimientos.Any(v => v.FechaVencimiento >= DateTime.UtcNow)) {
+						proximoVencimientoExistente = vencimientos
+							.Where(hns => hns.FechaVencimiento >= DateTime.UtcNow)
+							.OrderBy(hns => hns.FechaVencimiento)
+							.FirstOrDefault();
+					} else {
+						proximoVencimientoExistente = vencimientos
+							.OrderBy(hns => hns.FechaVencimiento)
+							.FirstOrDefault();
+					}
 
 					// En caso de estar modificando la fecha del próximo vencimiento, se valida que el próximo vencimiento sea una fecha futura...
 					if (entrada.Activado && proximoVencimientoExistente?.FechaVencimiento != entrada.ProximoVencimiento && entrada.ProximoVencimiento <= DateTime.UtcNow) {
