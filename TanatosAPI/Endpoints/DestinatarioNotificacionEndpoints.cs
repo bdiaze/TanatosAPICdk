@@ -191,7 +191,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, DestinatarioNotificacionDao destinatarioNotificacionDao, DestinatarioNotificacionBcp destinatarioNotificacionBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -207,9 +207,7 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El usuario no posee un destinatario de notificación con ID {id}.");
 					}
 
-					existente.FechaEliminacion = DateTime.UtcNow;
-					existente.Vigencia = false;
-					await destinatarioNotificacionDao.Actualizar(existente);
+					await destinatarioNotificacionBcp.Eliminar(existente);
 
 					LambdaLogger.Log(
 						$"[DELETE] - [DestinatarioNotificacion] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +

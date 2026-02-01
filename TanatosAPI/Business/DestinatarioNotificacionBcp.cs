@@ -16,5 +16,18 @@ namespace TanatosAPI.Business {
 				}
 			}
 		}
+
+		public async Task Eliminar(DestinatarioNotificacion destinatarioNotificacion, NpgsqlTransaction? transaction = null) {
+			if (destinatarioNotificacion.Vigencia) {
+				destinatarioNotificacion.FechaEliminacion = DateTime.UtcNow;
+				destinatarioNotificacion.Vigencia = false;
+				await destinatarioNotificacionDao.Actualizar(destinatarioNotificacion, transaction);
+
+				List<NormaSuscrita> normasSuscritas = [.. (await normaSuscritaDao.ObtenerPorSub(destinatarioNotificacion.Sub, destinatarioNotificacion.IdNegocio, true, transaction)).Where(ns => ns.Activado)];
+				foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
+					await historialNormaSuscritaBcp.ActualizarPorNormaSuscrita(normaSuscrita, transaction);
+				}
+			}
+		}
 	}
 }
