@@ -70,14 +70,32 @@ namespace TanatosAPI.Repositories {
 			);
 		}
 
-		public async Task Actualizar(DestinatarioNotificacion item) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			await connection.ExecuteAsync(
-				"UPDATE TANATOS.DESTINATARIO_NOTIFICACION SET SUB = @SUB, ID_NEGOCIO = @IDNEGOCIO, ID_TIPO_RECEPTOR = @IDTIPORECEPTOR, DESTINO = @DESTINO, CODIGO_VALIDACION = @CODIGOVALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION = @FECHACADUCIDADCODIGOVALIDACION, " +
+		public async Task Actualizar(DestinatarioNotificacion item, NpgsqlTransaction? transaction = null) {
+			string query =
+				"UPDATE TANATOS.DESTINATARIO_NOTIFICACION SET SUB = @SUB, ID_NEGOCIO = @IDNEGOCIO, ID_TIPO_RECEPTOR = @IDTIPORECEPTOR, DESTINO = @DESTINO, " +
+				"CODIGO_VALIDACION = @CODIGOVALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION = @FECHACADUCIDADCODIGOVALIDACION, " +
 				"FECHA_VALIDACION = @FECHAVALIDACION, VALIDADO = @VALIDADO, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
-				"WHERE ID = @ID",
-				new { item.Sub, item.IdNegocio, item.IdTipoReceptor, item.Destino, item.CodigoValidacion, item.FechaCaducidadCodigoValidacion, item.FechaValidacion, item.Validado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia, item.Id }
-			);
+				"WHERE ID = @ID";
+			DynamicParameters param = new();
+			param.Add("SUB", item.Sub);
+			param.Add("IDNEGOCIO", item.IdNegocio);
+			param.Add("IDTIPORECEPTOR", item.IdTipoReceptor);
+			param.Add("DESTINO", item.Destino);
+			param.Add("CODIGOVALIDACION", item.CodigoValidacion);
+			param.Add("FECHACADUCIDADCODIGOVALIDACION", item.FechaCaducidadCodigoValidacion);
+			param.Add("FECHAVALIDACION", item.FechaValidacion);
+			param.Add("VALIDADO", item.Validado);
+			param.Add("FECHACREACION", item.FechaCreacion);
+			param.Add("FECHAELIMINACION", item.FechaEliminacion);
+			param.Add("VIGENCIA", item.Vigencia);
+			param.Add("ID", item.Id);
+
+			if (transaction?.Connection != null) {
+				await transaction!.Connection!.ExecuteAsync(query, param, transaction);
+			} else {
+				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+				await connection.ExecuteAsync(query, param);
+			}
 		}
 	}
 }
