@@ -33,7 +33,8 @@ namespace TanatosAPI.Business {
 								historialNotificacion.IdDestinatarioNotificacion,
 								historialNotificacion.IdTipoUnidadTiempoAntelacion,
 								historialNotificacion.CantAntelacion,
-								fechaProgramacion
+								fechaProgramacion,
+								transaction
 							);
 						}
 					// Si no viene la antelación, se programa para la fecha de vencimiento...
