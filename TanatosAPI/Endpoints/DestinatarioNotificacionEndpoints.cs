@@ -1,11 +1,13 @@
 ﻿using Amazon.Lambda.Core;
 using Microsoft.AspNetCore.Authentication;
+using Npgsql;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
@@ -227,7 +229,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapValidarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Validar/", async (IHostEnvironment environment, EntDestinatarioNotificacionValidar entrada, DestinatarioNotificacionDao destinatarioNotificacionDao, CryptoHelper cryptoHelper) => {
+			routes.MapPost("/Validar/", async (EntDestinatarioNotificacionValidar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, DestinatarioNotificacionBcp destinatarioNotificacionBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, CryptoHelper cryptoHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -251,9 +253,17 @@ namespace TanatosAPI.Endpoints {
 
 							return Results.BadRequest("El código ingresado ya caducó");
 						} else {
-							destinatarioNotificacion.Validado = true;
-							destinatarioNotificacion.FechaValidacion = DateTime.UtcNow;
-							await destinatarioNotificacionDao.Actualizar(destinatarioNotificacion);
+							await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+							await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+
+							try {
+								await destinatarioNotificacionBcp.Validar(destinatarioNotificacion, transaction);
+
+								await transaction.CommitAsync();
+							} catch {
+								await transaction.RollbackAsync();
+								throw;
+							}
 						}
 					}
 

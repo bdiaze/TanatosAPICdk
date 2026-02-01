@@ -118,6 +118,7 @@ builder.Services.AddSingleton<HistorialNotificacionBcp>();
 builder.Services.AddSingleton<FiscalizadorNormaSuscritaBcp>();
 builder.Services.AddSingleton<NotificacionNormaSuscritaBcp>();
 builder.Services.AddSingleton<ProcesoNotificacionBcp>();
+builder.Services.AddSingleton<DestinatarioNotificacionBcp>();
 #endregion
 
 string cognitoRegion;

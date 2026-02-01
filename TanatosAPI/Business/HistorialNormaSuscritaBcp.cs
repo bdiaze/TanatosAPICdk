@@ -6,11 +6,32 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
 	public class HistorialNormaSuscritaBcp(HistorialNotificacionBcp historialNotificacionBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) {
-		public async Task ActualizarHistorialNotificacionPorNormaSuscrita(NormaSuscrita normaSuscrita, HashSet<(long idDestinatarioNotificacion, long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> historialesNotificaciones, NpgsqlTransaction? transaction = null) {
-			List<HistorialNormaSuscrita> historialNormasSuscritasVigentes =  await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true, transaction);
+		public async Task ActualizarPorNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			List<DestinatarioNotificacion> destinatarios = [.. (await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).Where(d => d.Validado)];
+			List<NotificacionNormaSuscrita> notificacionNormaSuscritas = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
+			List<TemplateNormaNotificacion> templateNormaNotificaciones = (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null && notificacionNormaSuscritas.Count == 0)
+				? await templateNormaNotificacionDao.ObtenerPorTemplateNorma(normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma, transaction)
+				: [];
 
+			HashSet<(long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> notificacionesAntelacion = [];
+			notificacionesAntelacion.Add((null, null));
+			foreach (NotificacionNormaSuscrita notificacionNormaSuscrita in notificacionNormaSuscritas) {
+				notificacionesAntelacion.Add((notificacionNormaSuscrita.IdTipoUnidadTiempoAntelacion, notificacionNormaSuscrita.CantAntelacion));
+			}
+			foreach (TemplateNormaNotificacion templateNormaNotificacion in templateNormaNotificaciones) {
+				notificacionesAntelacion.Add((templateNormaNotificacion.IdTipoUnidadTiempoAntelacion, templateNormaNotificacion.CantAntelacion));
+			}
+
+			HashSet<(long idDestinatarioNotificacion, long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> historialNotificaciones = [];
+			foreach (DestinatarioNotificacion destinatarioNotificacion in destinatarios) {
+				foreach ((long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion) antelacion in notificacionesAntelacion) {
+					historialNotificaciones.Add((destinatarioNotificacion.Id, antelacion.IdTipoUnidadTiempoAntelacion, antelacion.CantAntelacion));
+				}
+			}
+
+			List<HistorialNormaSuscrita> historialNormasSuscritasVigentes = [.. (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true, transaction)).Where(hns => hns.FechaVencimiento > DateTime.UtcNow)];
 			foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormasSuscritasVigentes) {
-				await historialNotificacionBcp.ActualizarPorHistorialNormaSuscrita(historialNormaSuscrita, historialesNotificaciones, transaction);
+				await historialNotificacionBcp.ActualizarPorHistorialNormaSuscrita(historialNormaSuscrita, historialNotificaciones, transaction);
 			}
 		}
 
