@@ -119,6 +119,7 @@ builder.Services.AddSingleton<FiscalizadorNormaSuscritaDao>();
 builder.Services.AddSingleton<NotificacionNormaSuscritaDao>();
 builder.Services.AddSingleton<HistorialNormaSuscritaDao>();
 builder.Services.AddSingleton<HistorialNotificacionDao>();
+builder.Services.AddSingleton<DocumentoAdjuntoDao>();
 #endregion
 
 #region Singleton BCP
