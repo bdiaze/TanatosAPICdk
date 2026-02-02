@@ -8,6 +8,43 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class HistorialNormaSuscritaDao(DatabaseConnectionHelper connectionHelper) {
+		public async Task<HistorialNormaSuscrita?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
+			string query =
+				"SELECT ID, ID_NORMA_SUSCRITA, FECHA_VENCIMIENTO, FECHA_COMPLETITUD, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.HISTORIAL_NORMA_SUSCRITA " +
+				"WHERE ID = @ID";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+
+				command.Parameters.AddWithValue("ID", id);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				HistorialNormaSuscrita? retorno = null;
+
+				if (await reader.ReadAsync()) {
+					retorno = new HistorialNormaSuscrita {
+						Id = reader.GetInt64(0),
+						IdNormaSuscrita = reader.GetInt64(1),
+						FechaVencimiento = reader.GetDateTime(2),
+						FechaCompletitud = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+						FechaCreacion = reader.GetDateTime(4),
+						FechaEliminacion = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+						Vigencia = reader.GetBoolean(6)
+					};
+				}
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
+		}
+
 		public async Task<List<HistorialNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, DateTime? fechaVencimiento = null, bool vigencia = true) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return [.. await connection.QueryAsync<HistorialNormaSuscrita>(
