@@ -181,6 +181,12 @@ namespace TanatosAPI.Entities.Contexts {
 				.WithMany(o => o.HistorialNotificaciones)
 				.HasForeignKey(o => o.IdHistorialNormaSuscrita)
 				.OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DocumentoAdjunto>()
+                .HasOne(o => o.HistorialNormaSuscrita)
+                .WithMany(o => o.DocumentosAdjuntos)
+                .HasForeignKey(o => o.IdHistorialNormaSuscrita)
+                .OnDelete(DeleteBehavior.Restrict);
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -222,5 +228,7 @@ namespace TanatosAPI.Entities.Contexts {
         public DbSet<TipoActividad> TiposActividades { get; set; }
 
 		public DbSet<TemplateActividad> TemplatesActividades  { get; set; }
-	}
+
+        public DbSet<DocumentoAdjunto> DocumentosAdjuntos { get; set; }
+		}
 }

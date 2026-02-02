@@ -55,5 +55,7 @@ namespace TanatosAPI.Entities.Models {
 		public NormaSuscrita? NormaSuscrita { get; set; }
 
 		public List<HistorialNotificacion>? HistorialNotificaciones { get; set; }
+	
+		public List<DocumentoAdjunto>? DocumentosAdjuntos { get; set; }
 	}
 }

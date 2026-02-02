@@ -31,7 +31,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251113165331_InitialCreation') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251113165331_InitialCreation', '9.0.11');
+    VALUES ('20251113165331_InitialCreation', '9.0.12');
     END IF;
 END $EF$;
 
@@ -194,7 +194,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251117132506_TablasTipo') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251117132506_TablasTipo', '9.0.11');
+    VALUES ('20251117132506_TablasTipo', '9.0.12');
     END IF;
 END $EF$;
 
@@ -354,7 +354,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251117144252_TablasTemplates') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251117144252_TablasTemplates', '9.0.11');
+    VALUES ('20251117144252_TablasTemplates', '9.0.12');
     END IF;
 END $EF$;
 
@@ -369,7 +369,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251205214630_CorreccionVigencia') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251205214630_CorreccionVigencia', '9.0.11');
+    VALUES ('20251205214630_CorreccionVigencia', '9.0.12');
     END IF;
 END $EF$;
 
@@ -507,7 +507,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251206192642_CambioPKTemplateNorma', '9.0.11');
+    VALUES ('20251206192642_CambioPKTemplateNorma', '9.0.12');
     END IF;
 END $EF$;
 
@@ -529,7 +529,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251209230256_DestCodValidUnique') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251209230256_DestCodValidUnique', '9.0.11');
+    VALUES ('20251209230256_DestCodValidUnique', '9.0.12');
     END IF;
 END $EF$;
 
@@ -544,7 +544,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251209235931_QuitaRequireFechaEliminacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251209235931_QuitaRequireFechaEliminacion', '9.0.11');
+    VALUES ('20251209235931_QuitaRequireFechaEliminacion', '9.0.12');
     END IF;
 END $EF$;
 
@@ -560,7 +560,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251210002949_RegexValidacionTipoReceptor') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251210002949_RegexValidacionTipoReceptor', '9.0.11');
+    VALUES ('20251210002949_RegexValidacionTipoReceptor', '9.0.12');
     END IF;
 END $EF$;
 
@@ -584,7 +584,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251212025425_CaducidadFechaValidacionDestinatario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251212025425_CaducidadFechaValidacionDestinatario', '9.0.11');
+    VALUES ('20251212025425_CaducidadFechaValidacionDestinatario', '9.0.12');
     END IF;
 END $EF$;
 
@@ -623,7 +623,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251214144425_TablaNegocio') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251214144425_TablaNegocio', '9.0.11');
+    VALUES ('20251214144425_TablaNegocio', '9.0.12');
     END IF;
 END $EF$;
 
@@ -645,7 +645,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251214150946_UniqueNegocio') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251214150946_UniqueNegocio', '9.0.11');
+    VALUES ('20251214150946_UniqueNegocio', '9.0.12');
     END IF;
 END $EF$;
 
@@ -689,7 +689,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251214212505_RelacionNegocioDestinatario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251214212505_RelacionNegocioDestinatario', '9.0.11');
+    VALUES ('20251214212505_RelacionNegocioDestinatario', '9.0.12');
     END IF;
 END $EF$;
 
@@ -782,7 +782,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251215173340_TablaNormaSuscrita') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251215173340_TablaNormaSuscrita', '9.0.11');
+    VALUES ('20251215173340_TablaNormaSuscrita', '9.0.12');
     END IF;
 END $EF$;
 
@@ -828,7 +828,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251217180256_TablaFiscalizadorNormaSuscrita') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251217180256_TablaFiscalizadorNormaSuscrita', '9.0.11');
+    VALUES ('20251217180256_TablaFiscalizadorNormaSuscrita', '9.0.12');
     END IF;
 END $EF$;
 
@@ -876,7 +876,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251218171902_TablaNotificacionesNormaSuscrita') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251218171902_TablaNotificacionesNormaSuscrita', '9.0.11');
+    VALUES ('20251218171902_TablaNotificacionesNormaSuscrita', '9.0.12');
     END IF;
 END $EF$;
 
@@ -898,7 +898,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251218212856_RemoveUniqueNegocio') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251218212856_RemoveUniqueNegocio', '9.0.11');
+    VALUES ('20251218212856_RemoveUniqueNegocio', '9.0.12');
     END IF;
 END $EF$;
 
@@ -945,7 +945,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251220132132_TablaHistorialNormaSuscrita') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251220132132_TablaHistorialNormaSuscrita', '9.0.11');
+    VALUES ('20251220132132_TablaHistorialNormaSuscrita', '9.0.12');
     END IF;
 END $EF$;
 
@@ -989,7 +989,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251222133226_AgregaIdNegocioInscripcionTemplate') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251222133226_AgregaIdNegocioInscripcionTemplate', '9.0.11');
+    VALUES ('20251222133226_AgregaIdNegocioInscripcionTemplate', '9.0.12');
     END IF;
 END $EF$;
 
@@ -1065,7 +1065,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260112193435_TablasRubroActividad') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260112193435_TablasRubroActividad', '9.0.11');
+    VALUES ('20260112193435_TablasRubroActividad', '9.0.12');
     END IF;
 END $EF$;
 
@@ -1096,7 +1096,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260113192226_TablasTemplateActividad') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260113192226_TablasTemplateActividad', '9.0.11');
+    VALUES ('20260113192226_TablasTemplateActividad', '9.0.12');
     END IF;
 END $EF$;
 
@@ -1112,7 +1112,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260119172016_CronTipoPeriodicidad') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260119172016_CronTipoPeriodicidad', '9.0.11');
+    VALUES ('20260119172016_CronTipoPeriodicidad', '9.0.12');
     END IF;
 END $EF$;
 
@@ -1156,7 +1156,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260119232011_TablaHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260119232011_TablaHistorialNotificacion', '9.0.11');
+    VALUES ('20260119232011_TablaHistorialNotificacion', '9.0.12');
     END IF;
 END $EF$;
 
@@ -1180,7 +1180,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260120231545_ColumnsHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260120231545_ColumnsHistorialNotificacion', '9.0.11');
+    VALUES ('20260120231545_ColumnsHistorialNotificacion', '9.0.12');
     END IF;
 END $EF$;
 
@@ -1212,7 +1212,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260121144405_ColumnsMetadataHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260121144405_ColumnsMetadataHistorialNotificacion', '9.0.11');
+    VALUES ('20260121144405_ColumnsMetadataHistorialNotificacion', '9.0.12');
     END IF;
 END $EF$;
 
@@ -1228,7 +1228,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260121213826_ColumnProcesoNotificacionNormaSuscrita') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260121213826_ColumnProcesoNotificacionNormaSuscrita', '9.0.11');
+    VALUES ('20260121213826_ColumnProcesoNotificacionNormaSuscrita', '9.0.12');
     END IF;
 END $EF$;
 
@@ -1244,7 +1244,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260125163311_NombrePluralUnidadTiempo') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260125163311_NombrePluralUnidadTiempo', '9.0.11');
+    VALUES ('20260125163311_NombrePluralUnidadTiempo', '9.0.12');
     END IF;
 END $EF$;
 
@@ -1276,7 +1276,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260125164127_DeltasPeriodicidad') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260125164127_DeltasPeriodicidad', '9.0.11');
+    VALUES ('20260125164127_DeltasPeriodicidad', '9.0.12');
     END IF;
 END $EF$;
 
@@ -1292,7 +1292,70 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260127234100_ColumnHermesIdHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260127234100_ColumnHermesIdHistorialNotificacion', '9.0.11');
+    VALUES ('20260127234100_ColumnHermesIdHistorialNotificacion', '9.0.12');
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260202192025_TablaDocumentoAdjunto') THEN
+    CREATE TABLE tanatos.documento_adjunto (
+        id bigint GENERATED BY DEFAULT AS IDENTITY,
+        id_historial_norma_suscrita bigint NOT NULL,
+        bucket_name text NOT NULL,
+        bucket_key text NOT NULL,
+        nombre_archivo text NOT NULL,
+        mime_esperado text NOT NULL,
+        tamanno_esperado bigint NOT NULL,
+        mime_real text,
+        tamanno_real bigint,
+        estado_subida smallint NOT NULL,
+        fecha_emision_url_prefirmada_put timestamp with time zone NOT NULL,
+        fecha_confirmacion_subida timestamp with time zone,
+        fecha_creacion timestamp with time zone NOT NULL,
+        fecha_eliminacion timestamp with time zone,
+        vigencia boolean NOT NULL,
+        CONSTRAINT "PK_documento_adjunto" PRIMARY KEY (id),
+        CONSTRAINT "FK_documento_adjunto_historial_norma_suscrita_id_historial_nor~" FOREIGN KEY (id_historial_norma_suscrita) REFERENCES tanatos.historial_norma_suscrita (id) ON DELETE RESTRICT
+    );
+    COMMENT ON TABLE tanatos.documento_adjunto IS 'Tabla que contiene la metadata de los documentos adjuntos asociados al historial de ejecución de una norma suscrita.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.id IS 'Identificador del documento adjunto.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.id_historial_norma_suscrita IS 'Identificador del historial de ejecución de una norma suscrita.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.bucket_name IS 'Nombre del bucket donde está almacenado el documento.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.bucket_key IS 'Identificador del objeto dentro del bucket.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.nombre_archivo IS 'Nombre original del archivo.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.mime_esperado IS 'Mime esperado del archivo.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.tamanno_esperado IS 'Tamaño esperado del archivo en bytes.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.mime_real IS 'Mime real del archivo.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.tamanno_real IS 'Tamaño real del archivo en bytes.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.estado_subida IS 'Estado de subida del documento adjunto. 0: Generada URL prefirmada para PUT - 1: Documento recepcionado.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.fecha_emision_url_prefirmada_put IS 'Fecha en que se emitió la URL prefirmada para método PUT.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.fecha_confirmacion_subida IS 'Fecha en que se confirmó la subida del archivo.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.fecha_creacion IS 'Fecha en que se creó el registro.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.fecha_eliminacion IS 'Fecha en que se eliminó el registro.';
+    COMMENT ON COLUMN tanatos.documento_adjunto.vigencia IS 'Vigencia del registro.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260202192025_TablaDocumentoAdjunto') THEN
+    CREATE INDEX "IX_documento_adjunto_bucket_name_bucket_key" ON tanatos.documento_adjunto (bucket_name, bucket_key);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260202192025_TablaDocumentoAdjunto') THEN
+    CREATE INDEX "IX_documento_adjunto_id_historial_norma_suscrita" ON tanatos.documento_adjunto (id_historial_norma_suscrita);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260202192025_TablaDocumentoAdjunto') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260202192025_TablaDocumentoAdjunto', '9.0.12');
     END IF;
 END $EF$;
 COMMIT;
