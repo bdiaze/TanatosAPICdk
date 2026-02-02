@@ -2,6 +2,7 @@ using Amazon.APIGateway;
 using Amazon.CognitoIdentityProvider;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
+using Amazon.S3;
 using Amazon.SecretsManager;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
@@ -74,6 +75,13 @@ builder.Services.AddSingleton<IAmazonCognitoIdentityProvider>(sp => {
 	};
 	return new AmazonCognitoIdentityProviderClient(config);
 });
+builder.Services.AddSingleton<IAmazonS3>(sp => {
+	AmazonS3Config config = new() {
+		ConnectTimeout = TimeSpan.FromSeconds(5),
+		Timeout = TimeSpan.FromSeconds(25)
+	};
+	return new AmazonS3Client(config);
+});
 #endregion
 
 #region Singleton Helpers
@@ -86,6 +94,8 @@ builder.Services.AddSingleton<KairosHelper>();
 builder.Services.AddSingleton<ConnectionStringHelper>();
 builder.Services.AddSingleton<DatabaseConnectionHelper>();
 builder.Services.AddSingleton<CryptoHelper>();
+builder.Services.AddSingleton<S3Helper>();
+builder.Services.AddSingleton<DocumentoAdjuntoHelper>();
 #endregion
 
 #region Singleton DAO

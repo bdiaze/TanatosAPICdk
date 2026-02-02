@@ -10,6 +10,7 @@ using Amazon.CDK.AWS.Lambda;
 using Amazon.CDK.AWS.Logs;
 using Amazon.CDK.AWS.Route53;
 using Amazon.CDK.AWS.Route53.Targets;
+using Amazon.CDK.AWS.S3;
 using Amazon.CDK.AWS.SecretsManager;
 using Amazon.CDK.AWS.SSM;
 using Amazon.CDK.AwsApigatewayv2Authorizers;
@@ -480,11 +481,32 @@ namespace Cdk
                 },
             });
 
-            #endregion
+			#endregion
 
-            #region API
-            // Se crea security group para la lambda y se enlaza con security group de RDS...
-            SecurityGroup securityGroup = new(this, $"{appName}LambdaSecurityGroup", new SecurityGroupProps {
+			#region S3
+			Bucket bucket = new(this, $"{appName}BucketDocumentosAdjuntos", new BucketProps {
+				BucketName = $"{appName.ToLowerInvariant()}-documentos-adjuntos",
+				BlockPublicAccess = BlockPublicAccess.BLOCK_ALL,
+				Versioned = true,
+				EnforceSSL = true,
+				Cors = [
+					new CorsRule {
+						AllowedOrigins = allowedDomains.Split(","),
+						AllowedMethods = [
+							HttpMethods.GET,
+							HttpMethods.PUT,
+						],
+						MaxAge = 10 * 24 * 60 * 60
+					}
+				],
+				RemovalPolicy = RemovalPolicy.DESTROY,
+				AutoDeleteObjects = false,
+			});
+			#endregion
+
+			#region API
+			// Se crea security group para la lambda y se enlaza con security group de RDS...
+			SecurityGroup securityGroup = new(this, $"{appName}LambdaSecurityGroup", new SecurityGroupProps {
                 Vpc = vpc,
                 SecurityGroupName = $"{appName}APILambda",
                 Description = $"Security Group de {appName} API Lambda",
@@ -551,6 +573,17 @@ namespace Cdk
 										$"arn:aws:cognito-idp:{this.Region}:{this.Account}:userpool/{userPool.UserPoolId}",
 									],
 								}),
+								new PolicyStatement(new PolicyStatementProps{
+									Sid = $"{appName}AccessToS3",
+									Actions = [
+										"s3:GetObject",
+										"s3:PutObject",
+										"s3:HeadObject",
+									],
+									Resources = [
+										$"{bucket.BucketArn}/*",
+									],
+								}),
 							]
                         })
                     }
@@ -586,6 +619,7 @@ namespace Cdk
 					{ "KAIROS_API_KEY_ID", parameterKairosApiKeyId.StringValue },
 					{ "NOTIFICACIONES_LAMBDA_ARN", parameterNotificacionesLambdaArn.StringValue },
 					{ "NOTIFICACIONES_EJECUCION_ROLE_ARN", parameterNotificacionesEjecucionRoleArn.StringValue },
+					{ "BUCKET_NAME_DOCUMENTOS_ADJUNTOS", bucket.BucketName }
 				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {
