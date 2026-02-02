@@ -54,6 +54,51 @@ namespace TanatosAPI.Repositories {
 			}
 		}
 
+		public async Task<DocumentoAdjunto?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
+			string query =
+				"SELECT ID, ID_HISTORIAL_NORMA_SUSCRITA, BUCKET_NAME, BUCKET_KEY, NOMBRE_ARCHIVO, MIME_ESPERADO, TAMANNO_ESPERADO, MIME_REAL, TAMANNO_REAL, " +
+				"ESTADO_SUBIDA, FECHA_EMISION_URL_PREFIRMADA_PUT, FECHA_CONFIRMACION_SUBIDA, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DOCUMENTO_ADJUNTO " +
+				"WHERE ID = @ID";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+				command.Parameters.AddWithValue("ID", id);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				DocumentoAdjunto? retorno = null;
+
+				if (await reader.ReadAsync()) {
+					retorno = new DocumentoAdjunto {
+						Id = reader.GetInt64(0),
+						IdHistorialNormaSuscrita = reader.GetInt64(1),
+						BucketName = reader.GetString(2),
+						BucketKey = reader.GetString(3),
+						NombreArchivo = reader.GetString(4),
+						MimeEsperado = reader.GetString(5),
+						TamannoEsperado = reader.GetInt64(6),
+						MimeReal = reader.IsDBNull(7) ? null : reader.GetString(7),
+						TamannoReal = reader.IsDBNull(8) ? null : reader.GetInt64(8),
+						EstadoSubida = reader.GetInt16(9),
+						FechaEmisionUrlPrefirmadaPut = reader.GetDateTime(10),
+						FechaConfirmacionSubida = reader.IsDBNull(11) ? null : reader.GetDateTime(11),
+						FechaCreacion = reader.GetDateTime(12),
+						FechaEliminacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
+						Vigencia = reader.GetBoolean(14)
+					};
+				}
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
+		}
+
 		public async Task<long> Insertar(DocumentoAdjunto item, NpgsqlTransaction? transaction = null) {
 			string query =
 				"INSERT INTO TANATOS.DOCUMENTO_ADJUNTO(ID_HISTORIAL_NORMA_SUSCRITA, BUCKET_NAME, BUCKET_KEY, NOMBRE_ARCHIVO, MIME_ESPERADO, TAMANNO_ESPERADO, " +
