@@ -2,7 +2,7 @@
 	public class DocumentoAdjuntoHelper(S3Helper s3Helper, VariableEntornoHelper variableEntorno) {
 		public readonly string BUCKET_NAME = variableEntorno.Obtener("BUCKET_NAME_DOCUMENTOS_ADJUNTOS");
 
-		public async Task<(string bucketName, string bucketKey, string preSignedUrl)> ObtenerPutPreSignedUrl(string sub, long idNegocio, long idNormaSuscrita, long idHistorialNormaSuscrita, long idHistorialNotificacion, string contentType) {
+		public async Task<(string bucketName, string bucketKey, string preSignedUrl)> ObtenerPutPreSignedUrl(string sub, long idNegocio, long idNormaSuscrita, long idHistorialNormaSuscrita, string contentType) {
 			string key = $"Sub-{sub}/Negocio-{idNegocio}/NormaSuscrita-{idNormaSuscrita}/HistorialNormaSuscrita-{idHistorialNormaSuscrita}/{Guid.NewGuid()}";
 			return (BUCKET_NAME, key, await s3Helper.ObtenerPutPreSignedUrl(BUCKET_NAME, key, contentType));
 		}
