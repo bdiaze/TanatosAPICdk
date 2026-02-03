@@ -69,6 +69,7 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(EntDocumentoAdjuntoConfirmarSubida))]
 	[JsonSerializable(typeof(EntDocumentoAdjuntoGenerarUrlBajada))]
 	[JsonSerializable(typeof(SalDocumentoAdjuntoGenerarUrlBajada))]
+	[JsonSerializable(typeof(SalNormaSuscritaObtenerPorIdConVencimiento))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }

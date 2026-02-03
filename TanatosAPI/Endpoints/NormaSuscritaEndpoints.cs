@@ -15,6 +15,7 @@ namespace TanatosAPI.Endpoints {
 			group.MapObtenerVigentes();
 			group.MapObtenerPorId();
 			group.MapObtenerConVencimiento();
+			group.MapObtenerPorIdConVencimiento();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
 			group.MapEliminarEndpoint();
@@ -315,6 +316,118 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener las normas suscritas con vencimiento por ID Negocio: {idNegocio}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Obligaciones.Read.Self", "Vencimientos.Read.Self", "Sistema.Read.Public", "Templates.Read.Public").WithOpenApi();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapObtenerPorIdConVencimiento(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/ObtenerPorIdConVencimiento/{idNormaSuscrita}/{idHistorialNormaSuscrita}", async (long idNormaSuscrita, long idHistorialNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, DocumentoAdjuntoDao documentoAdjuntoDao, CategoriaNormaDao categoriaNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+
+					NormaSuscrita? existente = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita);
+					if (existente == null || !existente.Vigencia || existente.Sub != sub) {
+						LambdaLogger.Log(
+							$"[GET] - [NormaSuscrita] - [ObtenerPorIdConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El ID de norma suscrita es inválido.");
+
+						return Results.BadRequest($"El ID de norma suscrita es inválido.");
+					}
+
+					HistorialNormaSuscrita? historialExistente = await historialNormaSuscritaDao.ObtenerPorId(idHistorialNormaSuscrita);
+					if (historialExistente == null || !historialExistente.Vigencia || historialExistente.IdNormaSuscrita != idNormaSuscrita) {
+						LambdaLogger.Log(
+							$"[GET] - [NormaSuscrita] - [ObtenerPorIdConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El ID de norma suscrita es inválido.");
+
+						return Results.BadRequest($"El ID de norma suscrita es inválido.");
+					}
+
+					List<TipoPeriodicidad> periodicidades = await tipoPeriodicidadDao.ObtenerPorVigencia(null);
+					List<CategoriaNorma> categorias = await categoriaNormaDao.ObtenerPorVigencia(null);
+
+					List<FiscalizadorNormaSuscrita> fiscalizadoresNormaSuscrita = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(existente.Id, true);
+
+					List<TipoFiscalizador> fiscalizadores = [];
+					if (fiscalizadoresNormaSuscrita.Count > 0) {
+						fiscalizadores = await tipoFiscalizadorDao.ObtenerPorVigencia(null);
+					}
+
+					Template? template = null;
+					TemplateNorma? templateNorma = null;
+					List<TemplateNormaFiscalizador> templateNormaFiscalizadores = [];
+					List<TemplateNormaNotificacion> templateNormaNotificaciones = [];
+					if (existente.IdTemplate != null && existente.IdNorma != null) {
+						template = await templateDao.ObtenerPorId(existente.IdTemplate.Value);
+
+						// Obtengo la información del template norma...
+						templateNorma = (await templateNormaDao.ObtenerPorTemplate(existente.IdTemplate!.Value)).FirstOrDefault(tn => tn.IdNorma == existente.IdNorma);
+
+						// Obtengo la información de los fiscalizadores del template norma...
+						templateNormaFiscalizadores = await templateNormaFiscalizadorDao.ObtenerPorTemplateNorma(templateNorma!.IdTemplate, templateNorma!.IdNorma);
+						if (templateNormaFiscalizadores.Count > 0 && (fiscalizadores == null || fiscalizadores.Count == 0)) {
+							fiscalizadores = await tipoFiscalizadorDao.ObtenerPorVigencia(null);
+						}
+					}
+
+					List<DocumentoAdjunto> documentosAdjuntos = (await documentoAdjuntoDao.ObtenerPorHistorial(historialExistente.Id, true)).Where(da => da.EstadoSubida == 1).ToList();
+
+					SalNormaSuscritaObtenerPorIdConVencimiento retorno = new() {
+						Id = existente.Id,
+						Nombre = existente.Nombre,
+						Descripcion = existente.Descripcion,
+						IdTipoPeriodicidad = existente.IdTipoPeriodicidad,
+						NombreTipoPeriodicidad = periodicidades.FirstOrDefault(p => p.Id == existente.IdTipoPeriodicidad)?.Nombre,
+						Multa = existente.Multa,
+						IdCategoriaNorma = existente.IdCategoriaNorma,
+						NombreCategoriaNorma = categorias.FirstOrDefault(c => c.Id == existente.IdCategoriaNorma)?.Nombre,
+						Fiscalizadores = [.. fiscalizadoresNormaSuscrita.Select(fns => new SalFiscalizadorNormaSuscrita() {
+								Id = fns.Id,
+								IdTipoFiscalizador = fns.IdTipoFiscalizador,
+								NombreTipoFiscalizador = fiscalizadores.FirstOrDefault(ff => ff.Id == fns.IdTipoFiscalizador)?.Nombre
+							})
+						],
+						TemplateNorma = (template == null || templateNorma == null) ? null : new SalTemplateNormaObtenerPorIdConVencimiento() {
+							IdTemplate = template.Id,
+							NombreTemplate = template.Nombre,
+							Nombre = templateNorma.Nombre,
+							Descripcion = templateNorma.Descripcion,
+							IdTipoPeriodicidad = templateNorma.IdTipoPeriodicidad,
+							NombreTipoPeriodicidad = periodicidades.FirstOrDefault(p => p.Id == templateNorma.IdTipoPeriodicidad)?.Nombre,
+							Multa = templateNorma.Multa,
+							IdCategoriaNorma = templateNorma.IdCategoriaNorma,
+							NombreCategoriaNorma = categorias.FirstOrDefault(c => c.Id == templateNorma.IdCategoriaNorma)?.Nombre,
+							Fiscalizadores = [.. templateNormaFiscalizadores.Select(fns => new SalFiscalizadorNormaSuscrita() {
+									Id = 0,
+									IdTipoFiscalizador = fns.IdTipoFiscalizador,
+									NombreTipoFiscalizador = fiscalizadores.FirstOrDefault(ff => ff.Id == fns.IdTipoFiscalizador)?.Nombre
+								})
+							],
+						},
+						FechaVencimiento = historialExistente.FechaVencimiento,
+						FechaCompletitud = historialExistente.FechaCompletitud,
+						DocumentosAdjuntos = [.. documentosAdjuntos.Select(da => new SalDocumentoAdjunto() {
+							Id = da.Id,
+							NombreArchivo = da.NombreArchivo,
+							FechaSubida = da.FechaConfirmacionSubida
+						})]
+					};
+
+					LambdaLogger.Log(
+						$"[GET] - [NormaSuscrita] - [ObtenerPorIdConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de la norma suscrita por ID {idNormaSuscrita} con vencimiento.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [NormaSuscrita] - [ObtenerPorIdConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener la norma suscrita por ID {idNormaSuscrita} con vencimiento. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
