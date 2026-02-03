@@ -294,6 +294,7 @@ namespace TanatosAPI.Endpoints {
 							retorno.Add(new SalNormaSuscritaObtenerConVencimiento {
 								FechaVencimiento = historialNormaSuscrita.FechaVencimiento,
 								IdNormaSuscrita = normaSuscrita.Id,
+								IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
 								NombreNorma = normaSuscrita.Nombre ?? templateNorma?.Nombre,
 								DescripcionNorma = normaSuscrita.Descripcion ?? templateNorma?.Descripcion,
 								MultaNorma = normaSuscrita.Multa ?? templateNorma?.Multa,
