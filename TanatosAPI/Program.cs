@@ -130,6 +130,7 @@ builder.Services.AddSingleton<FiscalizadorNormaSuscritaBcp>();
 builder.Services.AddSingleton<NotificacionNormaSuscritaBcp>();
 builder.Services.AddSingleton<ProcesoNotificacionBcp>();
 builder.Services.AddSingleton<DestinatarioNotificacionBcp>();
+builder.Services.AddSingleton<DocumentoAdjuntoBcp>();
 #endregion
 
 string cognitoRegion;
@@ -232,6 +233,7 @@ app.MapDestinatarioNotificacionEndpoints();
 app.MapNegocioEndpoints();
 app.MapNormaSuscritaEndpoints();
 app.MapInscripcionTemplateEndpoints();
+app.MapDocumentoAdjuntoEndpoints();
 
 app.Run();
 
