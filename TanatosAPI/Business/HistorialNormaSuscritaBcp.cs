@@ -5,7 +5,7 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class HistorialNormaSuscritaBcp(HistorialNotificacionBcp historialNotificacionBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) {
+	public class HistorialNormaSuscritaBcp(HistorialNotificacionBcp historialNotificacionBcp, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) {
 		public async Task ActualizarPorNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
 			List<DestinatarioNotificacion> destinatarios = [.. (await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).Where(d => d.Validado)];
 			List<NotificacionNormaSuscrita> notificacionNormaSuscritas = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
@@ -117,6 +117,7 @@ namespace TanatosAPI.Business {
 				await historialNormaSuscritaDao.Actualizar(historial, transaction);
 
 				await historialNotificacionBcp.EliminarPorHistorialNormaSuscrita(historial.Id, transaction);
+				await documentoAdjuntoBcp.EliminarPorHistorialNormaSuscrita(historial.Id, transaction);
 			}
 		}
 
