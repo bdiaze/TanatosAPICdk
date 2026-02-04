@@ -18,6 +18,7 @@ namespace TanatosAPI.Endpoints {
 			group.MapObtenerPorIdConVencimiento();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
+			group.MapCompletarNormaEndpoint();
 			group.MapEliminarEndpoint();
 			group.MapProcesarNotificacionEndpoint();
 
@@ -955,17 +956,83 @@ namespace TanatosAPI.Endpoints {
 
 					LambdaLogger.Log(
 						$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Actualización exitosa del negocio - ID: {entrada.Id}.");
+						$"Actualización exitosa de la norma suscrita - ID: {entrada.Id}.");
 
 					return Results.Ok(retorno);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error en la actualización del negocio - ID: {entrada.Id}. " +
+						$"Ocurrió un error en la actualización de la norma suscrita - ID: {entrada.Id}. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 			}).RequireAuthorization("Obligaciones.Write.Self", "Vencimientos.Write.Self", "Sistema.Read.Public").WithOpenApi();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapCompletarNormaEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPut("/CompletarNorma", async (EntNormaSuscritaCompletarNorma entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao) => {
+
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+
+					NormaSuscrita? existente = await normaSuscritaDao.ObtenerPorId(entrada.IdNormaSuscrita);
+					if (existente == null || !existente.Vigencia || existente.Sub != sub) {
+						LambdaLogger.Log(
+							$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El ID de norma suscrita es inválido.");
+
+						return Results.BadRequest($"El ID de norma suscrita es inválido.");
+					}
+
+					HistorialNormaSuscrita? historialExistente = await historialNormaSuscritaDao.ObtenerPorId(entrada.IdHistorialNormaSuscrita);
+					if (historialExistente == null || !historialExistente.Vigencia || historialExistente.IdNormaSuscrita != entrada.IdNormaSuscrita) {
+						LambdaLogger.Log(
+							$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El ID de norma suscrita es inválido.");
+
+						return Results.BadRequest($"El ID de norma suscrita es inválido.");
+					}
+
+					if (historialExistente.FechaCompletitud != null) {
+						LambdaLogger.Log(
+							$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"La norma suscrita ya se encuentra completada.");
+
+						return Results.BadRequest($"La norma suscrita ya se encuentra completada.");
+					}
+
+					historialExistente.FechaCompletitud = DateTime.UtcNow;
+
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+
+					try {
+						await historialNormaSuscritaDao.Actualizar(historialExistente, transaction);
+						await historialNormaSuscritaBcp.ProgramarSiguienteVencimiento(historialExistente, transaction);
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
+
+					LambdaLogger.Log(
+						$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Se da por completada exitosamente la norma suscrita - ID Norma Suscrita: {entrada.IdNormaSuscrita} - ID Historial Norma Suscrita: {entrada.IdHistorialNormaSuscrita}.");
+
+					return Results.Ok();
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al dar por completada la norma suscrita - ID Norma Suscrita: {entrada.IdNormaSuscrita} - ID Historial Norma Suscrita: {entrada.IdHistorialNormaSuscrita}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Obligaciones.Write.Self", "Vencimientos.Write.Self").WithOpenApi();
 
 			return routes;
 		}

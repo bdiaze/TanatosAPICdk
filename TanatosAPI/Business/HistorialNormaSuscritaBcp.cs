@@ -3,10 +3,11 @@ using Npgsql;
 using System.Formats.Asn1;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Repositories;
+using TimeZoneConverter;
 
 namespace TanatosAPI.Business {
-	public class HistorialNormaSuscritaBcp(HistorialNotificacionBcp historialNotificacionBcp, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) {
-		public async Task ActualizarPorNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+	public class HistorialNormaSuscritaBcp(HistorialNotificacionBcp historialNotificacionBcp, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TipoPeriodicidadDao tipoPeriodicidadDao) {
+		public async Task ActualizarHistorialNotificacionPorNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
 			List<DestinatarioNotificacion> destinatarios = [.. (await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).Where(d => d.Validado)];
 			List<NotificacionNormaSuscrita> notificacionNormaSuscritas = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
 			List<TemplateNormaNotificacion> templateNormaNotificaciones = (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null && notificacionNormaSuscritas.Count == 0)
@@ -157,6 +158,62 @@ namespace TanatosAPI.Business {
 							}
 						}
 					}
+				}
+			}
+		}
+
+		public async Task ProgramarSiguienteVencimiento(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			// Solo se programa el siguiente vencimiento si no existe otro vencimiento futuro...
+			List<HistorialNormaSuscrita> historialesFuturos = [.. (await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(historialNormaSuscrita.IdNormaSuscrita, null, true, transaction)).Where(hns => hns.FechaVencimiento > historialNormaSuscrita.FechaVencimiento)];
+			if (historialesFuturos.Count > 0) {
+				return;
+			}
+
+			// Se obtiene norma suscrita y/o template...
+			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(historialNormaSuscrita.IdNormaSuscrita, transaction) ?? throw new Exception("ID norma suscrita inválida");
+			TemplateNorma? templateNorma = null;
+			if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null && normaSuscrita.IdTipoPeriodicidad == null) {
+				templateNorma = (await templateNormaDao.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
+			}
+
+			TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad!).Value, transaction) ?? throw new Exception("Tipo periodicidad inválido");
+			if (!string.IsNullOrWhiteSpace(tipoPeriodicidad.Cron)) {
+				// Nos aseguramos de que la fecha esté en UTC...
+				DateTime vencimientoActual = DateTime.SpecifyKind(historialNormaSuscrita.FechaVencimiento, DateTimeKind.Utc);
+
+				// Se transforma la fecha de vencimiento actual a zona horaria de Chile...
+				string timezone = "America/Santiago";
+				if (OperatingSystem.IsWindows()) {
+					timezone = TZConvert.IanaToWindows(timezone);
+				}
+				TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+				DateTime proximoVencimiento = TimeZoneInfo.ConvertTimeFromUtc(vencimientoActual, timeZoneInfo);
+
+				// Se añaden los deltas de la periodicidad...
+				if (tipoPeriodicidad.DeltaDias != null) {
+					proximoVencimiento = proximoVencimiento.AddDays(tipoPeriodicidad.DeltaDias.Value);
+				}
+				if (tipoPeriodicidad.DeltaMeses != null) {
+					proximoVencimiento = proximoVencimiento.AddMonths(tipoPeriodicidad.DeltaMeses.Value);
+				}
+				if (tipoPeriodicidad.DeltaAnnos != null) {
+					proximoVencimiento = proximoVencimiento.AddYears(tipoPeriodicidad.DeltaAnnos.Value);
+				}
+
+				// Se convierte próximo vencimiento calculado a UTC...
+				proximoVencimiento = TimeZoneInfo.ConvertTimeToUtc(proximoVencimiento, timeZoneInfo);
+
+				if (vencimientoActual != proximoVencimiento) {
+					// Se crea el próximo vencimiento...
+					HistorialNormaSuscrita nuevoHistorialNormaSuscrita = new() {
+						Id = 0,
+						IdNormaSuscrita = historialNormaSuscrita.IdNormaSuscrita,
+						FechaVencimiento = proximoVencimiento,
+						FechaCreacion = DateTime.UtcNow,
+						Vigencia = true
+					};
+
+					await Crear(nuevoHistorialNormaSuscrita, transaction);
 				}
 			}
 		}

@@ -12,7 +12,7 @@ namespace TanatosAPI.Business {
 
 				List<NormaSuscrita> normasSuscritas = [.. (await normaSuscritaDao.ObtenerPorSub(destinatarioNotificacion.Sub, destinatarioNotificacion.IdNegocio, true, transaction)).Where(ns => ns.Activado)];
 				foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
-					await historialNormaSuscritaBcp.ActualizarPorNormaSuscrita(normaSuscrita, transaction);
+					await historialNormaSuscritaBcp.ActualizarHistorialNotificacionPorNormaSuscrita(normaSuscrita, transaction);
 				}
 			}
 		}
@@ -25,7 +25,7 @@ namespace TanatosAPI.Business {
 
 				List<NormaSuscrita> normasSuscritas = [.. (await normaSuscritaDao.ObtenerPorSub(destinatarioNotificacion.Sub, destinatarioNotificacion.IdNegocio, true, transaction)).Where(ns => ns.Activado)];
 				foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
-					await historialNormaSuscritaBcp.ActualizarPorNormaSuscrita(normaSuscrita, transaction);
+					await historialNormaSuscritaBcp.ActualizarHistorialNotificacionPorNormaSuscrita(normaSuscrita, transaction);
 				}
 			}
 		}

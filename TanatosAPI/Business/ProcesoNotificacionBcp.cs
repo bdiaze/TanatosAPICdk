@@ -310,41 +310,7 @@ namespace TanatosAPI.Business {
 					if (programarSiguienteEjecucion) {
 						HistorialNormaSuscrita? ultimoHistorial = historialNormaSuscritas.OrderByDescending(hns => hns.FechaVencimiento).FirstOrDefault();
 						if (ultimoHistorial != null) {
-							// Nos aseguramos de que la fecha esté en UTC...
-							DateTime vencimientoActual = DateTime.SpecifyKind(ultimoHistorial.FechaVencimiento, DateTimeKind.Utc);
-
-							// Se transforma la fecha de vencimiento actual a zona horaria de Chile...
-							string timezone = "America/Santiago";
-							if (OperatingSystem.IsWindows()) {
-								timezone = TZConvert.IanaToWindows(timezone);
-							}
-							TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
-							DateTime proximoVencimiento = TimeZoneInfo.ConvertTimeFromUtc(vencimientoActual, timeZoneInfo);
-
-							// Se añaden los deltas de la periodicidad...
-							if (tipoPeriodicidad.DeltaDias != null) {
-								proximoVencimiento = proximoVencimiento.AddDays(tipoPeriodicidad.DeltaDias.Value);
-							}
-							if (tipoPeriodicidad.DeltaMeses != null) {
-								proximoVencimiento = proximoVencimiento.AddMonths(tipoPeriodicidad.DeltaMeses.Value);
-							}
-							if (tipoPeriodicidad.DeltaAnnos != null) {
-								proximoVencimiento = proximoVencimiento.AddYears(tipoPeriodicidad.DeltaAnnos.Value);
-							}
-
-							// Se convierte próximo vencimiento calculado a UTC...
-							proximoVencimiento = TimeZoneInfo.ConvertTimeToUtc(proximoVencimiento, timeZoneInfo);
-
-							// Se crea el próximo vencimiento...
-							HistorialNormaSuscrita historialNormaSuscrita = new() {
-								Id = 0,
-								IdNormaSuscrita = ultimoHistorial.IdNormaSuscrita,
-								FechaVencimiento = proximoVencimiento,
-								FechaCreacion = DateTime.UtcNow,
-								Vigencia = true
-							};
-
-							await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
+							await historialNormaSuscritaBcp.ProgramarSiguienteVencimiento(ultimoHistorial, transaction);
 						}
 					}
 				}

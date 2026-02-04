@@ -35,7 +35,7 @@ namespace TanatosAPI.Business {
 				}
 			}
 
-			await historialNormaSuscritaBcp.ActualizarPorNormaSuscrita(normaSuscrita, transaction);
+			await historialNormaSuscritaBcp.ActualizarHistorialNotificacionPorNormaSuscrita(normaSuscrita, transaction);
 		}
 		
 		public async Task EliminarPorNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
