@@ -52,7 +52,7 @@ namespace TanatosAPI.Helpers {
 
 			GetObjectTaggingResponse responseGet = await amazonS3.GetObjectTaggingAsync(requestGet);
 
-			Dictionary<string, string> tags = responseGet.Tagging.ToDictionary(tag => tag.Key, tag => tag.Value);
+			Dictionary<string, string> tags = (responseGet.Tagging ?? Enumerable.Empty<Tag>()).ToDictionary(tag => tag.Key, tag => tag.Value);
 
 			// Se agrega o modifica el tag indicado...
 			tags[tagKey] = tagValue;

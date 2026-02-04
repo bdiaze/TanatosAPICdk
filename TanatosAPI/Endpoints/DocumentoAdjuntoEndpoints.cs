@@ -1,4 +1,5 @@
 ﻿using Amazon.Lambda.Core;
+using Npgsql;
 using System.Diagnostics;
 using System.Security.Claims;
 using TanatosAPI.Business;
@@ -266,7 +267,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, DocumentoAdjuntoHelper documentoAdjuntoHelper, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, DocumentoAdjuntoDao documentoAdjuntoDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, DocumentoAdjuntoHelper documentoAdjuntoHelper, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, DocumentoAdjuntoDao documentoAdjuntoDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -299,7 +300,17 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El ID de documento adjunto es inválido.");
 					}
 
-					await documentoAdjuntoBcp.Eliminar(documentoAdjunto);
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+					
+					try {
+						await documentoAdjuntoBcp.Eliminar(documentoAdjunto);
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
 
 					LambdaLogger.Log(
 						$"[DELETE] - [DocumentoAdjunto] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
