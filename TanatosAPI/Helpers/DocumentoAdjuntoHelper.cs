@@ -7,8 +7,8 @@
 			return (BUCKET_NAME, key, await s3Helper.ObtenerPutPreSignedUrl(BUCKET_NAME, key, contentType));
 		}
 
-		public async Task<string> ObtenerGetPreSignedUrl(string bucketKey) {
-			return await s3Helper.ObtenerGetPreSignedUrl(BUCKET_NAME, bucketKey);
+		public async Task<string> ObtenerGetPreSignedUrl(string bucketKey, string nombreDocumento) {
+			return await s3Helper.ObtenerGetPreSignedUrl(BUCKET_NAME, bucketKey, nombreDocumento);
 		}
 
 		public async Task<(long contentLength, string contentType)> ObtenerMetadata(string bucketKey) {

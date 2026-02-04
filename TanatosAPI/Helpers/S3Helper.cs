@@ -18,12 +18,15 @@ namespace TanatosAPI.Helpers {
 			return await amazonS3.GetPreSignedURLAsync(request);
 		}
 
-		public async Task<string> ObtenerGetPreSignedUrl(string bucketName, string bucketKey) {
+		public async Task<string> ObtenerGetPreSignedUrl(string bucketName, string bucketKey, string nombreArchivo) {
 			GetPreSignedUrlRequest request = new() {
 				BucketName = bucketName,
 				Key = bucketKey,
 				Verb = HttpVerb.GET,
 				Expires = DateTime.UtcNow.AddMinutes(PRE_SIGNED_URL_EXPIRATION_MINUTES),
+				ResponseHeaderOverrides = new ResponseHeaderOverrides {
+					ContentDisposition = $"attachment; filename=\"{nombreArchivo}\""
+				}
 			};
 
 			return await amazonS3.GetPreSignedURLAsync(request);

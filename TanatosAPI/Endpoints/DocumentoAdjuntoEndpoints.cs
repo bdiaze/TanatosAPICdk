@@ -244,7 +244,7 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El ID de documento adjunto es inválido.");
 					}
 
-					string presignedUrl = await documentoAdjuntoHelper.ObtenerGetPreSignedUrl(documentoAdjunto.BucketKey);
+					string presignedUrl = await documentoAdjuntoHelper.ObtenerGetPreSignedUrl(documentoAdjunto.BucketKey, documentoAdjunto.NombreArchivo);
 
 					LambdaLogger.Log(
 						$"[POST] - [DocumentoAdjunto] - [GenerarUrlBajada] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
