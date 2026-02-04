@@ -20,15 +20,13 @@ namespace TanatosAPI.Helpers {
 		}
 
 		public async Task<string> ObtenerGetPreSignedUrl(string bucketName, string bucketKey, string nombreArchivo) {
-			string safeAscii = Regex.Replace(nombreArchivo, @"[^\w\.]", "_");
-
 			GetPreSignedUrlRequest request = new() {
 				BucketName = bucketName,
 				Key = bucketKey,
 				Verb = HttpVerb.GET,
 				Expires = DateTime.UtcNow.AddMinutes(PRE_SIGNED_URL_EXPIRATION_MINUTES),
 				ResponseHeaderOverrides = new ResponseHeaderOverrides {
-					ContentDisposition = $"attachment; filename=\"{safeAscii}\"; filename*=UTF-8''{Uri.EscapeDataString(nombreArchivo)}"
+					ContentDisposition = $"attachment; filename*=UTF-8''{Uri.EscapeDataString(nombreArchivo)}"
 				}
 			};
 
