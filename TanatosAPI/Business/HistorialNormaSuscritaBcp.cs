@@ -162,6 +162,16 @@ namespace TanatosAPI.Business {
 			}
 		}
 
+		public async Task CompletarHistorialNormaSuscrita(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			if (historialNormaSuscrita.FechaCompletitud == null) {
+				historialNormaSuscrita.FechaCompletitud = DateTime.UtcNow;
+				await historialNormaSuscritaDao.Actualizar(historialNormaSuscrita, transaction);
+				await historialNotificacionBcp.EliminarPorHistorialNormaSuscrita(historialNormaSuscrita.Id, transaction);
+
+				await ProgramarSiguienteVencimiento(historialNormaSuscrita, transaction);
+			}
+		}
+
 		public async Task ProgramarSiguienteVencimiento(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			// Solo se programa el siguiente vencimiento si no existe otro vencimiento futuro...
 			List<HistorialNormaSuscrita> historialesFuturos = [.. (await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(historialNormaSuscrita.IdNormaSuscrita, null, true, transaction)).Where(hns => hns.FechaVencimiento > historialNormaSuscrita.FechaVencimiento)];

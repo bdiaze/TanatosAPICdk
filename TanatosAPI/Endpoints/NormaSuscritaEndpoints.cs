@@ -1005,14 +1005,11 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"La norma suscrita ya se encuentra completada.");
 					}
 
-					historialExistente.FechaCompletitud = DateTime.UtcNow;
-
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
 					try {
-						await historialNormaSuscritaDao.Actualizar(historialExistente, transaction);
-						await historialNormaSuscritaBcp.ProgramarSiguienteVencimiento(historialExistente, transaction);
+						await historialNormaSuscritaBcp.CompletarHistorialNormaSuscrita(historialExistente, transaction);
 
 						await transaction.CommitAsync();
 					} catch {
