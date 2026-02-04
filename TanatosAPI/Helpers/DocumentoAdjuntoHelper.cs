@@ -14,5 +14,9 @@
 		public async Task<(long contentLength, string contentType)> ObtenerMetadata(string bucketKey) {
 			return await s3Helper.ObtenerObjectMetadata(BUCKET_NAME, bucketKey);
 		}
+
+		public async Task AgregarTagEstadoEliminado(string bucketKey) {
+			await s3Helper.AgregarTag(BUCKET_NAME, bucketKey, "Estado", "Eliminado");
+		}
 	}
 }

@@ -1,15 +1,17 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class DocumentoAdjuntoBcp(DocumentoAdjuntoDao documentoAdjuntoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao) {
+	public class DocumentoAdjuntoBcp(DocumentoAdjuntoDao documentoAdjuntoDao, DocumentoAdjuntoHelper documentoAdjuntoHelper) {
 		public async Task Eliminar(DocumentoAdjunto documentoAdjunto, NpgsqlTransaction? transaction = null) {
 			if (documentoAdjunto.Vigencia) {
 				documentoAdjunto.Vigencia = false;
 				documentoAdjunto.FechaEliminacion = DateTime.UtcNow;
 
 				await documentoAdjuntoDao.Actualizar(documentoAdjunto, transaction);
+				await documentoAdjuntoHelper.AgregarTagEstadoEliminado(documentoAdjunto.BucketKey);
 			}
 		}
 

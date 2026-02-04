@@ -500,6 +500,21 @@ namespace Cdk
 						MaxAge = 10 * 24 * 60 * 60
 					}
 				],
+				LifecycleRules = [
+					new LifecycleRule { 
+						Id = "MoverADeepArchiveCuandoEliminado",
+						Enabled = true,
+						Transitions = [
+							new Transition {
+								StorageClass = StorageClass.DEEP_ARCHIVE,
+								TransitionAfter = Duration.Days(0)
+							}
+						],
+						TagFilters = new Dictionary<string, object> {
+							{ "Estado", "Eliminado" }
+						}
+					}	
+				],
 				RemovalPolicy = RemovalPolicy.DESTROY,
 				AutoDeleteObjects = false,
 			});
@@ -580,6 +595,8 @@ namespace Cdk
 										"s3:GetObject",
 										"s3:PutObject",
 										"s3:HeadObject",
+										"s3:PutObjectTagging",
+										"s3:GetObjectTagging",
 									],
 									Resources = [
 										$"{bucket.BucketArn}/*",

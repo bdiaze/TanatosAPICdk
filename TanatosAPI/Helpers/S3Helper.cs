@@ -42,5 +42,31 @@ namespace TanatosAPI.Helpers {
 			GetObjectMetadataResponse response = await amazonS3.GetObjectMetadataAsync(request);
 			return (response.ContentLength, response.ContentType);
 		}
+
+		public async Task AgregarTag(string bucketName, string bucketKey, string tagKey, string tagValue) {
+			// Obtenemos los tags actuales del objeto...
+			GetObjectTaggingRequest requestGet = new() {
+				BucketName = bucketName,
+				Key = bucketKey,
+			};
+
+			GetObjectTaggingResponse responseGet = await amazonS3.GetObjectTaggingAsync(requestGet);
+
+			Dictionary<string, string> tags = responseGet.Tagging.ToDictionary(tag => tag.Key, tag => tag.Value);
+
+			// Se agrega o modifica el tag indicado...
+			tags[tagKey] = tagValue;
+
+			// Se sube la nueva lista de tags...
+			PutObjectTaggingRequest request = new() {
+				BucketName = bucketName,
+				Key = bucketKey,
+				Tagging = new Tagging {
+					TagSet = [.. tags.Select(kv => new Tag { Key = kv.Key, Value = kv.Value })]
+				}
+			};
+
+			await amazonS3.PutObjectTaggingAsync(request);
+		}
 	}
 }
