@@ -491,6 +491,7 @@ namespace Cdk
 				EnforceSSL = true,
 				Cors = [
 					new CorsRule {
+						AllowedHeaders = ["*"],
 						AllowedOrigins = allowedDomains.Split(","),
 						AllowedMethods = [
 							HttpMethods.GET,
