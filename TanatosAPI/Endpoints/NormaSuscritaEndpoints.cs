@@ -1008,8 +1008,11 @@ namespace TanatosAPI.Endpoints {
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
+					SalNormaSuscritaCompletarNorma retorno = new();
+
 					try {
 						await historialNormaSuscritaBcp.CompletarHistorialNormaSuscrita(historialExistente, transaction);
+						retorno.FechaCompletitud = historialExistente.FechaCompletitud;
 
 						await transaction.CommitAsync();
 					} catch {
@@ -1021,7 +1024,7 @@ namespace TanatosAPI.Endpoints {
 						$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Se da por completada exitosamente la norma suscrita - ID Norma Suscrita: {entrada.IdNormaSuscrita} - ID Historial Norma Suscrita: {entrada.IdHistorialNormaSuscrita}.");
 
-					return Results.Ok();
+					return Results.Ok(retorno);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
