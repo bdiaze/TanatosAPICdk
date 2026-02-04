@@ -45,13 +45,43 @@ namespace TanatosAPI.Repositories {
 			}
 		}
 
-		public async Task<List<HistorialNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, DateTime? fechaVencimiento = null, bool vigencia = true) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return [.. await connection.QueryAsync<HistorialNormaSuscrita>(
+		public async Task<List<HistorialNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, DateTime? fechaVencimiento = null, bool vigencia = true, NpgsqlTransaction? transaction = null) {
+			string query =
 				"SELECT ID, ID_NORMA_SUSCRITA, FECHA_VENCIMIENTO, FECHA_COMPLETITUD, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.HISTORIAL_NORMA_SUSCRITA " +
-				"WHERE ID_NORMA_SUSCRITA = @IDNORMASUSCRITA AND (FECHA_VENCIMIENTO = @FECHAVENCIMIENTO OR @FECHAVENCIMIENTO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
-				new { idNormaSuscrita, fechaVencimiento, vigencia }
-			)];
+				"WHERE ID_NORMA_SUSCRITA = @IDNORMASUSCRITA AND (FECHA_VENCIMIENTO = @FECHAVENCIMIENTO OR @FECHAVENCIMIENTO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+
+				command.Parameters.AddWithValue("IDNORMASUSCRITA", idNormaSuscrita);
+				command.Parameters.AddWithValue("FECHAVENCIMIENTO", (object?)fechaVencimiento ?? DBNull.Value);
+				command.Parameters.AddWithValue("VIGENCIA", vigencia);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				List<HistorialNormaSuscrita> retorno = [];
+
+				while (await reader.ReadAsync()) {
+					retorno.Add(new HistorialNormaSuscrita {
+						Id = reader.GetInt64(0),
+						IdNormaSuscrita = reader.GetInt64(1),
+						FechaVencimiento = reader.GetDateTime(2),
+						FechaCompletitud = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+						FechaCreacion = reader.GetDateTime(4),
+						FechaEliminacion = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+						Vigencia = reader.GetBoolean(6)
+					});
+				}
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
 		}
 
 		public async Task<List<HistorialNormaSuscrita>> ObtenerPorNormaSuscritaYFechaCompletitud(long idNormaSuscrita, DateTime? fechaCompletitud, bool vigencia = true, NpgsqlTransaction? transaction = null) {
