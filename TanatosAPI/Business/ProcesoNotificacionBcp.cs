@@ -201,7 +201,7 @@ namespace TanatosAPI.Business {
             }
 
 			// Se obtienen destinatarios vigentes...
-            List<DestinatarioNotificacion> destinatariosVigentes = await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction);
+            List<DestinatarioNotificacion> destinatariosVigentes = [.. (await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).Where(dn => dn.Validado)];
 
 			// Se obtienen los tipos de unidades de tiempo...
 			List<TipoUnidadTiempo> tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true, transaction);
@@ -216,15 +216,8 @@ namespace TanatosAPI.Business {
 					foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormaSuscritas) {
 						
 						// Se obtienen los historiales de notificación no ejecutados...
-						List<HistorialNotificacion> historialNotificaciones = await historialNotificacionDao.ObtenerPorHistorial(historialNormaSuscrita.Id, null, true, transaction);
+						List<HistorialNotificacion> historialNotificaciones = [.. (await historialNotificacionDao.ObtenerPorHistorial(historialNormaSuscrita.Id, null, true, transaction)).Where(hn => hn.FechaProgramacion <= DateTime.UtcNow)];
 						foreach (HistorialNotificacion historialNotificacion in historialNotificaciones) {
-							
-							// Si el historial de notificación no corresponde al cron, se salta la notificación...
-							string cronProgramacion = CronHelper.GenerarCronDesdeFecha(historialNotificacion.FechaProgramacion, tipoPeriodicidad.Cron);
-							if (cronProgramacion != cron) {
-								continue;
-							}
-
 							// Se valida que el destinatario este vigente, si no lo esta entonces no se manda la notificación...
 							DestinatarioNotificacion? destinatario = destinatariosVigentes.FirstOrDefault(d => d.Id == historialNotificacion.IdDestinatarioNotificacion);
 							if (destinatario == null) {
