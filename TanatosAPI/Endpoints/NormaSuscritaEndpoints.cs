@@ -291,10 +291,11 @@ namespace TanatosAPI.Endpoints {
 						CategoriaNorma? categoriaNorma = categorias.FirstOrDefault(c => c.Id == (normaSuscrita.IdCategoriaNorma ?? templateNorma?.IdCategoriaNorma));
 						TipoPeriodicidad? tipoPeriodicidad = periodicidades.FirstOrDefault(p => p.Id == (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad));
 
-						List<HistorialNormaSuscrita> historialesNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true);
+						List<HistorialNormaSuscrita> historialesNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, null, true);
 						foreach (HistorialNormaSuscrita historialNormaSuscrita in historialesNormaSuscrita) {
 							retorno.Add(new SalNormaSuscritaObtenerConVencimiento {
 								FechaVencimiento = historialNormaSuscrita.FechaVencimiento,
+								FechaCompletitud = historialNormaSuscrita.FechaCompletitud,
 								IdNormaSuscrita = normaSuscrita.Id,
 								IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
 								NombreNorma = normaSuscrita.Nombre ?? templateNorma?.Nombre,
