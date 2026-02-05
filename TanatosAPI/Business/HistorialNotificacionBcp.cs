@@ -66,22 +66,26 @@ namespace TanatosAPI.Business {
 			}
 		}
 
-		public async Task<HistorialNotificacion> Crear(long idHistorialNormaSuscrita, long idDestinatarioNotificacion, long? idTipoUnidadTiempoAntelacion, int? cantAntelacion, DateTime fechaProgramacion, NpgsqlTransaction? transaction = null) {			
-			HistorialNotificacion nuevo = new() {
-				Id = 0,
-				IdHistorialNormaSuscrita = idHistorialNormaSuscrita,
-				IdDestinatarioNotificacion = idDestinatarioNotificacion,
-				IdTipoUnidadTiempoAntelacion = idTipoUnidadTiempoAntelacion,
-				CantAntelacion = cantAntelacion,
-				FechaProgramacion = fechaProgramacion,
-				FechaCreacion = DateTime.UtcNow,
-				FechaEliminacion = null,
-				Vigencia = true
-			};
+		public async Task<HistorialNotificacion?> Crear(long idHistorialNormaSuscrita, long idDestinatarioNotificacion, long? idTipoUnidadTiempoAntelacion, int? cantAntelacion, DateTime fechaProgramacion, NpgsqlTransaction? transaction = null) {
+			if (fechaProgramacion > DateTime.UtcNow) {
+				HistorialNotificacion nuevo = new() {
+					Id = 0,
+					IdHistorialNormaSuscrita = idHistorialNormaSuscrita,
+					IdDestinatarioNotificacion = idDestinatarioNotificacion,
+					IdTipoUnidadTiempoAntelacion = idTipoUnidadTiempoAntelacion,
+					CantAntelacion = cantAntelacion,
+					FechaProgramacion = fechaProgramacion,
+					FechaCreacion = DateTime.UtcNow,
+					FechaEliminacion = null,
+					Vigencia = true
+				};
 
-			nuevo.Id = await historialNotificacionDao.Insertar(nuevo, transaction);
+				nuevo.Id = await historialNotificacionDao.Insertar(nuevo, transaction);
 
-			return nuevo;
+				return nuevo;
+			} else {
+				return null;
+			}
 		}
 
 		public async Task Eliminar(HistorialNotificacion historialNotificacion, NpgsqlTransaction? transaction = null) {
