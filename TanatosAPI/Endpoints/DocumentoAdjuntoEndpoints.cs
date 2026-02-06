@@ -81,6 +81,27 @@ namespace TanatosAPI.Endpoints {
 
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
+					// Se valida el tamaño del archivo...
+					const long MAX_FILE_SIZE = 10 * 1024 * 1024;
+					if (entrada.Tamanno > MAX_FILE_SIZE) {
+						LambdaLogger.Log(
+							$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El tamaño del archivo es inválido.");
+
+						return Results.BadRequest($"El tamaño del archivo es inválido.");
+					}
+
+					// Se valida que el tipo de archivo sea permitido...
+					string[] ALLOWED_FILES_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+					if (!ALLOWED_FILES_TYPES.Contains(entrada.Mime)) {
+						LambdaLogger.Log(
+							$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El MIME del archivo es inválido.");
+
+						return Results.BadRequest($"El MIME del archivo es inválido.");
+					}
+
+
 					HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorId(entrada.IdHistorialNormaSuscrita);
 					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia) {
 						LambdaLogger.Log(
@@ -98,13 +119,14 @@ namespace TanatosAPI.Endpoints {
 
 						return Results.BadRequest($"El ID de historial norma suscrita es inválido.");
 					}
-
-					(string bucketName, string bucketKey, string preSignedUrl) presigned = await documentoAdjuntoHelper.ObtenerPutPreSignedUrl(
+					
+					(string bucketName, string bucketKey, string preSignedUrl, Dictionary<string, string> fields) presignedPost = await documentoAdjuntoHelper.ObtenerPostPreSignedUrl(
 						sub,
 						normaSuscrita.IdNegocio,
 						normaSuscrita.Id,
 						historialNormaSuscrita.Id,
-						entrada.Mime
+						entrada.Mime,
+						MAX_FILE_SIZE
 					);
 
 					DateTime utcNow = DateTime.UtcNow;
@@ -112,8 +134,8 @@ namespace TanatosAPI.Endpoints {
 					DocumentoAdjunto nuevo = new() {
 						Id = 0,
 						IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
-						BucketName = presigned.bucketName,
-						BucketKey = presigned.bucketKey,
+						BucketName = presignedPost.bucketName,
+						BucketKey = presignedPost.bucketKey,
 						NombreArchivo = entrada.NombreArchivo,
 						MimeEsperado = entrada.Mime,
 						TamannoEsperado = entrada.Tamanno,
@@ -135,7 +157,8 @@ namespace TanatosAPI.Endpoints {
 
 					return Results.Ok(new SalDocumentoAdjuntoGenerarUrlSubida {
 						IdDocumentoAdjunto = nuevo.Id,
-						PreSignedUrl = presigned.preSignedUrl
+						PreSignedUrl = presignedPost.preSignedUrl,
+						PreSignedFields = presignedPost.fields
 					});
 				} catch (Exception ex) {
 					LambdaLogger.Log(

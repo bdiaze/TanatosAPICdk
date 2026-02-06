@@ -33,6 +33,22 @@ namespace TanatosAPI.Helpers {
 			return await amazonS3.GetPreSignedURLAsync(request);
 		}
 
+		public async Task<(string url, Dictionary<string, string> fields)> ObtenerPostPreSignedUrl(string bucketName, string bucketKey, string contentType, long maxSize = 10 * 1024 * 1024) {
+			CreatePresignedPostRequest request = new() { 
+				BucketName = bucketName,
+				Key = bucketKey,
+				Expires = DateTime.UtcNow.AddMinutes(PRE_SIGNED_URL_EXPIRATION_MINUTES),
+				Conditions = [
+					S3PostCondition.ExactMatch("Content-Type", contentType),
+					S3PostCondition.ContentLengthRange(0, maxSize),
+				]
+			};
+
+
+			CreatePresignedPostResponse response = await amazonS3.CreatePresignedPostAsync(request);
+			return (response.Url, response.Fields);
+		}
+
 		public async Task<(long contentLength, string contentType)> ObtenerObjectMetadata(string bucketName, string bucketKey) {
 			GetObjectMetadataRequest request = new() { 
 				BucketName = bucketName,
