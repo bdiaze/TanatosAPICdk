@@ -496,6 +496,7 @@ namespace Cdk
 						AllowedMethods = [
 							HttpMethods.GET,
 							HttpMethods.PUT,
+							HttpMethods.POST,
 						],
 						MaxAge = 10 * 24 * 60 * 60
 					}
