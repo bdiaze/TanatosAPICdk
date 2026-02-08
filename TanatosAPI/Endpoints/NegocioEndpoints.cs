@@ -10,10 +10,43 @@ namespace TanatosAPI.Endpoints {
 	public static class NegocioEndpoints {
 		public static IEndpointRouteBuilder MapNegocioEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/Negocio");
+			group.MapObtenerInformacionUsuario();
 			group.MapObtenerVigentes();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
 			group.MapEliminarEndpoint();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapObtenerInformacionUsuario(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/InformacionUsuario", async (IHostEnvironment environment, ClaimsPrincipal user, CognitoHelper cognitoHelper) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+
+					Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
+
+					SalNegocioInformacionUsuario retorno = new() {
+						Nombre = atributosUsuario.TryGetValue("given_name", out string? givenName) ? givenName : null,
+						Apellido = atributosUsuario.TryGetValue("family_name", out string? familyName) ? familyName : null,
+						Email = atributosUsuario.TryGetValue("email", out string? email) ? email : null
+					};
+
+					LambdaLogger.Log(
+						$"[GET] - [Negocio] - [InformacionUsuario] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de la información del usuario.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Negocio] - [InformacionUsuario] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener la información del usuario. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Negocios.Read.Self").WithOpenApi();
 
 			return routes;
 		}
