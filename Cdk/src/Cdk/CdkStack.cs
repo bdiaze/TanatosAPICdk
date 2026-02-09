@@ -460,7 +460,7 @@ namespace Cdk
 					new() {
 						Category = "PAGE_BACKGROUND",
 						ColorMode = "LIGHT",
-						Extension = "JPG",
+						Extension = "JPEG",
 						Bytes = base64FormLogo,
 					},
 					new() {
