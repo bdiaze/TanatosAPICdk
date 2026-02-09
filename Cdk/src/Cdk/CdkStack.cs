@@ -363,6 +363,9 @@ namespace Cdk
 						}}
 					}},
 					{ "componentClasses", new Dictionary<string, object>{
+						{ "buttons", new Dictionary<string, object>{
+							{ "borderRadius", 16.0 }
+						}},
 						{ "focusState", new Dictionary<string, object>{
 							{ "lightMode", new Dictionary<string, object> {
 								{ "borderColor", "02b2cbff" }
