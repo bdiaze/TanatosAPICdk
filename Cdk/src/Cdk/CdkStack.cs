@@ -344,7 +344,7 @@ namespace Cdk
 			});
 
 			// string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.ico")));
-			// string base64FormLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FORM_LOGO.png")));
+			string base64FormLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FORM_LOGO.png")));
 
 			_ = new CfnManagedLoginBranding(this, $"{appName}ManagedLoginBranding", new CfnManagedLoginBrandingProps {
 				UserPoolId = userPool.UserPoolId,
@@ -364,7 +364,7 @@ namespace Cdk
 					{ "componentClasses", new Dictionary<string, object>{
 						{ "focusState", new Dictionary<string, object>{
 							{ "lightMode", new Dictionary<string, object> {
-								{ "borderColor", "0069d9ff" }
+								{ "borderColor", "02b2cbff" }
 							}}
 						}},
 						{ "input", new Dictionary<string, object>{
@@ -383,10 +383,10 @@ namespace Cdk
 						{ "link", new Dictionary<string, object>{
 							{ "lightMode", new Dictionary<string, object> {
 								{ "defaults", new Dictionary<string, object>{
-									{ "textColor", "1b6ec2ff" }
+									{ "textColor", "02b2cbff" }
 								}},
 								{ "hover", new Dictionary<string, object>{
-									{ "textColor", "0069d9ff" }
+									{ "textColor", "02b2cbcc" }
 								}},
 							}}
 						}}
@@ -397,7 +397,7 @@ namespace Cdk
 						}},
 						{ "form", new Dictionary<string, object> {
 							{ "logo", new Dictionary<string, object> {
-								// { "enabled", true }
+								{ "enabled", true }
 							}},
 						}},
 						{ "pageBackground", new Dictionary<string, object> {
@@ -415,11 +415,11 @@ namespace Cdk
 						{ "primaryButton", new Dictionary<string, object> {
 							{ "lightMode", new Dictionary<string, object> {
 								{ "defaults", new Dictionary<string, object>{
-									{ "backgroundColor", "1b6ec2ff" },
+									{ "backgroundColor", "02b2cbff" },
 									{ "textColor", "ffffffff" }
 								}},
 								{ "hover", new Dictionary<string, object>{
-									{ "backgroundColor", "0069d9ff" },
+									{ "backgroundColor", "02b2cbcc" },
 									{ "textColor", "ffffffff" }
 								}},
 							}},
@@ -428,19 +428,18 @@ namespace Cdk
 							{ "lightMode", new Dictionary<string, object> {
 								{ "defaults", new Dictionary<string, object>{
 									{ "backgroundColor", "ffffffff" },
-									{ "borderColor", "1b6ec2ff" },
-									{ "textColor", "1b6ec2ff" }
+									{ "borderColor", "02b2cbff" },
+									{ "textColor", "02b2cbff" }
 								}},
 								{ "hover", new Dictionary<string, object>{
-									{ "backgroundColor", "f2f8fdff" },
-									{ "borderColor", "0069d9ff" },
-									{ "textColor", "0069d9ff" }
+									{ "backgroundColor", "ffffffff" },
+									{ "borderColor", "02b2cbcc" },
+									{ "textColor", "02b2cbff" }
 								}},
 							}},
 						}}
 					}}
 				},
-                /*
 				Assets = (new List<CfnManagedLoginBranding.AssetTypeProperty>() {
 					new() {
 						Category = "FORM_LOGO",
@@ -448,14 +447,15 @@ namespace Cdk
 						Extension = "PNG",
 						Bytes = base64FormLogo,
 					},
+					/*
 					new() {
 						Category = "FAVICON_ICO",
 						ColorMode = "LIGHT",
 						Extension = "ICO",
 						Bytes = base64Favicon,
 					}
+					*/
 				}).ToArray()
-                */
 			});
 
 			IHostedZone hostedZone = HostedZone.FromLookup(this, $"{appName}HostedZone", new HostedZoneProviderProps {

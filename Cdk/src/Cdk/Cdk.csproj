@@ -17,4 +17,10 @@
     -->
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Recursos\FORM_LOGO.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
