@@ -389,14 +389,14 @@ namespace Cdk
 						{ "input", new Dictionary<string, object>{
 							{ "lightMode", new Dictionary<string, object> {
 								{ "defaults", new Dictionary<string, object>{
-                                    // { "borderColor", "0069d9ff" }
+                                    { "borderColor", "2a2d34cc" }
                                 }},
-								{ "placeholderColor", "6c757dff" },
+								{ "placeholderColor", "2a2d34b3" },
 							}}
 						}},
 						{ "inputLabel", new Dictionary<string, object>{
 							{ "lightMode", new Dictionary<string, object> {
-								{ "textColor", "2a2d34ff" }
+								{ "textColor", "2a2d34cc" }
                             }}
 						}},
 						{ "link", new Dictionary<string, object>{
@@ -462,9 +462,9 @@ namespace Cdk
 						}},
 						{ "pageText", new Dictionary<string, object> {
 							{ "lightMode", new Dictionary<string, object> {
-								{ "headingColor", "005db2ff" },
-								{ "bodyColor", "2a2d34ff" },
-								{ "descriptionColor", "2a2d34ff" },
+								{ "headingColor", "2a2d34cc" },
+								{ "bodyColor", "2a2d34cc" },
+								{ "descriptionColor", "2a2d34cc" },
 							}},
 						}},
 						{ "primaryButton", new Dictionary<string, object> {
