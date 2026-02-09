@@ -345,6 +345,8 @@ namespace Cdk
 
 			string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.ico")));
 			string base64FormLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FORM_LOGO.png")));
+			string base64PageHeaderLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "PAGE_HEADER_LOGO.png")));
+			string base64PageFooterLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "PAGE_FOOTER_LOGO.png")));
 			string base64BackgroundImage = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "BACKGROUND_IMAGE.jpeg")));
 
 			_ = new CfnManagedLoginBranding(this, $"{appName}ManagedLoginBranding", new CfnManagedLoginBrandingProps {
@@ -359,12 +361,25 @@ namespace Cdk
 							}}
 						}},
 						{ "global", new Dictionary<string, object> {
-							{ "colorSchemeMode", "LIGHT" }
+							{ "colorSchemeMode", "LIGHT" },
+							{ "pageHeader", new Dictionary<string, object> {
+								{ "enabled", true }
+							}},
+							{ "pageFooter", new Dictionary<string, object> {
+								{ "enabled", true }
+							}}
 						}}
 					}},
 					{ "componentClasses", new Dictionary<string, object>{
 						{ "buttons", new Dictionary<string, object>{
 							{ "borderRadius", 16.0 }
+						}},
+						{ "optionControls", new Dictionary<string, object>{
+							{ "lightMode", new Dictionary<string, object> {
+								{ "selected", new Dictionary<string, object>{
+									{ "backgroundColor", "005db2ff" }
+								}},
+							}}
 						}},
 						{ "focusState", new Dictionary<string, object>{
 							{ "lightMode", new Dictionary<string, object> {
@@ -387,10 +402,10 @@ namespace Cdk
 						{ "link", new Dictionary<string, object>{
 							{ "lightMode", new Dictionary<string, object> {
 								{ "defaults", new Dictionary<string, object>{
-									{ "textColor", "02b2cbff" }
+									{ "textColor", "005db2ff" }
 								}},
 								{ "hover", new Dictionary<string, object>{
-									{ "textColor", "02b2cbcc" }
+									{ "textColor", "005db2cc" }
 								}},
 							}}
 						}}
@@ -399,9 +414,40 @@ namespace Cdk
 						{ "favicon", new Dictionary<string, object> {
 							{ "enabledTypes", new string[1] { "ICO" }},
 						}},
-						{ "form", new Dictionary<string, object> {
+						{ "pageHeader", new Dictionary<string, object> {
+							{ "backgroundImage", new Dictionary<string, object> {
+								{ "enabled", false }
+							}},
 							{ "logo", new Dictionary<string, object> {
-								{ "enabled", true }
+								{ "enabled", true },
+								{ "location", "START" }
+							}},
+							{ "lightMode", new Dictionary<string, object> {
+								{ "background", new Dictionary<string, object>{
+                                    { "color", "ffffffff" }
+                                }},
+								{ "borderColor", "f5f5f5ff" }
+							}}
+						}},
+						{ "pageFooter", new Dictionary<string, object> {
+							{ "backgroundImage", new Dictionary<string, object> {
+								{ "enabled", false }
+							}},
+							{ "logo", new Dictionary<string, object> {
+								{ "enabled", true },
+								{ "location", "START" }
+							}},
+							{ "lightMode", new Dictionary<string, object> {
+								{ "background", new Dictionary<string, object>{
+									{ "color", "2a2d34ff" }
+								}},
+								{ "borderColor", "2a2d34ff" }
+							}}
+						}},
+						{ "form", new Dictionary<string, object> {
+							{ "borderRadius", 0.0 },
+							{ "logo", new Dictionary<string, object> {
+								{ "enabled", false }
 							}},
 						}},
 						{ "pageBackground", new Dictionary<string, object> {
@@ -420,14 +466,17 @@ namespace Cdk
 							{ "lightMode", new Dictionary<string, object> {
 								{ "defaults", new Dictionary<string, object>{
 									{ "backgroundColor", "02b2cbff" },
+									{ "borderColor", "02b2cbff" },
 									{ "textColor", "ffffffff" }
 								}},
 								{ "hover", new Dictionary<string, object>{
 									{ "backgroundColor", "02b2cbcc" },
+									{ "borderColor", "02b2cbcc" },
 									{ "textColor", "ffffffff" }
 								}},
 								{ "active", new Dictionary<string, object>{
 									{ "backgroundColor", "02b2cbff" },
+									{ "borderColor", "02b2cbff" },
 									{ "textColor", "ffffffff" }
 								}},
 							}},
@@ -459,6 +508,18 @@ namespace Cdk
 						ColorMode = "LIGHT",
 						Extension = "PNG",
 						Bytes = base64FormLogo,
+					},
+					new() {
+						Category = "PAGE_HEADER_LOGO",
+						ColorMode = "LIGHT",
+						Extension = "PNG",
+						Bytes = base64PageHeaderLogo,
+					},
+					new() {
+						Category = "PAGE_FOOTER_LOGO",
+						ColorMode = "LIGHT",
+						Extension = "PNG",
+						Bytes = base64PageFooterLogo,
 					},
 					new() {
 						Category = "PAGE_BACKGROUND",
