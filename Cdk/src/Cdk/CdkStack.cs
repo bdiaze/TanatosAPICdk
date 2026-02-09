@@ -343,7 +343,7 @@ namespace Cdk
 				AccessTokenValidity = Duration.Minutes(double.Parse(notificacionesTokenValidityMinutes))
 			});
 
-			string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.svg")));
+			string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.ico")));
 			string base64FormLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FORM_LOGO.png")));
 			string base64BackgroundImage = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "BACKGROUND_IMAGE.jpg")));
 
@@ -394,7 +394,7 @@ namespace Cdk
 					}},
 					{ "components", new Dictionary<string, object>{
 						{ "favicon", new Dictionary<string, object> {
-							{ "enabledTypes", new string[1] { "SVG" }},
+							{ "enabledTypes", new string[1] { "ICO" }},
 						}},
 						{ "form", new Dictionary<string, object> {
 							{ "logo", new Dictionary<string, object> {
@@ -461,12 +461,12 @@ namespace Cdk
 						Category = "PAGE_BACKGROUND",
 						ColorMode = "LIGHT",
 						Extension = "JPEG",
-						Bytes = base64FormLogo,
+						Bytes = base64BackgroundImage,
 					},
 					new() {
 						Category = "FAVICON_ICO",
 						ColorMode = "LIGHT",
-						Extension = "SVG",
+						Extension = "ICO",
 						Bytes = base64Favicon,
 					}
 				}).ToArray()

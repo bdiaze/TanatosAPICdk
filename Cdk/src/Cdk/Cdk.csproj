@@ -21,7 +21,7 @@
     <None Update="Recursos\BACKGROUND_IMAGE.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Recursos\FAVICON.svg">
+    <None Update="Recursos\FAVICON.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Recursos\FORM_LOGO.png">
