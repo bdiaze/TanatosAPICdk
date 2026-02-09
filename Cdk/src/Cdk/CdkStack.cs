@@ -344,6 +344,7 @@ namespace Cdk
 			});
 
 			string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.ico")));
+			string base64FaviconBlanco = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON_BLANCO.ico")));
 			string base64FormLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FORM_LOGO.png")));
 			string base64PageHeaderLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "PAGE_HEADER_LOGO.png")));
 			string base64PageFooterLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "PAGE_FOOTER_LOGO.png")));
@@ -447,7 +448,7 @@ namespace Cdk
 						{ "form", new Dictionary<string, object> {
 							{ "borderRadius", 0.0 },
 							{ "logo", new Dictionary<string, object> {
-								{ "enabled", false }
+								{ "enabled", true }
 							}},
 						}},
 						{ "pageBackground", new Dictionary<string, object> {
@@ -529,7 +530,13 @@ namespace Cdk
 						ColorMode = "LIGHT",
 						Extension = "ICO",
 						Bytes = base64Favicon,
-					}
+					},
+					new() {
+						Category = "FAVICON_ICO",
+						ColorMode = "DARK",
+						Extension = "ICO",
+						Bytes = base64FaviconBlanco,
+					},
 				}).ToArray()
 			});
 
