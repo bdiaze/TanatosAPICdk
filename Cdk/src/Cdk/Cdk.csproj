@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Recursos\BACKGROUND_IMAGE.jpg">
+    <None Update="Recursos\BACKGROUND_IMAGE.jpeg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Recursos\FAVICON.ico">
