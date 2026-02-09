@@ -343,8 +343,9 @@ namespace Cdk
 				AccessTokenValidity = Duration.Minutes(double.Parse(notificacionesTokenValidityMinutes))
 			});
 
-			// string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.ico")));
+			string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.svg")));
 			string base64FormLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FORM_LOGO.png")));
+			string base64BackgroundImage = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "BACKGROUND_IMAGE.jpg")));
 
 			_ = new CfnManagedLoginBranding(this, $"{appName}ManagedLoginBranding", new CfnManagedLoginBrandingProps {
 				UserPoolId = userPool.UserPoolId,
@@ -393,7 +394,7 @@ namespace Cdk
 					}},
 					{ "components", new Dictionary<string, object>{
 						{ "favicon", new Dictionary<string, object> {
-							{ "enabledTypes", new string[1] { "ICO" }},
+							{ "enabledTypes", new string[1] { "SVG" }},
 						}},
 						{ "form", new Dictionary<string, object> {
 							{ "logo", new Dictionary<string, object> {
@@ -402,7 +403,7 @@ namespace Cdk
 						}},
 						{ "pageBackground", new Dictionary<string, object> {
 							{ "image", new Dictionary<string, object> {
-								{ "enabled", false }
+								{ "enabled", true }
 							}},
 						}},
 						{ "pageText", new Dictionary<string, object> {
@@ -422,6 +423,10 @@ namespace Cdk
 									{ "backgroundColor", "02b2cbcc" },
 									{ "textColor", "ffffffff" }
 								}},
+								{ "active", new Dictionary<string, object>{
+									{ "backgroundColor", "02b2cbff" },
+									{ "textColor", "ffffffff" }
+								}},
 							}},
 						}},
 						{ "secondaryButton", new Dictionary<string, object> {
@@ -436,6 +441,11 @@ namespace Cdk
 									{ "borderColor", "02b2cbcc" },
 									{ "textColor", "02b2cbff" }
 								}},
+								{ "active", new Dictionary<string, object>{
+									{ "backgroundColor", "ffffffff" },
+									{ "borderColor", "02b2cbff" },
+									{ "textColor", "02b2cbff" }
+								}},
 							}},
 						}}
 					}}
@@ -447,14 +457,18 @@ namespace Cdk
 						Extension = "PNG",
 						Bytes = base64FormLogo,
 					},
-					/*
+					new() {
+						Category = "PAGE_BACKGROUND",
+						ColorMode = "LIGHT",
+						Extension = "JPG",
+						Bytes = base64FormLogo,
+					},
 					new() {
 						Category = "FAVICON_ICO",
 						ColorMode = "LIGHT",
-						Extension = "ICO",
+						Extension = "SVG",
 						Bytes = base64Favicon,
 					}
-					*/
 				}).ToArray()
 			});
 
