@@ -344,8 +344,7 @@ namespace Cdk
 			});
 
 			string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.ico")));
-			string base64FaviconBlanco = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON_BLANCO.ico")));
-			string base64FormLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FORM_LOGO.png")));
+			// string base64FormLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FORM_LOGO.png")));
 			string base64PageHeaderLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "PAGE_HEADER_LOGO.png")));
 			string base64PageFooterLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "PAGE_FOOTER_LOGO.png")));
 			string base64BackgroundImage = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "BACKGROUND_IMAGE.jpeg")));
@@ -448,7 +447,8 @@ namespace Cdk
 						{ "form", new Dictionary<string, object> {
 							{ "borderRadius", 0.0 },
 							{ "logo", new Dictionary<string, object> {
-								{ "enabled", true }
+								// { "enabled", true },
+								{ "enabled", false },
 							}},
 						}},
 						{ "pageBackground", new Dictionary<string, object> {
@@ -501,12 +501,14 @@ namespace Cdk
 					}}
 				},
 				Assets = (new List<CfnManagedLoginBranding.AssetTypeProperty>() {
+					/*
 					new() {
 						Category = "FORM_LOGO",
 						ColorMode = "LIGHT",
 						Extension = "PNG",
 						Bytes = base64FormLogo,
 					},
+					*/
 					new() {
 						Category = "PAGE_HEADER_LOGO",
 						ColorMode = "LIGHT",
@@ -531,12 +533,14 @@ namespace Cdk
 						Extension = "ICO",
 						Bytes = base64Favicon,
 					},
+					/*
 					new() {
 						Category = "FAVICON_ICO",
 						ColorMode = "DARK",
 						Extension = "ICO",
 						Bytes = base64FaviconBlanco,
 					},
+					*/
 				}).ToArray()
 			});
 

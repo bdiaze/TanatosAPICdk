@@ -24,9 +24,6 @@
     <None Update="Recursos\FAVICON.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Recursos\FAVICON_BLANCO.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Recursos\PAGE_HEADER_LOGO.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
