@@ -466,17 +466,14 @@ namespace Cdk
 							{ "lightMode", new Dictionary<string, object> {
 								{ "defaults", new Dictionary<string, object>{
 									{ "backgroundColor", "02b2cbff" },
-									{ "borderColor", "02b2cbff" },
 									{ "textColor", "ffffffff" }
 								}},
 								{ "hover", new Dictionary<string, object>{
 									{ "backgroundColor", "02b2cbcc" },
-									{ "borderColor", "02b2cbcc" },
 									{ "textColor", "ffffffff" }
 								}},
 								{ "active", new Dictionary<string, object>{
 									{ "backgroundColor", "02b2cbff" },
-									{ "borderColor", "02b2cbff" },
 									{ "textColor", "ffffffff" }
 								}},
 							}},
