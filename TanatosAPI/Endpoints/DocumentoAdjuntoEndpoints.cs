@@ -103,7 +103,7 @@ namespace TanatosAPI.Endpoints {
 
 
 					HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorId(entrada.IdHistorialNormaSuscrita);
-					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia) {
+					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia || historialNormaSuscrita.FechaCompletitud != null) {
 						LambdaLogger.Log(
 							$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El ID de historial norma suscrita es inválido.");
@@ -189,7 +189,7 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorId(documentoAdjunto.IdHistorialNormaSuscrita);
-					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia) {
+					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia || historialNormaSuscrita.FechaCompletitud != null) {
 						LambdaLogger.Log(
 							$"[POST] - [DocumentoAdjunto] - [ConfirmarSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El ID de documento adjunto es inválido.");
