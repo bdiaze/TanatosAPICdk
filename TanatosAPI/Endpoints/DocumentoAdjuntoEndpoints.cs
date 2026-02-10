@@ -306,7 +306,7 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorId(documentoAdjunto.IdHistorialNormaSuscrita);
-					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia) {
+					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia || historialNormaSuscrita.FechaCompletitud != null) {
 						LambdaLogger.Log(
 							$"[DELETE] - [DocumentoAdjunto] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El ID de documento adjunto es inválido.");
