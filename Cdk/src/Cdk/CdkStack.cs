@@ -345,8 +345,8 @@ namespace Cdk
 
 			string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.ico")));
 			// string base64FormLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FORM_LOGO.png")));
-			string base64PageHeaderLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "PAGE_HEADER_LOGO.png")));
-			string base64PageFooterLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "PAGE_FOOTER_LOGO.png")));
+			string base64PageHeaderLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "PAGE_HEADER_LOGO.svg")));
+			string base64PageFooterLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "PAGE_FOOTER_LOGO.svg")));
 			string base64BackgroundImage = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "BACKGROUND_IMAGE.jpeg")));
 
 			_ = new CfnManagedLoginBranding(this, $"{appName}ManagedLoginBranding", new CfnManagedLoginBrandingProps {
@@ -516,13 +516,13 @@ namespace Cdk
 					new() {
 						Category = "PAGE_HEADER_LOGO",
 						ColorMode = "LIGHT",
-						Extension = "PNG",
+						Extension = "SVG",
 						Bytes = base64PageHeaderLogo,
 					},
 					new() {
 						Category = "PAGE_FOOTER_LOGO",
 						ColorMode = "LIGHT",
-						Extension = "PNG",
+						Extension = "SVG",
 						Bytes = base64PageFooterLogo,
 					},
 					new() {
