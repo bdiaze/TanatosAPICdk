@@ -400,6 +400,7 @@ namespace TanatosAPI.Endpoints {
 					List<DocumentoAdjunto> documentosAdjuntos = [.. (await documentoAdjuntoDao.ObtenerPorHistorial(historialExistente.Id, true)).Where(da => da.EstadoSubida == 1)];
 
 					SalNormaSuscritaObtenerPorIdConVencimiento retorno = new() {
+						IdNegocio = existente.IdNegocio,
 						Id = existente.Id,
 						Nombre = existente.Nombre,
 						Descripcion = existente.Descripcion,

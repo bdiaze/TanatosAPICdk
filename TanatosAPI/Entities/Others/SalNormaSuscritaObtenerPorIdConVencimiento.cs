@@ -1,6 +1,7 @@
 ﻿namespace TanatosAPI.Entities.Others {
 	public class SalNormaSuscritaObtenerPorIdConVencimiento {
-		public long Id { get; set; }
+		public required long IdNegocio { get; set; }
+		public required long Id { get; set; }
 		public string? Nombre { get; set; }
 		public string? Descripcion { get; set; }
 		public long? IdTipoPeriodicidad { get; set; }
