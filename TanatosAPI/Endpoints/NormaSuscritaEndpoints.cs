@@ -344,7 +344,7 @@ namespace TanatosAPI.Endpoints {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
 					NormaSuscrita? existente = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita);
-					if (existente == null || !existente.Vigencia || existente.Sub != sub) {
+					if (existente == null || existente.Sub != sub) {
 						LambdaLogger.Log(
 							$"[GET] - [NormaSuscrita] - [ObtenerPorIdConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El ID de norma suscrita es inválido.");
@@ -353,7 +353,16 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					HistorialNormaSuscrita? historialExistente = await historialNormaSuscritaDao.ObtenerPorId(idHistorialNormaSuscrita);
-					if (historialExistente == null || !historialExistente.Vigencia || historialExistente.IdNormaSuscrita != idNormaSuscrita) {
+					if (historialExistente == null || (!historialExistente.Vigencia && historialExistente.FechaCompletitud == null) || historialExistente.IdNormaSuscrita != idNormaSuscrita) {
+						LambdaLogger.Log(
+							$"[GET] - [NormaSuscrita] - [ObtenerPorIdConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El ID de norma suscrita es inválido.");
+
+						return Results.BadRequest($"El ID de norma suscrita es inválido.");
+					}
+
+					// Solo se permite obtener el detalle de un vencimiento no completado si la norma suscrita esta vigente...
+					if (!existente.Vigencia && historialExistente.FechaCompletitud == null) {
 						LambdaLogger.Log(
 							$"[GET] - [NormaSuscrita] - [ObtenerPorIdConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El ID de norma suscrita es inválido.");
@@ -388,7 +397,7 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
-					List<DocumentoAdjunto> documentosAdjuntos = (await documentoAdjuntoDao.ObtenerPorHistorial(historialExistente.Id, true)).Where(da => da.EstadoSubida == 1).ToList();
+					List<DocumentoAdjunto> documentosAdjuntos = [.. (await documentoAdjuntoDao.ObtenerPorHistorial(historialExistente.Id, true)).Where(da => da.EstadoSubida == 1)];
 
 					SalNormaSuscritaObtenerPorIdConVencimiento retorno = new() {
 						Id = existente.Id,
