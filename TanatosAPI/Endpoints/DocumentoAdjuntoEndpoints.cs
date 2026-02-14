@@ -251,7 +251,8 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorId(documentoAdjunto.IdHistorialNormaSuscrita);
-					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia) {
+					// Solo no se deja descargar el documento si el vencimiento no existe, no está vigente ni completado...
+					if (historialNormaSuscrita == null || (!historialNormaSuscrita.Vigencia && historialNormaSuscrita.FechaCompletitud == null)) {
 						LambdaLogger.Log(
 							$"[POST] - [DocumentoAdjunto] - [GenerarUrlBajada] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El ID de documento adjunto es inválido.");
@@ -260,7 +261,8 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					NormaSuscrita? normaSuscrita = await normaSuscritaDao.ObtenerPorId(historialNormaSuscrita.IdNormaSuscrita);
-					if (normaSuscrita == null || !normaSuscrita.Vigencia || normaSuscrita.Sub != sub) {
+					// Solo no se deja descargar el documento si la norma suscrita no existe, no pertenece al usuario, o si no está vigente (con el vencimiento sin completar)...
+					if (normaSuscrita == null || (!normaSuscrita.Vigencia && historialNormaSuscrita.FechaCompletitud == null) || normaSuscrita.Sub != sub) {
 						LambdaLogger.Log(
 							$"[POST] - [DocumentoAdjunto] - [GenerarUrlBajada] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El ID de documento adjunto es inválido.");
