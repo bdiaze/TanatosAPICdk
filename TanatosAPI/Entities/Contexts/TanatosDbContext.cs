@@ -230,5 +230,7 @@ namespace TanatosAPI.Entities.Contexts {
 		public DbSet<TemplateActividad> TemplatesActividades  { get; set; }
 
         public DbSet<DocumentoAdjunto> DocumentosAdjuntos { get; set; }
-		}
+
+        public DbSet<Mensaje> Mensajes { get; set; }
+	}
 }
