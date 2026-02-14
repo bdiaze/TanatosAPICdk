@@ -253,7 +253,7 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
-					List<NormaSuscrita> normas = [.. (await normaSuscritaDao.ObtenerPorSub(sub, idNegocio, true)).Where(n => n.Activado)];
+					List<NormaSuscrita> normas = [.. await normaSuscritaDao.ObtenerPorSub(sub, idNegocio, null)];
 
 					List<TipoPeriodicidad> periodicidades = [];
 					List<CategoriaNorma> categorias = [];
@@ -292,22 +292,32 @@ namespace TanatosAPI.Endpoints {
 						TipoPeriodicidad? tipoPeriodicidad = periodicidades.FirstOrDefault(p => p.Id == (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad));
 
 						List<HistorialNormaSuscrita> historialesNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, null, true);
-						foreach (HistorialNormaSuscrita historialNormaSuscrita in historialesNormaSuscrita) {
-							retorno.Add(new SalNormaSuscritaObtenerConVencimiento {
-								FechaVencimiento = historialNormaSuscrita.FechaVencimiento,
-								FechaCompletitud = historialNormaSuscrita.FechaCompletitud,
-								IdNormaSuscrita = normaSuscrita.Id,
-								IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
-								NombreNorma = normaSuscrita.Nombre ?? templateNorma?.Nombre,
-								DescripcionNorma = normaSuscrita.Descripcion ?? templateNorma?.Descripcion,
-								MultaNorma = normaSuscrita.Multa ?? templateNorma?.Multa,
-								IdCategoriaNorma = categoriaNorma?.Id,
-								NombreCategoriaNorma = categoriaNorma?.NombreCorto ?? categoriaNorma?.Nombre,
-								IdTipoPeriodicidad = tipoPeriodicidad?.Id,
-								NombreTipoPeriodicidad = tipoPeriodicidad?.Nombre,
-							});
-						}					
-					}									
+
+						// Solo se consideran en la salida las normas vigentes y activas, o los vencimientos ya completados
+						if ((normaSuscrita.Vigencia && normaSuscrita.Activado) || historialesNormaSuscrita.Any(h => h.FechaCompletitud != null)) {
+
+							// Si la norma no esta vigente o activa, se filtran los vencimientos para mostrar solo los ya completados...
+							if (!normaSuscrita.Vigencia || !normaSuscrita.Activado) {
+								historialesNormaSuscrita = [.. historialesNormaSuscrita.Where(h => h.FechaCompletitud != null)];
+							}
+
+							foreach (HistorialNormaSuscrita historialNormaSuscrita in historialesNormaSuscrita) {
+								retorno.Add(new SalNormaSuscritaObtenerConVencimiento {
+									FechaVencimiento = historialNormaSuscrita.FechaVencimiento,
+									FechaCompletitud = historialNormaSuscrita.FechaCompletitud,
+									IdNormaSuscrita = normaSuscrita.Id,
+									IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
+									NombreNorma = normaSuscrita.Nombre ?? templateNorma?.Nombre,
+									DescripcionNorma = normaSuscrita.Descripcion ?? templateNorma?.Descripcion,
+									MultaNorma = normaSuscrita.Multa ?? templateNorma?.Multa,
+									IdCategoriaNorma = categoriaNorma?.Id,
+									NombreCategoriaNorma = categoriaNorma?.NombreCorto ?? categoriaNorma?.Nombre,
+									IdTipoPeriodicidad = tipoPeriodicidad?.Id,
+									NombreTipoPeriodicidad = tipoPeriodicidad?.Nombre,
+								});
+							}
+						}
+					}
 
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
