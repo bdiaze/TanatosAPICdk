@@ -18,6 +18,7 @@
     <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.4.6" />
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Dapper.AOT" Version="1.0.48" />
+    <PackageReference Include="Google.Cloud.RecaptchaEnterprise.V1" Version="2.20.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.23" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.23" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.12" />

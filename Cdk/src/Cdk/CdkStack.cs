@@ -78,6 +78,9 @@ namespace Cdk
 			string arnParameterKairosApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_KAIROS_API_KEY_ID") ?? throw new ArgumentNullException("ARN_PARAMETER_KAIROS_API_KEY_ID");
 			string arnParameterNotificacionesLambdaArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_NOTIFICACIONES_LAMBDA_ARN") ?? throw new ArgumentNullException("ARN_PARAMETER_NOTIFICACIONES_LAMBDA_ARN");
 			string arnParameterNotificacionesEjecucionRoleArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_NOTIFICACIONES_EJECUCION_ROLE_ARN") ?? throw new ArgumentNullException("ARN_PARAMETER_NOTIFICACIONES_EJECUCION_ROLE_ARN");
+			string googleAwsExternalAccountJson = System.Environment.GetEnvironmentVariable("GOOGLE_AWS_EXTERNAL_ACCOUNT_JSON") ?? throw new ArgumentNullException("GOOGLE_AWS_EXTERNAL_ACCOUNT_JSON");
+			string googleRecaptchaProjectId = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_PROJECT_ID") ?? throw new ArgumentNullException("GOOGLE_RECAPTCHA_PROJECT_ID");
+			string googleRecaptchaSiteKey = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_SITE_KEY") ?? throw new ArgumentNullException("GOOGLE_RECAPTCHA_SITE_KEY");
 
 			// Variables de entorno para la lambda de ejecución inicial...
 			string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new ArgumentNullException("APP_SCHEMA_NAME");
@@ -728,7 +731,10 @@ namespace Cdk
 					{ "KAIROS_API_KEY_ID", parameterKairosApiKeyId.StringValue },
 					{ "NOTIFICACIONES_LAMBDA_ARN", parameterNotificacionesLambdaArn.StringValue },
 					{ "NOTIFICACIONES_EJECUCION_ROLE_ARN", parameterNotificacionesEjecucionRoleArn.StringValue },
-					{ "BUCKET_NAME_DOCUMENTOS_ADJUNTOS", bucket.BucketName }
+					{ "BUCKET_NAME_DOCUMENTOS_ADJUNTOS", bucket.BucketName },
+					{ "GOOGLE_AWS_EXTERNAL_ACCOUNT_JSON", googleAwsExternalAccountJson }, 
+					{ "GOOGLE_RECAPTCHA_PROJECT_ID", googleRecaptchaProjectId },
+					{ "GOOGLE_RECAPTCHA_SITE_KEY", googleRecaptchaSiteKey }
 				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {

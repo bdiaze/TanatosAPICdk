@@ -235,6 +235,7 @@ app.MapNegocioEndpoints();
 app.MapNormaSuscritaEndpoints();
 app.MapInscripcionTemplateEndpoints();
 app.MapDocumentoAdjuntoEndpoints();
+app.MapMensajeEndpoints();
 
 app.Run();
 

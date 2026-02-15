@@ -73,6 +73,7 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(EntNormaSuscritaCompletarNorma))]
 	[JsonSerializable(typeof(SalNormaSuscritaCompletarNorma))]
 	[JsonSerializable(typeof(SalNegocioInformacionUsuario))]
+	[JsonSerializable(typeof(EntMensajeIngresar))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }
