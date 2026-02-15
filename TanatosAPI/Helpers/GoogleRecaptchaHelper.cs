@@ -6,7 +6,7 @@ namespace TanatosAPI.Helpers {
 	public class GoogleRecaptchaHelper(VariableEntornoHelper variableEntorno) {
 		public async Task<(bool valid, string invalidReason, string action, float score)> ObtenerAssesment(string recaptchaToken, string expectedAction) {
 			GoogleCredential credential = CredentialFactory.FromJson<AwsExternalAccountCredential>(variableEntorno.Obtener("GOOGLE_AWS_EXTERNAL_ACCOUNT_JSON")).ToGoogleCredential();
-			credential.CreateScoped(["https://www.googleapis.com/auth/recaptchaenterprise"]);
+			credential = credential.CreateScoped(["https://www.googleapis.com/auth/recaptchaenterprise"]);
 			RecaptchaEnterpriseServiceClient client = new RecaptchaEnterpriseServiceClientBuilder {
 				Credential = credential
 			}.Build();
