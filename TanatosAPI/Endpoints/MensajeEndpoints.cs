@@ -48,7 +48,10 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					(bool valid, string invalidReason, string action, float score) response = await googleRecaptchaHelper.ObtenerAssesment(entrada.RecaptchaToken, "contact_form");
+					const string ACTION = "contact_form";
+					const float MIN_SCORE = 0.7f;
+
+					(bool valid, string invalidReason, string action, float score) response = await googleRecaptchaHelper.ObtenerAssesment(entrada.RecaptchaToken, ACTION);
 
 					// Se valida que la respuesta sea válida...
 					if (!response.valid) {
@@ -59,19 +62,19 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					// Se valida que el action concuerde con el esperado...
-					if (response.action != "contact_form") {
+					if (response.action != ACTION) {
 						LambdaLogger.Log(
 							$"[POST] - [Mensaje] - [Ingresar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El token de reCAPTCHA no es válido dado que el Action no es correcto.");
-						return Results.BadRequest("El token de reCAPTCHA no es válido dado que el Action no es correcto.");
+							$"El token de reCAPTCHA no es válido dado que el Action no es correcto - Action: {response.action} - Expected Action: {ACTION}.");
+						return Results.BadRequest($"El token de reCAPTCHA no es válido dado que el Action no es correcto - Action: {response.action} - Expected Action: {ACTION}.");
 					}
 
 					// Y se valida que el score sea superior al mínimo aceptable...
-					if (response.score <= 7.0f) {
+					if (response.score <= MIN_SCORE) {
 						LambdaLogger.Log(
 							$"[POST] - [Mensaje] - [Ingresar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El token de reCAPTCHA no es válido dado que el Score es inferior al mínimo aceptado.");
-						return Results.BadRequest("El token de reCAPTCHA no es válido dado que el Score es inferior al mínimo aceptado.");
+							$"El token de reCAPTCHA no es válido dado que el Score es inferior al mínimo aceptado - Score: {response.score} - Score Mínimo: {MIN_SCORE}.");
+						return Results.BadRequest($"El token de reCAPTCHA no es válido dado que el Score es inferior al mínimo aceptado - Score: {response.score} - Score Mínimo: {MIN_SCORE}.");
 					}
 
 					entrada.Nombre = entrada.Nombre.Trim();
