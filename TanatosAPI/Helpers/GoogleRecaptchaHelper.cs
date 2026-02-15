@@ -11,7 +11,7 @@ namespace TanatosAPI.Helpers {
 				AppJsonSerializerContext.Default.DictionaryStringString
 			)!;
 
-			GoogleCredential credential = CredentialFactory.FromJson<GoogleCredential>(secretApp["GoogleRecaptchaCredential"]);
+			GoogleCredential credential = CredentialFactory.FromJson<ServiceAccountCredential>(secretApp["GoogleRecaptchaCredential"]).ToGoogleCredential();
 			RecaptchaEnterpriseServiceClient client = new RecaptchaEnterpriseServiceClientBuilder {
 				Credential = credential
 			}.Build();
