@@ -1,6 +1,4 @@
 ﻿using Amazon.Lambda.Core;
-using Amazon.SecurityToken;
-using Amazon.SecurityToken.Model;
 using Google.Api.Gax.ResourceNames;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.RecaptchaEnterprise.V1;
@@ -59,13 +57,8 @@ namespace TanatosAPI.Endpoints {
 					string expectedAction = "contact_form";
 					float minimumAcceptableScore = 0.7f;
 
-					var sts = new AmazonSecurityTokenServiceClient();
-					var identity = await sts.GetCallerIdentityAsync(new GetCallerIdentityRequest());
-					LambdaLogger.Log("Arn: " + identity.Arn);
-					LambdaLogger.Log("Account: " + identity.Account);
-
 					// Se obtiene información del token de reCaptcha...
-					AwsExternalAccountCredential credential = CredentialFactory.FromJson<AwsExternalAccountCredential>(googleAwsExternalAccountJson);
+					ExternalAccountCredential credential = CredentialFactory.FromJson<ExternalAccountCredential>(googleAwsExternalAccountJson);
 					RecaptchaEnterpriseServiceClient client = new RecaptchaEnterpriseServiceClientBuilder {
 						Credential = credential
 					}.Build();
