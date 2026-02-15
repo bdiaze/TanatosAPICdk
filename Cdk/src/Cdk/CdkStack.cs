@@ -38,8 +38,6 @@ namespace Cdk
             string appName = System.Environment.GetEnvironmentVariable("APP_NAME") ?? throw new ArgumentNullException("APP_NAME");
 			string regionAws = System.Environment.GetEnvironmentVariable("REGION_AWS") ?? throw new ArgumentNullException("REGION_AWS");
 
-			string developmentUser = System.Environment.GetEnvironmentVariable("DEVELOPMENT_USER") ?? throw new ArgumentException("DEVELOPMENT_USER");
-
 			// Para cognito...
 			string emailSubject = System.Environment.GetEnvironmentVariable("VERIFICATION_SUBJECT") ?? throw new ArgumentNullException("VERIFICATION_SUBJECT");
 			string emailBody = System.Environment.GetEnvironmentVariable("VERIFICATION_BODY") ?? throw new ArgumentNullException("VERIFICATION_BODY");
@@ -704,16 +702,6 @@ namespace Cdk
                 }
             });
 
-			// Creación de role para asumir al momento de requerir servicios externos (WIF)...
-			IRole roleWif = new Role(this, $"{appName}WIFRole", new RoleProps {
-				RoleName = $"{appName}WIFRole",
-				Description = $"Role para WIF de {appName}",
-				AssumedBy = new CompositePrincipal(
-					new ArnPrincipal(roleLambda.RoleArn),
-					new ArnPrincipal(developmentUser)
-				)
-			});
-
 			// Creación de la función lambda...
 			Function function = new(this, $"{appName}APILambdaFunction", new FunctionProps {
                 Runtime = Runtime.DOTNET_8,
@@ -744,7 +732,6 @@ namespace Cdk
 					{ "NOTIFICACIONES_LAMBDA_ARN", parameterNotificacionesLambdaArn.StringValue },
 					{ "NOTIFICACIONES_EJECUCION_ROLE_ARN", parameterNotificacionesEjecucionRoleArn.StringValue },
 					{ "BUCKET_NAME_DOCUMENTOS_ADJUNTOS", bucket.BucketName },
-					{ "ROLE_ARN_WIF", roleWif.RoleArn },
 					{ "GOOGLE_AWS_EXTERNAL_ACCOUNT_JSON", googleAwsExternalAccountJson }, 
 					{ "GOOGLE_RECAPTCHA_PROJECT_ID", googleRecaptchaProjectId },
 					{ "GOOGLE_RECAPTCHA_SITE_KEY", googleRecaptchaSiteKey }
