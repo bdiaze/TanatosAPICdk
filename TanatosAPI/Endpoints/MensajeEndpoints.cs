@@ -58,7 +58,7 @@ namespace TanatosAPI.Endpoints {
 					float minimumAcceptableScore = 0.7f;
 
 					// Se obtiene información del token de reCaptcha...
-					ExternalAccountCredential credential = CredentialFactory.FromJson<ExternalAccountCredential>(googleAwsExternalAccountJson);
+					GoogleCredential credential = CredentialFactory.FromJson<GoogleCredential>(googleAwsExternalAccountJson);
 					RecaptchaEnterpriseServiceClient client = new RecaptchaEnterpriseServiceClientBuilder {
 						Credential = credential
 					}.Build();
