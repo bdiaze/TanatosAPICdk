@@ -60,19 +60,11 @@ namespace TanatosAPI.Endpoints {
 
 					// Se obtiene información del token de reCaptcha...
 					GoogleCredential credential = CredentialFactory.FromJson<AwsExternalAccountCredential>(googleAwsExternalAccountJson).ToGoogleCredential();
-
-					LambdaLogger.Log("ExternalAccountJson: " + googleAwsExternalAccountJson);
-
+					credential.CreateScoped(["https://www.googleapis.com/auth/recaptchaenterprise"]);
 					RecaptchaEnterpriseServiceClient client = new RecaptchaEnterpriseServiceClientBuilder {
 						Credential = credential
 					}.Build();
-
-					LambdaLogger.Log("RecaptchaProjectID: " + googleRecaptchaProjectId);
-
 					ProjectName projectName = new(googleRecaptchaProjectId);
-
-					LambdaLogger.Log("RecaptchaProjectName: " + projectName);
-
 					CreateAssessmentRequest request = new() { 
 						ParentAsProjectName = projectName,
 						Assessment = new Assessment {
@@ -83,11 +75,6 @@ namespace TanatosAPI.Endpoints {
 							}
 						}
 					};
-
-					LambdaLogger.Log("RecaptchaSiteKey: " + googleRecaptchaSiteKey);
-					LambdaLogger.Log("ExpectedAction: " + expectedAction);
-					LambdaLogger.Log("RecaptchaToken: " + entrada.RecaptchaToken);
-
 					Assessment response = await client.CreateAssessmentAsync(request);
 
 					// Se valida que la respuesta sea válida...
