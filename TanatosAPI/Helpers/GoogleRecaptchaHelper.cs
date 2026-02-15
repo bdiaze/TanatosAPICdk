@@ -1,12 +1,17 @@
 ﻿using Google.Api.Gax.ResourceNames;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.RecaptchaEnterprise.V1;
+using System.Text.Json;
 
 namespace TanatosAPI.Helpers {
-	public class GoogleRecaptchaHelper(VariableEntornoHelper variableEntorno) {
+	public class GoogleRecaptchaHelper(VariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper) {
 		public async Task<(bool valid, string invalidReason, string action, float score)> ObtenerAssesment(string recaptchaToken, string expectedAction) {
-			GoogleCredential credential = CredentialFactory.FromJson<AwsExternalAccountCredential>(variableEntorno.Obtener("GOOGLE_AWS_EXTERNAL_ACCOUNT_JSON")).ToGoogleCredential();
-			credential = credential.CreateScoped(["https://www.googleapis.com/auth/recaptchaenterprise"]);
+			Dictionary<string, string> secretApp = JsonSerializer.Deserialize(
+				await secretManagerHelper.ObtenerSecreto(variableEntorno.Obtener("SECRET_ARN_APP")),
+				AppJsonSerializerContext.Default.DictionaryStringString
+			)!;
+
+			GoogleCredential credential = CredentialFactory.FromJson<GoogleCredential>(secretApp["GoogleRecaptchaCredential"]);
 			RecaptchaEnterpriseServiceClient client = new RecaptchaEnterpriseServiceClientBuilder {
 				Credential = credential
 			}.Build();
@@ -22,6 +27,7 @@ namespace TanatosAPI.Helpers {
 				}
 			};
 			Assessment response = await client.CreateAssessmentAsync(request);
+
 			return (response.TokenProperties.Valid, response.TokenProperties.InvalidReason.ToString(), response.TokenProperties.Action, response.RiskAnalysis.Score);
 		}
 	}
