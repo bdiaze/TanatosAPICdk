@@ -96,6 +96,7 @@ builder.Services.AddSingleton<DatabaseConnectionHelper>();
 builder.Services.AddSingleton<CryptoHelper>();
 builder.Services.AddSingleton<S3Helper>();
 builder.Services.AddSingleton<DocumentoAdjuntoHelper>();
+builder.Services.AddSingleton<GoogleRecaptchaHelper>();
 #endregion
 
 #region Singleton DAO
