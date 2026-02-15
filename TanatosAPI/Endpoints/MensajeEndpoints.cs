@@ -4,6 +4,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Cloud.RecaptchaEnterprise.V1;
 using System.Diagnostics;
 using System.Security.Claims;
+using System.Text;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
@@ -58,7 +59,7 @@ namespace TanatosAPI.Endpoints {
 					float minimumAcceptableScore = 0.7f;
 
 					// Se obtiene información del token de reCaptcha...
-					GoogleCredential credential = CredentialFactory.FromJson<GoogleCredential>(googleAwsExternalAccountJson);
+					GoogleCredential credential = CredentialFactory.FromJson<AwsExternalAccountCredential>(googleAwsExternalAccountJson).ToGoogleCredential();
 					RecaptchaEnterpriseServiceClient client = new RecaptchaEnterpriseServiceClientBuilder {
 						Credential = credential
 					}.Build();
