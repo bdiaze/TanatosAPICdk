@@ -16,6 +16,7 @@
     <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.5.1" />
     <PackageReference Include="AWSSDK.S3" Version="4.0.18.1" />
     <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.4.6" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.9" />
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Dapper.AOT" Version="1.0.48" />
     <PackageReference Include="Google.Cloud.RecaptchaEnterprise.V1" Version="2.20.0" />
