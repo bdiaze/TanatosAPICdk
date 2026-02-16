@@ -26,26 +26,32 @@ namespace TanatosAPI.Business {
 				strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "MensajeRecibido.html"));
 			}
 
-			await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
-				De = new DireccionCorreo() {
-					Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
-					Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
-				},
-				ResponderA = [
-					new DireccionCorreo() {
-						Nombre = nuevo.Nombre,
-						Correo = nuevo.Correo,
-					}
-				],
-				Para = [.. variableEntorno.Obtener("DESTINATARIOS_NUEVO_MENSAJE").Split(',').Select(destinatario => new DireccionCorreo() { 
-					Correo = destinatario 
-				})],
-				Asunto = "¡Hemos recibido un mensaje!",
-				Cuerpo = strTemplateCorreo
-							.Replace("[NOMBRE_USUARIO]", WebUtility.HtmlEncode(nuevo.Nombre))
-							.Replace("[CORREO_USUARIO]", WebUtility.HtmlEncode(nuevo.Correo))
-							.Replace("[CONTENIDO]", WebUtility.HtmlEncode(nuevo.Contenido)),
-			});
+			string cuerpoCorreo = strTemplateCorreo
+				.Replace("[NOMBRE_USUARIO]", WebUtility.HtmlEncode(nuevo.Nombre))
+				.Replace("[CORREO_USUARIO]", WebUtility.HtmlEncode(nuevo.Correo))
+				.Replace("[CONTENIDO]", WebUtility.HtmlEncode(nuevo.Contenido));
+
+			foreach (string destinatario in variableEntorno.Obtener("DESTINATARIOS_NUEVO_MENSAJE").Split(',')) {
+				await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+					De = new DireccionCorreo() {
+						Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
+						Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
+					},
+					ResponderA = [
+						new DireccionCorreo() {
+							Nombre = nuevo.Nombre,
+							Correo = nuevo.Correo,
+						}
+					],
+					Para = [ 
+						new DireccionCorreo() {
+							Correo = destinatario
+						}
+					],
+					Asunto = "¡Hemos recibido un mensaje!",
+					Cuerpo = cuerpoCorreo,
+				});
+			}
 
 			return nuevo;
 		}
