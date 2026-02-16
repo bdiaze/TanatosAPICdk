@@ -133,6 +133,7 @@ builder.Services.AddSingleton<NotificacionNormaSuscritaBcp>();
 builder.Services.AddSingleton<ProcesoNotificacionBcp>();
 builder.Services.AddSingleton<DestinatarioNotificacionBcp>();
 builder.Services.AddSingleton<DocumentoAdjuntoBcp>();
+builder.Services.AddSingleton<MensajeBcp>();
 #endregion
 
 string cognitoRegion;

@@ -81,6 +81,7 @@ namespace Cdk
 			string googleRecaptchaCredential = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_CREDENTIAL") ?? throw new ArgumentNullException("GOOGLE_RECAPTCHA_CREDENTIAL");
 			string googleRecaptchaProjectId = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_PROJECT_ID") ?? throw new ArgumentNullException("GOOGLE_RECAPTCHA_PROJECT_ID");
 			string googleRecaptchaSiteKey = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_SITE_KEY") ?? throw new ArgumentNullException("GOOGLE_RECAPTCHA_SITE_KEY");
+			string destinatariosNuevoMensaje = System.Environment.GetEnvironmentVariable("DESTINATARIOS_NUEVO_MENSAJE") ?? throw new ArgumentNullException("DESTINATARIOS_NUEVO_MENSAJE");	
 
 			// Variables de entorno para la lambda de ejecución inicial...
 			string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new ArgumentNullException("APP_SCHEMA_NAME");
@@ -736,7 +737,8 @@ namespace Cdk
 					{ "BUCKET_NAME_DOCUMENTOS_ADJUNTOS", bucket.BucketName },
 					{ "SECRET_ARN_APP", secret.SecretArn }, 
 					{ "GOOGLE_RECAPTCHA_PROJECT_ID", googleRecaptchaProjectId },
-					{ "GOOGLE_RECAPTCHA_SITE_KEY", googleRecaptchaSiteKey }
+					{ "GOOGLE_RECAPTCHA_SITE_KEY", googleRecaptchaSiteKey },
+					{ "DESTINATARIOS_NUEVO_MENSAJE", destinatariosNuevoMensaje }
 				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {

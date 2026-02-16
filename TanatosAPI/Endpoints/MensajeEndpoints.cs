@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Security.Claims;
+using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
@@ -46,7 +47,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapIngresarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntMensajeIngresar entrada, IHostEnvironment environment, ClaimsPrincipal user, VariableEntornoHelper variableEntorno, GoogleRecaptchaHelper googleRecaptchaHelper, MensajeDao mensajeDao) => {
+			routes.MapPost("/", async (EntMensajeIngresar entrada, IHostEnvironment environment, ClaimsPrincipal user, VariableEntornoHelper variableEntorno, GoogleRecaptchaHelper googleRecaptchaHelper, MensajeBcp mensajeBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -94,18 +95,11 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El correo ingresado no es válido.");
 					}
 
-					long id = await mensajeDao.Insertar(new Mensaje {
-						Id = 0,
-						Sub = sub,
-						Nombre = entrada.Nombre,
-						Correo = entrada.Correo,
-						Contenido = entrada.Contenido,
-						FechaCreacion = DateTime.UtcNow
-					});
+					Mensaje mensaje = await mensajeBcp.Ingresar(entrada.Nombre, entrada.Correo, entrada.Contenido, sub);
 
 					LambdaLogger.Log(
 						$"[POST] - [Mensaje] - [Ingresar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Se ingresa exitosamente el mensaje ID: {id}.");
+						$"Se ingresa exitosamente el mensaje ID: {mensaje.Id}.");
 
 					return Results.Ok();
 				} catch (Exception ex) {
@@ -121,7 +115,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapIngresarAnonimoEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntMensajeIngresar entrada, IHostEnvironment environment, GoogleRecaptchaHelper googleRecaptchaHelper, MensajeDao mensajeDao) => {
+			routes.MapPost("/", async (EntMensajeIngresar entrada, IHostEnvironment environment, GoogleRecaptchaHelper googleRecaptchaHelper, MensajeBcp mensajeBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -167,18 +161,11 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El correo ingresado no es válido.");
 					}
 
-					long id = await mensajeDao.Insertar(new Mensaje {
-						Id = 0,
-						Sub = null,
-						Nombre = entrada.Nombre,
-						Correo = entrada.Correo,
-						Contenido = entrada.Contenido,
-						FechaCreacion = DateTime.UtcNow
-					});
+					Mensaje mensaje = await mensajeBcp.Ingresar(entrada.Nombre, entrada.Correo, entrada.Contenido);
 
 					LambdaLogger.Log(
 						$"[POST] - [Mensaje] - [IngresarAnonimo] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Se ingresa exitosamente el mensaje ID: {id}.");
+						$"Se ingresa exitosamente el mensaje ID: {mensaje.Id}.");
 
 					return Results.Ok();
 				} catch (Exception ex) {
