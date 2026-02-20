@@ -2,7 +2,7 @@
 
 namespace TanatosAPI.Entities.Others {
 	public class SalHermesCorreoEnviar {
-		[JsonPropertyName("queueMessageId")]
-		public required string QueueMessageId { get; set; }
+		[JsonPropertyName("idMensaje")]
+		public required string IdMensaje { get; set; }
 	}
 }

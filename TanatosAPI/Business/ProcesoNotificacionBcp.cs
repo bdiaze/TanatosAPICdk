@@ -294,7 +294,7 @@ namespace TanatosAPI.Business {
                                 });
 
 								historialNotificacion.FechaEjecucion = DateTime.UtcNow;
-								historialNotificacion.HermesQueueMessageId = response.QueueMessageId;
+								historialNotificacion.HermesIdMensaje = response.IdMensaje;
 								await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
                             }
                         }

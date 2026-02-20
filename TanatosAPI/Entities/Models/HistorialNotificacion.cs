@@ -49,9 +49,9 @@ namespace TanatosAPI.Entities.Models {
 		public DateTime? FechaEjecucion { get; set; }
 
 		[UseColumnAttribute]
-		[Column("hermes_queue_message_id")]
-		[Comment("ID del mensaje en la cola de envío de correo de Hermes.")]
-		public string? HermesQueueMessageId { get; set; }
+		[Column("hermes_id_mensaje")]
+		[Comment("ID del mensaje en Hermes.")]
+		public string? HermesIdMensaje { get; set; }
 
 		[UseColumnAttribute]
 		[Required]

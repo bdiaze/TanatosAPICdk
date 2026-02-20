@@ -1409,5 +1409,27 @@ BEGIN
     VALUES ('20260214231636_TablaMensaje', '9.0.12');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260220224806_RenameColumnHistorialNotificacion') THEN
+    ALTER TABLE tanatos.historial_notificacion RENAME COLUMN hermes_queue_message_id TO hermes_id_mensaje;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260220224806_RenameColumnHistorialNotificacion') THEN
+    COMMENT ON COLUMN tanatos.historial_notificacion.hermes_id_mensaje IS 'ID del mensaje en Hermes.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260220224806_RenameColumnHistorialNotificacion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260220224806_RenameColumnHistorialNotificacion', '9.0.12');
+    END IF;
+END $EF$;
 COMMIT;
 
