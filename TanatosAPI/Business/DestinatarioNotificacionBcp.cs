@@ -75,7 +75,7 @@ namespace TanatosAPI.Business {
 						negocio.Nombre
 					],
 					ParametrosBoton = [
-						codigoValidacion
+						WebUtility.UrlEncode(codigoValidacion)
 					]
 				});
 			}
