@@ -42,4 +42,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <ItemGroup>
+    <TrimmerRootAssembly Include="Google.Apis.Auth" />
+  </ItemGroup>
 </Project>
