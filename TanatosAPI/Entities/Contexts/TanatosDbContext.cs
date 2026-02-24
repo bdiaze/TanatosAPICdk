@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text.Json;
+using TanatosAPI.Business;
 using TanatosAPI.Endpoints;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
@@ -24,7 +25,7 @@ namespace TanatosAPI.Entities.Contexts {
 
             modelBuilder.Entity<DestinatarioNotificacion>()
                 .Property(x => x.FechaCaducidadCodigoValidacion)
-                .HasDefaultValueSql($"NOW() + INTERVAL '{DestinatarioNotificacionEndpoints.HORAS_CADUCIDAD_CODIGO_VALIDACION} hours'");
+                .HasDefaultValueSql($"NOW() + INTERVAL '{DestinatarioNotificacionBcp.HORAS_CADUCIDAD_CODIGO_VALIDACION} hours'");
 
             modelBuilder.Entity<InscripcionTemplate>()
                 .HasOne(o => o.Template)

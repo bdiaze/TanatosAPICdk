@@ -7,7 +7,7 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
 	public class DestinatarioNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntorno, CryptoHelper cryptoHelper, CognitoHelper cognitoHelper, HermesHelper hermesHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, NormaSuscritaDao normaSuscritaDao, NegocioDao negocioDao, HistorialNormaSuscritaBcp historialNormaSuscritaBcp) {
-		private const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
+		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
 		public async Task<DestinatarioNotificacion> Crear(string sub, long idNegocio, long idTipoReceptor, string destino) {
 			// Se crea un código de validación...
