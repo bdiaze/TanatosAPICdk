@@ -15,8 +15,6 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
 	public static class DestinatarioNotificacionEndpoints {
-		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
-
 		public static IEndpointRouteBuilder MapDestinatarioNotificacionEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/DestinatarioNotificacion");
 			group.MapObtenerVigentes();
@@ -66,7 +64,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CryptoHelper cryptoHelper, VariableEntornoHelper variableEntorno, CognitoHelper cognitoHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, NegocioDao negocioDao, HermesHelper hermesHelper) => {
+			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CryptoHelper cryptoHelper, VariableEntornoHelper variableEntorno, CognitoHelper cognitoHelper, DestinatarioNotificacionBcp destinatarioNotificacionBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, NegocioDao negocioDao, HermesHelper hermesHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -113,58 +111,12 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El negocio es inválido.");
 					}
 
-					// Se crea un código de validación...
-					string codigoValidacion = cryptoHelper.GenerarToken(12);
-					DestinatarioNotificacion? mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion));
-					while (mismoCodigo != null) {
-						codigoValidacion = cryptoHelper.GenerarToken(12);
-						mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion));
-					}
-
-					DestinatarioNotificacion nuevoDestinatario = new() { 
-						Id = 0,
-						Sub = sub,
-						IdNegocio = negocio.Id,
-						IdTipoReceptor = entrada.IdTipoReceptor,
-						Destino = entrada.Destino,
-						CodigoValidacion = cryptoHelper.HashSHA256(codigoValidacion),
-						FechaCaducidadCodigoValidacion = DateTime.UtcNow.AddHours(HORAS_CADUCIDAD_CODIGO_VALIDACION),
-						Validado = false,
-						FechaCreacion = DateTime.UtcNow,
-						Vigencia = true
-					};
-					nuevoDestinatario.Id = await destinatarioNotificacionDao.Insertar(nuevoDestinatario);
-
-					// Se envía mensaje con el código de validación...
-					if (nuevoDestinatario.IdTipoReceptor == 1) {
-						Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
-
-						string strTemplateCorreo;
-						if (environment.IsProduction()) {
-							strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "ValidacionDestinatario.html"));
-						} else {
-							strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "ValidacionDestinatario.html"));
-						}
-
-						await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
-							De = new DireccionCorreo() {
-								Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
-								Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
-							},
-							Para = [
-								new DireccionCorreo() {
-								Correo = nuevoDestinatario.Destino
-							}
-							],
-							Asunto = "¡[NOMBRE_USUARIO] te añadió como destinatario de notificaciones de [NOMBRE_NEGOCIO]!"
-										.Replace("[NOMBRE_USUARIO]", atributosUsuario["given_name"])
-										.Replace("[NOMBRE_NEGOCIO]", negocio.Nombre),
-							Cuerpo = strTemplateCorreo
-										.Replace("[NOMBRE_USUARIO]", WebUtility.HtmlEncode(atributosUsuario["given_name"]))
-										.Replace("[NOMBRE_NEGOCIO]", WebUtility.HtmlEncode(negocio.Nombre))
-										.Replace("[CODIGO_VALIDACION]", WebUtility.UrlEncode(codigoValidacion)),
-						});
-					}
+					DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionBcp.Crear(
+						sub,
+						negocio.Id,
+						entrada.IdTipoReceptor,
+						entrada.Destino
+					);
 
 					SalDestinatarioNotificacion retorno = new() {
 						Id = nuevoDestinatario.Id,

@@ -275,7 +275,7 @@ namespace TanatosAPI.Business {
 
 								}
 
-                                SalHermesCorreoEnviar response = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+                                SalHermesEnviar response = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
                                     De = new DireccionCorreo() {
                                         Nombre = variableEntornoHelper.Obtener("HERMES_DE_NOMBRE"),
                                         Correo = variableEntornoHelper.Obtener("HERMES_DE_CORREO"),

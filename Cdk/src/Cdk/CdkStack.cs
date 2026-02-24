@@ -74,6 +74,7 @@ namespace Cdk
 			string arnParameterHermesApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_HERMES_API_KEY_ID") ?? throw new ArgumentNullException("ARN_PARAMETER_HERMES_API_KEY_ID");
 			string hermesDeNombre = System.Environment.GetEnvironmentVariable("HERMES_DE_NOMBRE") ?? throw new ArgumentNullException("HERMES_DE_NOMBRE");
 			string hermesDeCorreo = System.Environment.GetEnvironmentVariable("HERMES_DE_CORREO") ?? throw new ArgumentNullException("HERMES_DE_CORREO");
+			string hermesDeWhatsapp = System.Environment.GetEnvironmentVariable("HERMES_DE_WHATSAPP") ?? throw new ArgumentNullException("HERMES_DE_WHATSAPP");
 			string arnParameterKairosApiUrl = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_KAIROS_API_URL") ?? throw new ArgumentNullException("ARN_PARAMETER_KAIROS_API_URL");
 			string arnParameterKairosApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_KAIROS_API_KEY_ID") ?? throw new ArgumentNullException("ARN_PARAMETER_KAIROS_API_KEY_ID");
 			string arnParameterNotificacionesLambdaArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_NOTIFICACIONES_LAMBDA_ARN") ?? throw new ArgumentNullException("ARN_PARAMETER_NOTIFICACIONES_LAMBDA_ARN");
@@ -730,6 +731,7 @@ namespace Cdk
 					{ "HERMES_API_KEY_ID", parameterHermesApiKeyId.StringValue },
 					{ "HERMES_DE_NOMBRE", hermesDeNombre },
 					{ "HERMES_DE_CORREO", hermesDeCorreo },
+					{ "HERMES_DE_WHATSAPP", hermesDeWhatsapp },
 					{ "KAIROS_API_URL", parameterKairosApiUrl.StringValue },
 					{ "KAIROS_API_KEY_ID", parameterKairosApiKeyId.StringValue },
 					{ "NOTIFICACIONES_LAMBDA_ARN", parameterNotificacionesLambdaArn.StringValue },

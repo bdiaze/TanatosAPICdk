@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others {
-	public class SalHermesCorreoEnviar {
+	public class SalHermesEnviar {
 		[JsonPropertyName("idMensaje")]
 		public required string IdMensaje { get; set; }
 	}
