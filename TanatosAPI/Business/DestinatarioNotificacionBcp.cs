@@ -74,6 +74,9 @@ namespace TanatosAPI.Business {
 						atributosUsuario["given_name"],
 						negocio.Nombre
 					],
+					ParametrosBoton = [
+						codigoValidacion
+					]
 				});
 			}
 
