@@ -290,13 +290,52 @@ namespace TanatosAPI.Business {
                                                 .Replace("[NOMBRE_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Nombre ?? templateNorma?.Nombre ?? ""))
                                                 .Replace("[MULTA_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? ""))
                                                 .Replace("[TIEMPO_FALTANTE]", WebUtility.HtmlEncode(tiempoFaltante ?? ""))
-												.Replace("[DE_LOS_PROXIMOS]", WebUtility.HtmlEncode(deLosProximos ?? "")),
+												.Replace("[DE_LOS_PROXIMOS]", WebUtility.HtmlEncode(deLosProximos ?? ""))
+												.Replace("[ID_NORMA_SUSCRITA]", WebUtility.HtmlEncode(normaSuscrita.Id.ToString()))
+												.Replace("[ID_HISTORIAL_NORMA_SUSCRITA]", WebUtility.HtmlEncode(historialNormaSuscrita.Id.ToString())),
                                 });
 
 								historialNotificacion.FechaEjecucion = DateTime.UtcNow;
 								historialNotificacion.HermesIdMensaje = response.IdMensaje;
 								await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
-                            }
+                            } else if (destinatario.IdTipoReceptor == 2) {
+								string nombreTemplate; 
+								string[]? parametrosTitulo;
+								string[]? parametrosCuerpo;
+								if (tiempoFaltante != null) {
+									nombreTemplate = "notificacion_previa";
+									parametrosTitulo = [
+										tiempoFaltante ?? ""
+									];
+									parametrosCuerpo = [
+										normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "",
+										deLosProximos ?? "",
+										normaSuscrita.Multa ?? templateNorma?.Multa ?? ""
+									];
+								} else {
+									nombreTemplate = "norma_vencida";
+									parametrosTitulo = null;
+									parametrosCuerpo = [
+										normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "",
+										normaSuscrita.Multa ?? templateNorma?.Multa ?? ""
+									];
+								}
+
+								SalHermesEnviar response = await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {
+									De = variableEntornoHelper.Obtener("HERMES_DE_WHATSAPP"),
+									Para = destinatario.Destino,
+									NombreTemplate = nombreTemplate,
+									ParametrosTitulo = parametrosTitulo,
+									ParametrosCuerpo = parametrosCuerpo,
+									ParametrosBoton = [
+										$"{WebUtility.UrlEncode(normaSuscrita.Id.ToString())}/{WebUtility.UrlEncode(historialNormaSuscrita.Id.ToString())}"
+									]
+								});
+
+								historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+								historialNotificacion.HermesIdMensaje = response.IdMensaje;
+								await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
+							}
                         }
                     }
 
