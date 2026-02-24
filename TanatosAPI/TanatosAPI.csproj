@@ -42,9 +42,4 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
-  <ItemGroup>
-    <TrimmerRootAssembly Include="Google.Apis.Auth" />
-    <TrimmerRootAssembly Include="Google.Cloud.RecaptchaEnterprise.V1" />
-  </ItemGroup>
 </Project>
