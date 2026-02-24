@@ -287,8 +287,8 @@ namespace TanatosAPI.Business {
                                     ],
                                     Asunto = asunto.Replace("[TIEMPO_FALTANTE]", tiempoFaltante ?? ""),
                                     Cuerpo = strTemplateCorreo
-                                                .Replace("[NOMBRE_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Nombre ?? templateNorma?.Nombre ?? ""))
-                                                .Replace("[MULTA_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? ""))
+                                                .Replace("[NOMBRE_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado"))
+                                                .Replace("[MULTA_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"))
                                                 .Replace("[TIEMPO_FALTANTE]", WebUtility.HtmlEncode(tiempoFaltante ?? ""))
 												.Replace("[DE_LOS_PROXIMOS]", WebUtility.HtmlEncode(deLosProximos ?? ""))
 												.Replace("[ID_NORMA_SUSCRITA]", WebUtility.HtmlEncode(normaSuscrita.Id.ToString()))
@@ -305,19 +305,19 @@ namespace TanatosAPI.Business {
 								if (tiempoFaltante != null) {
 									nombreTemplate = "notificacion_previa";
 									parametrosTitulo = [
-										tiempoFaltante ?? ""
+										tiempoFaltante
 									];
 									parametrosCuerpo = [
-										normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "",
-										deLosProximos ?? "",
-										normaSuscrita.Multa ?? templateNorma?.Multa ?? ""
+										normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado",
+										deLosProximos!,
+										normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"
 									];
 								} else {
 									nombreTemplate = "norma_vencida";
 									parametrosTitulo = null;
 									parametrosCuerpo = [
-										normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "",
-										normaSuscrita.Multa ?? templateNorma?.Multa ?? ""
+										normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado",
+										normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"
 									];
 								}
 
