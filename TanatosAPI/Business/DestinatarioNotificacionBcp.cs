@@ -9,7 +9,7 @@ namespace TanatosAPI.Business {
 	public class DestinatarioNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntorno, CryptoHelper cryptoHelper, CognitoHelper cognitoHelper, HermesHelper hermesHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, NormaSuscritaDao normaSuscritaDao, NegocioDao negocioDao, HistorialNormaSuscritaBcp historialNormaSuscritaBcp) {
 		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
-		public async Task<DestinatarioNotificacion> Crear(string sub, long idNegocio, long idTipoReceptor, string destino) {
+		public async Task<DestinatarioNotificacion> Crear(string sub, long idNegocio, long idTipoReceptor, string? alias, string destino) {
 			// Se crea un código de validación...
 			string codigoValidacion = cryptoHelper.GenerarToken(12);
 			DestinatarioNotificacion? mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion));
@@ -23,6 +23,7 @@ namespace TanatosAPI.Business {
 				Sub = sub,
 				IdNegocio = idNegocio,
 				IdTipoReceptor = idTipoReceptor,
+				Alias = alias,
 				Destino = destino,
 				CodigoValidacion = cryptoHelper.HashSHA256(codigoValidacion),
 				FechaCaducidadCodigoValidacion = DateTime.UtcNow.AddHours(HORAS_CADUCIDAD_CODIGO_VALIDACION),
@@ -44,7 +45,7 @@ namespace TanatosAPI.Business {
 					strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "ValidacionDestinatario.html"));
 				}
 
-				await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+				SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
 					De = new DireccionCorreo() {
 						Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
 						Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
@@ -62,11 +63,15 @@ namespace TanatosAPI.Business {
 								.Replace("[NOMBRE_NEGOCIO]", WebUtility.HtmlEncode(negocio.Nombre))
 								.Replace("[CODIGO_VALIDACION]", WebUtility.UrlEncode(codigoValidacion)),
 				});
+
+				nuevoDestinatario.HermesIdMensaje = retorno.IdMensaje;
+				await destinatarioNotificacionDao.Actualizar(nuevoDestinatario);
+
 			} else if (nuevoDestinatario.IdTipoReceptor == 2 /* Whatsapp */) {
 				Negocio negocio = (await negocioDao.ObtenerPorSub(sub)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new Exception("ID de negocio no válido");
 				Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
 
-				await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {
+				SalHermesEnviar retorno = await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {
 					De = variableEntorno.Obtener("HERMES_DE_WHATSAPP"),
 					Para = nuevoDestinatario.Destino,
 					NombreTemplate = "validacion_destinatario",
@@ -78,6 +83,9 @@ namespace TanatosAPI.Business {
 						WebUtility.UrlEncode(codigoValidacion)
 					]
 				});
+
+				nuevoDestinatario.HermesIdMensaje = retorno.IdMensaje;
+				await destinatarioNotificacionDao.Actualizar(nuevoDestinatario);
 			}
 
 			return nuevoDestinatario;

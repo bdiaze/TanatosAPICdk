@@ -41,6 +41,7 @@ namespace TanatosAPI.Endpoints {
 							Id = d.Id,
 							IdTipoReceptor = d.IdTipoReceptor,
 							NombreTipoReceptor = receptores.FirstOrDefault(r => r.Id == d.IdTipoReceptor)?.Nombre,
+							Alias = d.Alias,
 							Destino = d.Destino,
 							Validado = d.Validado
 						})
@@ -68,6 +69,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
+					entrada.Alias = entrada.Alias?.Trim();
 					entrada.Destino = entrada.Destino.Trim();
 
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
@@ -115,12 +117,14 @@ namespace TanatosAPI.Endpoints {
 						sub,
 						negocio.Id,
 						entrada.IdTipoReceptor,
+						entrada.Alias,
 						entrada.Destino
 					);
 
 					SalDestinatarioNotificacion retorno = new() {
 						Id = nuevoDestinatario.Id,
 						IdTipoReceptor = nuevoDestinatario.IdTipoReceptor,
+						Alias = nuevoDestinatario.Alias,
 						Destino = nuevoDestinatario.Destino,
 						Validado = nuevoDestinatario.Validado
 					};
