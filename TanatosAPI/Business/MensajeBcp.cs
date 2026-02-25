@@ -31,8 +31,9 @@ namespace TanatosAPI.Business {
 				.Replace("[CORREO_USUARIO]", WebUtility.HtmlEncode(nuevo.Correo))
 				.Replace("[CONTENIDO]", WebUtility.HtmlEncode(nuevo.Contenido));
 
+			List<string> idsMensajes = [];
 			foreach (string destinatario in variableEntorno.Obtener("DESTINATARIOS_NUEVO_MENSAJE").Split(',')) {
-				await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+				SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
 					De = new DireccionCorreo() {
 						Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
 						Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
@@ -51,7 +52,11 @@ namespace TanatosAPI.Business {
 					Asunto = "¡Hemos recibido un mensaje!",
 					Cuerpo = cuerpoCorreo,
 				});
+				idsMensajes.Add(retorno.IdMensaje);
 			}
+
+			nuevo.HermesIdMensaje = string.Join('|', idsMensajes);
+			await mensajeDao.Actualizar(nuevo);
 
 			return nuevo;
 		}

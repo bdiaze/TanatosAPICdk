@@ -42,6 +42,11 @@ namespace TanatosAPI.Entities.Models {
 		public required string Contenido { get; set; }
 
 		[UseColumnAttribute]
+		[Column("hermes_id_mensaje")]
+		[Comment("ID del mensaje en Hermes.")]
+		public string? HermesIdMensaje { get; set; }
+
+		[UseColumnAttribute]
 		[Required]
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
 		[Comment("Fecha en que se creó el mensaje.")]

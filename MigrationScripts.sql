@@ -1431,5 +1431,21 @@ BEGIN
     VALUES ('20260220224806_RenameColumnHistorialNotificacion', '9.0.12');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260225000603_ColumnHermesIdMensajeEnMensaje') THEN
+    ALTER TABLE tanatos.mensaje ADD hermes_id_mensaje text;
+    COMMENT ON COLUMN tanatos.mensaje.hermes_id_mensaje IS 'ID del mensaje en Hermes.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260225000603_ColumnHermesIdMensajeEnMensaje') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260225000603_ColumnHermesIdMensajeEnMensaje', '9.0.12');
+    END IF;
+END $EF$;
 COMMIT;
 
