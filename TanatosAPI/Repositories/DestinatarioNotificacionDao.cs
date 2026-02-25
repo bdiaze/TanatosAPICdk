@@ -71,7 +71,7 @@ namespace TanatosAPI.Repositories {
 				"INSERT INTO TANATOS.DESTINATARIO_NOTIFICACION(SUB, ID_NEGOCIO, ID_TIPO_RECEPTOR, ALIAS, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
 				"VALUES (@SUB, @IDNEGOCIO, @IDTIPORECEPTOR, @ALIAS, @DESTINO, @CODIGOVALIDACION, @FECHACADUCIDADCODIGOVALIDACION, @FECHAVALIDACION, @VALIDADO, @HERMESIDMENSAJE, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
 				"RETURNING ID",
-				new { item.Sub, item.IdNegocio, item.IdTipoReceptor, item.Alias, item.Destino, item.CodigoValidacion, item.FechaCaducidadCodigoValidacion, item.FechaValidacion, item.Validado, item.FechaCreacion, item.FechaEliminacion, item.Vigencia }
+				new { item.Sub, item.IdNegocio, item.IdTipoReceptor, item.Alias, item.Destino, item.CodigoValidacion, item.FechaCaducidadCodigoValidacion, item.FechaValidacion, item.Validado, item.HermesIdMensaje, item.FechaCreacion, item.FechaEliminacion, item.Vigencia }
 			);
 		}
 
