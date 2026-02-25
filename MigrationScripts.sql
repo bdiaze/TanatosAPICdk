@@ -1447,5 +1447,29 @@ BEGIN
     VALUES ('20260225000603_ColumnHermesIdMensajeEnMensaje', '9.0.12');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260225003619_ColumnAliasHermesIdMensajeEnDestinatarioNotificacion') THEN
+    ALTER TABLE tanatos.destinatario_notificacion ADD alias text;
+    COMMENT ON COLUMN tanatos.destinatario_notificacion.alias IS 'Alias del destinatario.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260225003619_ColumnAliasHermesIdMensajeEnDestinatarioNotificacion') THEN
+    ALTER TABLE tanatos.destinatario_notificacion ADD hermes_id_mensaje text;
+    COMMENT ON COLUMN tanatos.destinatario_notificacion.hermes_id_mensaje IS 'ID del mensaje en Hermes.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260225003619_ColumnAliasHermesIdMensajeEnDestinatarioNotificacion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260225003619_ColumnAliasHermesIdMensajeEnDestinatarioNotificacion', '9.0.12');
+    END IF;
+END $EF$;
 COMMIT;
 

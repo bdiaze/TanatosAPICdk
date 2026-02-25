@@ -37,6 +37,11 @@ namespace TanatosAPI.Entities.Models {
         public required long IdTipoReceptor { get; set; }
 
 		[UseColumnAttribute]
+		[Column("alias")]
+		[Comment("Alias del destinatario.")]
+		public string? Alias { get; set; }
+
+		[UseColumnAttribute]
 		[Required]
         [Column("destino")]
         [Comment("Destino de la notificación. Puede ser un correo o un número de Whatsapp.")]
@@ -64,6 +69,11 @@ namespace TanatosAPI.Entities.Models {
         [Column("validado")]
         [Comment("Identifica si el destinatario ya fue validado.")]
         public required bool Validado { get; set; }
+
+		[UseColumnAttribute]
+		[Column("hermes_id_mensaje")]
+		[Comment("ID del mensaje en Hermes.")]
+		public string? HermesIdMensaje { get; set; }
 
 		[UseColumnAttribute]
 		[Required]
