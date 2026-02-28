@@ -692,7 +692,6 @@ namespace Cdk
 									Actions = [
 										"s3:GetObject",
 										"s3:PutObject",
-										"s3:HeadObject",
 										"s3:PutObjectTagging",
 										"s3:GetObjectTagging",
 									],
