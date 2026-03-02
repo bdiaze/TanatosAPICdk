@@ -238,6 +238,7 @@ app.MapNormaSuscritaEndpoints();
 app.MapInscripcionTemplateEndpoints();
 app.MapDocumentoAdjuntoEndpoints();
 app.MapMensajeEndpoints();
+app.MapWhatsappEndpoints();
 
 app.Run();
 

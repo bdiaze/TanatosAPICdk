@@ -15,6 +15,9 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(EntHermesCorreoEnviar))]
 	[JsonSerializable(typeof(EntHermesWhatsappEnviar))]
 	[JsonSerializable(typeof(SalHermesEnviar))]
+	[JsonSerializable(typeof(SalHermesWhatsappMedia))]
+	[JsonSerializable(typeof(List<SalHermesWhatsappConversacion>))]
+	[JsonSerializable(typeof(List<SalHermesWhatsappMensaje>))]
 	[JsonSerializable(typeof(EntKairosIngresarProceso))]
 	[JsonSerializable(typeof(EntKairosParametrosProceso))]
 	[JsonSerializable(typeof(SalKairosIngresarProceso))]
@@ -75,6 +78,7 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(SalNormaSuscritaCompletarNorma))]
 	[JsonSerializable(typeof(SalNegocioInformacionUsuario))]
 	[JsonSerializable(typeof(EntMensajeIngresar))]
+	[JsonSerializable(typeof(EntWhatsappEnviar))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }
