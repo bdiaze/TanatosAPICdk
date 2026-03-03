@@ -8,6 +8,9 @@ namespace TanatosAPI.Entities.Others {
 		[JsonPropertyName("numeroTelefono")]
 		public required string NumeroTelefono { get; set; }
 
+		[JsonPropertyName("idMensaje")]
+		public string? IdMensaje { get; set; }
+
 		[JsonPropertyName("whatsappMessageId")]
 		public required string WhatsappMessageId { get; set; }
 
