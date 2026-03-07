@@ -467,8 +467,8 @@ namespace TanatosAPI.Endpoints {
 
 				try {
 					entrada.Nombre = entrada.Nombre.Trim();
-					entrada.Descripcion = entrada.Descripcion?.Trim();
-					entrada.Multa = entrada.Multa?.Trim();
+					entrada.Descripcion = string.IsNullOrWhiteSpace(entrada.Descripcion) ? null : entrada.Descripcion?.Trim();
+					entrada.Multa = string.IsNullOrWhiteSpace(entrada.Multa) ? null : entrada.Multa?.Trim();
 
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
@@ -703,8 +703,8 @@ namespace TanatosAPI.Endpoints {
 
 				try {
 					entrada.Nombre = entrada.Nombre.Trim();
-					entrada.Descripcion = entrada.Descripcion?.Trim();
-					entrada.Multa = entrada.Multa?.Trim();
+					entrada.Descripcion = string.IsNullOrWhiteSpace(entrada.Descripcion) ? null : entrada.Descripcion?.Trim();
+					entrada.Multa = string.IsNullOrWhiteSpace(entrada.Multa) ? null : entrada.Multa?.Trim();
 
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
