@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TanatosAPI.Entities.Contexts;
@@ -13,9 +14,11 @@ using TanatosAPI.Entities.Contexts;
 namespace TanatosAPI.Migrations
 {
     [DbContext(typeof(TanatosDbContext))]
-    partial class TanatosDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260309201207_TablasPlanSuscripcionPagoEvento")]
+    partial class TablasPlanSuscripcionPagoEvento
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -911,10 +914,15 @@ namespace TanatosAPI.Migrations
                         .HasColumnName("nombre")
                         .HasComment("Nombre del plan.");
 
-                    b.Property<decimal>("Precio")
+                    b.Property<decimal?>("PrecioAnual")
                         .HasColumnType("numeric")
-                        .HasColumnName("precio")
-                        .HasComment("Precio del plan.");
+                        .HasColumnName("precio_anual")
+                        .HasComment("Precio anual del plan.");
+
+                    b.Property<decimal>("PrecioMensual")
+                        .HasColumnType("numeric")
+                        .HasColumnName("precio_mensual")
+                        .HasComment("Precio mensual del plan.");
 
                     b.Property<bool>("Vigencia")
                         .HasColumnType("boolean")
