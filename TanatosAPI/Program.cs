@@ -122,6 +122,7 @@ builder.Services.AddSingleton<HistorialNormaSuscritaDao>();
 builder.Services.AddSingleton<HistorialNotificacionDao>();
 builder.Services.AddSingleton<DocumentoAdjuntoDao>();
 builder.Services.AddSingleton<MensajeDao>();
+builder.Services.AddSingleton<PlanDao>();
 #endregion
 
 #region Singleton BCP
@@ -239,6 +240,7 @@ app.MapInscripcionTemplateEndpoints();
 app.MapDocumentoAdjuntoEndpoints();
 app.MapMensajeEndpoints();
 app.MapWhatsappEndpoints();
+app.MapPlanEndpoints();
 
 app.Run();
 
