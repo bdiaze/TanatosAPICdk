@@ -125,6 +125,8 @@ builder.Services.AddSingleton<DocumentoAdjuntoDao>();
 builder.Services.AddSingleton<MensajeDao>();
 builder.Services.AddSingleton<PlanDao>();
 builder.Services.AddSingleton<SuscripcionDao>();
+builder.Services.AddSingleton<EventoPagoDao>();
+builder.Services.AddSingleton<PagoDao>();
 #endregion
 
 #region Singleton BCP
