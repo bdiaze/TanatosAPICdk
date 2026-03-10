@@ -1676,5 +1676,72 @@ BEGIN
     VALUES ('20260309203258_ColumnPrecioPlan', '9.0.12');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260310201224_ColumnFechaInicioExpiracionSuscripcion') THEN
+    ALTER TABLE tanatos.suscripcion ALTER COLUMN fecha_inicio DROP NOT NULL;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260310201224_ColumnFechaInicioExpiracionSuscripcion') THEN
+    ALTER TABLE tanatos.suscripcion ALTER COLUMN fecha_expiracion DROP NOT NULL;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260310201224_ColumnFechaInicioExpiracionSuscripcion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260310201224_ColumnFechaInicioExpiracionSuscripcion', '9.0.12');
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260310213240_ColumnFlowPago') THEN
+    DROP INDEX tanatos."IX_pago_flow_payment_id";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260310213240_ColumnFlowPago') THEN
+    ALTER TABLE tanatos.pago DROP COLUMN flow_payment_id;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260310213240_ColumnFlowPago') THEN
+    ALTER TABLE tanatos.pago ADD flow_period integer NOT NULL DEFAULT 0;
+    COMMENT ON COLUMN tanatos.pago.flow_period IS 'Periodo correspondiente al pago en la plataforma Flow.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260310213240_ColumnFlowPago') THEN
+    ALTER TABLE tanatos.pago ADD flow_subscription_id bigint NOT NULL DEFAULT 0;
+    COMMENT ON COLUMN tanatos.pago.flow_subscription_id IS 'ID de la suscripción en la plataforma Flow.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260310213240_ColumnFlowPago') THEN
+    CREATE UNIQUE INDEX "IX_pago_flow_subscription_id_flow_period" ON tanatos.pago (flow_subscription_id, flow_period);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260310213240_ColumnFlowPago') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260310213240_ColumnFlowPago', '9.0.12');
+    END IF;
+END $EF$;
 COMMIT;
 

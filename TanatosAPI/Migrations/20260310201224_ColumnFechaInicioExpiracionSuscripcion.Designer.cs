@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TanatosAPI.Entities.Contexts;
@@ -13,9 +14,11 @@ using TanatosAPI.Entities.Contexts;
 namespace TanatosAPI.Migrations
 {
     [DbContext(typeof(TanatosDbContext))]
-    partial class TanatosDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260310201224_ColumnFechaInicioExpiracionSuscripcion")]
+    partial class ColumnFechaInicioExpiracionSuscripcion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -841,15 +844,10 @@ namespace TanatosAPI.Migrations
                         .HasColumnName("fecha_pago")
                         .HasComment("Fecha en que se efectuó el pago.");
 
-                    b.Property<int>("FlowPeriod")
-                        .HasColumnType("integer")
-                        .HasColumnName("flow_period")
-                        .HasComment("Periodo correspondiente al pago en la plataforma Flow.");
-
-                    b.Property<long>("FlowSubscriptionId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("flow_subscription_id")
-                        .HasComment("ID de la suscripción en la plataforma Flow.");
+                    b.Property<string>("FlowPaymentId")
+                        .HasColumnType("text")
+                        .HasColumnName("flow_payment_id")
+                        .HasComment("ID del pago en la plataforma Flow.");
 
                     b.Property<long>("IdSuscripcion")
                         .HasColumnType("bigint")
@@ -880,12 +878,12 @@ namespace TanatosAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FlowPaymentId")
+                        .IsUnique();
+
                     b.HasIndex("IdSuscripcion");
 
                     b.HasIndex("Sub");
-
-                    b.HasIndex("FlowSubscriptionId", "FlowPeriod")
-                        .IsUnique();
 
                     b.ToTable("pago", "tanatos", t =>
                         {

@@ -32,7 +32,7 @@ namespace TanatosAPI.Entities.Models {
 		[Required]
 		[Column("payload", TypeName = "jsonb")]
 		[Comment("Payload del evento recepcionado desde el proveedor.")]
-		public required JsonDocument Payload { get; set; }
+		public required string Payload { get; set; }
 
 		[UseColumnAttribute]
 		[Required]

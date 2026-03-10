@@ -31,16 +31,14 @@ namespace TanatosAPI.Entities.Models {
 		public required long IdPlan { get; set; }
 
 		[UseColumnAttribute]
-		[Required]
 		[Column("fecha_inicio", TypeName = "timestamp with time zone")]
 		[Comment("Fecha en que se inició la suscripción.")]
-		public required DateTime FechaInicio { get; set; }
+		public DateTime? FechaInicio { get; set; }
 
 		[UseColumnAttribute]
-		[Required]
 		[Column("fecha_expiracion", TypeName = "timestamp with time zone")]
 		[Comment("Fecha en que expira la suscripción.")]
-		public required DateTime FechaExpiracion { get; set; }
+		public DateTime? FechaExpiracion { get; set; }
 
 		[UseColumnAttribute]
 		[Column("fecha_cancelacion", TypeName = "timestamp with time zone")]
