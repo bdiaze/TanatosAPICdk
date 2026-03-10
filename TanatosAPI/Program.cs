@@ -97,6 +97,7 @@ builder.Services.AddSingleton<CryptoHelper>();
 builder.Services.AddSingleton<S3Helper>();
 builder.Services.AddSingleton<DocumentoAdjuntoHelper>();
 builder.Services.AddSingleton<GoogleRecaptchaHelper>();
+builder.Services.AddHttpClient<FlowHelper>();
 #endregion
 
 #region Singleton DAO
@@ -123,6 +124,7 @@ builder.Services.AddSingleton<HistorialNotificacionDao>();
 builder.Services.AddSingleton<DocumentoAdjuntoDao>();
 builder.Services.AddSingleton<MensajeDao>();
 builder.Services.AddSingleton<PlanDao>();
+builder.Services.AddSingleton<SuscripcionDao>();
 #endregion
 
 #region Singleton BCP
@@ -199,6 +201,8 @@ builder.Services.AddAuthorizationBuilder()
 	.AddPolicy("Negocios.Write.Self", policy => policy.RequireClaim("scope", "api/negocios.write.self"))
 	.AddPolicy("Vencimientos.Read.Self", policy => policy.RequireClaim("scope", "api/vencimientos.read.self"))
 	.AddPolicy("Vencimientos.Write.Self", policy => policy.RequireClaim("scope", "api/vencimientos.write.self"))
+	.AddPolicy("Suscripciones.Read.Self", policy => policy.RequireClaim("scope", "api/suscripciones.read.self"))
+	.AddPolicy("Suscripciones.Write.Self", policy => policy.RequireClaim("scope", "api/suscripciones.write.self"))
 	.AddPolicy("Templates.Read.Public", policy => policy.RequireClaim("scope", "api/templates.read.public"))
 	.AddPolicy("Sistema.Read.Public", policy => policy.RequireClaim("scope", "api/sistema.read.public"))
 	.AddPolicy("Obligaciones.Read.All", policy => policy.RequireClaim("scope", "api/obligaciones.read.all"))
@@ -241,6 +245,7 @@ app.MapDocumentoAdjuntoEndpoints();
 app.MapMensajeEndpoints();
 app.MapWhatsappEndpoints();
 app.MapPlanEndpoints();
+app.MapSuscripcionEndpoints();
 
 app.Run();
 
