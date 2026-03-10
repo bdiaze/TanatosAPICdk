@@ -82,7 +82,12 @@ namespace Cdk
 			string googleRecaptchaCredential = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_CREDENTIAL") ?? throw new ArgumentNullException("GOOGLE_RECAPTCHA_CREDENTIAL");
 			string googleRecaptchaProjectId = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_PROJECT_ID") ?? throw new ArgumentNullException("GOOGLE_RECAPTCHA_PROJECT_ID");
 			string googleRecaptchaSiteKey = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_SITE_KEY") ?? throw new ArgumentNullException("GOOGLE_RECAPTCHA_SITE_KEY");
-			string destinatariosNuevoMensaje = System.Environment.GetEnvironmentVariable("DESTINATARIOS_NUEVO_MENSAJE") ?? throw new ArgumentNullException("DESTINATARIOS_NUEVO_MENSAJE");	
+			string destinatariosNuevoMensaje = System.Environment.GetEnvironmentVariable("DESTINATARIOS_NUEVO_MENSAJE") ?? throw new ArgumentNullException("DESTINATARIOS_NUEVO_MENSAJE");
+			string flowApiKey = System.Environment.GetEnvironmentVariable("FLOW_API_KEY") ?? throw new ArgumentNullException("FLOW_API_KEY");
+			string flowSecretKey = System.Environment.GetEnvironmentVariable("FLOW_SECRET_KEY") ?? throw new ArgumentNullException("FLOW_SECRET_KEY");
+			string flowApiUrl = System.Environment.GetEnvironmentVariable("FLOW_API_URL") ?? throw new ArgumentNullException("FLOW_API_URL");
+			string flowUrlConfirmacion = System.Environment.GetEnvironmentVariable("FLOW_URL_CONFIRMACION") ?? throw new ArgumentNullException("FLOW_URL_CONFIRMACION");
+			string flowUrlRetorno = System.Environment.GetEnvironmentVariable("FLOW_URL_RETORNO") ?? throw new ArgumentNullException("FLOW_URL_RETORNO");
 
 			// Variables de entorno para la lambda de ejecución inicial...
 			string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new ArgumentNullException("APP_SCHEMA_NAME");
@@ -202,10 +207,19 @@ namespace Cdk
                 ScopeName = "vencimientos.write.self",
                 ScopeDescription = "Acceso de escritura a los vencimientos del usuario"
             });
-            #endregion
 
-            #region Public Scopes
-            ResourceServerScope scopeTemplatesReadPublic = new(new ResourceServerScopeProps {
+			ResourceServerScope scopeSuscripcionesReadSelf = new(new ResourceServerScopeProps {
+				ScopeName = "suscripciones.read.self",
+				ScopeDescription = "Acceso de lectura a las suscripciones del usuario"
+			});
+			ResourceServerScope scopeSuscripcionesWriteSelf = new(new ResourceServerScopeProps {
+				ScopeName = "suscripciones.write.self",
+				ScopeDescription = "Acceso de escritura a las suscripciones del usuario"
+			});
+			#endregion
+
+			#region Public Scopes
+			ResourceServerScope scopeTemplatesReadPublic = new(new ResourceServerScopeProps {
 				ScopeName = "templates.read.public",
 				ScopeDescription = "Acceso de lectura a los templates públicos"
 			});
@@ -214,10 +228,10 @@ namespace Cdk
 				ScopeName = "sistema.read.public",
 				ScopeDescription = "Acceso de lectura a los parametros públicos del sistema"
             });
-            #endregion
+			#endregion
 
-            #region All Scopes
-            ResourceServerScope scopeObligacionesReadAll = new(new ResourceServerScopeProps {
+			#region All Scopes
+			ResourceServerScope scopeObligacionesReadAll = new(new ResourceServerScopeProps {
                 ScopeName = "obligaciones.read.all",
                 ScopeDescription = "Acceso de lectura a todas las obligaciones"
             });
@@ -261,10 +275,19 @@ namespace Cdk
                 ScopeName = "sistema.write.all",
                 ScopeDescription = "Acceso de escritura a todos los parametros del sistema"
             });
-            #endregion
+
+			ResourceServerScope scopeSuscripcionesReadAll = new(new ResourceServerScopeProps {
+				ScopeName = "suscripciones.read.all",
+				ScopeDescription = "Acceso de lectura a todas las suscripciones"
+			});
+			ResourceServerScope scopeSuscripcionesWriteAll = new(new ResourceServerScopeProps {
+				ScopeName = "suscripciones.write.all",
+				ScopeDescription = "Acceso de escritura a todas las suscripciones"
+			});
+			#endregion
 
 
-            UserPoolResourceServer resourceServer =  userPool.AddResourceServer($"{appName}ResourceServer", new UserPoolResourceServerOptions { 
+			UserPoolResourceServer resourceServer =  userPool.AddResourceServer($"{appName}ResourceServer", new UserPoolResourceServerOptions { 
 				Identifier = "api",
 				Scopes = [
 					scopeObligacionesReadSelf,
@@ -273,6 +296,8 @@ namespace Cdk
                     scopeNegociosWriteSelf,
                     scopeVencimientosReadSelf,
                     scopeVencimientosWriteSelf,
+					scopeSuscripcionesReadSelf,
+					scopeSuscripcionesWriteSelf,
                     scopeTemplatesReadPublic,
                     scopeSistemaReadPublic,
                     scopeObligacionesReadAll,
@@ -285,6 +310,8 @@ namespace Cdk
                     scopeTemplatesWriteAll,
                     scopeSistemaReadAll,
                     scopeSistemaWriteAll,
+					scopeSuscripcionesReadAll,
+					scopeSuscripcionesWriteAll,
                 ]
 			});
 
@@ -311,6 +338,8 @@ namespace Cdk
 						OAuthScope.ResourceServer(resourceServer, scopeNegociosWriteSelf),
 						OAuthScope.ResourceServer(resourceServer, scopeVencimientosReadSelf),
 						OAuthScope.ResourceServer(resourceServer, scopeVencimientosWriteSelf),
+						OAuthScope.ResourceServer(resourceServer, scopeSuscripcionesReadSelf),
+						OAuthScope.ResourceServer(resourceServer, scopeSuscripcionesWriteSelf),
 						OAuthScope.ResourceServer(resourceServer, scopeTemplatesReadPublic),
 						OAuthScope.ResourceServer(resourceServer, scopeSistemaReadPublic),
 					]
@@ -573,8 +602,10 @@ namespace Cdk
                     { "CognitoBaseUrl", SecretValue.UnsafePlainText(domain.BaseUrl()) },
                     { "NotificacionesUserPoolClientId", SecretValue.UnsafePlainText(notificacionesUserPoolClient.UserPoolClientId) },
                     { "NotificacionesUserPoolClientSecret", notificacionesUserPoolClient.UserPoolClientSecret },
-					{ "GoogleRecaptchaCredential", SecretValue.UnsafePlainText(googleRecaptchaCredential) }
-                },
+					{ "GoogleRecaptchaCredential", SecretValue.UnsafePlainText(googleRecaptchaCredential) },
+					{ "FlowApiKey", SecretValue.UnsafePlainText(flowApiKey) },
+					{ "FlowSecretKey", SecretValue.UnsafePlainText(flowSecretKey) },
+				},
             });
 
 			#endregion
@@ -739,7 +770,10 @@ namespace Cdk
 					{ "SECRET_ARN_APP", secret.SecretArn }, 
 					{ "GOOGLE_RECAPTCHA_PROJECT_ID", googleRecaptchaProjectId },
 					{ "GOOGLE_RECAPTCHA_SITE_KEY", googleRecaptchaSiteKey },
-					{ "DESTINATARIOS_NUEVO_MENSAJE", destinatariosNuevoMensaje }
+					{ "DESTINATARIOS_NUEVO_MENSAJE", destinatariosNuevoMensaje },
+					{ "FLOW_API_URL", flowApiUrl },
+					{ "FLOW_URL_CONFIRMACION", flowUrlConfirmacion },
+					{ "FLOW_URL_RETORNO", flowUrlRetorno },
 				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {
