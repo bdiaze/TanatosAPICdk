@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using TanatosAPI.Entities.Others;
@@ -9,7 +10,7 @@ namespace TanatosAPI.Helpers {
 		private readonly string _flowApiKey = JsonSerializer.Deserialize(secretManagerHelper.ObtenerSecreto("SECRET_ARN_APP").Result, AppJsonSerializerContext.Default.DictionaryStringString)!["FlowApiKey"];
 		private readonly string _flowSecretKey = JsonSerializer.Deserialize(secretManagerHelper.ObtenerSecreto("SECRET_ARN_APP").Result, AppJsonSerializerContext.Default.DictionaryStringString)!["FlowSecretKey"];
 
-		public async Task<(string token, string url)> SuscriptionCreate(string customerEmail, string planId, string externalId) {
+		public async Task<SalFlowSubscriptionCreate> SuscriptionCreate(string customerEmail, string planId, string externalId) {
 			Dictionary<string, string> parametros = new() {
 				["apiKey"] = _flowApiKey,
 				["planId"] = planId,
@@ -27,8 +28,24 @@ namespace TanatosAPI.Helpers {
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
-			SalFlowSubscriptionCreate salida = JsonSerializer.Deserialize(content, AppJsonSerializerContext.Default.SalFlowSubscriptionCreate)!;
-			return (salida.Token, salida.Url);
+			return JsonSerializer.Deserialize(content, AppJsonSerializerContext.Default.SalFlowSubscriptionCreate)!;
+		}
+
+		public async Task<SalFlowSubscriptionStatus> SubscriptionStatus(string token) {
+			Dictionary<string, string> parametros = new() {
+				["apiKey"] = _flowApiKey,
+				["token"] = token,
+			};
+			parametros["s"] = Firmar(parametros);
+			string query = await new FormUrlEncodedContent(parametros).ReadAsStringAsync();
+
+			using HttpResponseMessage response = await httpClient.GetAsync(_flowBaseUrl + $"subscription/getStatus?{query}");
+			if (!response.IsSuccessStatusCode) {
+				throw new Exception($"Ocurrió un error al obtener estado de suscripción en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+			}
+
+			string content = await response.Content.ReadAsStringAsync();
+			return JsonSerializer.Deserialize(content, AppJsonSerializerContext.Default.SalFlowSubscriptionStatus)!;
 		}
 
 		private string Firmar(Dictionary<string, string> data) {
