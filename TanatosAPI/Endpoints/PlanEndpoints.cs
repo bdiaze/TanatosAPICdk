@@ -30,7 +30,8 @@ namespace TanatosAPI.Endpoints {
 						Id = p.Id,
 						Nombre = p.Nombre,
 						Precio = p.Precio,
-						DuracionMeses = p.DuracionMeses
+						DuracionMeses = p.DuracionMeses,
+						SuscripcionUnica = p.SuscripcionUnica,
 					})];
 
 					LambdaLogger.Log(
@@ -105,6 +106,7 @@ namespace TanatosAPI.Endpoints {
 							Nombre = entrada.Nombre,
 							Precio = entrada.Precio,
 							DuracionMeses = entrada.DuracionMeses,
+							SuscripcionUnica = entrada.SuscripcionUnica,
 							Vigencia = true
 						};
 						await planDao.Insertar(nuevo, transaction);
@@ -168,6 +170,7 @@ namespace TanatosAPI.Endpoints {
 						existente.Nombre = entrada.Nombre;
 						existente.Precio = entrada.Precio;
 						existente.DuracionMeses = entrada.DuracionMeses;
+						existente.SuscripcionUnica = entrada.SuscripcionUnica;
 						existente.Vigencia = entrada.Vigencia;
 						await planDao.Actualizar(existente, transaction);
 
