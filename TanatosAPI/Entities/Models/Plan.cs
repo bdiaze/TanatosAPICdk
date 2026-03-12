@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -33,6 +34,13 @@ namespace TanatosAPI.Entities.Models {
 		[Column("duracion_meses")]
 		[Comment("Duración del plan en meses.")]
 		public required int DuracionMeses { get; set; }
+
+		[UseColumnAttribute]
+		[Required]
+		[Column("suscripcion_unica")]
+		[Comment("Indicador de si el plan solo permite una suscripción única por usuario.")]
+		[DefaultValue(false)]
+		public required bool SuscripcionUnica { get; set; }
 
 		[UseColumnAttribute]
 		[Column("flow_plan_id")]

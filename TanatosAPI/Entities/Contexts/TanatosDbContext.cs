@@ -253,5 +253,7 @@ namespace TanatosAPI.Entities.Contexts {
         public DbSet<Pago> Pagos { get; set; }
 
         public DbSet<EventoPago> EventosPagos { get; set; }
+
+        public DbSet<Usuario> Usuarios { get; set; }
 	}
 }

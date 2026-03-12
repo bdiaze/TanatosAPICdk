@@ -1743,5 +1743,66 @@ BEGIN
     VALUES ('20260310213240_ColumnFlowPago', '9.0.12');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260312173149_TablaUsuario') THEN
+    CREATE TABLE tanatos.usuario (
+        sub text NOT NULL,
+        flow_customer_id text,
+        CONSTRAINT "PK_usuario" PRIMARY KEY (sub)
+    );
+    COMMENT ON TABLE tanatos.usuario IS 'Tabla que contiene la información del usuario.';
+    COMMENT ON COLUMN tanatos.usuario.sub IS 'Identificador del usuario.';
+    COMMENT ON COLUMN tanatos.usuario.flow_customer_id IS 'ID del cliente en Flow.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260312173149_TablaUsuario') THEN
+    CREATE UNIQUE INDEX "IX_usuario_flow_customer_id" ON tanatos.usuario (flow_customer_id);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260312173149_TablaUsuario') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260312173149_TablaUsuario', '9.0.12');
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260312175633_ColumnSuscripcionUnicaPlan') THEN
+    ALTER TABLE tanatos.plan ADD suscripcion_unica boolean NOT NULL DEFAULT FALSE;
+    COMMENT ON COLUMN tanatos.plan.suscripcion_unica IS 'Indicador de si el plan solo permite una suscripción única por usuario.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260312175633_ColumnSuscripcionUnicaPlan') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260312175633_ColumnSuscripcionUnicaPlan', '9.0.12');
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260312190732_ColumnCorreoElectronicoUsuario') THEN
+    ALTER TABLE tanatos.usuario ADD correo_electronico text NOT NULL DEFAULT '';
+    COMMENT ON COLUMN tanatos.usuario.correo_electronico IS 'Correo electrónico del cliente.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260312190732_ColumnCorreoElectronicoUsuario') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260312190732_ColumnCorreoElectronicoUsuario', '9.0.12');
+    END IF;
+END $EF$;
 COMMIT;
 

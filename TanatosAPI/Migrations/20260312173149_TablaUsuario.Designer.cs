@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TanatosAPI.Entities.Contexts;
@@ -13,9 +14,11 @@ using TanatosAPI.Entities.Contexts;
 namespace TanatosAPI.Migrations
 {
     [DbContext(typeof(TanatosDbContext))]
-    partial class TanatosDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260312173149_TablaUsuario")]
+    partial class TablaUsuario
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -921,11 +924,6 @@ namespace TanatosAPI.Migrations
                         .HasColumnName("precio")
                         .HasComment("Precio del plan.");
 
-                    b.Property<bool>("SuscripcionUnica")
-                        .HasColumnType("boolean")
-                        .HasColumnName("suscripcion_unica")
-                        .HasComment("Indicador de si el plan solo permite una suscripción única por usuario.");
-
                     b.Property<bool>("Vigencia")
                         .HasColumnType("boolean")
                         .HasColumnName("vigencia")
@@ -1417,12 +1415,6 @@ namespace TanatosAPI.Migrations
                         .HasColumnType("text")
                         .HasColumnName("sub")
                         .HasComment("Identificador del usuario.");
-
-                    b.Property<string>("CorreoElectronico")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("correo_electronico")
-                        .HasComment("Correo electrónico del cliente.");
 
                     b.Property<string>("FlowCustomerId")
                         .HasColumnType("text")
