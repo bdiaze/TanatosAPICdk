@@ -27,7 +27,8 @@ namespace TanatosAPI.Entities.Others {
 		public string? ExternalId { get; set; }
 
 		[JsonPropertyName("status")]
-		public string? Status { get; set; }
+		/* 0: Eliminado - 1: Activo */
+		public short? Status { get; set; }
 
 		[JsonPropertyName("registerDate")]
 		public string? RegisterDate { get; set; }

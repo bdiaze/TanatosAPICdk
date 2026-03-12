@@ -14,7 +14,7 @@ namespace TanatosAPI.Entities.Others {
 
 		[JsonPropertyName("status")]
 		/* 1: Pendiente de pago - 2: Pagada - 3: Rechazada - 4: Anulada */
-		public short? Status { get; set; }
+		public string? Status { get; set; }
 
 		[JsonPropertyName("subject")]
 		public string? Subject { get; set; }

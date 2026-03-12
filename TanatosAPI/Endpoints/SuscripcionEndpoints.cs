@@ -160,6 +160,9 @@ namespace TanatosAPI.Endpoints {
 					using StreamReader reader = new(request.Body);
 					string cuerpo = await reader.ReadToEndAsync();
 
+					LambdaLogger.Log($"flow-webhook cuerpo: {cuerpo}");
+					return Results.Ok();
+
 					// Se registra evento recepcionado en webhook...
 					EventoPago eventoPago = new() { 
 						Id = 0,
@@ -195,7 +198,7 @@ namespace TanatosAPI.Endpoints {
 
 									// Se crea suscripción en Flow...
 									SalFlowSubscriptionCreate salFlowSubscriptionCreate = await flowHelper.SuscriptionCreate(plan.FlowPlanId!, usuario.CorreoElectronico);
-									if (salFlowSubscriptionCreate.Status == 1 /* Activa */) {
+									if (salFlowSubscriptionCreate.Status == "1" /* Activa */) {
 										suscripcionActivar.FechaInicio = DateTime.UtcNow;
 										suscripcionActivar.FechaExpiracion = suscripcionActivar.FechaInicio.Value.AddMonths(plan.DuracionMeses);
 										suscripcionActivar.Estado = 1; // Activa

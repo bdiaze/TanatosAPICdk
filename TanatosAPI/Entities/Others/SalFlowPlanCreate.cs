@@ -43,7 +43,7 @@ namespace TanatosAPI.Entities.Others {
 		public short? CurrencyConvertOption { get; set; }
 
 		[JsonPropertyName("status")]
-		public short? Status { get; set; }
+		public string? Status { get; set; }
 
 		[JsonPropertyName("public")]
 		public short? Public { get; set; } 
