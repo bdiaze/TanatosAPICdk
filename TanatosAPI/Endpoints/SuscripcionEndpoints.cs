@@ -1,5 +1,7 @@
 ﻿using Amazon.Lambda.Core;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Primitives;
 using Npgsql;
 using System.Data.SqlTypes;
 using System.Diagnostics;
@@ -159,22 +161,22 @@ namespace TanatosAPI.Endpoints {
 				try {
 					using StreamReader reader = new(request.Body);
 					string cuerpo = await reader.ReadToEndAsync();
-
-					LambdaLogger.Log($"flow-webhook cuerpo: {cuerpo}");
-					return Results.Ok();
+					Dictionary<string, string> dictCuerpo = QueryHelpers.ParseQuery(cuerpo).ToDictionary(c => c.Key, c => c.Value.ToString());
 
 					// Se registra evento recepcionado en webhook...
 					EventoPago eventoPago = new() { 
 						Id = 0,
 						Proveedor = "Flow",
 						Evento = $"{tipo}Webhook",
-						Payload = cuerpo,
+						Payload = JsonSerializer.Serialize(dictCuerpo, AppJsonSerializerContext.Default.DictionaryStringString),
 						Procesado = false,
 						FechaCreacion = DateTime.UtcNow,
 						FechaEliminacion = null,
 						Vigencia = true,
 					};
 					eventoPago.Id = await eventoPagoDao.Insertar(eventoPago);
+
+					return Results.Ok();
 
 					EntSuscripcionWebhook entrada = JsonSerializer.Deserialize(cuerpo, AppJsonSerializerContext.Default.EntSuscripcionWebhook)!;
 
