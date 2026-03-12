@@ -1,7 +1,10 @@
 ﻿using Amazon.Lambda.Core;
+using Microsoft.IdentityModel.Logging;
+using Npgsql;
 using System.Diagnostics;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
+using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -78,10 +81,12 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (Plan entrada, IHostEnvironment environment, PlanDao planDao) => {
+			routes.MapPost("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, VariableEntornoHelper variableEntorno, DatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
+					entrada.Nombre = entrada.Nombre.Trim();
+
 					Plan? existente = (await planDao.ObtenerPorVigencia(null)).FirstOrDefault(p => p.Id == entrada.Id);
 
 					if (existente != null) {
@@ -92,8 +97,36 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"Ya existe un plan con ID {entrada.Id}.");
 					}
 
-					await planDao.Insertar(entrada);
-					existente = entrada;
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+					try {
+						Plan nuevo = new() {
+							Id = entrada.Id,
+							Nombre = entrada.Nombre,
+							Precio = entrada.Precio,
+							DuracionMeses = entrada.DuracionMeses,
+							Vigencia = true
+						};
+						await planDao.Insertar(nuevo, transaction);
+
+						if (entrada.Precio > 0) {
+							SalFlowPlanCreate salFlowPlanCreate = await flowHelper.PlanCreate(
+								$"{variableEntorno.Obtener("APP_NAME")}-{entrada.Id}-{Guid.NewGuid():N}",
+								entrada.Nombre,
+								entrada.Precio,
+								entrada.DuracionMeses
+							);
+							nuevo.FlowPlanId = salFlowPlanCreate.PlanId;
+							await planDao.Actualizar(nuevo, transaction);
+						}
+
+						existente = nuevo;
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
 
 					LambdaLogger.Log(
 						$"[POST] - [Plan] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
@@ -113,10 +146,12 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (Plan entrada, IHostEnvironment environment, PlanDao planDao) => {
+			routes.MapPut("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, VariableEntornoHelper variableEntorno, DatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
+					entrada.Nombre = entrada.Nombre;
+
 					Plan? existente = (await planDao.ObtenerPorVigencia(null)).FirstOrDefault(p => p.Id == entrada.Id);
 
 					if (existente == null) {
@@ -127,8 +162,49 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"No existe el plan con ID {entrada.Id}.");
 					}
 
-					await planDao.Actualizar(entrada);
-					existente = entrada;
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+					try {
+						existente.Nombre = entrada.Nombre;
+						existente.Precio = entrada.Precio;
+						existente.DuracionMeses = entrada.DuracionMeses;
+						existente.Vigencia = entrada.Vigencia;
+						await planDao.Actualizar(existente, transaction);
+
+						if (existente.FlowPlanId != null) {
+							if (existente.Precio > 0) {
+								// Se modifica plan de flow...
+								SalFlowPlanEdit salFlowPlanEdit = await flowHelper.PlanEdit(
+									existente.FlowPlanId,
+									existente.Nombre,
+									existente.Precio,
+									existente.DuracionMeses
+								);
+							} else {
+								// Se elimina plan de flow, y se quita de tabla de Plan...
+								SalFlowPlanDelete salFlowPlanDelete = await flowHelper.PlanDelete(existente.FlowPlanId);
+								existente.FlowPlanId = null;
+								await planDao.Actualizar(existente, transaction);
+							}
+						} else {
+							if (existente.Precio > 0) {
+								// Se crea plan en flow...
+								SalFlowPlanCreate salFlowPlanCreate = await flowHelper.PlanCreate(
+									$"{variableEntorno.Obtener("APP_NAME")}-{entrada.Id}-{Guid.NewGuid():N}",
+									existente.Nombre,
+									existente.Precio,
+									existente.DuracionMeses
+								);
+								existente.FlowPlanId = salFlowPlanCreate.PlanId;
+								await planDao.Actualizar(existente, transaction);
+							}
+						}
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
 
 					LambdaLogger.Log(
 						$"[PUT] - [Plan] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
@@ -148,7 +224,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, PlanDao planDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -162,7 +238,20 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"No existe el plan con ID {id}.");
 					}
 
-					await planDao.Eliminar(id);
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+					try {
+						await planDao.Eliminar(id, transaction);
+
+						if (existente.FlowPlanId != null) {
+							SalFlowPlanDelete salFlowPlanDelete = await flowHelper.PlanDelete(existente.FlowPlanId);
+						}
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
 
 					LambdaLogger.Log(
 						$"[DELETE] - [Plan] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +

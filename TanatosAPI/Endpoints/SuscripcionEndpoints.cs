@@ -96,8 +96,8 @@ namespace TanatosAPI.Endpoints {
 						if (nuevo.Estado == 4 /* Pago Pendiente */ && planExistente.FlowPlanId != null) {
 							// Si es un plan Flow, se crea la suscripción en Flow...
 							Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
-							SalFlowSubscriptionCreate salida = await flowHelper.SuscriptionCreate(atributosUsuario["email"], planExistente.FlowPlanId, nuevo.Id.ToString());
-							urlRedirect = $"{salida.Url}?token={salida.Token}";
+							// SalFlowUrlToken salida = await flowHelper.SuscriptionCreate(atributosUsuario["email"], planExistente.FlowPlanId, nuevo.Id.ToString());
+							// urlRedirect = $"{salida.Url}?token={salida.Token}";
 						}
 
 						await transaction.CommitAsync();
@@ -126,7 +126,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapWebhookEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/flow-webhook", async (HttpRequest request, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, EventoPagoDao eventoPagoDao, SuscripcionDao suscripcionDao, PlanDao planDao, PagoDao pagoDao, FlowHelper flowHelper) => {
+			routes.MapPost("/flow-webhook/{tipo}", async (string tipo, HttpRequest request, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, EventoPagoDao eventoPagoDao, SuscripcionDao suscripcionDao, PlanDao planDao, PagoDao pagoDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -137,7 +137,7 @@ namespace TanatosAPI.Endpoints {
 					EventoPago eventoPago = new() { 
 						Id = 0,
 						Proveedor = "Flow",
-						Evento = "Subscription Webhook",
+						Evento = $"{tipo}Webhook",
 						Payload = cuerpo,
 						Procesado = false,
 						FechaCreacion = DateTime.UtcNow,
@@ -145,11 +145,12 @@ namespace TanatosAPI.Endpoints {
 						Vigencia = true,
 					};
 					eventoPago.Id = await eventoPagoDao.Insertar(eventoPago);
-
+					
+					/*
 					EntSuscripcionWebhook entrada = JsonSerializer.Deserialize(cuerpo, AppJsonSerializerContext.Default.EntSuscripcionWebhook)!;
 
 					// Se obtiene estado de la suscripción de Flow...
-					SalFlowSubscriptionStatus salida = await flowHelper.SubscriptionStatus(entrada.Token);
+					SalFlowSubscriptionGet salida = await flowHelper.SubscriptionGet(entrada.Token);
 
 					// Se valida que exista una suscripción para el token recepcionado...
 					Suscripcion? existente = await suscripcionDao.Obtener(long.Parse(salida.ExternalId));
@@ -185,7 +186,7 @@ namespace TanatosAPI.Endpoints {
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 					try {
 						// Si llega activa, se procesa el pago...
-						if (salida.Status == 1 /* Activa */) {
+						if (salida.Status == 1) {
 							existente.Estado = 1;
 							existente.FechaInicio ??= DateTime.UtcNow;
 							if (existente.FechaExpiracion == null) {
@@ -216,8 +217,8 @@ namespace TanatosAPI.Endpoints {
 							nuevoPago.Id = await pagoDao.Insertar(nuevoPago, transaction);
 
 						// Si llega cancelada, se cancela la suscripción...
-						} else if (salida.Status == 2 /* Cancelada */) {
-							if (existente.Estado != 2 /* Cancelada */) {
+						} else if (salida.Status == 2) {
+							if (existente.Estado != 2) {
 								existente.Estado = 2; // Cancelada
 								existente.FechaCancelacion = DateTime.UtcNow;
 								await suscripcionDao.Actualizar(existente, transaction);
@@ -229,6 +230,7 @@ namespace TanatosAPI.Endpoints {
 						await transaction.RollbackAsync();
 						throw;
 					}
+					*/
 
 					eventoPago.Procesado = true;
 					await eventoPagoDao.Actualizar(eventoPago);

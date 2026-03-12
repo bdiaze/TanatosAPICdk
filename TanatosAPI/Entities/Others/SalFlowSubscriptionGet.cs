@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others {
-	public class SalFlowSubscriptionCreate {
+	public class SalFlowSubscriptionGet {
 		[JsonPropertyName("subscriptionId")]
 		public string? SubscriptionId { get; set; }
 

@@ -62,7 +62,7 @@ jobs:
             FLOW_API_KEY: ${{ secrets.FLOW_API_KEY }}
             FLOW_SECRET_KEY: ${{ secrets.FLOW_SECRET_KEY }}
             FLOW_API_URL: ${{ vars.FLOW_API_URL }}
-            FLOW_URL_CONFIRMACION: ${{ vars.FLOW_URL_CONFIRMACION }}
+            FLOW_URL_CALLBACK: ${{ vars.FLOW_URL_CALLBACK }}
             FLOW_URL_RETORNO: ${{ vars.FLOW_URL_RETORNO }}
             
             APP_SCHEMA_NAME: ${{ vars.APP_SCHEMA_NAME }}

@@ -86,7 +86,7 @@ namespace Cdk
 			string flowApiKey = System.Environment.GetEnvironmentVariable("FLOW_API_KEY") ?? throw new ArgumentNullException("FLOW_API_KEY");
 			string flowSecretKey = System.Environment.GetEnvironmentVariable("FLOW_SECRET_KEY") ?? throw new ArgumentNullException("FLOW_SECRET_KEY");
 			string flowApiUrl = System.Environment.GetEnvironmentVariable("FLOW_API_URL") ?? throw new ArgumentNullException("FLOW_API_URL");
-			string flowUrlConfirmacion = System.Environment.GetEnvironmentVariable("FLOW_URL_CONFIRMACION") ?? throw new ArgumentNullException("FLOW_URL_CONFIRMACION");
+			string flowUrlCallback = System.Environment.GetEnvironmentVariable("FLOW_URL_CALLBACK") ?? throw new ArgumentNullException("FLOW_URL_CALLBACK");
 			string flowUrlRetorno = System.Environment.GetEnvironmentVariable("FLOW_URL_RETORNO") ?? throw new ArgumentNullException("FLOW_URL_RETORNO");
 
 			// Variables de entorno para la lambda de ejecución inicial...
@@ -772,7 +772,7 @@ namespace Cdk
 					{ "GOOGLE_RECAPTCHA_SITE_KEY", googleRecaptchaSiteKey },
 					{ "DESTINATARIOS_NUEVO_MENSAJE", destinatariosNuevoMensaje },
 					{ "FLOW_API_URL", flowApiUrl },
-					{ "FLOW_URL_CONFIRMACION", flowUrlConfirmacion },
+					{ "FLOW_URL_CALLBACK", flowUrlCallback },
 					{ "FLOW_URL_RETORNO", flowUrlRetorno },
 				},
                 Vpc = vpc,
