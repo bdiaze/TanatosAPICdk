@@ -185,6 +185,23 @@ namespace TanatosAPI.Helpers {
 			return JsonSerializer.Deserialize(content, AppJsonSerializerContext.Default.SalFlowSubscriptionCancel)!;
 		}
 
+		public async Task<SalFlowPaymentGetStatus> PaymentGetStatus(string token) {
+			Dictionary<string, string> parametros = new() {
+				["apiKey"] = _flowApiKey,
+				["token"] = token,
+			};
+			parametros["s"] = Firmar(parametros);
+			string query = await new FormUrlEncodedContent(parametros).ReadAsStringAsync();
+
+			using HttpResponseMessage response = await httpClient.GetAsync(_flowBaseUrl + $"payment/getStatus?{query}");
+			if (!response.IsSuccessStatusCode) {
+				throw new Exception($"Ocurrió un error al obtener estado de pago en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+			}
+
+			string content = await response.Content.ReadAsStringAsync();
+			return JsonSerializer.Deserialize(content, AppJsonSerializerContext.Default.SalFlowPaymentGetStatus)!;
+		}
+
 		private string Firmar(Dictionary<string, string> data) {
 			IOrderedEnumerable<KeyValuePair<string, string>> dataOrdenada = data.OrderBy(x => x.Key);
 			string aFirmar = string.Join("&", dataOrdenada.Select(x => $"{x.Key}={x.Value}"));

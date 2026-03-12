@@ -3,6 +3,7 @@
 namespace TanatosAPI.Entities.Others {
 	public class SalFlowCustomerGetRegisterStatus {
 		[JsonPropertyName("status")]
+		/* 0: No registrado - 1: Registrado */
 		public string? Status { get; set; }
 
 		[JsonPropertyName("customerId")]
