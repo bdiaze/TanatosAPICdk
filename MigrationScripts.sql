@@ -1804,5 +1804,64 @@ BEGIN
     VALUES ('20260312190732_ColumnCorreoElectronicoUsuario', '9.0.12');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260318190717_ColumnFlowInvoiceIdPago') THEN
+    DROP INDEX tanatos."IX_pago_flow_subscription_id_flow_period";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260318190717_ColumnFlowInvoiceIdPago') THEN
+    ALTER TABLE tanatos.pago DROP COLUMN flow_period;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260318190717_ColumnFlowInvoiceIdPago') THEN
+    ALTER TABLE tanatos.pago ALTER COLUMN flow_subscription_id TYPE text;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260318190717_ColumnFlowInvoiceIdPago') THEN
+    ALTER TABLE tanatos.pago ADD flow_invoice_id text NOT NULL DEFAULT '';
+    COMMENT ON COLUMN tanatos.pago.flow_invoice_id IS 'ID del invoice en la plataforma Flow.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260318190717_ColumnFlowInvoiceIdPago') THEN
+    CREATE UNIQUE INDEX "IX_pago_flow_subscription_id_flow_invoice_id" ON tanatos.pago (flow_subscription_id, flow_invoice_id);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260318190717_ColumnFlowInvoiceIdPago') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260318190717_ColumnFlowInvoiceIdPago', '9.0.12');
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260318193611_DropColumnCorreoElectronicoUsuario') THEN
+    ALTER TABLE tanatos.usuario DROP COLUMN correo_electronico;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260318193611_DropColumnCorreoElectronicoUsuario') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260318193611_DropColumnCorreoElectronicoUsuario', '9.0.12');
+    END IF;
+END $EF$;
 COMMIT;
 

@@ -7,6 +7,14 @@ using static Google.Cloud.RecaptchaEnterprise.V1.TransactionData.Types;
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class PlanDao(DatabaseConnectionHelper connectionHelper) {
+		public async Task<Plan?> Obtener(long id) {
+			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+			return await connection.QueryFirstOrDefaultAsync<Plan>(
+				"SELECT ID, NOMBRE, PRECIO, DURACION_MESES, SUSCRIPCION_UNICA, FLOW_PLAN_ID, VIGENCIA FROM TANATOS.PLAN WHERE ID = @ID",
+				new { id }
+			);
+		}
+
 		public async Task<List<Plan>> ObtenerPorVigencia(bool? vigencia = true) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return [.. await connection.QueryAsync<Plan>(

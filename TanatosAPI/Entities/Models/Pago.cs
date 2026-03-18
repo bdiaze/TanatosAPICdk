@@ -8,7 +8,7 @@ namespace TanatosAPI.Entities.Models {
 	[Table("pago", Schema = "tanatos")]
 	[Comment("Tabla que contiene los pagos de los usuarios.")]
 	[Index(nameof(Sub))]
-	[Index(nameof(FlowSubscriptionId), nameof(FlowPeriod), IsUnique = true)]
+	[Index(nameof(FlowSubscriptionId), nameof(FlowInvoiceId), IsUnique = true)]
 	public class Pago {
 		[UseColumnAttribute]
 		[Required]
@@ -57,13 +57,13 @@ namespace TanatosAPI.Entities.Models {
 		[Required]
 		[Column("flow_subscription_id")]
 		[Comment("ID de la suscripción en la plataforma Flow.")]
-		public required long FlowSubscriptionId { get; set; }
+		public required string FlowSubscriptionId { get; set; }
 
 		[UseColumnAttribute]
 		[Required]
-		[Column("flow_period")]
-		[Comment("Periodo correspondiente al pago en la plataforma Flow.")]
-		public required int FlowPeriod { get; set; }
+		[Column("flow_invoice_id")]
+		[Comment("ID del invoice en la plataforma Flow.")]
+		public required string FlowInvoiceId { get; set; }
 
 		[UseColumnAttribute]
 		[Required]

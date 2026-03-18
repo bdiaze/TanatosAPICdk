@@ -20,11 +20,5 @@ namespace TanatosAPI.Entities.Models {
 		[Column("flow_customer_id")]
 		[Comment("ID del cliente en Flow.")]
 		public string? FlowCustomerId { get; set; }
-
-		[UseColumnAttribute]
-		[Required]
-		[Column("correo_electronico")]
-		[Comment("Correo electrónico del cliente.")]
-		public required string CorreoElectronico { get; set; }
 	}
 }

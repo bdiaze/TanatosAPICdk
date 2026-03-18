@@ -16,6 +16,15 @@ namespace TanatosAPI.Repositories {
 			);
 		}
 
+		public async Task<Suscripcion?> ObtenerPorFlowSubscriptionId(string flowSubscriptionId) {
+			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+			return await connection.QueryFirstOrDefaultAsync<Suscripcion>(
+				"SELECT ID, SUB, ID_PLAN, FECHA_INICIO, FECHA_EXPIRACION, FECHA_CANCELACION, ESTADO, FLOW_CUSTOMER_ID, FLOW_SUBSCRIPTION_ID, " +
+				"FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.SUSCRIPCION WHERE FLOW_SUBSCRIPTION_ID = @FLOWSUBSCRIPTIONID",
+				new { flowSubscriptionId }
+			);
+		}
+
 		public async Task<List<Suscripcion>> ObtenerPorSub(string sub, bool? vigencia = true) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return [.. await connection.QueryAsync<Suscripcion>(
