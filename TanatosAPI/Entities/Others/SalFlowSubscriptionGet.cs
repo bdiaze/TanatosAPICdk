@@ -55,7 +55,7 @@ namespace TanatosAPI.Entities.Others {
 
 		[JsonPropertyName("status")]
 		/* 0: Inactivo - 1: Activa - 2: En periodo de trial - 4: Cancelada */
-		public string? Status { get; set; }
+		public short? Status { get; set; }
 
 		[JsonPropertyName("discount_balance")]
 		public string? DiscountBalance { get; set; }

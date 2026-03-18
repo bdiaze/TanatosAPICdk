@@ -14,7 +14,7 @@ namespace TanatosAPI.Entities.Others {
 
 		[JsonPropertyName("status")]
 		/* 1: Pendiente de pago - 2: Pagada - 3: Rechazada - 4: Anulada */
-		public string? Status { get; set; }
+		public short? Status { get; set; }
 
 		[JsonPropertyName("subject")]
 		public string? Subject { get; set; }
@@ -23,7 +23,7 @@ namespace TanatosAPI.Entities.Others {
 		public string? Currency { get; set; }
 
 		[JsonPropertyName("amount")]
-		public decimal? Amount { get; set; }
+		public string? Amount { get; set; }
 
 		[JsonPropertyName("payer")]
 		public string? Payer { get; set; }
@@ -60,21 +60,24 @@ namespace TanatosAPI.Entities.Others {
 		public string? ConversionDate { get; set; }
 
 		[JsonPropertyName("conversionRate")]
-		public decimal? ConversionRate { get; set; }
+		public string? ConversionRate { get; set; }
 
 		[JsonPropertyName("amount")]
-		public decimal? Amount { get; set; }
+		public string? Amount { get; set; }
 
 		[JsonPropertyName("currency")]
 		public string? Currency { get; set; }
 
 		[JsonPropertyName("fee")]
-		public decimal? Fee { get; set; }
+		public string? Fee { get; set; }
 
 		[JsonPropertyName("balance")]
 		public decimal? Balance { get; set; }
 
 		[JsonPropertyName("transferDate")]
 		public string? TransferDate { get; set; }
+
+		[JsonPropertyName("taxes")]
+		public decimal? Taxes { get; set; }
 	}
 }

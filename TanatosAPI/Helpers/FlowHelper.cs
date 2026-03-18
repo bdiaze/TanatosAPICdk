@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -46,7 +47,7 @@ namespace TanatosAPI.Helpers {
 				["interval"] = "3", // Mensual
 				["interval_count"] = cantMeses.ToString(CultureInfo.InvariantCulture),
 				["days_until_due"] = diasAntesVencer.ToString(CultureInfo.InvariantCulture),
-				["urlCallback"] = $"{variableEntorno.Obtener("FLOW_URL_CALLBACK")}/PlanEdit",
+				["urlCallback"] = $"{variableEntorno.Obtener("FLOW_URL_CALLBACK")}/PlanCreate",
 				["charges_retries_number"] = reintentos.ToString(CultureInfo.InvariantCulture),
 			};
 			parametros["s"] = Firmar(parametros);
@@ -132,11 +133,11 @@ namespace TanatosAPI.Helpers {
 			return JsonSerializer.Deserialize(content, AppJsonSerializerContext.Default.SalFlowCustomerGetRegisterStatus)!;
 		}
 
-		public async Task<SalFlowSubscriptionCreate> SuscriptionCreate(string planId, string customerEmail) {
+		public async Task<SalFlowSubscriptionCreate> SuscriptionCreate(string planId, string customerId) {
 			Dictionary<string, string> parametros = new() {
 				["apiKey"] = _flowApiKey,
 				["planId"] = planId,
-				["customerEmail"] = customerEmail,
+				["customerId"] = customerId,
 			};
 			parametros["s"] = Firmar(parametros);
 			FormUrlEncodedContent formContent = new(parametros);
@@ -200,6 +201,23 @@ namespace TanatosAPI.Helpers {
 
 			string content = await response.Content.ReadAsStringAsync();
 			return JsonSerializer.Deserialize(content, AppJsonSerializerContext.Default.SalFlowPaymentGetStatus)!;
+		}
+
+		public async Task<SalFlowInvoiceGet> InvoiceGet(string invoiceId) {
+			Dictionary<string, string> parametros = new() {
+				["apiKey"] = _flowApiKey,
+				["invoiceId"] = invoiceId,
+			};
+			parametros["s"] = Firmar(parametros);
+			string query = await new FormUrlEncodedContent(parametros).ReadAsStringAsync();
+
+			using HttpResponseMessage response = await httpClient.GetAsync(_flowBaseUrl + $"invoice/get?{query}");
+			if (!response.IsSuccessStatusCode) {
+				throw new Exception($"Ocurrió un error al obtener invoice en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+			}
+
+			string content = await response.Content.ReadAsStringAsync();
+			return JsonSerializer.Deserialize(content, AppJsonSerializerContext.Default.SalFlowInvoiceGet)!;
 		}
 
 		private string Firmar(Dictionary<string, string> data) {
