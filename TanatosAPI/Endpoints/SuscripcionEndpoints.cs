@@ -7,12 +7,14 @@ using Npgsql;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Globalization;
+using System.Numerics;
 using System.Security.Claims;
 using System.Text.Json;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
+using TimeZoneConverter;
 using static Google.Cloud.RecaptchaEnterprise.V1.TransactionData.Types;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -75,7 +77,25 @@ namespace TanatosAPI.Endpoints {
 						if (planExistente.Precio == 0) {
 							estado = 1; // Activa
 							fechaInicio = DateTime.UtcNow;
-							fechaExpiracion = fechaInicio.Value.AddMonths(planExistente.DuracionMeses);
+
+							// Nos aseguramos de que la fecha esté en UTC...
+							DateTime fechaUTC = DateTime.SpecifyKind(fechaInicio.Value, DateTimeKind.Utc);
+
+							// Se transforma la fecha a zona horaria de Chile...
+							string timezone = "America/Santiago";
+							if (OperatingSystem.IsWindows()) {
+								timezone = TZConvert.IanaToWindows(timezone);
+							}
+							TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+							DateTime fechaTimezone = TimeZoneInfo.ConvertTimeFromUtc(fechaUTC, timeZoneInfo);
+
+							// Se añade la duración en meses del plan...
+							fechaTimezone = fechaTimezone.AddMonths(planExistente.DuracionMeses);
+
+							// Se transforma de vuelta a UTC...
+							fechaTimezone = TimeZoneInfo.ConvertTimeToUtc(fechaTimezone, timeZoneInfo);
+
+							fechaExpiracion = fechaTimezone;
 						} else {
 							estado = 4; // Pago Pendiente
 							fechaInicio = null;
@@ -253,7 +273,26 @@ namespace TanatosAPI.Endpoints {
 											// Se actualiza fecha de expiración de la suscripción...
 											suscripcion.FechaInicio ??= ahora;
 											DateTime fechaReferencia = suscripcion.FechaExpiracion == null ? suscripcion.FechaInicio.Value : (ahora > suscripcion.FechaExpiracion.Value ? ahora : suscripcion.FechaExpiracion.Value);
-											suscripcion.FechaExpiracion = fechaReferencia.AddMonths(plan.DuracionMeses);
+											
+											// Nos aseguramos de que la fecha esté en UTC...
+											DateTime fechaUTC = DateTime.SpecifyKind(fechaReferencia, DateTimeKind.Utc);
+
+											// Se transforma la fecha a zona horaria de Chile...
+											string timezone = "America/Santiago";
+											if (OperatingSystem.IsWindows()) {
+												timezone = TZConvert.IanaToWindows(timezone);
+											}
+											TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+											DateTime fechaTimezone = TimeZoneInfo.ConvertTimeFromUtc(fechaUTC, timeZoneInfo);
+
+											// Se añade la duración en meses del plan...
+											fechaTimezone = fechaTimezone.AddMonths(plan.DuracionMeses);
+
+											// Se transforma de vuelta a UTC...
+											fechaTimezone = TimeZoneInfo.ConvertTimeToUtc(fechaTimezone, timeZoneInfo);
+
+
+											suscripcion.FechaExpiracion = fechaTimezone;
 											suscripcion.Estado = 1 /* Activa */;
 											await suscripcionDao.Actualizar(suscripcion, transaction);
 										}
