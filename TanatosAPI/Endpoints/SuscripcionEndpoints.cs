@@ -1,10 +1,12 @@
 ﻿using Amazon.Lambda.Core;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using Npgsql;
 using System.Data.SqlTypes;
 using System.Diagnostics;
+using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json;
 using TanatosAPI.Entities.Models;
@@ -34,8 +36,8 @@ namespace TanatosAPI.Endpoints {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
 					// Se valida que el plan exista y este vigente...
-					Plan? planExistente = (await planDao.ObtenerPorVigencia(true)).FirstOrDefault(p => p.Id == entrada.IdPlan);
-					if (planExistente == null) {
+					Plan? planExistente = await planDao.Obtener(entrada.IdPlan);
+					if (planExistente == null || !planExistente.Vigencia) {
 						LambdaLogger.Log(
 							$"[POST] - [Suscripcion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El plan indicado es inválido - ID Plan: {entrada.IdPlan}.");
@@ -53,7 +55,7 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El usuario ya cuenta con una suscripción activa.");
 					}
 
-					// Si es una suscripción gratuita, se valida que no tenga otra suscripción anterior del mismo tipo...
+					// Si es una suscripción única, se valida que no tenga otra suscripción anterior del mismo tipo...
 					if (planExistente.SuscripcionUnica && suscripciones.Any(s => s.IdPlan == planExistente.Id)) {
 						LambdaLogger.Log(
 							$"[POST] - [Suscripcion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
@@ -78,6 +80,13 @@ namespace TanatosAPI.Endpoints {
 							estado = 4; // Pago Pendiente
 							fechaInicio = null;
 							fechaExpiracion = null;
+
+							// Se eliminan todas las suscripciones del cliente que tienen su pago pendiente...
+							foreach (Suscripcion suscripcionEliminar in suscripciones.Where(s => s.Estado == 4 /* Pago Pendiente */)) {
+								suscripcionEliminar.FechaEliminacion = DateTime.UtcNow;
+								suscripcionEliminar.Vigencia = false;
+								await suscripcionDao.Actualizar(suscripcionEliminar, transaction);
+							}
 						}
 
 						// Se crea la suscripción en el sistema interno...
@@ -97,7 +106,7 @@ namespace TanatosAPI.Endpoints {
 						};
 						nuevo.Id = await suscripcionDao.Insertar(nuevo, transaction);
 
-						// Si es un plan Flow, se crea la suscripción en Flow...
+						// Si es un plan Flow, se crea el usuario y se solicita el registro del medio de pago...
 						if (nuevo.Estado == 4 /* Pago Pendiente */ && planExistente.FlowPlanId != null) {
 							Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
 							string nombre = atributosUsuario.TryGetValue("given_name", out string? givenName) ? givenName : "";
@@ -108,8 +117,7 @@ namespace TanatosAPI.Endpoints {
 							Usuario? usuarioExistente = await usuarioDao.Obtener(sub);
 							if (usuarioExistente == null) {
 								usuarioExistente = new Usuario() {
-									Sub = sub,
-									CorreoElectronico = correo
+									Sub = sub
 								};
 								await usuarioDao.Insertar(usuarioExistente, transaction);
 							}
@@ -155,20 +163,20 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapWebhookEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/flow-webhook/{tipo}", async (string tipo, HttpRequest request, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, EventoPagoDao eventoPagoDao, SuscripcionDao suscripcionDao, PlanDao planDao, PagoDao pagoDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
+			routes.MapPost("/flow-webhook/{tipo}", async (string tipo, [FromForm] string token, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, EventoPagoDao eventoPagoDao, SuscripcionDao suscripcionDao, PlanDao planDao, PagoDao pagoDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					using StreamReader reader = new(request.Body);
-					string cuerpo = await reader.ReadToEndAsync();
-					Dictionary<string, string> dictCuerpo = QueryHelpers.ParseQuery(cuerpo).ToDictionary(c => c.Key, c => c.Value.ToString());
+					EntSuscripcionWebhook entrada = new() {
+						Token = token
+					};
 
 					// Se registra evento recepcionado en webhook...
 					EventoPago eventoPago = new() { 
 						Id = 0,
 						Proveedor = "Flow",
 						Evento = $"{tipo}Webhook",
-						Payload = JsonSerializer.Serialize(dictCuerpo, AppJsonSerializerContext.Default.DictionaryStringString),
+						Payload = JsonSerializer.Serialize(entrada, AppJsonSerializerContext.Default.EntSuscripcionWebhook),
 						Procesado = false,
 						FechaCreacion = DateTime.UtcNow,
 						FechaEliminacion = null,
@@ -176,42 +184,88 @@ namespace TanatosAPI.Endpoints {
 					};
 					eventoPago.Id = await eventoPagoDao.Insertar(eventoPago);
 
-					return Results.Ok();
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
-					EntSuscripcionWebhook entrada = JsonSerializer.Deserialize(cuerpo, AppJsonSerializerContext.Default.EntSuscripcionWebhook)!;
+					try {
+						if (tipo == "CustomerRegister") {
+							SalFlowCustomerGetRegisterStatus salFlow = await flowHelper.CustomerGetRegisterStatus(entrada.Token);
+							if (salFlow.Status?.Trim() == "1" /* Registrado */ && salFlow.CustomerId != null) {
+								Usuario? usuario = await usuarioDao.ObtenerPorFlowCustomerId(salFlow.CustomerId);
+								if (usuario != null) {
+									List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(usuario.Sub);
+									List<Plan> planesVigentes = await planDao.ObtenerPorVigencia(true);
+									Suscripcion? suscripcionActivar = null;
+									foreach (Suscripcion suscripcion in suscripciones.Where(s => s.Estado == 4 /* Pago Pendiente */).OrderByDescending(s => s.FechaCreacion)) {
+										if (planesVigentes.Any(p => p.Id == suscripcion.IdPlan)) {
+											suscripcionActivar = suscripcion;
+											break;
+										}
+									}
 
-					if (tipo == "CustomerRegister") {
-						SalFlowCustomerGetRegisterStatus salFlow = await flowHelper.CustomerGetRegisterStatus(entrada.Token);
-						if (salFlow.Status?.Trim() == "1" /* Registrado */ && salFlow.CustomerId != null) {
-							Usuario? usuario = await usuarioDao.ObtenerPorFlowCustomerId(salFlow.CustomerId);
-							if (usuario != null) {
-								List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(usuario.Sub);
-								List<Plan> planesVigentes = await planDao.ObtenerPorVigencia(true);
-								Suscripcion? suscripcionActivar = null;
-								foreach (Suscripcion suscripcion in suscripciones.Where(s => s.Estado == 4 /* Pago Pendiente */).OrderByDescending(s => s.FechaCreacion)) {
-									if (planesVigentes.Any(p => p.Id == suscripcion.IdPlan)) {
-										suscripcionActivar = suscripcion;
-										break;
+									if (suscripcionActivar != null && suscripcionActivar.FlowSubscriptionId == null) {
+										Plan plan = planesVigentes.First(p => p.Id == suscripcionActivar.IdPlan);
+
+										// Se crea suscripción en Flow...
+										SalFlowSubscriptionCreate salFlowSubscriptionCreate = await flowHelper.SuscriptionCreate(plan.FlowPlanId!, usuario.FlowCustomerId!);
+										if (salFlowSubscriptionCreate.Status == 1 /* Activa */) {
+											suscripcionActivar.FlowSubscriptionId = salFlowSubscriptionCreate.SubscriptionId;
+											await suscripcionDao.Actualizar(suscripcionActivar, transaction);
+										}
 									}
 								}
+							}
+						} else if (tipo == "PlanCreate") {
+							SalFlowPaymentGetStatus salFlow = await flowHelper.PaymentGetStatus(entrada.Token);
+							if (salFlow.Status == 2 /* Pagada */) {
+								string[] commerceOrderParts = salFlow.CommerceOrder!.Split('_');
+								string flowSubscriptionId = $"{commerceOrderParts[0]}_{commerceOrderParts[1]}";
+								string flowInvoiceId = commerceOrderParts[2];
+								string flowInvoiceDate = commerceOrderParts[3];
 
-								if (suscripcionActivar != null) {
-									Plan plan = planesVigentes.First(p => p.Id == suscripcionActivar.IdPlan);
+								SalFlowInvoiceGet salFlowInvoiceGet = await flowHelper.InvoiceGet(flowInvoiceId);
 
-									// Se crea suscripción en Flow...
-									SalFlowSubscriptionCreate salFlowSubscriptionCreate = await flowHelper.SuscriptionCreate(plan.FlowPlanId!, usuario.CorreoElectronico);
-									if (salFlowSubscriptionCreate.Status == "1" /* Activa */) {
-										suscripcionActivar.FechaInicio = DateTime.UtcNow;
-										suscripcionActivar.FechaExpiracion = suscripcionActivar.FechaInicio.Value.AddMonths(plan.DuracionMeses);
-										suscripcionActivar.Estado = 1; // Activa
-										suscripcionActivar.FlowSubscriptionId = salFlowSubscriptionCreate.SubscriptionId;
-										await suscripcionDao.Actualizar(suscripcionActivar);
+								Suscripcion? suscripcion = await suscripcionDao.ObtenerPorFlowSubscriptionId(flowSubscriptionId);
+								if (suscripcion != null) {
+									Plan? plan = await planDao.Obtener(suscripcion.IdPlan);
+									if (plan != null) {
+										Pago? pagoExistente = await pagoDao.ObtenerPorFlow(suscripcion.FlowSubscriptionId!, flowInvoiceId);
+										if (pagoExistente == null) {
+											DateTime ahora = DateTime.UtcNow;
+
+											// Se crea el pago en el sistema...
+											Pago nuevoPago = new() {
+												Id = 0,
+												Sub = suscripcion.Sub,
+												IdSuscripcion = suscripcion.Id,
+												Monto = decimal.Parse(salFlow.Amount!, CultureInfo.InvariantCulture),
+												Moneda = salFlow.Currency ?? "CLP",
+												FechaPago = ahora,
+												Estado = 1, // Pagado
+												FlowSubscriptionId = suscripcion.FlowSubscriptionId!,
+												FlowInvoiceId = flowInvoiceId,
+												FechaCreacion = ahora,
+												FechaEliminacion = null,
+												Vigencia = true,
+											};
+											nuevoPago.Id = await pagoDao.Insertar(nuevoPago, transaction);
+
+											// Se actualiza fecha de expiración de la suscripción...
+											suscripcion.FechaInicio ??= ahora;
+											DateTime fechaReferencia = suscripcion.FechaExpiracion == null ? suscripcion.FechaInicio.Value : (ahora > suscripcion.FechaExpiracion.Value ? ahora : suscripcion.FechaExpiracion.Value);
+											suscripcion.FechaExpiracion = fechaReferencia.AddMonths(plan.DuracionMeses);
+											suscripcion.Estado = 1 /* Activa */;
+											await suscripcionDao.Actualizar(suscripcion, transaction);
+										}
 									}
 								}
 							}
 						}
-					} else if (tipo == "PlanCreate" || tipo == "PlanEdit") {
-						SalFlowPaymentGetStatus salFlow = await flowHelper.PaymentGetStatus(entrada.Token);
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
 					}
 
 					eventoPago.Procesado = true;
@@ -219,17 +273,17 @@ namespace TanatosAPI.Endpoints {
 
 					LambdaLogger.Log(
 						$"[POST] - [Suscripcion] - [Webhook] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Ejecución exitosa del webhook de suscripción.");
+						$"Ejecución exitosa del webhook de suscripción - Tipo: {tipo}.");
 
 					return Results.Ok();
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [Suscripcion] - [Webhook] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error en la ejecución del webhook de suscripción. " +
+						$"Ocurrió un error en la ejecución del webhook de suscripción  - Tipo: {tipo}. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).AllowAnonymous().WithOpenApi();
+			}).AllowAnonymous().DisableAntiforgery().WithOpenApi();
 
 			return routes;
 		}
