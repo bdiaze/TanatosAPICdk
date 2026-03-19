@@ -133,7 +133,7 @@ namespace TanatosAPI.Helpers {
 			return JsonSerializer.Deserialize(content, AppJsonSerializerContext.Default.SalFlowCustomerGetRegisterStatus)!;
 		}
 
-		public async Task<SalFlowSubscriptionCreate> SuscriptionCreate(string planId, string customerId) {
+		public async Task<SalFlowSubscriptionCreate> SubscriptionCreate(string planId, string customerId) {
 			Dictionary<string, string> parametros = new() {
 				["apiKey"] = _flowApiKey,
 				["planId"] = planId,
@@ -168,7 +168,7 @@ namespace TanatosAPI.Helpers {
 			return JsonSerializer.Deserialize(content, AppJsonSerializerContext.Default.SalFlowSubscriptionGet)!;
 		}
 
-		public async Task<SalFlowSubscriptionCancel> SuscriptionCancel(string subscriptionId, short atPeriodEnd = 1) {
+		public async Task<SalFlowSubscriptionCancel> SubscriptionCancel(string subscriptionId, short atPeriodEnd = 1) {
 			Dictionary<string, string> parametros = new() {
 				["apiKey"] = _flowApiKey,
 				["subscriptionId"] = subscriptionId,

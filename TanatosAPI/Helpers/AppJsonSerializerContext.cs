@@ -97,6 +97,7 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(SalFlowSubscriptionCancel))]
 	[JsonSerializable(typeof(SalFlowPaymentGetStatus))]
 	[JsonSerializable(typeof(SalFlowInvoiceGet))]
+	[JsonSerializable(typeof(List<SalSuscripcion>))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }

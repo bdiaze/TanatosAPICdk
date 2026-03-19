@@ -22,10 +22,54 @@ namespace TanatosAPI.Endpoints {
 	public static class SuscripcionEndpoints {
 		public static IEndpointRouteBuilder MapSuscripcionEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/Suscripcion");
+			group.MapObtenerVigentesEndpoint();
 			group.MapCrearEndpoint();
+			group.MapCancelarEndpoint();
 
 			RouteGroupBuilder publicGroup = routes.MapGroup("/public/Suscripcion");
 			publicGroup.MapWebhookEndpoint();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapObtenerVigentesEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ClaimsPrincipal user, PlanDao planDao, SuscripcionDao suscripcionDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+
+					List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(sub, true);
+					List<Plan> planes = await planDao.ObtenerPorVigencia(null);
+					List<SalSuscripcion> retorno = [.. suscripciones.Select(s => {
+						Plan plan = planes.First(p => p.Id == s.IdPlan);
+
+						return new SalSuscripcion {
+							Id = s.Id,
+							IdPlan = plan.Id,
+							NombrePlan = plan.Nombre,
+							PrecioPlan = plan.Precio,
+							DuracionMesesPlan = plan.DuracionMeses,
+							FechaInicio = s.FechaInicio,
+							FechaExpiracion = s.FechaExpiracion,
+							FechaCancelacion = s.FechaCancelacion,
+							Estado = s.Estado
+							};
+						})];
+
+					LambdaLogger.Log(
+						$"[GET] - [Suscripcion] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de las suscripciones del cliente - Cant. Registros: {retorno.Count}.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Suscripcion] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener las suscripciones del cliente. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Suscripciones.Read.Self").WithOpenApi();
 
 			return routes;
 		}
@@ -182,6 +226,58 @@ namespace TanatosAPI.Endpoints {
 			return routes;
 		}
 
+		private static IEndpointRouteBuilder MapCancelarEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapDelete("/{idSuscripcion}", async (long idSuscripcion, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, SuscripcionDao suscripcionDao, FlowHelper flowHelper) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+
+					// Se valida que la suscripción exista, este vigente, pertenezca al cliente y que no esté "Cancelada"...
+					Suscripcion? existente = await suscripcionDao.Obtener(idSuscripcion);
+					if (existente == null || !existente.Vigencia || existente.Sub != sub || existente.Estado == 2 /* Cancelada */) {
+						LambdaLogger.Log(
+							$"[DELETE] - [Suscripcion] - [Cancelar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El ID de suscripción es inválido.");
+
+						return Results.BadRequest($"El ID de suscripción es inválido.");
+					}
+
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+
+					try {
+						existente.Estado = 2; // Cancelada
+						existente.FechaCancelacion = DateTime.UtcNow;
+						await suscripcionDao.Actualizar(existente, transaction);
+
+						if (existente.FlowSubscriptionId != null) {
+							SalFlowSubscriptionCancel salFlowSubscriptionCancel = await flowHelper.SubscriptionCancel(existente.FlowSubscriptionId);
+						}
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
+
+					LambdaLogger.Log(
+						$"[DELETE] - [Suscripcion] - [Cancelar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Cancelación exitosa de la suscripción - ID Suscripcion: {idSuscripcion}.");
+
+					return Results.Ok();
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[DELETE] - [Suscripcion] - [Cancelar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al cancelar la suscripción - ID Suscripcion: {idSuscripcion}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Suscripciones.Write.Self").WithOpenApi();
+
+			return routes;
+		}
+
 		private static IEndpointRouteBuilder MapWebhookEndpoint(this IEndpointRouteBuilder routes) {
 			routes.MapPost("/flow-webhook/{tipo}", async (string tipo, [FromForm] string token, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, EventoPagoDao eventoPagoDao, SuscripcionDao suscripcionDao, PlanDao planDao, PagoDao pagoDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
@@ -227,7 +323,7 @@ namespace TanatosAPI.Endpoints {
 										Plan plan = planesVigentes.First(p => p.Id == suscripcionActivar.IdPlan);
 
 										// Se crea suscripción en Flow...
-										SalFlowSubscriptionCreate salFlowSubscriptionCreate = await flowHelper.SuscriptionCreate(plan.FlowPlanId!, usuario.FlowCustomerId!);
+										SalFlowSubscriptionCreate salFlowSubscriptionCreate = await flowHelper.SubscriptionCreate(plan.FlowPlanId!, usuario.FlowCustomerId!);
 										if (salFlowSubscriptionCreate.Status == 1 /* Activa */) {
 											suscripcionActivar.FlowSubscriptionId = salFlowSubscriptionCreate.SubscriptionId;
 											await suscripcionDao.Actualizar(suscripcionActivar, transaction);
