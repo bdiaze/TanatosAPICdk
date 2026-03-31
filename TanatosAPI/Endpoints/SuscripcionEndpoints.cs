@@ -279,7 +279,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapWebhookEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/flow-webhook/{tipo}", async (string tipo, [FromForm] string token, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, EventoPagoDao eventoPagoDao, SuscripcionDao suscripcionDao, PlanDao planDao, PagoDao pagoDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
+			routes.MapPost("/flow-webhook/{tipo}", async (string tipo, [FromForm] string token, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, VariableEntornoHelper variableEntorno, EventoPagoDao eventoPagoDao, SuscripcionDao suscripcionDao, PlanDao planDao, PagoDao pagoDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -300,11 +300,14 @@ namespace TanatosAPI.Endpoints {
 					};
 					eventoPago.Id = await eventoPagoDao.Insertar(eventoPago);
 
+					bool redirect = false;
+
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
 					try {
 						if (tipo == "CustomerRegister") {
+							redirect = true;
 							SalFlowCustomerGetRegisterStatus salFlow = await flowHelper.CustomerGetRegisterStatus(entrada.Token);
 							if (salFlow.Status?.Trim() == "1" /* Registrado */ && salFlow.CustomerId != null) {
 								Usuario? usuario = await usuarioDao.ObtenerPorFlowCustomerId(salFlow.CustomerId);
@@ -395,6 +398,8 @@ namespace TanatosAPI.Endpoints {
 									}
 								}
 							}
+						} else {
+							throw new Exception("Tipo de webhook de Flow inválido");
 						}
 
 						await transaction.CommitAsync();
@@ -410,7 +415,11 @@ namespace TanatosAPI.Endpoints {
 						$"[POST] - [Suscripcion] - [Webhook] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Ejecución exitosa del webhook de suscripción - Tipo: {tipo}.");
 
-					return Results.Ok();
+					if (redirect) {
+						return Results.Redirect(variableEntorno.Obtener("FLOW_URL_RETORNO"));
+					} else {
+						return Results.Ok();
+					}
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [Suscripcion] - [Webhook] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
