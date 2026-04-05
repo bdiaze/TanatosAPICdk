@@ -92,8 +92,8 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					// Se valida que el usuario no tenga otra suscripción vigente...
-					List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(sub);
-					if (suscripciones.Any(s => s.Estado == 1 /* Activa */)) {
+					List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(sub, true);
+					if (suscripciones.Any(s => s.FechaExpiracion != null && s.FechaExpiracion > DateTime.UtcNow)) {
 						LambdaLogger.Log(
 							$"[POST] - [Suscripcion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El usuario ya cuenta con una suscripción activa.");
