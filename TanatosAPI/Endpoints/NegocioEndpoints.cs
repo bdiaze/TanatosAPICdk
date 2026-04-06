@@ -1,6 +1,7 @@
 ﻿using Amazon.Lambda.Core;
 using System.Diagnostics;
 using System.Security.Claims;
+using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
@@ -20,7 +21,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerInformacionUsuario(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/InformacionUsuario", async (IHostEnvironment environment, ClaimsPrincipal user, CognitoHelper cognitoHelper) => {
+			routes.MapGet("/InformacionUsuario", async (IHostEnvironment environment, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, CognitoHelper cognitoHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -31,7 +32,8 @@ namespace TanatosAPI.Endpoints {
 					SalNegocioInformacionUsuario retorno = new() {
 						Nombre = atributosUsuario.TryGetValue("given_name", out string? givenName) ? givenName : null,
 						Apellido = atributosUsuario.TryGetValue("family_name", out string? familyName) ? familyName : null,
-						Email = atributosUsuario.TryGetValue("email", out string? email) ? email : null
+						Email = atributosUsuario.TryGetValue("email", out string? email) ? email : null,
+						TienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub)
 					};
 
 					LambdaLogger.Log(
@@ -71,7 +73,8 @@ namespace TanatosAPI.Endpoints {
 							Nombre = d.Nombre,
 							Direccion = d.Direccion,
 							IdTipoActividad = d.IdTipoActividad,
-							NombreTipoActividad = tiposActividades.FirstOrDefault(ta => ta.Id == d.IdTipoActividad)?.Nombre
+							NombreTipoActividad = tiposActividades.FirstOrDefault(ta => ta.Id == d.IdTipoActividad)?.Nombre,
+							FechaCreacion = d.FechaCreacion,
 						})
 					];
 
@@ -93,7 +96,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntNegocioCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao, TipoActividadDao tipoActividadDao) => {
+			routes.MapPost("/", async (EntNegocioCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, NegocioDao negocioDao, TipoActividadDao tipoActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -110,6 +113,15 @@ namespace TanatosAPI.Endpoints {
 							$"Ya tienes registrado dicho negocio.");
 
 						return Results.BadRequest($"Ya tienes registrado dicho negocio.");
+					}
+
+					// Se valida que el usuario tenga plan empresa si este no es su único negocio...
+					if (negociosVigentes.Count > 0 && !await suscripcionBcp.TienePlanEmpresa(sub)) {
+						LambdaLogger.Log(
+							$"[POST] - [Negocio] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Tu plan no permite registrar un negocio adicional.");
+
+						return Results.BadRequest($"Tu plan no permite registrar un negocio adicional.");
 					}
 
 					// Se valida que el tipo de actividad sea válido...
@@ -141,7 +153,8 @@ namespace TanatosAPI.Endpoints {
 						Nombre = nuevo.Nombre,
 						Direccion = nuevo.Direccion,
 						IdTipoActividad = nuevo.IdTipoActividad,
-						NombreTipoActividad = tipoActividad?.Nombre
+						NombreTipoActividad = tipoActividad?.Nombre,
+						FechaCreacion = nuevo.FechaCreacion,
 					};
 
 					LambdaLogger.Log(
@@ -162,7 +175,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (EntNegocioActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao, TipoActividadDao tipoActividadDao) => {
+			routes.MapPut("/", async (EntNegocioActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, NegocioDao negocioDao, TipoActividadDao tipoActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -172,13 +185,24 @@ namespace TanatosAPI.Endpoints {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
 					// Se valida que el negocio a actualizar pertenezca al usuario y este vigente...
-					Negocio? existente = (await negocioDao.ObtenerPorSub(sub, true)).FirstOrDefault(n => n.Id == entrada.Id);
+					List<Negocio> negociosVigentes = await negocioDao.ObtenerPorSub(sub, true);
+					Negocio? existente = negociosVigentes.FirstOrDefault(n => n.Id == entrada.Id);
 					if (existente == null) {
 						LambdaLogger.Log(
 							$"[PUT] - [Negocio] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"No existe el negocio con ID {entrada.Id}.");
 
 						return Results.BadRequest($"No existe el negocio con ID {entrada.Id}.");
+					}
+
+					// Se valida que el usuario tenga plan empresa si no esta editando su primer negocio...
+					Negocio primerNegocio = negociosVigentes.OrderBy(n => n.FechaCreacion).First();
+					if (primerNegocio.Id != existente!.Id && !await suscripcionBcp.TienePlanEmpresa(sub)) {
+						LambdaLogger.Log(
+							$"[PUT] - [Negocio] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Tu plan no permite actualizar la información de este negocio.");
+
+						return Results.BadRequest($"Tu plan no permite actualizar la información de este negocio.");
 					}
 
 					// Se valida que el tipo de actividad sea válido...
@@ -205,7 +229,8 @@ namespace TanatosAPI.Endpoints {
 						Nombre = existente.Nombre,
 						Direccion = existente.Direccion,
 						IdTipoActividad = existente.IdTipoActividad,
-						NombreTipoActividad = tipoActividad?.Nombre
+						NombreTipoActividad = tipoActividad?.Nombre,
+						FechaCreacion = existente.FechaCreacion,
 					};
 
 					LambdaLogger.Log(
@@ -232,7 +257,8 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
-					Negocio? existente = (await negocioDao.ObtenerPorSub(sub, true)).FirstOrDefault(d => d.Id == id);
+					List<Negocio> negociosVigentes = await negocioDao.ObtenerPorSub(sub, true);
+					Negocio? existente = negociosVigentes.FirstOrDefault(d => d.Id == id);
 
 					if (existente == null) {
 						LambdaLogger.Log(

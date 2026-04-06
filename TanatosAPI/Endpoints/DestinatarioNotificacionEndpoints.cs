@@ -65,7 +65,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CryptoHelper cryptoHelper, VariableEntornoHelper variableEntorno, CognitoHelper cognitoHelper, DestinatarioNotificacionBcp destinatarioNotificacionBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, NegocioDao negocioDao, HermesHelper hermesHelper) => {
+			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, CryptoHelper cryptoHelper, VariableEntornoHelper variableEntorno, CognitoHelper cognitoHelper, DestinatarioNotificacionBcp destinatarioNotificacionBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, NegocioDao negocioDao, HermesHelper hermesHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -76,12 +76,22 @@ namespace TanatosAPI.Endpoints {
 
 					// Se valida que el usuario no tenga otro destinatario igual...
 					List<DestinatarioNotificacion> destVigentes = await destinatarioNotificacionDao.ObtenerPorSub(sub, entrada.IdNegocio, true);
-					if (destVigentes.Any(d => d.Sub == sub && d.IdNegocio == entrada.IdNegocio && d.IdTipoReceptor == entrada.IdTipoReceptor && d.Destino == entrada.Destino)) {
+					if (destVigentes.Any(d => d.IdTipoReceptor == entrada.IdTipoReceptor && d.Destino == entrada.Destino)) {
 						LambdaLogger.Log(
 							$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"Ya tienes registrado dicho destinatario.");
 
 						return Results.BadRequest($"Ya tienes registrado dicho destinatario.");
+					}
+
+					// Se valida que el usuario tenga plan Empresa en caso de tener más de un destinatario...
+					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
+					if (destVigentes.Count > 0 && !tienePlanEmpresa) {
+						LambdaLogger.Log(
+							$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Tu plan no permite registrar un destinatario adicional.");
+
+						return Results.BadRequest($"Tu plan no permite registrar un destinatario adicional.");
 					}
 
 					// Se valida que el tipo de receptor sea válido...
@@ -92,6 +102,15 @@ namespace TanatosAPI.Endpoints {
 							$"El tipo de receptor de notificación es inválido.");
 
 						return Results.BadRequest($"El tipo de receptor de notificación es inválido.");
+					}
+
+					// Se valida que el tipo de receptor seleccionado no se restringa según el plan del usuario...
+					if (tipoReceptor!.RequierePlanEmpresa && !tienePlanEmpresa) {
+						LambdaLogger.Log(
+							$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Tu plan no permite registrar un destinatario de dicho tipo.");
+
+						return Results.BadRequest($"Tu plan no permite registrar un destinatario de dicho tipo.");
 					}
 
 					// Se valida regex del tipo de receptor...
