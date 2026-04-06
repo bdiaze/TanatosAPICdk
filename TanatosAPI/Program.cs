@@ -5,11 +5,13 @@ using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.S3;
 using Amazon.SecretsManager;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Routing.Constraints;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
@@ -25,6 +27,7 @@ WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+	options.SerializerOptions.MaxDepth = 128;
 });
 
 builder.Services.Configure<RouteOptions>(options => {
@@ -34,23 +37,27 @@ builder.Services.Configure<RouteOptions>(options => {
 builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi, new SourceGeneratorLambdaJsonSerializer<AppJsonSerializerContext>());
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c => {
-	c.SwaggerDoc("v1", new OpenApiInfo {
-		Title = "API Tánatos - Minimal API AoT",
-		Version = "v1"
-	});
+builder.Services.AddOpenApi(c => {
+	c.AddDocumentTransformer((document, context, cancellationToken) => {
+		document.Info = new() {
+			Title = "API Tánatos - Minimal API AoT",
+			Version = "v1"
+		};
 
-	c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
-		Name = "Authorization",
-		Description = "JWT Authorization header usando el esquema Bearer.\r\n\r\n" +
-					  "Ejemplo: \"Bearer eyJhbGciOi...\"",
-		In = ParameterLocation.Header,
-		Type = SecuritySchemeType.Http,
-		Scheme = "bearer",
-		BearerFormat = "JWT"
-	});
+		document.Components ??= new();
+		document.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme> {
+			["Bearer"] = new OpenApiSecurityScheme {
+				Type = SecuritySchemeType.Http,
+				Scheme = "bearer",
+				BearerFormat = "JWT",
+				In = ParameterLocation.Header,
+				Name = "Authorization",
+				Description = "JWT Authorization header usando el esquema Bearer. Ejemplo: \"Bearer eyJhbGciOi...\"",
+			}
+		};
 
-	c.OperationFilter<AuthApplyOperationFilter>();
+		return Task.CompletedTask;
+	});
 });
 
 #region Singleton AWS Services
@@ -225,8 +232,8 @@ builder.Services.AddAuthorizationBuilder()
 WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment()) {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi();
+	app.MapScalarApiReference();
 }
 
 app.UseAuthentication();

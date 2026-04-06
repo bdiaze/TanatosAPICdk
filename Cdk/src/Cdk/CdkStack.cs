@@ -738,7 +738,7 @@ namespace Cdk
 
 			// Creación de la función lambda...
 			Function function = new(this, $"{appName}APILambdaFunction", new FunctionProps {
-                Runtime = Runtime.DOTNET_8,
+                Runtime = Runtime.DOTNET_10,
                 Handler = handler,
                 Code = Code.FromAsset(publishZip),
                 FunctionName = $"{appName}API",
@@ -930,7 +930,7 @@ namespace Cdk
 
             // Creación de la función lambda
             Function functionInitial = new(this, $"{appName}APIInitialCreationLambda", new FunctionProps {
-                Runtime = Runtime.DOTNET_8,
+                Runtime = Runtime.DOTNET_10,
                 Handler = initialCreationHandler,
                 Code = Code.FromAsset(initialCreationPublishZip),
                 FunctionName = $"{appName}APIInitialCreation",
