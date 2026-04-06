@@ -38,7 +38,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Sistema.Read.Public").WithOpenApi();
+			}).RequireAuthorization("Sistema.Read.Public");
 
 			return routes;
 		}
@@ -68,7 +68,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Admin").WithOpenApi();
+			}).RequireAuthorization("Admin");
 
 			return routes;
 		}
@@ -103,7 +103,7 @@ namespace TanatosAPI.Endpoints {
                         $"{ex}");
                     return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
                 }
-            }).RequireAuthorization("Admin").WithOpenApi();
+            }).RequireAuthorization("Admin");
 
             return routes;
         }
@@ -138,7 +138,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Admin").WithOpenApi();
+			}).RequireAuthorization("Admin");
 
 			return routes;
 		}
@@ -172,7 +172,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Admin").WithOpenApi();
+			}).RequireAuthorization("Admin");
 
 			return routes;
 		}

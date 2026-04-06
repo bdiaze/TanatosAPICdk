@@ -66,7 +66,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Vencimientos.Read.Self").WithOpenApi();
+			}).RequireAuthorization("Vencimientos.Read.Self");
 
 			return routes;
 		}
@@ -167,7 +167,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Vencimientos.Write.Self").WithOpenApi();
+			}).RequireAuthorization("Vencimientos.Write.Self");
 
 			return routes;
 		}
@@ -229,7 +229,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Vencimientos.Write.Self").WithOpenApi();
+			}).RequireAuthorization("Vencimientos.Write.Self");
 
 			return routes;
 		}
@@ -286,7 +286,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Vencimientos.Read.Self").WithOpenApi();
+			}).RequireAuthorization("Vencimientos.Read.Self");
 
 			return routes;
 		}
@@ -349,7 +349,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Vencimientos.Write.Self").WithOpenApi();
+			}).RequireAuthorization("Vencimientos.Write.Self");
 
 			return routes;
 		}

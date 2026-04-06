@@ -69,7 +69,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Suscripciones.Read.Self").WithOpenApi();
+			}).RequireAuthorization("Suscripciones.Read.Self");
 
 			return routes;
 		}
@@ -221,7 +221,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Suscripciones.Write.Self").WithOpenApi();
+			}).RequireAuthorization("Suscripciones.Write.Self");
 
 			return routes;
 		}
@@ -273,7 +273,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Suscripciones.Write.Self").WithOpenApi();
+			}).RequireAuthorization("Suscripciones.Write.Self");
 
 			return routes;
 		}
@@ -427,7 +427,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).AllowAnonymous().DisableAntiforgery().WithOpenApi();
+			}).AllowAnonymous().DisableAntiforgery();
 
 			return routes;
 		}
