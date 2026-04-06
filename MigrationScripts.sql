@@ -1863,5 +1863,21 @@ BEGIN
     VALUES ('20260318193611_DropColumnCorreoElectronicoUsuario', '9.0.12');
     END IF;
 END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260406161935_AddColumnPlanEmpresaTipoReceptor') THEN
+    ALTER TABLE tanatos.tipo_receptor_notificacion ADD requiere_plan_empresa boolean NOT NULL DEFAULT FALSE;
+    COMMENT ON COLUMN tanatos.tipo_receptor_notificacion.requiere_plan_empresa IS 'Indicador de si el tipo de receptor requiere de que el usuario tenga plan Empresa.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260406161935_AddColumnPlanEmpresaTipoReceptor') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260406161935_AddColumnPlanEmpresaTipoReceptor', '9.0.12');
+    END IF;
+END $EF$;
 COMMIT;
 

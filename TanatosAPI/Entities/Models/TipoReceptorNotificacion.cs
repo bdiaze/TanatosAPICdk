@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -25,6 +26,13 @@ namespace TanatosAPI.Entities.Models {
 		[Column("regex_validacion")]
 		[Comment("Regex para validar el tipo de receptor.")]
 		public string? RegexValidacion { get; set; }
+
+        [UseColumnAttribute]
+        [Required]
+		[DefaultValue(false)]
+		[Column("requiere_plan_empresa")]
+        [Comment("Indicador de si el tipo de receptor requiere de que el usuario tenga plan Empresa.")]
+        public required bool RequierePlanEmpresa { get; set; } = false;
 
 		[UseColumnAttribute]
 		[Required]
