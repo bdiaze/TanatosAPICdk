@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("categoria_norma", Schema = "tanatos")]
@@ -37,8 +38,10 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Vigencia de la categoría.")]
 		public required bool Vigencia { get; set; }
 
-		public List<TemplateNorma>? TemplateNormas { get; set; } 
+		[JsonIgnore]
+		public List<TemplateNorma>? TemplateNormas { get; set; }
 
+		[JsonIgnore]
 		public List<NormaSuscrita>? NormasSuscritas { get; set; }
 	}
 }

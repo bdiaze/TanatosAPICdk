@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("tipo_unidad_tiempo", Schema = "tanatos")]
@@ -38,8 +39,10 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Vigencia del tipo de unidad de tiempo.")]
 		public required bool Vigencia { get; set; }
 
+		[JsonIgnore]
 		public List<TemplateNormaNotificacion>? TemplateNormasNotificacion { get; set; }
 
+		[JsonIgnore]
 		public List<NotificacionNormaSuscrita>? NotificacionesNormaSuscrita { get; set; }
 	}
 }

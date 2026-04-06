@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TanatosAPI.Entities.Models {
@@ -78,9 +79,11 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Vigencia de la suscripción.")]
 		public required bool Vigencia { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdPlan))]
 		public Plan? Plan { get; set; }
 
+		[JsonIgnore]
 		public List<Pago>? Pagos { get; set; }
 	}
 }

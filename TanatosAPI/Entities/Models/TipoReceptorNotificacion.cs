@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
     [Table("tipo_receptor_notificacion", Schema = "tanatos")]
@@ -40,6 +41,7 @@ namespace TanatosAPI.Entities.Models {
         [Comment("Vigencia del tipo de receptor de notificación.")]
         public required bool Vigencia { get; set; }
 
-        public List<DestinatarioNotificacion>? DestinatariosNotificaciones { get; set; }
+		[JsonIgnore]
+		public List<DestinatarioNotificacion>? DestinatariosNotificaciones { get; set; }
     }
 }

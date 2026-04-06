@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("pago", Schema = "tanatos")]
@@ -82,6 +83,7 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Vigencia del pago.")]
 		public required bool Vigencia { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdSuscripcion))]
 		public Suscripcion? Suscripcion { get; set; }
 	}

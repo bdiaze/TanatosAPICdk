@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("tipo_actividad", Schema = "tanatos")]
@@ -38,11 +39,14 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Vigencia de la actividad.")]
 		public required bool Vigencia { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdTipoRubro))]
 		public TipoRubro? TipoRubro { get; set; }
 
+		[JsonIgnore]
 		public List<Negocio>? Negocios { get; set; }
 
+		[JsonIgnore]
 		public List<TemplateActividad>? TemplatesActividad { get; set; }
 	}
 }

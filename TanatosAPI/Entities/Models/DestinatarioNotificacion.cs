@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
     [Table("destinatario_notificacion", Schema = "tanatos")]
@@ -92,12 +93,15 @@ namespace TanatosAPI.Entities.Models {
         [Comment("Vigencia del destinatario.")]
         public required bool Vigencia { get; set; }
 
-        [ForeignKey(nameof(IdTipoReceptor))]
+		[JsonIgnore]
+		[ForeignKey(nameof(IdTipoReceptor))]
         public TipoReceptorNotificacion? TipoReceptorNotificacion { get; set; }
 
-        [ForeignKey(nameof(IdNegocio))]
+		[JsonIgnore]
+		[ForeignKey(nameof(IdNegocio))]
 		public Negocio? Negocio { get; set; }
 
-        public List<HistorialNotificacion>? HistorialNotificaciones { get; set; }
+		[JsonIgnore]
+		public List<HistorialNotificacion>? HistorialNotificaciones { get; set; }
     }
 }

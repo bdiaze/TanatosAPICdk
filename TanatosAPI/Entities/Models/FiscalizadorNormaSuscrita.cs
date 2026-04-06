@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("fiscalizador_norma_suscrita", Schema = "tanatos")]
@@ -46,9 +47,11 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Vigencia del fiscalizador asociado.")]
 		public required bool Vigencia { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdNormaSuscrita))]
 		public NormaSuscrita? NormaSuscrita { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdTipoFiscalizador))]
 		public TipoFiscalizador? TipoFiscalizador { get; set; }
 

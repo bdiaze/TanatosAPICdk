@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("template", Schema = "tanatos")]
@@ -35,15 +36,20 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Vigencia del template.")]
 		public required bool Vigencia { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdTemplatePadre))]
 		public Template? TemplatePadre { get; set; }
 
+		[JsonIgnore]
 		public List<Template>? TemplatesHijos { get; set; }
 
+		[JsonIgnore]
 		public List<TemplateNorma>? TemplateNormas { get; set; }
 
+		[JsonIgnore]
 		public List<InscripcionTemplate>? InscripcionesTemplate { get; set; }
 
+		[JsonIgnore]
 		public List<TemplateActividad>? TemplateActividades { get; set; }
 
 		public override int GetHashCode() {

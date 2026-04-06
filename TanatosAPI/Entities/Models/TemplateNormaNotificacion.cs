@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("template_norma_notificacion", Schema = "tanatos")]
@@ -34,8 +35,10 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Cantidad de unidades de tiempo a usar para la notificación.")]
 		public required int CantAntelacion { get; set; }
 
+		[JsonIgnore]
 		public TemplateNorma? TemplateNorma { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdTipoUnidadTiempoAntelacion))]
 		public TipoUnidadTiempo? TipoUnidadTiempoAntelacion { get; set; }
 

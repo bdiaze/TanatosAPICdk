@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("notificacion_norma_suscrita", Schema = "tanatos")]
@@ -50,9 +51,11 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Vigencia de la notificación asociada.")]
 		public required bool Vigencia { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdNormaSuscrita))]
 		public NormaSuscrita? NormaSuscrita { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdTipoUnidadTiempoAntelacion))]
 		public TipoUnidadTiempo? TipoUnidadTiempo { get; set; }
 

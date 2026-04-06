@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("template_actividad", Schema = "tanatos")]
@@ -20,9 +21,11 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Identificador del tipo de actividad del negocio.")]
 		public required long IdTipoActividad { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdTemplate))]
 		public Template? Template { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdTipoActividad))]
 		public TipoActividad? TipoActividad { get; set; }
 	}

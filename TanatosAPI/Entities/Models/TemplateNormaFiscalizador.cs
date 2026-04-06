@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("template_norma_fiscalizador", Schema = "tanatos")]
@@ -27,8 +28,10 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Identificador del tipo de fiscalizador.")]
 		public required long IdTipoFiscalizador { get; set; }
 
+		[JsonIgnore]
 		public TemplateNorma? TemplateNorma { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdTipoFiscalizador))]
 		public TipoFiscalizador? TipoFiscalizador { get; set; }
 

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("template_norma", Schema = "tanatos")]
@@ -46,19 +47,25 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Identificador de la categoría a la que pertenece la norma.")]
 		public required long IdCategoriaNorma { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdTemplate))]
 		public Template? Template { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdTipoPeriodicidad))]
 		public TipoPeriodicidad? TipoPeriodicidad { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdCategoriaNorma))]
 		public CategoriaNorma? CategoriaNorma { get; set; }
 
+		[JsonIgnore]
 		public List<TemplateNormaFiscalizador>? TemplateNormaFiscalizadores { get; set; }
 
+		[JsonIgnore]
 		public List<TemplateNormaNotificacion>? TemplateNormaNotificaciones { get; set; }
 
+		[JsonIgnore]
 		public List<NormaSuscrita>? NormasSuscritas { get; set; }
 
 		public override int GetHashCode() {

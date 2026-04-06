@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.Eventing.Reader;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TanatosAPI.Entities.Models {
@@ -115,21 +116,28 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Vigencia de la norma.")]
 		public required bool Vigencia { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdTipoPeriodicidad))]
 		public TipoPeriodicidad? TipoPeriodicidad { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdCategoriaNorma))]
 		public CategoriaNorma? CategoriaNorma { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(IdNegocio))]
 		public Negocio? Negocio { get; set; }
 
+		[JsonIgnore]
 		public TemplateNorma? TemplateNorma { get; set; }
 
+		[JsonIgnore]
 		public List<FiscalizadorNormaSuscrita>? FiscalizadoresNormaSuscrita { get; set; }
 
+		[JsonIgnore]
 		public List<NotificacionNormaSuscrita>? NotificacionesNormaSuscrita { get; set; }
 
+		[JsonIgnore]
 		public List<HistorialNormaSuscrita>? HistorialesNormaSuscrita { get; set; }
 	}
 }

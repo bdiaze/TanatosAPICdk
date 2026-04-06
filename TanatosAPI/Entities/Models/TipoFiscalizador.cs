@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("tipo_fiscalizador", Schema = "tanatos")]
@@ -32,8 +33,10 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Vigencia del tipo de fiscalizador.")]
 		public required bool Vigencia { get; set; }
 
+		[JsonIgnore]
 		public List<TemplateNormaFiscalizador>? TemplateNormasFiscalizador { get; set; }
 
+		[JsonIgnore]
 		public List<FiscalizadorNormaSuscrita>? FiscalizadoresNormaSuscrita { get; set; }
 	}
 }
