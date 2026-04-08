@@ -2026,3 +2026,22 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260408233055_AddColumnObservacionHistorialNotificacion') THEN
+    ALTER TABLE tanatos.historial_notificacion ADD observacion text;
+    COMMENT ON COLUMN tanatos.historial_notificacion.observacion IS 'Observación relacionada a la notificación.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260408233055_AddColumnObservacionHistorialNotificacion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260408233055_AddColumnObservacionHistorialNotificacion', '10.0.5');
+    END IF;
+END $EF$;
+COMMIT;
+

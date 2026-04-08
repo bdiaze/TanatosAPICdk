@@ -55,6 +55,11 @@ namespace TanatosAPI.Entities.Models {
 		public short? Estado { get; set; }
 
 		[UseColumnAttribute]
+		[Column("observacion")]
+		[Comment("Observación relacionada a la notificación.")]
+		public string? Observacion { get; set; }
+
+		[UseColumnAttribute]
 		[Column("hermes_id_mensaje")]
 		[Comment("ID del mensaje en Hermes.")]
 		public string? HermesIdMensaje { get; set; }
