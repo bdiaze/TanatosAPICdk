@@ -43,13 +43,11 @@ namespace TanatosAPI.Entities.Models {
 		[JsonIgnore]
 		public List<Template>? TemplatesHijos { get; set; }
 
-		[JsonIgnore]
 		public List<TemplateNorma>? TemplateNormas { get; set; }
 
 		[JsonIgnore]
 		public List<InscripcionTemplate>? InscripcionesTemplate { get; set; }
 
-		[JsonIgnore]
 		public List<TemplateActividad>? TemplateActividades { get; set; }
 
 		public override int GetHashCode() {
