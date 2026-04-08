@@ -12,7 +12,7 @@ namespace TanatosAPI.Repositories {
 		public async Task<List<HistorialNotificacion>> ObtenerPorHistorial(long idHistorialNormaSuscrita, DateTime? fechaEjecucion = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_HISTORIAL_NORMA_SUSCRITA, ID_DESTINATARIO_NOTIFICACION, ID_TIPO_UNIDAD_TIEMPO_ANTELACION, CANT_ANTELACION, " +
-				"FECHA_PROGRAMACION, FECHA_EJECUCION, ESTADO, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.HISTORIAL_NOTIFICACION " +
+				"FECHA_PROGRAMACION, FECHA_EJECUCION, ESTADO, OBSERVACION, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.HISTORIAL_NOTIFICACION " +
 				"WHERE ID_HISTORIAL_NORMA_SUSCRITA = @IDHISTORIALNORMASUSCRITA AND FECHA_EJECUCION IS NOT DISTINCT FROM @FECHAEJECUCION AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
 
 			bool disposeConnection = transaction?.Connection == null;
@@ -39,10 +39,11 @@ namespace TanatosAPI.Repositories {
 						FechaProgramacion = reader.GetDateTime(5),
 						FechaEjecucion = reader.IsDBNull(6) ? null : reader.GetDateTime(6),
 						Estado = reader.IsDBNull(7) ? null : reader.GetInt16(7),
-						HermesIdMensaje = reader.IsDBNull(8) ? null : reader.GetString(8),
-						FechaCreacion = reader.GetDateTime(9),
-						FechaEliminacion = reader.IsDBNull(10) ? null : reader.GetDateTime(10),
-						Vigencia = reader.GetBoolean(11)
+						Observacion = reader.IsDBNull(8) ? null : reader.GetString(8),
+						HermesIdMensaje = reader.IsDBNull(9) ? null : reader.GetString(9),
+						FechaCreacion = reader.GetDateTime(10),
+						FechaEliminacion = reader.IsDBNull(11) ? null : reader.GetDateTime(11),
+						Vigencia = reader.GetBoolean(12)
 					});
 				}
 
@@ -56,8 +57,8 @@ namespace TanatosAPI.Repositories {
 
 		public async Task<long> Insertar(HistorialNotificacion item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"INSERT INTO TANATOS.HISTORIAL_NOTIFICACION(ID_HISTORIAL_NORMA_SUSCRITA, ID_DESTINATARIO_NOTIFICACION, ID_TIPO_UNIDAD_TIEMPO_ANTELACION, CANT_ANTELACION, FECHA_PROGRAMACION, FECHA_EJECUCION, ESTADO, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
-				"VALUES (@IDHISTORIALNORMASUSCRITA, @IDDESTINATARIONOTIFICACION, @IDTIPOUNIDADTIEMPOANTELACION, @CANTANTELACION, @FECHAPROGRAMACION, @FECHAEJECUCION, @ESTADO, @HERMESIDMENSAJE, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
+				"INSERT INTO TANATOS.HISTORIAL_NOTIFICACION(ID_HISTORIAL_NORMA_SUSCRITA, ID_DESTINATARIO_NOTIFICACION, ID_TIPO_UNIDAD_TIEMPO_ANTELACION, CANT_ANTELACION, FECHA_PROGRAMACION, FECHA_EJECUCION, ESTADO, OBSERVACION, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
+				"VALUES (@IDHISTORIALNORMASUSCRITA, @IDDESTINATARIONOTIFICACION, @IDTIPOUNIDADTIEMPOANTELACION, @CANTANTELACION, @FECHAPROGRAMACION, @FECHAEJECUCION, @ESTADO, @OBSERVACION, @HERMESIDMENSAJE, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
 				"RETURNING ID";
 			DynamicParameters param = new();
 			param.Add("IDHISTORIALNORMASUSCRITA", item.IdHistorialNormaSuscrita);
@@ -67,6 +68,7 @@ namespace TanatosAPI.Repositories {
 			param.Add("FECHAPROGRAMACION", item.FechaProgramacion);
 			param.Add("FECHAEJECUCION", item.FechaEjecucion);
 			param.Add("ESTADO", item.Estado);
+			param.Add("OBSERVACION", item.Observacion);
 			param.Add("HERMESIDMENSAJE", item.HermesIdMensaje);
 			param.Add("FECHACREACION", item.FechaCreacion);
 			param.Add("FECHAELIMINACION", item.FechaEliminacion);
@@ -84,7 +86,7 @@ namespace TanatosAPI.Repositories {
 			string query =
 				"UPDATE TANATOS.HISTORIAL_NOTIFICACION SET ID_HISTORIAL_NORMA_SUSCRITA = @IDHISTORIALNORMASUSCRITA, ID_DESTINATARIO_NOTIFICACION = @IDDESTINATARIONOTIFICACION, " +
 				"ID_TIPO_UNIDAD_TIEMPO_ANTELACION = @IDTIPOUNIDADTIEMPOANTELACION, CANT_ANTELACION = @CANTANTELACION, FECHA_PROGRAMACION = @FECHAPROGRAMACION, FECHA_EJECUCION = @FECHAEJECUCION, " +
-				"ESTADO = @ESTADO, HERMES_ID_MENSAJE = @HERMESIDMENSAJE, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
+				"ESTADO = @ESTADO, OBSERVACION = @OBSERVACION, HERMES_ID_MENSAJE = @HERMESIDMENSAJE, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
 				"WHERE ID = @ID";
 			DynamicParameters param = new();
 			param.Add("IDHISTORIALNORMASUSCRITA", item.IdHistorialNormaSuscrita);
@@ -94,6 +96,7 @@ namespace TanatosAPI.Repositories {
 			param.Add("FECHAPROGRAMACION", item.FechaProgramacion);
 			param.Add("FECHAEJECUCION", item.FechaEjecucion);
 			param.Add("ESTADO", item.Estado);
+			param.Add("OBSERVACION", item.Observacion);
 			param.Add("HERMESIDMENSAJE", item.HermesIdMensaje);
 			param.Add("FECHACREACION", item.FechaCreacion);
 			param.Add("FECHAELIMINACION", item.FechaEliminacion);
