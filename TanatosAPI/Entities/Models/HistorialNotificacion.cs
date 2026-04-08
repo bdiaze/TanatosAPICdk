@@ -50,6 +50,11 @@ namespace TanatosAPI.Entities.Models {
 		public DateTime? FechaEjecucion { get; set; }
 
 		[UseColumnAttribute]
+		[Column("estado")]
+		[Comment("Estado de la notificación - 0: Pendiente - 1: Enviado - 2: Omitido.")]
+		public short? Estado { get; set; }
+
+		[UseColumnAttribute]
 		[Column("hermes_id_mensaje")]
 		[Comment("ID del mensaje en Hermes.")]
 		public string? HermesIdMensaje { get; set; }

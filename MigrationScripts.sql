@@ -2007,3 +2007,22 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260408232111_AddColumnEstadoHistorialNotificacion') THEN
+    ALTER TABLE tanatos.historial_notificacion ADD estado smallint;
+    COMMENT ON COLUMN tanatos.historial_notificacion.estado IS 'Estado de la notificación - 0: Pendiente - 1: Enviado - 2: Omitido.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260408232111_AddColumnEstadoHistorialNotificacion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260408232111_AddColumnEstadoHistorialNotificacion', '10.0.5');
+    END IF;
+END $EF$;
+COMMIT;
+
