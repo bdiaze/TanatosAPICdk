@@ -1,17 +1,48 @@
 ﻿using Dapper;
 using Npgsql;
+using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class NegocioDao(DatabaseConnectionHelper connectionHelper) {
-		public async Task<List<Negocio>> ObtenerPorSub(string sub, bool vigencia = true) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return [.. await connection.QueryAsync<Negocio>(
-				"SELECT ID, SUB, NOMBRE, DIRECCION, ID_TIPO_ACTIVIDAD, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NEGOCIO WHERE SUB = @SUB AND VIGENCIA = @VIGENCIA",
-				new { sub, vigencia }
-			)];
+		public async Task<List<Negocio>> ObtenerPorSub(string sub, bool vigencia = true, NpgsqlTransaction? transaction = null) {
+			string query =
+				"SELECT ID, SUB, NOMBRE, DIRECCION, ID_TIPO_ACTIVIDAD, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NEGOCIO " +
+				"WHERE SUB = @SUB AND VIGENCIA = @VIGENCIA";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+				command.Parameters.AddWithValue("SUB", sub);
+				command.Parameters.AddWithValue("VIGENCIA", (object?)vigencia ?? DBNull.Value);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				List<Negocio> retorno = [];
+
+				while (await reader.ReadAsync()) {
+					retorno.Add(new Negocio {
+						Id = reader.GetInt64(0),
+						Sub = reader.GetString(1),
+						Nombre = reader.GetString(2),
+						Direccion = reader.IsDBNull(3) ? null : reader.GetString(3),
+						IdTipoActividad = reader.IsDBNull(4) ? null : reader.GetInt64(4),
+						FechaCreacion = reader.GetDateTime(5),
+						FechaEliminacion = reader.IsDBNull(6) ? null : reader.GetDateTime(6),
+						Vigencia = reader.GetBoolean(7)
+					});
+				}
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
 		}
 
 		public async Task<long> Insertar(Negocio item) {

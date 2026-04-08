@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Npgsql;
+using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
@@ -25,13 +26,46 @@ namespace TanatosAPI.Repositories {
 			);
 		}
 
-		public async Task<List<Suscripcion>> ObtenerPorSub(string sub, bool? vigencia = true) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return [.. await connection.QueryAsync<Suscripcion>(
+		public async Task<List<Suscripcion>> ObtenerPorSub(string sub, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
+			string query =
 				"SELECT ID, SUB, ID_PLAN, FECHA_INICIO, FECHA_EXPIRACION, FECHA_CANCELACION, ESTADO, FLOW_CUSTOMER_ID, FLOW_SUBSCRIPTION_ID, " +
-				"FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.SUSCRIPCION WHERE SUB = @SUB AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)",
-				new { sub, vigencia }
-			)];
+				"FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.SUSCRIPCION WHERE SUB = @SUB AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+				command.Parameters.AddWithValue("SUB", sub);
+				command.Parameters.AddWithValue("VIGENCIA", (object?)vigencia ?? DBNull.Value);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				List<Suscripcion> retorno = [];
+
+				while (await reader.ReadAsync()) {
+					retorno.Add(new Suscripcion {
+						Id = reader.GetInt64(0),
+						Sub = reader.GetString(1),
+						IdPlan = reader.GetInt64(2),
+						FechaInicio = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+						FechaExpiracion = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
+						FechaCancelacion = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+						Estado = reader.GetInt16(6),
+						FlowCustomerId = reader.IsDBNull(7) ? null : reader.GetString(7),
+						FlowSubscriptionId = reader.IsDBNull(8) ? null : reader.GetString(8),
+						FechaCreacion = reader.GetDateTime(9),
+						FechaEliminacion = reader.IsDBNull(10) ? null : reader.GetDateTime(10),
+						Vigencia = reader.GetBoolean(11)
+					});
+				}
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
 		}
 
 		public async Task<long> Insertar(Suscripcion item, NpgsqlTransaction? transaction = null) {
