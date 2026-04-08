@@ -75,6 +75,7 @@ namespace TanatosAPI.Business {
 					IdTipoUnidadTiempoAntelacion = idTipoUnidadTiempoAntelacion,
 					CantAntelacion = cantAntelacion,
 					FechaProgramacion = fechaProgramacion,
+					Estado = 0, // Pendiente
 					FechaCreacion = DateTime.UtcNow,
 					FechaEliminacion = null,
 					Vigencia = true
