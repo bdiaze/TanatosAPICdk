@@ -72,7 +72,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapGenerarUrlSubidaEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/GenerarUrlSubida", async (EntDocumentoAdjuntoGenerarUrlSubida entrada, IHostEnvironment environment, ClaimsPrincipal user, DocumentoAdjuntoHelper documentoAdjuntoHelper, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, DocumentoAdjuntoDao documentoAdjuntoDao) => {
+			routes.MapPost("/GenerarUrlSubida", async (EntDocumentoAdjuntoGenerarUrlSubida entrada, IHostEnvironment environment, ClaimsPrincipal user, DocumentoAdjuntoHelper documentoAdjuntoHelper, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, DocumentoAdjuntoDao documentoAdjuntoDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -80,6 +80,17 @@ namespace TanatosAPI.Endpoints {
 					entrada.Mime = entrada.Mime.Trim();
 
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+
+					// Se valida que el usuario tenga plan Empresa...
+					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
+					if (!tienePlanEmpresa) {
+						LambdaLogger.Log(
+							$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Tu plan no permite adjuntar documentos.");
+
+						return Results.BadRequest($"Tu plan no permite adjuntar documentos.");
+					}
+
 
 					// Se valida el tamaño del archivo...
 					const long MAX_FILE_SIZE = 10 * 1024 * 1024;
