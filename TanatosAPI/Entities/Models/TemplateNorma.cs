@@ -59,10 +59,8 @@ namespace TanatosAPI.Entities.Models {
 		[ForeignKey(nameof(IdCategoriaNorma))]
 		public CategoriaNorma? CategoriaNorma { get; set; }
 
-		[JsonIgnore]
 		public List<TemplateNormaFiscalizador>? TemplateNormaFiscalizadores { get; set; }
 
-		[JsonIgnore]
 		public List<TemplateNormaNotificacion>? TemplateNormaNotificaciones { get; set; }
 
 		[JsonIgnore]
