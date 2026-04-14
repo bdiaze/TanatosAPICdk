@@ -34,13 +34,14 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
-					List<TipoReceptorNotificacion> receptores = await tipoReceptorNotificacionDao.ObtenerPorVigencia(null);
+					List<TipoReceptorNotificacion> receptores = await tipoReceptorNotificacionDao.ObtenerPorVigencia(true);
 
 					List<SalDestinatarioNotificacion> retorno = [.. (await destinatarioNotificacionDao.ObtenerPorSub(sub, idNegocio, true))
 						.Select(d => new SalDestinatarioNotificacion() {
 							Id = d.Id,
 							IdTipoReceptor = d.IdTipoReceptor,
 							NombreTipoReceptor = receptores.FirstOrDefault(r => r.Id == d.IdTipoReceptor)?.Nombre,
+							RequierePlanEmpresa = receptores.FirstOrDefault(r => r.Id == d.IdTipoReceptor)?.RequierePlanEmpresa,
 							Alias = d.Alias,
 							Destino = d.Destino,
 							Validado = d.Validado
@@ -143,6 +144,8 @@ namespace TanatosAPI.Endpoints {
 					SalDestinatarioNotificacion retorno = new() {
 						Id = nuevoDestinatario.Id,
 						IdTipoReceptor = nuevoDestinatario.IdTipoReceptor,
+						NombreTipoReceptor = tipoReceptor.Nombre,
+						RequierePlanEmpresa = tipoReceptor.RequierePlanEmpresa,
 						Alias = nuevoDestinatario.Alias,
 						Destino = nuevoDestinatario.Destino,
 						Validado = nuevoDestinatario.Validado
