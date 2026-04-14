@@ -3,7 +3,7 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class SuscripcionBcp(SuscripcionDao suscripcionDao, NegocioDao negocioDao, DestinatarioNotificacionDao destinatarioNotificacionDao) {
+	public class SuscripcionBcp(SuscripcionDao suscripcionDao, NegocioDao negocioDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) {
 		public async Task<bool> TienePlanEmpresa(string sub, NpgsqlTransaction? transaction = null) {
 			// Se obtienen las suscripciones del usuario...
 			List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(sub, true, transaction);
@@ -44,6 +44,12 @@ namespace TanatosAPI.Business {
 			// Se valida si el usuario tiene plan Empresa...
 			bool tienePlanEmpresa = await TienePlanEmpresa(sub, transaction);
 			if (tienePlanEmpresa) return true;
+
+			// Dado que no tiene plan Empresa, se valida si el tipo de receptor requiere plan Empresa...
+			TipoReceptorNotificacion? tipoReceptorDestinatario = await tipoReceptorNotificacionDao.ObtenerPorId(destinatarioSeleccionado.IdTipoReceptor, transaction);
+			if (tipoReceptorDestinatario == null || !tipoReceptorDestinatario.Vigencia || tipoReceptorDestinatario.RequierePlanEmpresa) {
+				return false;
+			}
 
 			// Dado que no tiene plan Empresa, se valida si el destinatario corresponde al primer destinatario creado por el usuario...
 			DestinatarioNotificacion primerDestinatario = destinatarios.OrderBy(d => d.FechaCreacion).First();
