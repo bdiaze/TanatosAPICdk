@@ -2045,3 +2045,22 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260415233226_AddColumnRequierePlanEmpresaTemplate') THEN
+    ALTER TABLE tanatos.template ADD requiere_plan_empresa boolean NOT NULL DEFAULT FALSE;
+    COMMENT ON COLUMN tanatos.template.requiere_plan_empresa IS 'Indicador de si el template requiere de que el usuario tenga plan Empresa.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260415233226_AddColumnRequierePlanEmpresaTemplate') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260415233226_AddColumnRequierePlanEmpresaTemplate', '10.0.5');
+    END IF;
+END $EF$;
+COMMIT;
+
