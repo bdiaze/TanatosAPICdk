@@ -59,7 +59,7 @@ namespace TanatosAPI.Entities.Models {
 		public List<TemplateActividad>? TemplateActividades { get; set; }
 
 		public override int GetHashCode() {
-			return HashCode.Combine(Id, IdTemplatePadre, Nombre, Descripcion, Vigencia);
+			return HashCode.Combine(Id, IdTemplatePadre, Nombre, Descripcion, RequierePlanEmpresa, Vigencia);
 		}
 
 		public override bool Equals(object? obj) {
@@ -71,6 +71,7 @@ namespace TanatosAPI.Entities.Models {
 					IdTemplatePadre == other.IdTemplatePadre &&
 					Nombre == other.Nombre &&
 					Descripcion == other.Descripcion &&
+					RequierePlanEmpresa == other.RequierePlanEmpresa &&
 					Vigencia == other.Vigencia;
 		}
 	}
