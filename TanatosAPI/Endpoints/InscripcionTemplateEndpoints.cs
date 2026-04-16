@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Npgsql;
 using System.Diagnostics;
 using System.Security.Claims;
+using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
@@ -57,7 +58,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActivarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Activar", async (EntInscripcionTemplateActivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
+			routes.MapPost("/Activar", async (EntInscripcionTemplateActivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -66,14 +67,14 @@ namespace TanatosAPI.Endpoints {
 					// Se valida que el template esté vigente...
 					List<Template> templatesVigentes = await templateDao.ObtenerPorVigencia(true);
 					Template? templateExistente = templatesVigentes.FirstOrDefault(t => t.Id == entrada.IdTemplate);
-					if (templateExistente == null) {
+					if (templateExistente == null || !templateExistente.Vigencia) {
 						LambdaLogger.Log(
 							$"[POST] - [InscripcionTemplate] - [Activar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El template es inválido.");
 
 						return Results.BadRequest($"El template es inválido.");
 					}
-
+										
 					// Se valida que el cliente no cuente con esa inscripción ya activa...
 					List<InscripcionTemplate> inscripcionesExistentes = await inscripcionTemplateDao.ObtenerPorSub(sub, entrada.IdNegocio, null);
 					InscripcionTemplate? inscripcionExistente = inscripcionesExistentes.FirstOrDefault(it => it.IdTemplate == entrada.IdTemplate);
@@ -85,11 +86,24 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"La inscripción al template ya se encuentra activa.");
 					}
 
+					// Se valida que el usuario tenga plan empresa si este template requiere de dicho plan...
+					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
+					if (templateExistente.RequierePlanEmpresa && !tienePlanEmpresa) {
+						LambdaLogger.Log(
+							$"[POST] - [InscripcionTemplate] - [Activar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Tu plan no permite inscribirte a esta plantilla.");
+
+						return Results.BadRequest($"Tu plan no permite inscribirte a esta plantilla.");
+					}
+
 					// Se crea lista con todos los templates a los que se va a inscribir el cliente...
 					List<Template> templatesAInscribir = [];
 					Template? templateAuxiliar = templateExistente;
 					while (templateAuxiliar != null) {
-						templatesAInscribir.Add(templateAuxiliar);
+						// Solo se agregan las plantillas que no requieren plan empresa o todas si el cliente tiene plan empresa...
+						if (!templateAuxiliar.RequierePlanEmpresa || tienePlanEmpresa) {
+							templatesAInscribir.Add(templateAuxiliar);
+						}
 						if (entrada.ActivarPadres && templateAuxiliar.IdTemplatePadre != null) {
 							templateAuxiliar = templatesVigentes.FirstOrDefault(t => t.Id == templateAuxiliar.IdTemplatePadre);
 						} else {
