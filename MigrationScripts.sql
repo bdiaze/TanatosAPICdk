@@ -2064,3 +2064,22 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260422193647_AddColumnCronActivacionAutomaticaTemplateNorma') THEN
+    ALTER TABLE tanatos.template_norma ADD cron_activacion_automatica text;
+    COMMENT ON COLUMN tanatos.template_norma.cron_activacion_automatica IS 'Cron que define el próximo vencimiento de la obligación al momento de la inscripción.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260422193647_AddColumnCronActivacionAutomaticaTemplateNorma') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260422193647_AddColumnCronActivacionAutomaticaTemplateNorma', '10.0.5');
+    END IF;
+END $EF$;
+COMMIT;
+

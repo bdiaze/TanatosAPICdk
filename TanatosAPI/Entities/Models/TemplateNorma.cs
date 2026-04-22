@@ -47,6 +47,11 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Identificador de la categoría a la que pertenece la norma.")]
 		public required long IdCategoriaNorma { get; set; }
 
+		[UseColumnAttribute]
+		[Column("cron_activacion_automatica")]
+		[Comment("Cron que define el próximo vencimiento de la obligación al momento de la inscripción.")]
+		public string? CronActivacionAutomatica { get; set; }
+
 		[JsonIgnore]
 		[ForeignKey(nameof(IdTemplate))]
 		public Template? Template { get; set; }
