@@ -1,4 +1,5 @@
 ﻿using Amazon.Lambda.Core;
+using Cronos;
 using Npgsql;
 using System.Diagnostics;
 using TanatosAPI.Entities.Models;
@@ -225,6 +226,24 @@ namespace TanatosAPI.Endpoints {
 
 							return Results.BadRequest($"No todas las notificaciones pertenecen a la norma con ID Norma {templateNorma.IdNorma}.");
 						}
+
+						// Además, se valida Cron de Activación Automática...
+						if (templateNorma.CronActivacionAutomatica != null) {
+							bool cronValido = true;
+							try {
+								_ = CronExpression.Parse(templateNorma.CronActivacionAutomatica!, CronFormat.Standard);
+							} catch(CronFormatException) {
+								cronValido = false;
+							}
+
+							if (!cronValido) {
+								LambdaLogger.Log(
+								$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"Formato inválido del cron de activación automática de la norma con ID Norma {templateNorma.IdNorma}.");
+
+								return Results.BadRequest($"Formato inválido del cron de activación automática de la norma con ID Norma {templateNorma.IdNorma}.");
+							}
+						}
 					}
 
 					// Se valida que todas las actividades pertenezcan al template...
@@ -336,6 +355,24 @@ namespace TanatosAPI.Endpoints {
 								$"No todas las notificaciones pertenecen a la norma con ID Norma {templateNormaEntrada.IdNorma}.");
 
 							return Results.BadRequest($"No todas las notificaciones pertenecen a la norma con ID Norma {templateNormaEntrada.IdNorma}.");
+						}
+
+						// Además, se valida Cron de Activación Automática...
+						if (templateNormaEntrada.CronActivacionAutomatica != null) {
+							bool cronValido = true;
+							try {
+								_ = CronExpression.Parse(templateNormaEntrada.CronActivacionAutomatica!, CronFormat.Standard);
+							} catch (CronFormatException) {
+								cronValido = false;
+							}
+
+							if (!cronValido) {
+								LambdaLogger.Log(
+								$"[PUT] - [Template] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"Formato inválido del cron de activación automática de la norma con ID Norma {templateNormaEntrada.IdNorma}.");
+
+								return Results.BadRequest($"Formato inválido del cron de activación automática de la norma con ID Norma {templateNormaEntrada.IdNorma}.");
+							}
 						}
 					}
 
