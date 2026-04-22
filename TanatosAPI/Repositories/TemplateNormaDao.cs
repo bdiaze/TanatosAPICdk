@@ -9,7 +9,7 @@ namespace TanatosAPI.Repositories {
 	public class TemplateNormaDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<List<TemplateNorma>> ObtenerPorTemplate(long idTemplate, NpgsqlTransaction? transaction = null) {
 			string query = 
-				"SELECT ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA FROM TANATOS.TEMPLATE_NORMA " +
+				"SELECT ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, CRON_ACTIVACION_AUTOMATICA FROM TANATOS.TEMPLATE_NORMA " +
 				"WHERE ID_TEMPLATE = @IDTEMPLATE";
 
 			bool disposeConnection = transaction?.Connection == null;
@@ -31,7 +31,8 @@ namespace TanatosAPI.Repositories {
 						Descripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
 						IdTipoPeriodicidad = reader.IsDBNull(4) ? null : reader.GetInt64(4),
 						Multa = reader.IsDBNull(5) ? null : reader.GetString(5),
-						IdCategoriaNorma = reader.GetInt64(6)
+						IdCategoriaNorma = reader.GetInt64(6),
+						CronActivacionAutomatica = reader.IsDBNull(7) ? null : reader.GetString(7)
 					});
 				}
 
@@ -45,8 +46,8 @@ namespace TanatosAPI.Repositories {
 
 		public async Task Insertar(TemplateNorma item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"INSERT INTO TANATOS.TEMPLATE_NORMA(ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA) " +
-				"VALUES (@IDTEMPLATE, @IDNORMA, @NOMBRE, @DESCRIPCION, @IDTIPOPERIODICIDAD, @MULTA, @IDCATEGORIANORMA)";
+				"INSERT INTO TANATOS.TEMPLATE_NORMA(ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, CRON_ACTIVACION_AUTOMATICA) " +
+				"VALUES (@IDTEMPLATE, @IDNORMA, @NOMBRE, @DESCRIPCION, @IDTIPOPERIODICIDAD, @MULTA, @IDCATEGORIANORMA, @CRONACTIVACIONAUTOMATICA)";
 			DynamicParameters param = new();
 			param.Add("IDTEMPLATE", item.IdTemplate);
 			param.Add("IDNORMA", item.IdNorma);
@@ -55,6 +56,7 @@ namespace TanatosAPI.Repositories {
 			param.Add("IDTIPOPERIODICIDAD", item.IdTipoPeriodicidad);
 			param.Add("MULTA", item.Multa);
 			param.Add("IDCATEGORIANORMA", item.IdCategoriaNorma);
+			param.Add("CRONACTIVACIONAUTOMATICA", item.CronActivacionAutomatica);
 
 			if (transaction?.Connection != null) {
 				await transaction!.Connection!.ExecuteAsync(query, param, transaction);
@@ -67,13 +69,15 @@ namespace TanatosAPI.Repositories {
 		public async Task Actualizar(TemplateNorma item, NpgsqlTransaction? transaction = null) {
 			string query = 
 				"UPDATE TANATOS.TEMPLATE_NORMA SET NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, ID_TIPO_PERIODICIDAD = @IDTIPOPERIODICIDAD, " +
-				"MULTA = @MULTA, ID_CATEGORIA_NORMA = @IDCATEGORIANORMA WHERE ID_TEMPLATE = @IDTEMPLATE AND ID_NORMA = @IDNORMA";
+				"MULTA = @MULTA, ID_CATEGORIA_NORMA = @IDCATEGORIANORMA, CRON_ACTIVACION_AUTOMATICA = @CRONACTIVACIONAUTOMATICA " +
+				"WHERE ID_TEMPLATE = @IDTEMPLATE AND ID_NORMA = @IDNORMA";
 			DynamicParameters param = new();
 			param.Add("NOMBRE", item.Nombre);
 			param.Add("DESCRIPCION", item.Descripcion);
 			param.Add("IDTIPOPERIODICIDAD", item.IdTipoPeriodicidad);
 			param.Add("MULTA", item.Multa);
 			param.Add("IDCATEGORIANORMA", item.IdCategoriaNorma);
+			param.Add("CRONACTIVACIONAUTOMATICA", item.CronActivacionAutomatica);
 			param.Add("IDTEMPLATE", item.IdTemplate);
 			param.Add("IDNORMA", item.IdNorma);
 
