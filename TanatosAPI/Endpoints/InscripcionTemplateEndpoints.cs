@@ -1,4 +1,5 @@
 ﻿using Amazon.Lambda.Core;
+using Cronos;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Npgsql;
 using System.Diagnostics;
@@ -8,6 +9,7 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
+using TimeZoneConverter;
 
 namespace TanatosAPI.Endpoints {
 	public static class InscripcionTemplateEndpoints {
@@ -58,7 +60,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActivarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Activar", async (EntInscripcionTemplateActivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
+			routes.MapPost("/Activar", async (EntInscripcionTemplateActivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -146,9 +148,35 @@ namespace TanatosAPI.Endpoints {
 
 							// Se actualizan las normas suscritas correspondientes al template...
 							foreach (NormaSuscrita normaSuscrita in normasSuscritas.Where(ns => ns.IdTemplate == templateAInscribir.Id && !ns.Vigencia)) {
-								if (templateNormas.Any(tn => tn.IdTemplate == normaSuscrita.IdTemplate && tn.IdNorma == normaSuscrita.IdNorma)) {
+								TemplateNorma? templateNormaAsociada = templateNormas.FirstOrDefault(tn => tn.IdTemplate == normaSuscrita.IdTemplate && tn.IdNorma == normaSuscrita.IdNorma);
+
+								if (templateNormaAsociada != null) {
 									normaSuscrita.FechaEliminacion = null;
 									normaSuscrita.Vigencia = true;
+
+									if (!string.IsNullOrWhiteSpace(templateNormaAsociada.CronActivacionAutomatica)) {
+										CronExpression cron = CronExpression.Parse(templateNormaAsociada.CronActivacionAutomatica);
+
+										string timezone = "America/Santiago";
+										if (OperatingSystem.IsWindows()) {
+											timezone = TZConvert.IanaToWindows(timezone);
+										}
+										TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+
+										DateTime proximoVencimiento = cron.GetNextOccurrence(DateTime.UtcNow, timeZoneInfo) ?? throw new Exception("No se pudo calcular el próximo vencimiento para obligación con activación automática");
+										HistorialNormaSuscrita historialNormaSuscrita = new() {
+											Id = 0,
+											IdNormaSuscrita = normaSuscrita.Id,
+											FechaVencimiento = proximoVencimiento,
+											FechaCreacion = DateTime.UtcNow,
+											Vigencia = true
+										};
+
+										await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
+
+										normaSuscrita.Activado = true;
+									}
+
 									await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 								}
 							}
@@ -156,7 +184,7 @@ namespace TanatosAPI.Endpoints {
 							// Se insertan las normas suscritas que no estaban registradas...
 							foreach (TemplateNorma templateNorma in templateNormas) {
 								if (!normasSuscritas.Any(ns => ns.IdTemplate == templateNorma.IdTemplate && ns.IdNorma == templateNorma.IdNorma)) {
-									await normaSuscritaDao.Insertar(new NormaSuscrita {
+									NormaSuscrita normaSuscrita = new() {
 										Id = 0,
 										Sub = sub,
 										IdNegocio = entrada.IdNegocio,
@@ -166,7 +194,33 @@ namespace TanatosAPI.Endpoints {
 										Activado = false,
 										FechaCreacion = DateTime.UtcNow,
 										Vigencia = true
-									}, transaction);
+									};
+									normaSuscrita.Id = await normaSuscritaDao.Insertar(normaSuscrita, transaction);
+
+									if (!string.IsNullOrWhiteSpace(templateNorma.CronActivacionAutomatica)) {
+										CronExpression cron = CronExpression.Parse(templateNorma.CronActivacionAutomatica);
+
+										string timezone = "America/Santiago";
+										if (OperatingSystem.IsWindows()) {
+											timezone = TZConvert.IanaToWindows(timezone);
+										}
+										TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+
+										DateTime proximoVencimiento = cron.GetNextOccurrence(DateTime.UtcNow, timeZoneInfo) ?? throw new Exception("No se pudo calcular el próximo vencimiento para obligación con activación automática");
+										HistorialNormaSuscrita historialNormaSuscrita = new() {
+											Id = 0,
+											IdNormaSuscrita = normaSuscrita.Id,
+											FechaVencimiento = proximoVencimiento,
+											FechaCreacion = DateTime.UtcNow,
+											Vigencia = true
+										};
+
+										await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
+
+										normaSuscrita.Activado = true;
+
+										await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
+									}
 								}
 							}
 						}
