@@ -60,7 +60,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActivarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Activar", async (EntInscripcionTemplateActivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
+			routes.MapPost("/Activar", async (EntInscripcionTemplateActivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, ProcesoNotificacionBcp procesoNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -178,6 +178,8 @@ namespace TanatosAPI.Endpoints {
 									}
 
 									await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
+
+									await procesoNotificacionBcp.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
 								}
 							}
 
@@ -221,6 +223,8 @@ namespace TanatosAPI.Endpoints {
 
 										await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 									}
+
+									await procesoNotificacionBcp.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
 								}
 							}
 						}
