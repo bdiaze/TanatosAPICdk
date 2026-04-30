@@ -70,8 +70,20 @@ namespace TanatosAPI.Business {
 						TipoUnidadTiempo? unidadTiempo = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == notificacionNormaSuscrita.IdTipoUnidadTiempoAntelacion);
 
 						if (unidadTiempo != null) {
-							long segundosPrevios = notificacionNormaSuscrita.CantAntelacion * unidadTiempo.CantSegundos;
-							DateTime fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
+							DateTime fechaProgramacion;
+							if (unidadTiempo.CantDias != null) {
+								long diasPrevios = notificacionNormaSuscrita.CantAntelacion * unidadTiempo.CantDias.Value;
+								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddDays(-1 * diasPrevios);
+							} else if (unidadTiempo.CantHoras != null) {
+								long horasPrevias = notificacionNormaSuscrita.CantAntelacion * unidadTiempo.CantHoras.Value;
+								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddHours(-1 * horasPrevias);
+							} else if (unidadTiempo.CantMinutos != null) {
+								long minutosPrevios = notificacionNormaSuscrita.CantAntelacion * unidadTiempo.CantMinutos.Value;
+								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddMinutes(-1 * minutosPrevios);
+							} else {
+								long segundosPrevios = notificacionNormaSuscrita.CantAntelacion * unidadTiempo.CantSegundos;
+								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
+							}
 
 							await historialNotificacionBcp.Crear(
 								historialNormaSuscrita.Id, 
@@ -88,8 +100,20 @@ namespace TanatosAPI.Business {
 						TipoUnidadTiempo? unidadTiempo = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == templateNormaNotificacion.IdTipoUnidadTiempoAntelacion);
 
 						if (unidadTiempo != null) {
-							long segundosPrevios = templateNormaNotificacion.CantAntelacion * unidadTiempo.CantSegundos;
-							DateTime fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
+							DateTime fechaProgramacion;
+							if (unidadTiempo.CantDias != null) {
+								long diasPrevios = templateNormaNotificacion.CantAntelacion * unidadTiempo.CantDias.Value;
+								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddDays(-1 * diasPrevios);
+							} else if (unidadTiempo.CantHoras != null) {
+								long horasPrevias = templateNormaNotificacion.CantAntelacion * unidadTiempo.CantHoras.Value;
+								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddHours(-1 * horasPrevias);
+							} else if (unidadTiempo.CantMinutos != null) {
+								long minutosPrevios = templateNormaNotificacion.CantAntelacion * unidadTiempo.CantMinutos.Value;
+								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddMinutes(-1 * minutosPrevios);
+							} else {
+								long segundosPrevios = templateNormaNotificacion.CantAntelacion * unidadTiempo.CantSegundos;
+								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
+							}
 
 							await historialNotificacionBcp.Crear(
 								historialNormaSuscrita.Id,
@@ -146,8 +170,20 @@ namespace TanatosAPI.Business {
 					// Se obtienen los historiales de notificación existentes, que estén vigentes y pertenezcan a la misma antelación...
 					List<HistorialNotificacion> notificacionesVigentes = [.. (await historialNotificacionDao.ObtenerPorHistorial(historial.Id, null, true, transaction)).Where(n => n.IdTipoUnidadTiempoAntelacion == idTipoUnidadTiempoAntelacion && n.CantAntelacion == cantAntelacion)];
 
-					long segundosPrevios = cantAntelacion * tipoUnidadTiempo.CantSegundos;
-					DateTime fechaProgramacion = historial.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
+					DateTime fechaProgramacion;
+					if (tipoUnidadTiempo.CantDias != null) {
+						long diasPrevios = cantAntelacion * tipoUnidadTiempo.CantDias.Value;
+						fechaProgramacion = historial.FechaVencimiento.AddDays(-1 * diasPrevios);
+					} else if (tipoUnidadTiempo.CantHoras != null) {
+						long horasPrevias = cantAntelacion * tipoUnidadTiempo.CantHoras.Value;
+						fechaProgramacion = historial.FechaVencimiento.AddHours(-1 * horasPrevias);
+					} else if (tipoUnidadTiempo.CantMinutos != null) {
+						long minutosPrevios = cantAntelacion * tipoUnidadTiempo.CantMinutos.Value;
+						fechaProgramacion = historial.FechaVencimiento.AddMinutes(-1 * minutosPrevios);
+					} else {
+						long segundosPrevios = cantAntelacion * tipoUnidadTiempo.CantSegundos;
+						fechaProgramacion = historial.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
+					}
 
 					// Solo se programan las notificaciones cuya fecha de programación sea futura...
 					if (fechaProgramacion > DateTime.UtcNow) {

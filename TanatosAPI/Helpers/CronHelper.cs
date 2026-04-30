@@ -3,21 +3,7 @@ using TimeZoneConverter;
 
 namespace TanatosAPI.Helpers {
 	public static class CronHelper {
-		public static string GenerarCronDesdeFecha(DateTime fecha, string? baseCron = null, string? timezone = "America/Santiago") {
-			if (timezone != null) {
-				// Nos aseguramos de que la fecha esté en UTC...
-				fecha = DateTime.SpecifyKind(fecha, DateTimeKind.Utc);
-
-				// Si estamos en Windows, convertimos la zona horaria de IANA a Windows...
-				if (OperatingSystem.IsWindows()) {
-					timezone = TZConvert.IanaToWindows(timezone);
-				}
-
-				TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
-
-				fecha = TimeZoneInfo.ConvertTimeFromUtc(fecha, timeZoneInfo);
-			}
-
+		public static string GenerarCronDesdeFecha(DateTime fecha, string? baseCron = null) {
 			baseCron = baseCron?.Trim();
 			if (baseCron != null) baseCron = Regex.Replace(baseCron, @"\s+", " ");
 			baseCron ??= "MI HO DM MO ? YE";
@@ -65,6 +51,20 @@ namespace TanatosAPI.Helpers {
 			}
 
 			return string.Join(" ", cronConfigs);
+		}
+
+		public static DateTime TransformarFechaUTCATimezone(DateTime fecha, string timezone = "America/Santiago") {
+			// Nos aseguramos de que la fecha esté en UTC...
+			fecha = DateTime.SpecifyKind(fecha, DateTimeKind.Utc);
+
+			// Si estamos en Windows, convertimos la zona horaria de IANA a Windows...
+			if (OperatingSystem.IsWindows()) {
+				timezone = TZConvert.IanaToWindows(timezone);
+			}
+
+			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+
+			return TimeZoneInfo.ConvertTimeFromUtc(fecha, timeZoneInfo);
 		}
 	}
 }

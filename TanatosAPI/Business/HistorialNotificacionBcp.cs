@@ -25,8 +25,20 @@ namespace TanatosAPI.Business {
 						TipoUnidadTiempo? tipoUnidadTiempo = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == historialNotificacion.IdTipoUnidadTiempoAntelacion);
 						
 						if (tipoUnidadTiempo != null) {
-							long segundosPrevios = historialNotificacion.CantAntelacion.Value * tipoUnidadTiempo.CantSegundos;
-							DateTime fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
+							DateTime fechaProgramacion;
+							if (tipoUnidadTiempo.CantDias != null) {
+								long diasPrevios = historialNotificacion.CantAntelacion.Value * tipoUnidadTiempo.CantDias.Value;
+								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddDays(-1 * diasPrevios);
+							} else if (tipoUnidadTiempo.CantHoras != null) {
+								long horasPrevias = historialNotificacion.CantAntelacion.Value * tipoUnidadTiempo.CantHoras.Value;
+								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddHours(-1 * horasPrevias);
+							} else if (tipoUnidadTiempo.CantMinutos != null) {
+								long minutosPrevios = historialNotificacion.CantAntelacion.Value * tipoUnidadTiempo.CantMinutos.Value;
+								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddMinutes(-1 * minutosPrevios);
+							} else {
+								long segundosPrevios = historialNotificacion.CantAntelacion.Value * tipoUnidadTiempo.CantSegundos;
+								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
+							}
 
 							await Crear(
 								historialNormaSuscrita.Id,

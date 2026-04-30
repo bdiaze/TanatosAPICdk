@@ -82,16 +82,27 @@ namespace TanatosAPI.Business {
 						List<HistorialNormaSuscrita> historialNormaSuscritas = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction);
 						foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormaSuscritas.Where(hns => hns.FechaVencimiento > DateTime.UtcNow)) {
 
-							cronVencimiento.Add(CronHelper.GenerarCronDesdeFecha(historialNormaSuscrita.FechaVencimiento, tipoPeriodicidad.Cron));
+							cronVencimiento.Add(CronHelper.GenerarCronDesdeFecha(CronHelper.TransformarFechaUTCATimezone(historialNormaSuscrita.FechaVencimiento), tipoPeriodicidad.Cron));
 
 							foreach ((long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion) antelacion in configNotifPrevias) {
-								DateTime fechaProgramacion = historialNormaSuscrita.FechaVencimiento;
+								DateTime fechaProgramacion = CronHelper.TransformarFechaUTCATimezone(historialNormaSuscrita.FechaVencimiento);
 
 								if (antelacion.IdTipoUnidadTiempoAntelacion != null && antelacion.CantAntelacion != null) {
 									TipoUnidadTiempo? tipoUnidadTiempo = tiposUnidadTiempo.FirstOrDefault(ut => ut.Id == antelacion.IdTipoUnidadTiempoAntelacion);
 									if (tipoUnidadTiempo != null) {
-										long segundosPrevios = antelacion.CantAntelacion.Value * tipoUnidadTiempo.CantSegundos;
-										fechaProgramacion = fechaProgramacion.AddSeconds(-1 * segundosPrevios);
+										if (tipoUnidadTiempo.CantDias != null) {
+											long diasPrevios = antelacion.CantAntelacion.Value * tipoUnidadTiempo.CantDias.Value;
+											fechaProgramacion = fechaProgramacion.AddDays(-1 * diasPrevios);
+										} else if (tipoUnidadTiempo.CantHoras != null) {
+											long horasPrevias = antelacion.CantAntelacion.Value * tipoUnidadTiempo.CantHoras.Value;
+											fechaProgramacion = fechaProgramacion.AddHours(-1 * horasPrevias);
+										} else if (tipoUnidadTiempo.CantMinutos != null) {
+											long minutosPrevios = antelacion.CantAntelacion.Value * tipoUnidadTiempo.CantMinutos.Value;
+											fechaProgramacion = fechaProgramacion.AddMinutes(-1 * minutosPrevios);
+										} else {
+											long segundosPrevios = antelacion.CantAntelacion.Value * tipoUnidadTiempo.CantSegundos;
+											fechaProgramacion = fechaProgramacion.AddSeconds(-1 * segundosPrevios);
+										}
 									}
 								}
 
