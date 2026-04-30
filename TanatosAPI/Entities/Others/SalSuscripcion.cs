@@ -9,6 +9,6 @@
 		public DateTime? FechaExpiracion { get; set; }
 		public DateTime? FechaCancelacion { get; set; }
 		public required short Estado { get; set; }
-
+		public required bool TieneFlowSubscriptionId { get; set; }
 	}
 }

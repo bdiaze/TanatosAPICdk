@@ -53,9 +53,10 @@ namespace TanatosAPI.Endpoints {
 							FechaInicio = s.FechaInicio,
 							FechaExpiracion = s.FechaExpiracion,
 							FechaCancelacion = s.FechaCancelacion,
-							Estado = s.Estado
-							};
-						})];
+							Estado = s.Estado,
+							TieneFlowSubscriptionId = !string.IsNullOrWhiteSpace(s.FlowSubscriptionId)
+						};
+					})];
 
 					LambdaLogger.Log(
 						$"[GET] - [Suscripcion] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
