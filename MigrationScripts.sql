@@ -2083,3 +2083,30 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260430201141_AddColumnCantHorasCantDiasTipoUnidadTiempo') THEN
+    ALTER TABLE tanatos.tipo_unidad_tiempo ADD cant_dias bigint;
+    COMMENT ON COLUMN tanatos.tipo_unidad_tiempo.cant_dias IS 'Cantidad de días que representan a la unidad de tiempo.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260430201141_AddColumnCantHorasCantDiasTipoUnidadTiempo') THEN
+    ALTER TABLE tanatos.tipo_unidad_tiempo ADD cant_horas bigint;
+    COMMENT ON COLUMN tanatos.tipo_unidad_tiempo.cant_horas IS 'Cantidad de horas que representan a la unidad de tiempo.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260430201141_AddColumnCantHorasCantDiasTipoUnidadTiempo') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260430201141_AddColumnCantHorasCantDiasTipoUnidadTiempo', '10.0.5');
+    END IF;
+END $EF$;
+COMMIT;
+
