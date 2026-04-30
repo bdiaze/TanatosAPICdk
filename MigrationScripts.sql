@@ -2110,3 +2110,22 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260430204204_AddColumnCantMinutosTipoUnidadTiempo') THEN
+    ALTER TABLE tanatos.tipo_unidad_tiempo ADD cant_minutos bigint;
+    COMMENT ON COLUMN tanatos.tipo_unidad_tiempo.cant_minutos IS 'Cantidad de minutos que representan a la unidad de tiempo.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260430204204_AddColumnCantMinutosTipoUnidadTiempo') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260430204204_AddColumnCantMinutosTipoUnidadTiempo', '10.0.5');
+    END IF;
+END $EF$;
+COMMIT;
+

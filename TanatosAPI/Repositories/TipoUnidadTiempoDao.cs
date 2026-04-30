@@ -11,7 +11,7 @@ namespace TanatosAPI.Repositories {
 	public class TipoUnidadTiempoDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<TipoUnidadTiempo?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
 			string query =
-				"SELECT ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, CANT_HORAS, CANT_DIAS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO " +
+				"SELECT ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, CANT_MINUTOS, CANT_HORAS, CANT_DIAS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO " +
 				"WHERE ID = @ID";
 
 			bool disposeConnection = transaction?.Connection == null;
@@ -32,9 +32,10 @@ namespace TanatosAPI.Repositories {
 						Nombre = reader.GetString(1),
 						NombrePlural = reader.IsDBNull(2) ? null : reader.GetString(2),
 						CantSegundos = reader.GetInt64(3),
-						CantHoras = reader.IsDBNull(4) ? null : reader.GetInt64(4),
-						CantDias = reader.IsDBNull(5) ? null : reader.GetInt64(5),
-						Vigencia = reader.GetBoolean(6)
+						CantMinutos = reader.IsDBNull(4) ? null : reader.GetInt64(4),
+						CantHoras = reader.IsDBNull(5) ? null : reader.GetInt64(5),
+						CantDias = reader.IsDBNull(6) ? null : reader.GetInt64(6),
+						Vigencia = reader.GetBoolean(7)
 					};
 				}
 
@@ -48,7 +49,7 @@ namespace TanatosAPI.Repositories {
 
 		public async Task<List<TipoUnidadTiempo>> ObtenerPorVigencia(bool? vigencia, NpgsqlTransaction? transaction = null) {
 			string query =
-				"SELECT ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, CANT_HORAS, CANT_DIAS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO " +
+				"SELECT ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, CANT_MINUTOS, CANT_HORAS, CANT_DIAS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO " +
 				"WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
 
 			bool disposeConnection = transaction?.Connection == null;
@@ -69,9 +70,10 @@ namespace TanatosAPI.Repositories {
 						Nombre = reader.GetString(1),
                         NombrePlural = reader.IsDBNull(2) ? null : reader.GetString(2),
                         CantSegundos = reader.GetInt64(3),
-						CantHoras = reader.IsDBNull(4) ? null : reader.GetInt64(4),
-						CantDias = reader.IsDBNull(5) ? null : reader.GetInt64(5),
-						Vigencia = reader.GetBoolean(6)
+						CantMinutos = reader.IsDBNull(4) ? null : reader.GetInt64(4),
+						CantHoras = reader.IsDBNull(5) ? null : reader.GetInt64(5),
+						CantDias = reader.IsDBNull(6) ? null : reader.GetInt64(6),
+						Vigencia = reader.GetBoolean(7)
 					});
 				}
 
@@ -86,18 +88,18 @@ namespace TanatosAPI.Repositories {
 		public async Task Insertar(TipoUnidadTiempo item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			await connection.ExecuteAsync(
-				"INSERT INTO TANATOS.TIPO_UNIDAD_TIEMPO(ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, CANT_HORAS, CANT_DIAS, VIGENCIA) " +
-				"VALUES (@ID, @NOMBRE, @NOMBREPLURAL, @CANTSEGUNDOS, @CANTHORAS, @CANTDIAS, @VIGENCIA)",
-				new { item.Id, item.Nombre, item.NombrePlural, item.CantSegundos, item.CantHoras, item.CantDias, item.Vigencia }
+				"INSERT INTO TANATOS.TIPO_UNIDAD_TIEMPO(ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, CANT_MINUTOS, CANT_HORAS, CANT_DIAS, VIGENCIA) " +
+				"VALUES (@ID, @NOMBRE, @NOMBREPLURAL, @CANTSEGUNDOS, @CANTMINUTOS, @CANTHORAS, @CANTDIAS, @VIGENCIA)",
+				new { item.Id, item.Nombre, item.NombrePlural, item.CantSegundos, item.CantMinutos, item.CantHoras, item.CantDias, item.Vigencia }
 			);
 		}
 
 		public async Task Actualizar(TipoUnidadTiempo item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			await connection.ExecuteAsync(
-				"UPDATE TANATOS.TIPO_UNIDAD_TIEMPO SET NOMBRE = @NOMBRE, NOMBRE_PLURAL = @NOMBREPLURAL, CANT_SEGUNDOS = @CANTSEGUNDOS, CANT_HORAS = @CANTHORAS, " +
-				"CANT_DIAS = @CANTDIAS, VIGENCIA = @VIGENCIA WHERE ID = @ID",
-				new { item.Nombre, item.NombrePlural, item.CantSegundos, item.CantHoras, item.CantDias, item.Vigencia, item.Id }
+				"UPDATE TANATOS.TIPO_UNIDAD_TIEMPO SET NOMBRE = @NOMBRE, NOMBRE_PLURAL = @NOMBREPLURAL, CANT_SEGUNDOS = @CANTSEGUNDOS, CANT_MINUTOS = @CANTMINUTOS, " +
+				"CANT_HORAS = @CANTHORAS, CANT_DIAS = @CANTDIAS, VIGENCIA = @VIGENCIA WHERE ID = @ID",
+				new { item.Nombre, item.NombrePlural, item.CantSegundos, item.CantMinutos, item.CantHoras, item.CantDias, item.Vigencia, item.Id }
 			);
 		}
 

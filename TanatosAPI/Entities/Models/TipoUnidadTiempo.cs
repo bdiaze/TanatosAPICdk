@@ -34,6 +34,11 @@ namespace TanatosAPI.Entities.Models {
 		public required long CantSegundos { get; set; }
 
 		[UseColumnAttribute]
+		[Column("cant_minutos")]
+		[Comment("Cantidad de minutos que representan a la unidad de tiempo.")]
+		public long? CantMinutos { get; set; }
+
+		[UseColumnAttribute]
 		[Column("cant_horas")]
 		[Comment("Cantidad de horas que representan a la unidad de tiempo.")]
 		public long? CantHoras { get; set; }
