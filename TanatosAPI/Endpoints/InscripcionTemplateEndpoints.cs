@@ -113,9 +113,6 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
-					// Se obtienen todas las normas suscritas...
-					List<NormaSuscrita> normasSuscritas = await normaSuscritaDao.ObtenerPorSub(sub, entrada.IdNegocio, null);
-
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
@@ -144,88 +141,49 @@ namespace TanatosAPI.Endpoints {
 								await inscripcionTemplateDao.Actualizar(inscripcionExistente, transaction);
 							}
 
-							List<TemplateNorma> templateNormas = await templateNormaDao.ObtenerPorTemplate(templateAInscribir.Id);
-
-							// Se actualizan las normas suscritas correspondientes al template...
-							foreach (NormaSuscrita normaSuscrita in normasSuscritas.Where(ns => ns.IdTemplate == templateAInscribir.Id && !ns.Vigencia)) {
-								TemplateNorma? templateNormaAsociada = templateNormas.FirstOrDefault(tn => tn.IdTemplate == normaSuscrita.IdTemplate && tn.IdNorma == normaSuscrita.IdNorma);
-
-								if (templateNormaAsociada != null) {
-									normaSuscrita.FechaEliminacion = null;
-									normaSuscrita.Vigencia = true;
-
-									if (!string.IsNullOrWhiteSpace(templateNormaAsociada.CronActivacionAutomatica)) {
-										CronExpression cron = CronExpression.Parse(templateNormaAsociada.CronActivacionAutomatica);
-
-										string timezone = "America/Santiago";
-										if (OperatingSystem.IsWindows()) {
-											timezone = TZConvert.IanaToWindows(timezone);
-										}
-										TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
-
-										DateTime proximoVencimiento = cron.GetNextOccurrence(DateTime.UtcNow, timeZoneInfo) ?? throw new Exception("No se pudo calcular el próximo vencimiento para obligación con activación automática");
-										HistorialNormaSuscrita historialNormaSuscrita = new() {
-											Id = 0,
-											IdNormaSuscrita = normaSuscrita.Id,
-											FechaVencimiento = proximoVencimiento,
-											FechaCreacion = DateTime.UtcNow,
-											Vigencia = true
-										};
-
-										await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
-
-										normaSuscrita.Activado = true;
-									}
-
-									await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
-
-									await procesoNotificacionBcp.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
-								}
-							}
-
+							List<TemplateNorma> templateNormas = await templateNormaDao.ObtenerPorTemplate(templateAInscribir.Id, transaction);
+							
 							// Se insertan las normas suscritas que no estaban registradas...
 							foreach (TemplateNorma templateNorma in templateNormas) {
-								if (!normasSuscritas.Any(ns => ns.IdTemplate == templateNorma.IdTemplate && ns.IdNorma == templateNorma.IdNorma)) {
-									NormaSuscrita normaSuscrita = new() {
+								NormaSuscrita normaSuscrita = new() {
+									Id = 0,
+									Sub = sub,
+									IdNegocio = entrada.IdNegocio,
+									IdTemplate = templateNorma.IdTemplate,
+									IdNorma = templateNorma.IdNorma,
+									Editable = false,
+									Activado = false,
+									FechaCreacion = DateTime.UtcNow,
+									Vigencia = true
+								};
+								normaSuscrita.Id = await normaSuscritaDao.Insertar(normaSuscrita, transaction);
+
+								if (!string.IsNullOrWhiteSpace(templateNorma.CronActivacionAutomatica)) {
+									CronExpression cron = CronExpression.Parse(templateNorma.CronActivacionAutomatica);
+
+									string timezone = "America/Santiago";
+									if (OperatingSystem.IsWindows()) {
+										timezone = TZConvert.IanaToWindows(timezone);
+									}
+									TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+
+									DateTime proximoVencimiento = cron.GetNextOccurrence(DateTime.UtcNow, timeZoneInfo) ?? throw new Exception("No se pudo calcular el próximo vencimiento para obligación con activación automática");
+									HistorialNormaSuscrita historialNormaSuscrita = new() {
 										Id = 0,
-										Sub = sub,
-										IdNegocio = entrada.IdNegocio,
-										IdTemplate = templateNorma.IdTemplate,
-										IdNorma = templateNorma.IdNorma,
-										Editable = false,
-										Activado = false,
+										IdNormaSuscrita = normaSuscrita.Id,
+										FechaVencimiento = proximoVencimiento,
 										FechaCreacion = DateTime.UtcNow,
 										Vigencia = true
 									};
-									normaSuscrita.Id = await normaSuscritaDao.Insertar(normaSuscrita, transaction);
 
-									if (!string.IsNullOrWhiteSpace(templateNorma.CronActivacionAutomatica)) {
-										CronExpression cron = CronExpression.Parse(templateNorma.CronActivacionAutomatica);
+									await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
 
-										string timezone = "America/Santiago";
-										if (OperatingSystem.IsWindows()) {
-											timezone = TZConvert.IanaToWindows(timezone);
-										}
-										TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+									normaSuscrita.Activado = true;
 
-										DateTime proximoVencimiento = cron.GetNextOccurrence(DateTime.UtcNow, timeZoneInfo) ?? throw new Exception("No se pudo calcular el próximo vencimiento para obligación con activación automática");
-										HistorialNormaSuscrita historialNormaSuscrita = new() {
-											Id = 0,
-											IdNormaSuscrita = normaSuscrita.Id,
-											FechaVencimiento = proximoVencimiento,
-											FechaCreacion = DateTime.UtcNow,
-											Vigencia = true
-										};
-
-										await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
-
-										normaSuscrita.Activado = true;
-
-										await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
-									}
-
-									await procesoNotificacionBcp.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
+									await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 								}
+
+								await procesoNotificacionBcp.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
 							}
 						}
 
@@ -253,7 +211,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapDesactivarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Desactivar", async (EntInscripcionTemplateDesactivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
+			routes.MapPost("/Desactivar", async (EntInscripcionTemplateDesactivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaBcp normaSuscritaBcp, ProcesoNotificacionBcp procesoNotificacionBcp, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -280,27 +238,9 @@ namespace TanatosAPI.Endpoints {
 						// Se actualizan las normas suscritas correspondientes al template...
 						List<NormaSuscrita> normasSuscritas = await normaSuscritaDao.ObtenerPorSub(sub, entrada.IdNegocio, true);
 						foreach (NormaSuscrita normaSuscrita in normasSuscritas.Where(ns => ns.IdTemplate == entrada.IdTemplate)) {
-							normaSuscrita.FechaEliminacion = DateTime.UtcNow;
-							normaSuscrita.Vigencia = false;
-
-							if (normaSuscrita.Activado) {
-								normaSuscrita.FechaDesactivacion = DateTime.UtcNow;
-								normaSuscrita.Activado = false;
-
-								// Si la norma suscrita estaba activada, se elimina su próximo vencimiento existente...
-								HistorialNormaSuscrita? proximoVencimientoExistente = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true))
-									.OrderBy(hns => hns.FechaVencimiento)
-									.FirstOrDefault();
-								
-								if (proximoVencimientoExistente != null) {
-									proximoVencimientoExistente.FechaEliminacion = DateTime.UtcNow;
-									proximoVencimientoExistente.Vigencia = false;
-									await historialNormaSuscritaDao.Actualizar(proximoVencimientoExistente, transaction);
-								}
-							}
-
-							await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
-						}
+                            await normaSuscritaBcp.EliminarNormaSuscrita(normaSuscrita, transaction);
+                            await procesoNotificacionBcp.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
+                        }
 
 						await transaction.CommitAsync();
 					} catch {
