@@ -148,6 +148,7 @@ builder.Services.AddSingleton<DestinatarioNotificacionBcp>();
 builder.Services.AddSingleton<DocumentoAdjuntoBcp>();
 builder.Services.AddSingleton<MensajeBcp>();
 builder.Services.AddSingleton<SuscripcionBcp>();
+builder.Services.AddSingleton<TemplateNormaBcp>();
 #endregion
 
 string cognitoRegion;
