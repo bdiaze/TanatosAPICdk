@@ -38,6 +38,7 @@ namespace TanatosAPI.Business {
                 normaSuscrita.IdTipoPeriodicidad ??= templateNorma.IdTipoPeriodicidad;
                 normaSuscrita.Multa ??= templateNorma.Multa;
                 normaSuscrita.IdCategoriaNorma ??= templateNorma.IdCategoriaNorma;
+                normaSuscrita.Editable = true;
                 normaSuscrita.IdTemplate = null;
                 normaSuscrita.IdNorma = null;
 
