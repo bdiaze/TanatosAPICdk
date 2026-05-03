@@ -1,20 +1,47 @@
 ﻿using Dapper;
 using Npgsql;
+using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
 	[DapperAot]
 	public class TemplateNormaFiscalizadorDao(DatabaseConnectionHelper connectionHelper) {
-		public async Task<List<TemplateNormaFiscalizador>> ObtenerPorTemplateNorma(long idTemplate, long? idNorma = null) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return [.. await connection.QueryAsync<TemplateNormaFiscalizador>(
-				"SELECT ID_TEMPLATE, ID_NORMA, ID_TIPO_FISCALIZADOR FROM TANATOS.TEMPLATE_NORMA_FISCALIZADOR WHERE ID_TEMPLATE = @IDTEMPLATE AND (ID_NORMA = @IDNORMA OR @IDNORMA IS NULL)",
-				new { idTemplate, idNorma }
-			)];
-		}
+        public async Task<List<TemplateNormaFiscalizador>> ObtenerPorTemplateNorma(long idTemplate, long? idNorma = null, NpgsqlTransaction? transaction = null) {
+            string query =
+                "SELECT ID_TEMPLATE, ID_NORMA, ID_TIPO_FISCALIZADOR FROM TANATOS.TEMPLATE_NORMA_FISCALIZADOR " +
+				"WHERE ID_TEMPLATE = @IDTEMPLATE AND (ID_NORMA = @IDNORMA OR @IDNORMA IS NULL)";
 
-		public async Task<List<TemplateNormaFiscalizador>> ObtenerPorFiscalizador(long idTipoFiscalizador) {
+            bool disposeConnection = transaction?.Connection == null;
+            NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+            try {
+                await using NpgsqlCommand command = new(query, connection, transaction);
+
+                command.Parameters.AddWithValue("IDTEMPLATE", idTemplate);
+                command.Parameters.AddWithValue("IDNORMA", (object?)idNorma ?? DBNull.Value);
+
+                await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+                List<TemplateNormaFiscalizador> retorno = [];
+
+                while (await reader.ReadAsync()) {
+                    retorno.Add(new TemplateNormaFiscalizador {
+                        IdTemplate = reader.GetInt64(0),
+                        IdNorma = reader.GetInt64(1),
+                        IdTipoFiscalizador = reader.GetInt64(2),
+                    });
+                }
+
+                return retorno;
+            } finally {
+                if (disposeConnection && connection != null) {
+                    await connection.DisposeAsync();
+                }
+            }
+        }
+
+        public async Task<List<TemplateNormaFiscalizador>> ObtenerPorFiscalizador(long idTipoFiscalizador) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return [.. await connection.QueryAsync<TemplateNormaFiscalizador>(
 				"SELECT ID_TEMPLATE, ID_NORMA, ID_TIPO_FISCALIZADOR FROM TANATOS.TEMPLATE_NORMA_FISCALIZADOR WHERE ID_TIPO_FISCALIZADOR = @IDTIPOFISCALIZADOR",
