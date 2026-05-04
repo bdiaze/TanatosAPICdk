@@ -200,7 +200,13 @@ namespace TanatosAPI.Entities.Contexts {
                 .WithMany(o => o.Pagos)
                 .HasForeignKey(o => o.IdSuscripcion)
                 .OnDelete(DeleteBehavior.Restrict);
-		}
+
+            modelBuilder.Entity<Cargo>()
+                .HasOne(o => o.Negocio)
+                .WithMany(o => o.Cargos)
+                .HasForeignKey(o => o.IdNegocio)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
 
@@ -255,5 +261,7 @@ namespace TanatosAPI.Entities.Contexts {
         public DbSet<EventoPago> EventosPagos { get; set; }
 
         public DbSet<Usuario> Usuarios { get; set; }
+
+        public DbSet<Cargo> Cargos { get; set; }
 	}
 }
