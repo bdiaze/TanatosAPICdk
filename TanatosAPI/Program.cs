@@ -135,6 +135,7 @@ builder.Services.AddSingleton<SuscripcionDao>();
 builder.Services.AddSingleton<EventoPagoDao>();
 builder.Services.AddSingleton<PagoDao>();
 builder.Services.AddSingleton<UsuarioDao>();
+builder.Services.AddSingleton<CargoDao>();
 #endregion
 
 #region Singleton BCP
@@ -258,6 +259,7 @@ app.MapMensajeEndpoints();
 app.MapWhatsappEndpoints();
 app.MapPlanEndpoints();
 app.MapSuscripcionEndpoints();
+app.MapCargoEndpoints();
 
 app.Run();
 
