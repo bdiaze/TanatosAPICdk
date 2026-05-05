@@ -136,6 +136,7 @@ builder.Services.AddSingleton<EventoPagoDao>();
 builder.Services.AddSingleton<PagoDao>();
 builder.Services.AddSingleton<UsuarioDao>();
 builder.Services.AddSingleton<CargoDao>();
+builder.Services.AddSingleton<EmpleadoDao>();
 #endregion
 
 #region Singleton BCP
