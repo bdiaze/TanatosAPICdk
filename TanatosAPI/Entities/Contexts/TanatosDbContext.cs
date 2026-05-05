@@ -177,11 +177,11 @@ namespace TanatosAPI.Entities.Contexts {
                 .HasForeignKey(o => o.IdDestinatarioNotificacion)
                 .OnDelete(DeleteBehavior.Restrict);
 
-			modelBuilder.Entity<HistorialNotificacion>()
-				.HasOne(o => o.HistorialNormaSuscrita)
-				.WithMany(o => o.HistorialNotificaciones)
-				.HasForeignKey(o => o.IdHistorialNormaSuscrita)
-				.OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<HistorialNotificacion>()
+                .HasOne(o => o.HistorialNormaSuscrita)
+                .WithMany(o => o.HistorialNotificaciones)
+                .HasForeignKey(o => o.IdHistorialNormaSuscrita)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<DocumentoAdjunto>()
                 .HasOne(o => o.HistorialNormaSuscrita)
@@ -206,7 +206,19 @@ namespace TanatosAPI.Entities.Contexts {
                 .WithMany(o => o.Cargos)
                 .HasForeignKey(o => o.IdNegocio)
                 .OnDelete(DeleteBehavior.Restrict);
-        }
+
+            modelBuilder.Entity<Empleado>()
+                .HasOne(o => o.Negocio)
+                .WithMany(o => o.Empleados)
+                .HasForeignKey(o => o.IdNegocio)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Empleado>()
+                .HasOne(o => o.Cargo)
+                .WithMany(o => o.Empleados)
+                .HasForeignKey(o => o.IdCargo)
+                .OnDelete(DeleteBehavior.Restrict);
+		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
 
@@ -263,5 +275,7 @@ namespace TanatosAPI.Entities.Contexts {
         public DbSet<Usuario> Usuarios { get; set; }
 
         public DbSet<Cargo> Cargos { get; set; }
+
+		public DbSet<Empleado> Empleados { get; set; }
 	}
 }

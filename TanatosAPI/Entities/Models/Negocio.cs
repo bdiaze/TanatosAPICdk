@@ -72,5 +72,8 @@ namespace TanatosAPI.Entities.Models {
         [JsonIgnore]
         public List<Cargo>? Cargos { get; set; }
 
-    }
+		[JsonIgnore]
+		public List<Empleado>? Empleados { get; set; }
+
+	}
 }
