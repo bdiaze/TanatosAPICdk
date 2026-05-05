@@ -261,6 +261,7 @@ app.MapWhatsappEndpoints();
 app.MapPlanEndpoints();
 app.MapSuscripcionEndpoints();
 app.MapCargoEndpoints();
+app.MapEmpleadoEndpoints();
 
 app.Run();
 

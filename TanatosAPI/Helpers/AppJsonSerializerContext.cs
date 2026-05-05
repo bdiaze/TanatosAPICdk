@@ -102,6 +102,10 @@ namespace TanatosAPI.Helpers {
     [JsonSerializable(typeof(List<SalCargo>))]
     [JsonSerializable(typeof(EntCargoCrear))]
     [JsonSerializable(typeof(EntCargoActualizar))]
-    internal partial class AppJsonSerializerContext : JsonSerializerContext {
+	[JsonSerializable(typeof(SalEmpleado))]
+	[JsonSerializable(typeof(List<SalEmpleado>))]
+	[JsonSerializable(typeof(EntEmpleadoCrear))]
+	[JsonSerializable(typeof(EntEmpleadoActualizar))]
+	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }

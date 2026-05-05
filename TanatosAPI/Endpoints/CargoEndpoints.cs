@@ -1,4 +1,5 @@
 ﻿using Amazon.Lambda.Core;
+using Npgsql;
 using System.Diagnostics;
 using System.Security.Claims;
 using TanatosAPI.Business;
@@ -148,14 +149,14 @@ namespace TanatosAPI.Endpoints {
         }
 
         private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-            routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, CargoDao cargoDao) => {
+            routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, CargoDao cargoDao, EmpleadoDao empleadoDao) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
                     string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
-                    Cargo? existente = (await cargoDao.ObtenerPorSub(sub, null, true)).FirstOrDefault(d => d.Id == id);
-
+					// Se valida que el cargo exista y pertenezca al usuario...
+					Cargo? existente = (await cargoDao.ObtenerPorSub(sub, null, true)).FirstOrDefault(d => d.Id == id);
                     if (existente == null) {
                         LambdaLogger.Log(
                             $"[DELETE] - [Cargo] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
@@ -164,10 +165,27 @@ namespace TanatosAPI.Endpoints {
                         return Results.BadRequest($"El usuario no posee un cargo con ID {id}.");
                     }
 
-                    existente.FechaEliminacion = DateTime.UtcNow;
-                    existente.Vigencia = false;
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
-                    await cargoDao.Actualizar(existente);
+					try {
+                        // Se quitan los cargos a los empleados que tenga el cargo a eliminar...
+                        List<Empleado> empleados = await empleadoDao.ObtenerPorSub(sub, existente.IdNegocio, true, transaction);
+                        foreach (Empleado empleado in empleados) {
+                            empleado.IdCargo = null;
+                            await empleadoDao.Actualizar(empleado, transaction);
+						}
+
+                        // Se elimina el cargo...
+						existente.FechaEliminacion = DateTime.UtcNow;
+						existente.Vigencia = false;
+						await cargoDao.Actualizar(existente, transaction);
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
 
                     LambdaLogger.Log(
                         $"[DELETE] - [Cargo] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
@@ -185,7 +203,5 @@ namespace TanatosAPI.Endpoints {
 
             return routes;
         }
-
-
     }
 }
