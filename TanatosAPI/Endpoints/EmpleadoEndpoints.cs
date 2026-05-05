@@ -29,7 +29,10 @@ namespace TanatosAPI.Endpoints {
 
 					List<SalEmpleado> retorno = [.. empleados
 						.Select(d => {
-							Cargo? cargo = cargos.TryGetValue(d.Id, out Cargo? v) ? v : null;
+							Cargo? cargo = null;
+							if (d.IdCargo != null) {
+								cargo = cargos.TryGetValue(d.IdCargo.Value, out Cargo? v) ? v : null;
+							}
 
 							return new SalEmpleado() {
 								Id = d.Id,
