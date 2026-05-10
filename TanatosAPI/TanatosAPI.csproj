@@ -30,6 +30,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Certs\global-bundle.pem">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TemplatesCorreos\NormaVencida.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

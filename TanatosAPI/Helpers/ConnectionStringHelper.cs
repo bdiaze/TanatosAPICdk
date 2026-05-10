@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using Npgsql;
+using System.Text.Json;
 
 namespace TanatosAPI.Helpers {
     public class ConnectionStringHelper(IHostEnvironment env, IConfiguration config, VariableEntornoHelper variableEntorno, SecretManagerHelper secretManager) {
@@ -24,18 +25,25 @@ namespace TanatosAPI.Helpers {
                     secretConnectionString.Add($"{appName}AppPassword", config["ConnectionStrings:Password"]!);
                 }
 
-                connectionString =
-                    $"Server={secretConnectionString["Host"]};" +
-                    $"Port={secretConnectionString["Port"]};" +
-                    $"Database={secretConnectionString[$"{appName}Database"]};" +
-                    $"User Id={secretConnectionString[$"{appName}AppUsername"]};" +
-                    $"Password='{secretConnectionString[$"{appName}AppPassword"]}';";
+				NpgsqlConnectionStringBuilder builder = new()  { 
+                    Host = secretConnectionString["Host"],
+                    Port = int.Parse(secretConnectionString["Port"]),
+                    Database = secretConnectionString[$"{appName}Database"],
+                    Username = secretConnectionString[$"{appName}AppUsername"],
+                    Password = secretConnectionString[$"{appName}AppPassword"],
+                };
 
                 if (env.IsProduction()) {
-                    connectionString += "Ssl Mode=Require;";
-                    connectionString += "Trust Server Certificate=true;";
+                    string pathCert = Path.Combine(AppContext.BaseDirectory, "Certs", "global-bundle.pem");
+					// Se valida que existe el root certificate...
+                    if (!File.Exists(pathCert)) throw new FileNotFoundException("No se encontró el certificado raíz para la conexión SSL", pathCert);
+
+					builder.SslMode = SslMode.VerifyFull;
+                    builder.RootCertificate = pathCert;
                 }
-            }
+
+                connectionString = builder.ToString();
+			}
 
             return connectionString;
         }
