@@ -172,7 +172,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapLimpiarAuthCookies(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/LimpiarAuthCookies", (HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
+			routes.MapPost("/LimpiarAuthCookies", (HttpContext httpContext, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -181,8 +181,22 @@ namespace TanatosAPI.Endpoints {
 						apiMapping = "";
 					}
 
+					// Se revisa si request llega desde localhost para setear cookies como SameSiteMode.None...
+					bool sameSiteStrict = true;
+					if (httpContext.Request.Headers.TryGetValue("Origin", out StringValues originHeader)) {
+						if (Uri.TryCreate(originHeader.ToString(), UriKind.Absolute, out Uri? uri)) {
+							if (uri.IsLoopback) {
+								sameSiteStrict = false;
+							}
+						}
+					}
+
 					httpResponse.Cookies.Delete("refresh_token", new CookieOptions {
 						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
+						IsEssential = true,
+						HttpOnly = true,
+						Secure = true,
+						SameSite = sameSiteStrict ? SameSiteMode.Strict : SameSiteMode.None
 					});
 
 					LambdaLogger.Log(
