@@ -28,7 +28,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerAccessToken(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/ObtenerAccessToken", async (EntAuthObtenerAccessToken entrada, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
+			routes.MapPost("/ObtenerAccessToken", async (EntAuthObtenerAccessToken entrada, HttpContext httpContext, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -72,13 +72,23 @@ namespace TanatosAPI.Endpoints {
 					
 					DateTimeOffset refreshExpiration = DateTimeOffset.UtcNow.AddMinutes(double.Parse(variableEntorno.Obtener("COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES")));
 
+					// Se revisa si request llega desde localhost para setear cookies como SameSiteMode.None...
+					bool sameSiteStrict = true;
+					if (httpContext.Request.Headers.TryGetValue("Origin", out StringValues originHeader)) {
+						if (Uri.TryCreate(originHeader.ToString(), UriKind.Absolute, out Uri? uri)) {
+							if (uri.IsLoopback) {
+								sameSiteStrict = false;
+							}
+						}
+					}
+
 					httpResponse.Cookies.Append("refresh_token", tokens["refresh_token"].ToString(), new CookieOptions {
 						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
 						IsEssential = true,
 						Expires = refreshExpiration,
 						HttpOnly = true,
 						Secure = true,
-						SameSite = SameSiteMode.Strict
+						SameSite = sameSiteStrict ? SameSiteMode.Strict : SameSiteMode.None
 					});
 
 					string csrfToken = Guid.NewGuid().ToString("N");
@@ -88,7 +98,7 @@ namespace TanatosAPI.Endpoints {
 						Expires = refreshExpiration,
 						HttpOnly = true,
 						Secure = true,
-						SameSite = SameSiteMode.Strict
+						SameSite = sameSiteStrict ? SameSiteMode.Strict : SameSiteMode.None
 					});
 
 					SalAuthObtenerAccessToken retorno = new() {
@@ -210,18 +220,10 @@ namespace TanatosAPI.Endpoints {
 
 					httpResponse.Cookies.Delete("refresh_token", new CookieOptions {
 						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
-						IsEssential = true,
-						HttpOnly = true,
-						Secure = true,
-						SameSite = SameSiteMode.Strict
 					});
 
 					httpResponse.Cookies.Delete("csrf_token", new CookieOptions {
 						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
-						IsEssential = true,
-						HttpOnly = true,
-						Secure = true,
-						SameSite = SameSiteMode.Strict
 					});
 
 					LambdaLogger.Log(
