@@ -91,21 +91,9 @@ namespace TanatosAPI.Endpoints {
 						SameSite = sameSiteStrict ? SameSiteMode.Strict : SameSiteMode.None
 					});
 
-					string csrfToken = Guid.NewGuid().ToString("N");
-					httpResponse.Cookies.Append("csrf_token", csrfToken, new CookieOptions {
-						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
-						IsEssential = true,
-						Expires = refreshExpiration,
-						HttpOnly = true,
-						Secure = true,
-						SameSite = sameSiteStrict ? SameSiteMode.Strict : SameSiteMode.None
-					});
-
 					SalAuthObtenerAccessToken retorno = new() {
 						AccessToken = tokens["access_token"].ToString(),
-						ExpiresIn = tokens["expires_in"].GetInt32(),
-						CsrfToken = csrfToken,
-						CsrfTokenExpiration = refreshExpiration
+						ExpiresIn = tokens["expires_in"].GetInt32()
 					};
 
 					LambdaLogger.Log(
@@ -126,35 +114,10 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapRefreshAccessToken(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/RefreshAccessToken", async([FromHeader(Name = "X-CSRF-Token")] string? headerCsrf, HttpRequest httpRequest, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
+			routes.MapPost("/RefreshAccessToken", async(HttpRequest httpRequest, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					// Se valida CSRF Token...
-					if (string.IsNullOrEmpty(headerCsrf)) {
-						LambdaLogger.Log(
-							$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"No se incluyo header X-CSRF-Token.");
-
-						return Results.BadRequest();
-					}
-
-					if (!httpRequest.Cookies.TryGetValue("csrf_token", out string? cookieCsrf)) {
-						LambdaLogger.Log(
-							$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"No se incluyo cookie csrf_token.");
-
-						return Results.BadRequest();
-					}
-
-					if (string.IsNullOrEmpty(cookieCsrf) || headerCsrf != cookieCsrf) {
-						LambdaLogger.Log(
-							$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status401Unauthorized}] - " +
-							$"No coinciden los valores del header X-CSRF-Token con la cookie csrf_token.");
-
-						return Results.Unauthorized();
-					}
-
 					// Se valida que venga el refresh token...
 					if (!httpRequest.Cookies.TryGetValue("refresh_token", out string? refreshToken)) {
 						LambdaLogger.Log(
@@ -219,10 +182,6 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					httpResponse.Cookies.Delete("refresh_token", new CookieOptions {
-						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
-					});
-
-					httpResponse.Cookies.Delete("csrf_token", new CookieOptions {
 						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
 					});
 

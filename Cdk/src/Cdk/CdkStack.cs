@@ -802,7 +802,7 @@ namespace Cdk
 						CorsHttpMethod.PUT,
 						CorsHttpMethod.DELETE
 					],
-					AllowHeaders = ["Content-Type", "X-CSRF-Token", "Authorization", "X-Retry"],
+					AllowHeaders = ["Content-Type", "Authorization", "X-Retry"],
 					AllowCredentials = true,
 					MaxAge = Duration.Days(10),
 				},
