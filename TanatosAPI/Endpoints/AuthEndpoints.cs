@@ -78,7 +78,7 @@ namespace TanatosAPI.Endpoints {
 						Expires = refreshExpiration,
 						HttpOnly = true,
 						Secure = true,
-						SameSite = SameSiteMode.None
+						SameSite = SameSiteMode.Strict
 					});
 
 					string csrfToken = Guid.NewGuid().ToString("N");
@@ -88,7 +88,7 @@ namespace TanatosAPI.Endpoints {
 						Expires = refreshExpiration,
 						HttpOnly = true,
 						Secure = true,
-						SameSite = SameSiteMode.None
+						SameSite = SameSiteMode.Strict
 					});
 
 					SalAuthObtenerAccessToken retorno = new() {
@@ -213,7 +213,7 @@ namespace TanatosAPI.Endpoints {
 						IsEssential = true,
 						HttpOnly = true,
 						Secure = true,
-						SameSite = SameSiteMode.None
+						SameSite = SameSiteMode.Strict
 					});
 
 					httpResponse.Cookies.Delete("csrf_token", new CookieOptions {
@@ -221,7 +221,7 @@ namespace TanatosAPI.Endpoints {
 						IsEssential = true,
 						HttpOnly = true,
 						Secure = true,
-						SameSite = SameSiteMode.None
+						SameSite = SameSiteMode.Strict
 					});
 
 					LambdaLogger.Log(
