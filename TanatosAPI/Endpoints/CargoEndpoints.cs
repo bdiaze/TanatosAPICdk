@@ -157,7 +157,7 @@ namespace TanatosAPI.Endpoints {
 
 					// Se valida que el cargo exista y pertenezca al usuario...
 					Cargo? existente = (await cargoDao.ObtenerPorSub(sub, null, true)).FirstOrDefault(d => d.Id == id);
-                    if (existente == null) {
+                    if (existente == null || !existente.Vigencia) {
                         LambdaLogger.Log(
                             $"[DELETE] - [Cargo] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
                             $"El usuario no posee un cargo con ID {id}.");
@@ -171,7 +171,7 @@ namespace TanatosAPI.Endpoints {
 					try {
                         // Se quitan los cargos a los empleados que tenga el cargo a eliminar...
                         List<Empleado> empleados = await empleadoDao.ObtenerPorSub(sub, existente.IdNegocio, true, transaction);
-                        foreach (Empleado empleado in empleados) {
+                        foreach (Empleado empleado in empleados.Where(e => e.IdCargo == existente.Id)) {
                             empleado.IdCargo = null;
                             await empleadoDao.Actualizar(empleado, transaction);
 						}
