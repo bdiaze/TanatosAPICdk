@@ -2266,3 +2266,21 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260511212839_IndexCodigoAccesoHistorialNotificacion') THEN
+    CREATE UNIQUE INDEX "IX_historial_notificacion_codigo_acceso" ON tanatos.historial_notificacion (codigo_acceso);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260511212839_IndexCodigoAccesoHistorialNotificacion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260511212839_IndexCodigoAccesoHistorialNotificacion', '10.0.5');
+    END IF;
+END $EF$;
+COMMIT;
+

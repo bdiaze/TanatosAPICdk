@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 namespace TanatosAPI.Entities.Models {
 	[Table("historial_notificacion", Schema = "tanatos")]
 	[Comment("Tabla que contiene el historial de notificaciones de una norma suscrita.")]
+	[Index(nameof(CodigoAcceso), IsUnique = true)]
 	public class HistorialNotificacion {
 		[UseColumnAttribute]
 		[Required]
