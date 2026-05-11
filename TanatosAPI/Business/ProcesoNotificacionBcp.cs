@@ -12,7 +12,9 @@ using TimeZoneConverter;
 using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace TanatosAPI.Business {
-	public class ProcesoNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) {
+	public class ProcesoNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, CryptoHelper cryptoHelper, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) {
+		private const int DIAS_CADUCIDAD_CODIGO_ACCESO = 30;
+
 		public async Task ActualizarProgramacionProcesosNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			List<string> procesosProgramados = [];
 			List<EntKairosIngresarProceso> procesosDesprogramados = [];
@@ -283,8 +285,16 @@ namespace TanatosAPI.Business {
                         }
                     }
 
-                    // Si el destinatario es email, se manda correo electrónico...
-                    if (destinatario.IdTipoReceptor == 1) {
+					// Se genera código de acceso para notificación...
+					string codigoAcceso = cryptoHelper.GenerarToken();
+					HistorialNotificacion? mismoCodigo = await historialNotificacionDao.ObtenerPorCodigoAcceso(cryptoHelper.HashSHA256(codigoAcceso), true, transaction);
+					while (mismoCodigo != null) {
+						codigoAcceso = cryptoHelper.GenerarToken();
+						mismoCodigo = await historialNotificacionDao.ObtenerPorCodigoAcceso(cryptoHelper.HashSHA256(codigoAcceso), true, transaction);
+					}
+
+					// Si el destinatario es email, se manda correo electrónico...
+					if (destinatario.IdTipoReceptor == 1) {
                         string strTemplateCorreo;
 						string asunto;
 						if (tiempoFaltante != null) {
@@ -320,14 +330,16 @@ namespace TanatosAPI.Business {
                                         .Replace("[MULTA_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"))
                                         .Replace("[TIEMPO_FALTANTE]", WebUtility.HtmlEncode(tiempoFaltante ?? ""))
 										.Replace("[DE_LOS_PROXIMOS]", WebUtility.HtmlEncode(deLosProximos ?? ""))
-										.Replace("[ID_NORMA_SUSCRITA]", WebUtility.HtmlEncode(normaSuscrita.Id.ToString()))
-										.Replace("[ID_HISTORIAL_NORMA_SUSCRITA]", WebUtility.HtmlEncode(historialNormaSuscrita.Id.ToString())),
+										.Replace("[CODIGO_ACCESO]", Uri.EscapeDataString(codigoAcceso))
                         });
 
 						historialNotificacion.FechaEjecucion = DateTime.UtcNow;
 						historialNotificacion.Estado = 1; // Enviado
+						historialNotificacion.CodigoAcceso = cryptoHelper.HashSHA256(codigoAcceso);
+						historialNotificacion.FechaCaducidadCodigoAcceso = DateTime.UtcNow.AddDays(DIAS_CADUCIDAD_CODIGO_ACCESO);
 						historialNotificacion.HermesIdMensaje = response.IdMensaje;
 						await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
+
 					// Si el destinatario es Whatsapp, se manda mensaje de Whatsapp...
 					} else if (destinatario.IdTipoReceptor == 2) {
 						string nombreTemplate; 
@@ -358,13 +370,13 @@ namespace TanatosAPI.Business {
 							NombreTemplate = nombreTemplate,
 							ParametrosTitulo = parametrosTitulo,
 							ParametrosCuerpo = parametrosCuerpo,
-							ParametrosBoton = [
-								$"{WebUtility.UrlEncode(normaSuscrita.Id.ToString())}/{WebUtility.UrlEncode(historialNormaSuscrita.Id.ToString())}"
-							]
+							ParametrosBoton = [Uri.EscapeDataString(codigoAcceso) ]
 						});
 
 						historialNotificacion.FechaEjecucion = DateTime.UtcNow;
 						historialNotificacion.Estado = 1; // Enviado
+						historialNotificacion.CodigoAcceso = cryptoHelper.HashSHA256(codigoAcceso);
+						historialNotificacion.FechaCaducidadCodigoAcceso = DateTime.UtcNow.AddDays(DIAS_CADUCIDAD_CODIGO_ACCESO);
 						historialNotificacion.HermesIdMensaje = response.IdMensaje;
 						await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
 					// En cualquier otro caso, se omite la notificación por falta de implementación...

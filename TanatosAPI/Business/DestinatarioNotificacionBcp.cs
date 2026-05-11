@@ -61,7 +61,7 @@ namespace TanatosAPI.Business {
 					Cuerpo = strTemplateCorreo
 								.Replace("[NOMBRE_USUARIO]", WebUtility.HtmlEncode(atributosUsuario["given_name"]))
 								.Replace("[NOMBRE_NEGOCIO]", WebUtility.HtmlEncode(negocio.Nombre))
-								.Replace("[CODIGO_VALIDACION]", WebUtility.UrlEncode(codigoValidacion)),
+								.Replace("[CODIGO_VALIDACION]", Uri.EscapeDataString(codigoValidacion)),
 				});
 
 				nuevoDestinatario.HermesIdMensaje = retorno.IdMensaje;
@@ -80,7 +80,7 @@ namespace TanatosAPI.Business {
 						negocio.Nombre
 					],
 					ParametrosBoton = [
-						WebUtility.UrlEncode(codigoValidacion)
+						Uri.EscapeDataString(codigoValidacion)
 					]
 				});
 
