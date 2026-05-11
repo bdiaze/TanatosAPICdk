@@ -2239,3 +2239,30 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260511193153_ColumnCodigoAccesoHistorialNotificacion') THEN
+    ALTER TABLE tanatos.historial_notificacion ADD codigo_acceso text;
+    COMMENT ON COLUMN tanatos.historial_notificacion.codigo_acceso IS 'Código generado para acceder al vencimiento desde la notificación.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260511193153_ColumnCodigoAccesoHistorialNotificacion') THEN
+    ALTER TABLE tanatos.historial_notificacion ADD fecha_caducidad_codigo_acceso timestamp with time zone;
+    COMMENT ON COLUMN tanatos.historial_notificacion.fecha_caducidad_codigo_acceso IS 'Fecha en que caduca el código de acceso.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260511193153_ColumnCodigoAccesoHistorialNotificacion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260511193153_ColumnCodigoAccesoHistorialNotificacion', '10.0.5');
+    END IF;
+END $EF$;
+COMMIT;
+

@@ -59,7 +59,17 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Observación relacionada a la notificación.")]
 		public string? Observacion { get; set; }
 
-		[UseColumnAttribute]
+        [UseColumnAttribute]
+        [Column("codigo_acceso")]
+        [Comment("Código generado para acceder al vencimiento desde la notificación.")]
+        public string? CodigoAcceso { get; set; }
+
+        [UseColumnAttribute]
+        [Column("fecha_caducidad_codigo_acceso", TypeName = "timestamp with time zone")]
+        [Comment("Fecha en que caduca el código de acceso.")]
+        public DateTime? FechaCaducidadCodigoAcceso { get; set; }
+
+        [UseColumnAttribute]
 		[Column("hermes_id_mensaje")]
 		[Comment("ID del mensaje en Hermes.")]
 		public string? HermesIdMensaje { get; set; }
