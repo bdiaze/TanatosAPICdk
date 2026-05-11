@@ -11,10 +11,10 @@ namespace TanatosAPI.Business {
 
 		public async Task<DestinatarioNotificacion> Crear(string sub, long idNegocio, long idTipoReceptor, string? alias, string destino) {
 			// Se crea un código de validación...
-			string codigoValidacion = cryptoHelper.GenerarToken(12);
+			string codigoValidacion = cryptoHelper.GenerarToken();
 			DestinatarioNotificacion? mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion));
 			while (mismoCodigo != null) {
-				codigoValidacion = cryptoHelper.GenerarToken(12);
+				codigoValidacion = cryptoHelper.GenerarToken();
 				mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion));
 			}
 
