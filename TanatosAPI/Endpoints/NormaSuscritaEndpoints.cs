@@ -1,4 +1,5 @@
 ﻿using Amazon.Lambda.Core;
+using Microsoft.AspNetCore.SignalR;
 using Npgsql;
 using System.Diagnostics;
 using System.Security.Claims;
@@ -22,7 +23,10 @@ namespace TanatosAPI.Endpoints {
 			group.MapEliminarEndpoint();
 			group.MapProcesarNotificacionEndpoint();
 
-            return routes;
+			RouteGroupBuilder publicGroup = routes.MapGroup("/public/NormaSuscrita");
+			publicGroup.MapObtenerPorCodigoAccesoConVencimiento();
+
+			return routes;
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
@@ -1157,5 +1161,141 @@ namespace TanatosAPI.Endpoints {
 
             return routes;
         }
+
+		private static IEndpointRouteBuilder MapObtenerPorCodigoAccesoConVencimiento(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/ObtenerPorCodigoAccesoConVencimiento/{codigoAcceso}", async (string codigoAcceso, IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, DocumentoAdjuntoDao documentoAdjuntoDao, CategoriaNormaDao categoriaNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					// Se valida que el código de acceso exista, esté vigente y no haya caducado...
+					HistorialNotificacion? historialNotificacion = await historialNotificacionDao.ObtenerPorCodigoAcceso(codigoAcceso, true);
+					if (historialNotificacion == null || !historialNotificacion.Vigencia || historialNotificacion.FechaCaducidadCodigoAcceso < DateTime.UtcNow) {
+						LambdaLogger.Log(
+							$"[GET] - [NormaSuscrita] - [ObtenerPorCodigoAccesoConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El código de acceso es inválido.");
+
+						return Results.BadRequest($"El código de acceso es inválido.");
+					}
+
+					// Se valida que el vencimiento asociada a la notificación exista, esté vigente o completada...
+					HistorialNormaSuscrita? historialExistente = await historialNormaSuscritaDao.ObtenerPorId(historialNotificacion.IdHistorialNormaSuscrita);
+					if (historialExistente == null || (!historialExistente.Vigencia && historialExistente.FechaCompletitud == null)) {
+						LambdaLogger.Log(
+							$"[GET] - [NormaSuscrita] - [ObtenerPorCodigoAccesoConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El código de acceso es inválido - el vencimiento es inválido.");
+
+						return Results.BadRequest($"El código de acceso es inválido.");
+					}
+
+					// Se valida que exista la obligación...
+					NormaSuscrita? existente = await normaSuscritaDao.ObtenerPorId(historialExistente.IdNormaSuscrita);
+					if (existente == null) {
+						LambdaLogger.Log(
+							$"[GET] - [NormaSuscrita] - [ObtenerPorCodigoAccesoConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El código de acceso es inválido - la obligación es inválida.");
+
+						return Results.BadRequest($"El código de acceso es inválido.");
+					}
+
+					// Solo se permite obtener el detalle de un vencimiento no completado si la norma suscrita esta vigente...
+					if (!existente.Vigencia && historialExistente.FechaCompletitud == null) {
+						LambdaLogger.Log(
+							$"[GET] - [NormaSuscrita] - [ObtenerPorCodigoAccesoConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El código de acceso es inválido - la obligación no está vigente.");
+
+						return Results.BadRequest($"El código de acceso es inválido.");
+					}
+
+					List<TipoPeriodicidad> periodicidades = await tipoPeriodicidadDao.ObtenerPorVigencia(null);
+					List<CategoriaNorma> categorias = await categoriaNormaDao.ObtenerPorVigencia(null);
+
+					List<FiscalizadorNormaSuscrita> fiscalizadoresNormaSuscrita = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(existente.Id, true);
+
+					List<TipoFiscalizador> fiscalizadores = [];
+					if (fiscalizadoresNormaSuscrita.Count > 0) {
+						fiscalizadores = await tipoFiscalizadorDao.ObtenerPorVigencia(null);
+					}
+
+					Template? template = null;
+					TemplateNorma? templateNorma = null;
+					List<TemplateNormaFiscalizador> templateNormaFiscalizadores = [];
+					List<TemplateNormaNotificacion> templateNormaNotificaciones = [];
+					if (existente.IdTemplate != null && existente.IdNorma != null) {
+						template = await templateDao.ObtenerPorId(existente.IdTemplate.Value);
+
+						// Obtengo la información del template norma...
+						templateNorma = (await templateNormaDao.ObtenerPorTemplate(existente.IdTemplate!.Value)).FirstOrDefault(tn => tn.IdNorma == existente.IdNorma);
+
+						// Obtengo la información de los fiscalizadores del template norma...
+						templateNormaFiscalizadores = await templateNormaFiscalizadorDao.ObtenerPorTemplateNorma(templateNorma!.IdTemplate, templateNorma!.IdNorma);
+						if (templateNormaFiscalizadores.Count > 0 && (fiscalizadores == null || fiscalizadores.Count == 0)) {
+							fiscalizadores = await tipoFiscalizadorDao.ObtenerPorVigencia(null);
+						}
+					}
+
+					List<DocumentoAdjunto> documentosAdjuntos = [.. (await documentoAdjuntoDao.ObtenerPorHistorial(historialExistente.Id, true)).Where(da => da.EstadoSubida == 1)];
+
+					Negocio? negocio = (await negocioDao.ObtenerPorSub(existente.Sub)).FirstOrDefault(n => n.Id == existente.IdNegocio);
+
+					SalNormaSuscritaObtenerPorIdConVencimiento retorno = new() {
+						IdNegocio = negocio?.Id,
+						NombreNegocio = negocio?.Nombre,
+						Id = existente.Id,
+						Nombre = existente.Nombre,
+						Descripcion = existente.Descripcion,
+						IdTipoPeriodicidad = existente.IdTipoPeriodicidad,
+						NombreTipoPeriodicidad = periodicidades.FirstOrDefault(p => p.Id == existente.IdTipoPeriodicidad)?.Nombre,
+						Multa = existente.Multa,
+						IdCategoriaNorma = existente.IdCategoriaNorma,
+						NombreCategoriaNorma = categorias.FirstOrDefault(c => c.Id == existente.IdCategoriaNorma)?.Nombre,
+						Fiscalizadores = [.. fiscalizadoresNormaSuscrita.Select(fns => new SalFiscalizadorNormaSuscrita() {
+								Id = fns.Id,
+								IdTipoFiscalizador = fns.IdTipoFiscalizador,
+								NombreTipoFiscalizador = fiscalizadores.FirstOrDefault(ff => ff.Id == fns.IdTipoFiscalizador)?.Nombre
+							})
+						],
+						TemplateNorma = (template == null || templateNorma == null) ? null : new SalTemplateNormaObtenerPorIdConVencimiento() {
+							IdTemplate = template.Id,
+							NombreTemplate = template.Nombre,
+							Nombre = templateNorma.Nombre,
+							Descripcion = templateNorma.Descripcion,
+							IdTipoPeriodicidad = templateNorma.IdTipoPeriodicidad,
+							NombreTipoPeriodicidad = periodicidades.FirstOrDefault(p => p.Id == templateNorma.IdTipoPeriodicidad)?.Nombre,
+							Multa = templateNorma.Multa,
+							IdCategoriaNorma = templateNorma.IdCategoriaNorma,
+							NombreCategoriaNorma = categorias.FirstOrDefault(c => c.Id == templateNorma.IdCategoriaNorma)?.Nombre,
+							Fiscalizadores = [.. templateNormaFiscalizadores.Select(fns => new SalFiscalizadorNormaSuscrita() {
+									Id = 0,
+									IdTipoFiscalizador = fns.IdTipoFiscalizador,
+									NombreTipoFiscalizador = fiscalizadores.FirstOrDefault(ff => ff.Id == fns.IdTipoFiscalizador)?.Nombre
+								})
+							],
+						},
+						FechaVencimiento = historialExistente.FechaVencimiento,
+						FechaCompletitud = historialExistente.FechaCompletitud,
+						DocumentosAdjuntos = [.. documentosAdjuntos.Select(da => new SalDocumentoAdjunto() {
+							Id = da.Id,
+							NombreArchivo = da.NombreArchivo,
+							FechaSubida = da.FechaConfirmacionSubida
+						})]
+					};
+
+					LambdaLogger.Log(
+						$"[GET] - [NormaSuscrita] - [ObtenerPorCodigoAccesoConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de la norma suscrita por código de acceso con vencimiento.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [NormaSuscrita] - [ObtenerPorCodigoAccesoConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener la norma suscrita por código de acceso con vencimiento. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).AllowAnonymous();
+
+			return routes;
+		}
+
 	}
 }
