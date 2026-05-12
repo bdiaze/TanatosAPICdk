@@ -1,4 +1,5 @@
 ﻿using Amazon.Lambda.Core;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Npgsql;
 using System.Diagnostics;
@@ -1163,7 +1164,7 @@ namespace TanatosAPI.Endpoints {
         }
 
 		private static IEndpointRouteBuilder MapObtenerPorCodigoAccesoConVencimiento(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/ObtenerPorCodigoAccesoConVencimiento/{codigoAcceso}", async (string codigoAcceso, IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, DocumentoAdjuntoDao documentoAdjuntoDao, CategoriaNormaDao categoriaNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao) => {
+			routes.MapGet("/ObtenerPorCodigoAccesoConVencimiento", async ([FromQuery] string codigoAcceso, IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, DocumentoAdjuntoDao documentoAdjuntoDao, CategoriaNormaDao categoriaNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
