@@ -1185,9 +1185,9 @@ namespace TanatosAPI.Endpoints {
 					if (historialExistente == null || (!historialExistente.Vigencia && historialExistente.FechaCompletitud == null)) {
 						LambdaLogger.Log(
 							$"[GET] - [NormaSuscrita] - [ObtenerPorCodigoAccesoConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El código de acceso es inválido - el vencimiento es inválido.");
+							$"La obligación no permite el uso de códigos de acceso.");
 
-						return Results.BadRequest($"El código de acceso es inválido.");
+						return Results.BadRequest($"La obligación no permite el uso de códigos de acceso.");
 					}
 
 					// Se valida que exista la obligación...
@@ -1195,18 +1195,18 @@ namespace TanatosAPI.Endpoints {
 					if (existente == null) {
 						LambdaLogger.Log(
 							$"[GET] - [NormaSuscrita] - [ObtenerPorCodigoAccesoConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El código de acceso es inválido - la obligación es inválida.");
+							$"La obligación no permite el uso de códigos de acceso.");
 
-						return Results.BadRequest($"El código de acceso es inválido.");
+						return Results.BadRequest($"La obligación no permite el uso de códigos de acceso.");
 					}
 
 					// Solo se permite obtener el detalle de un vencimiento no completado si la norma suscrita esta vigente...
 					if (!existente.Vigencia && historialExistente.FechaCompletitud == null) {
 						LambdaLogger.Log(
 							$"[GET] - [NormaSuscrita] - [ObtenerPorCodigoAccesoConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El código de acceso es inválido - la obligación no está vigente.");
+							$"La obligación no permite el uso de códigos de acceso.");
 
-						return Results.BadRequest($"El código de acceso es inválido.");
+						return Results.BadRequest($"La obligación no permite el uso de códigos de acceso.");
 					}
 
 					List<TipoPeriodicidad> periodicidades = await tipoPeriodicidadDao.ObtenerPorVigencia(null);
@@ -1320,9 +1320,9 @@ namespace TanatosAPI.Endpoints {
 					if (historialExistente == null || !historialExistente.Vigencia) {
 						LambdaLogger.Log(
 							$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El código de acceso es inválido - el vencimiento es inválido.");
+							$"La obligación no puede darse por completada.");
 
-						return Results.BadRequest($"El código de acceso es inválido.");
+						return Results.BadRequest($"La obligación no puede darse por completada.");
 					}
 
 					if (historialExistente.FechaCompletitud != null) {
@@ -1337,9 +1337,9 @@ namespace TanatosAPI.Endpoints {
 					if (existente == null || !existente.Vigencia) {
 						LambdaLogger.Log(
 							$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El código de acceso es inválido - la obligación es inválida.");
+							$"La obligación no puede darse por completada.");
 
-						return Results.BadRequest($"El código de acceso es inválido.");
+						return Results.BadRequest($"La obligación no puede darse por completada.");
 					}
 
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();

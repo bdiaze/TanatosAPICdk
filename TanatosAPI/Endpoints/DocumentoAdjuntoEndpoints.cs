@@ -1,4 +1,5 @@
 ﻿using Amazon.Lambda.Core;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Npgsql;
 using System.Diagnostics;
@@ -22,8 +23,8 @@ namespace TanatosAPI.Endpoints {
 			RouteGroupBuilder publicGroup = routes.MapGroup("/public/DocumentoAdjunto");
 			publicGroup.MapGenerarUrlSubidaPorCodigoAccesoEndpoint();
 			publicGroup.MapConfirmarSubidaPorCodigoAccesoEndpoint();
-			// publicGroup.MapGenerarUrlBajadaPorCodigoAccesoEndpoint();
-			// publicGroup.MapEliminarPorCodigoAccesoEndpoint();
+			publicGroup.MapGenerarUrlBajadaPorCodigoAccesoEndpoint();
+			publicGroup.MapEliminarPorCodigoAccesoEndpoint();
 
 			return routes;
 		}
@@ -415,9 +416,9 @@ namespace TanatosAPI.Endpoints {
 					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia || historialNormaSuscrita.FechaCompletitud != null) {
 						LambdaLogger.Log(
 							$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubidaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"La obligación no permite la subida de documentos.");
+							$"La obligación no permite la subida de documentos adjuntos.");
 
-						return Results.BadRequest($"La obligación no permite la subida de documentos.");
+						return Results.BadRequest($"La obligación no permite la subida de documentos adjuntos.");
 					}
 
 					// Se valida que la obligación este vigente...
@@ -425,9 +426,9 @@ namespace TanatosAPI.Endpoints {
 					if (normaSuscrita == null || !normaSuscrita.Vigencia) {
 						LambdaLogger.Log(
 							$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubidaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El código de acceso es inválido - la obligación es inválida.");
+							$"La obligación no permite la subida de documentos adjuntos.");
 
-						return Results.BadRequest($"El código de acceso es inválido.");
+						return Results.BadRequest($"La obligación no permite la subida de documentos adjuntos.");
 					}
 
 					// Se valida que el usuario tenga plan Empresa...
@@ -512,9 +513,9 @@ namespace TanatosAPI.Endpoints {
 					if (documentoAdjunto == null || !documentoAdjunto.Vigencia || historialNotificacion.IdHistorialNormaSuscrita != documentoAdjunto.IdHistorialNormaSuscrita) {
 						LambdaLogger.Log(
 							$"[POST] - [DocumentoAdjunto] - [ConfirmarSubidaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El código de acceso es inválido - el ID de documento adjunto es inválido.");
+							$"El documento adjunto indicado es inválido.");
 
-						return Results.BadRequest($"El código de acceso es inválido.");
+						return Results.BadRequest($"El documento adjunto indicado es inválido.");
 					}
 
 					// Se valida que el vencimiento este vigente y sin completar...
@@ -522,9 +523,9 @@ namespace TanatosAPI.Endpoints {
 					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia || historialNormaSuscrita.FechaCompletitud != null) {
 						LambdaLogger.Log(
 							$"[POST] - [DocumentoAdjunto] - [ConfirmarSubidaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"La obligación no permite la subida de documentos.");
+							$"La obligación no permite la subida de documentos adjuntos.");
 
-						return Results.BadRequest($"La obligación no permite la subida de documentos.");
+						return Results.BadRequest($"La obligación no permite la subida de documentos adjuntos.");
 					}
 
 					// Se valida que la obligación este vigente...
@@ -532,9 +533,9 @@ namespace TanatosAPI.Endpoints {
 					if (normaSuscrita == null || !normaSuscrita.Vigencia) {
 						LambdaLogger.Log(
 							$"[POST] - [DocumentoAdjunto] - [ConfirmarSubidaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El código de acceso es inválido - la obligación es inválida.");
+							$"La obligación no permite la subida de documentos adjuntos.");
 
-						return Results.BadRequest($"El código de acceso es inválido.");
+						return Results.BadRequest($"La obligación no permite la subida de documentos adjuntos.");
 					}
 
 					if (documentoAdjunto.EstadoSubida != 1 /* Documento recepcionado */) {
@@ -557,6 +558,146 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[POST] - [DocumentoAdjunto] - [ConfirmarSubidaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error en la confirmación de la subida del documento - ID: {entrada.IdDocumentoAdjunto}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).AllowAnonymous();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapGenerarUrlBajadaPorCodigoAccesoEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPost("/GenerarUrlBajadaPorCodigoAcceso", async (EntDocumentoAdjuntoGenerarUrlBajadaPorCodigoAcceso entrada, IHostEnvironment environment, ClaimsPrincipal user, CryptoHelper cryptoHelper, DocumentoAdjuntoHelper documentoAdjuntoHelper, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, DocumentoAdjuntoDao documentoAdjuntoDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					// Se valida que el código de acceso exista, esté vigente y no haya caducado...
+					HistorialNotificacion? historialNotificacion = await historialNotificacionDao.ObtenerPorCodigoAcceso(cryptoHelper.HashSHA256(entrada.CodigoAcceso), true);
+					if (historialNotificacion == null || !historialNotificacion.Vigencia || historialNotificacion.FechaCaducidadCodigoAcceso < DateTime.UtcNow) {
+						LambdaLogger.Log(
+							$"[POST] - [DocumentoAdjunto] - [GenerarUrlBajadaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El código de acceso es inválido.");
+
+						return Results.BadRequest($"El código de acceso es inválido.");
+					}
+
+					// Se valida que el documento este vigente y este asociado al código de acceso...
+					DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoDao.ObtenerPorId(entrada.IdDocumentoAdjunto);
+					if (documentoAdjunto == null || !documentoAdjunto.Vigencia || historialNotificacion.IdHistorialNormaSuscrita != documentoAdjunto.IdHistorialNormaSuscrita) {
+						LambdaLogger.Log(
+							$"[POST] - [DocumentoAdjunto] - [GenerarUrlBajadaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El documento adjunto indicado es inválido.");
+
+						return Results.BadRequest($"El documento adjunto indicado es inválido.");
+					}
+
+					// Solo no se deja descargar el documento si el vencimiento no existe, no está vigente ni completado...
+					HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorId(documentoAdjunto.IdHistorialNormaSuscrita);
+					if (historialNormaSuscrita == null || (!historialNormaSuscrita.Vigencia && historialNormaSuscrita.FechaCompletitud == null)) {
+						LambdaLogger.Log(
+							$"[POST] - [DocumentoAdjunto] - [GenerarUrlBajadaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"La obligación no permite la descarga de documentos adjuntos.");
+
+						return Results.BadRequest($"La obligación no permite la descarga de documentos adjuntos.");
+					}
+
+					NormaSuscrita? normaSuscrita = await normaSuscritaDao.ObtenerPorId(historialNormaSuscrita.IdNormaSuscrita);
+					// Solo no se deja descargar el documento si la norma suscrita no existe, no pertenece al usuario, o si no está vigente (con el vencimiento sin completar)...
+					if (normaSuscrita == null || (!normaSuscrita.Vigencia && historialNormaSuscrita.FechaCompletitud == null)) {
+						LambdaLogger.Log(
+							$"[POST] - [DocumentoAdjunto] - [GenerarUrlBajadaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"La obligación no permite la descarga de documentos adjuntos.");
+
+						return Results.BadRequest($"La obligación no permite la descarga de documentos adjuntos.");
+					}
+
+					string presignedUrl = await documentoAdjuntoHelper.ObtenerGetPreSignedUrl(documentoAdjunto.BucketKey, documentoAdjunto.NombreArchivo);
+
+					LambdaLogger.Log(
+						$"[POST] - [DocumentoAdjunto] - [GenerarUrlBajadaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Generación exitosa de la URL prefirmada para bajada de documento - ID: {documentoAdjunto.Id}.");
+
+					return Results.Ok(new SalDocumentoAdjuntoGenerarUrlBajada {
+						PreSignedUrl = presignedUrl
+					});
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[POST] - [DocumentoAdjunto] - [GenerarUrlBajadaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error en la generación de la URL prefirmada para bajada de documento - ID: {entrada.IdDocumentoAdjunto}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).AllowAnonymous();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapEliminarPorCodigoAccesoEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapDelete("/PorCodigoAcceso/{id}", async (long id, [FromQuery] string codigoAcceso, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, CryptoHelper cryptoHelper, DocumentoAdjuntoHelper documentoAdjuntoHelper, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, DocumentoAdjuntoDao documentoAdjuntoDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					// Se valida que el código de acceso exista, esté vigente y no haya caducado...
+					HistorialNotificacion? historialNotificacion = await historialNotificacionDao.ObtenerPorCodigoAcceso(cryptoHelper.HashSHA256(codigoAcceso), true);
+					if (historialNotificacion == null || !historialNotificacion.Vigencia || historialNotificacion.FechaCaducidadCodigoAcceso < DateTime.UtcNow) {
+						LambdaLogger.Log(
+							$"[DELETE] - [DocumentoAdjunto] - [EliminarPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El código de acceso es inválido.");
+
+						return Results.BadRequest($"El código de acceso es inválido.");
+					}
+
+					// Se valida que el documento este vigente...
+					DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoDao.ObtenerPorId(id);
+					if (documentoAdjunto == null || !documentoAdjunto.Vigencia || historialNotificacion.IdHistorialNormaSuscrita != documentoAdjunto.IdHistorialNormaSuscrita) {
+						LambdaLogger.Log(
+							$"[DELETE] - [DocumentoAdjunto] - [EliminarPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El documento adjunto no está vigente.");
+
+						return Results.BadRequest($"El documento adjunto no está vigente.");
+					}
+
+					// Se valida que el vencimiento este vigente y sin completar...
+					HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorId(documentoAdjunto.IdHistorialNormaSuscrita);
+					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia || historialNormaSuscrita.FechaCompletitud != null) {
+						LambdaLogger.Log(
+							$"[DELETE] - [DocumentoAdjunto] - [EliminarPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"La obligación no permite eliminar documentos adjuntos.");
+
+						return Results.BadRequest($"La obligación no permite eliminar documentos adjuntos.");
+					}
+
+					// Se valida que la obligación este vigente...
+					NormaSuscrita? normaSuscrita = await normaSuscritaDao.ObtenerPorId(historialNormaSuscrita.IdNormaSuscrita);
+					if (normaSuscrita == null || !normaSuscrita.Vigencia) {
+						LambdaLogger.Log(
+							$"[DELETE] - [DocumentoAdjunto] - [EliminarPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"La obligación no permite eliminar documentos adjuntos.");
+
+						return Results.BadRequest($"La obligación no permite eliminar documentos adjuntos.");
+					}
+
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+
+					try {
+						await documentoAdjuntoBcp.Eliminar(documentoAdjunto);
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
+
+					LambdaLogger.Log(
+						$"[DELETE] - [DocumentoAdjunto] - [EliminarPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Eliminación exitosa del documento adjunto - ID: {id}.");
+
+					return Results.Ok();
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[DELETE] - [DocumentoAdjunto] - [EliminarPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error en la eliminación del documento adjunto - ID: {id}. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
