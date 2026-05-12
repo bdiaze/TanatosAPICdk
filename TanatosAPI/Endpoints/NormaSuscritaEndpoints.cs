@@ -26,6 +26,7 @@ namespace TanatosAPI.Endpoints {
 
 			RouteGroupBuilder publicGroup = routes.MapGroup("/public/NormaSuscrita");
 			publicGroup.MapObtenerPorCodigoAccesoConVencimiento();
+			publicGroup.MapCompletarNormaPorCodigoAccesoEndpoint();
 
 			return routes;
 		}
@@ -1299,6 +1300,80 @@ namespace TanatosAPI.Endpoints {
 
 			return routes;
 		}
+
+		private static IEndpointRouteBuilder MapCompletarNormaPorCodigoAccesoEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPut("/CompletarNormaPorCodigoAcceso", async (EntNormaSuscritaCompletarNormaPorCodigoAcceso entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, CryptoHelper cryptoHelper, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					// Se valida que el código de acceso exista, esté vigente y no haya caducado...
+					HistorialNotificacion? historialNotificacion = await historialNotificacionDao.ObtenerPorCodigoAcceso(cryptoHelper.HashSHA256(entrada.CodigoAcceso), true);
+					if (historialNotificacion == null || !historialNotificacion.Vigencia || historialNotificacion.FechaCaducidadCodigoAcceso < DateTime.UtcNow) {
+						LambdaLogger.Log(
+							$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El código de acceso es inválido.");
+
+						return Results.BadRequest($"El código de acceso es inválido.");
+					}
+
+					HistorialNormaSuscrita? historialExistente = await historialNormaSuscritaDao.ObtenerPorId(historialNotificacion.IdHistorialNormaSuscrita);
+					if (historialExistente == null || !historialExistente.Vigencia) {
+						LambdaLogger.Log(
+							$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El código de acceso es inválido - el vencimiento es inválido.");
+
+						return Results.BadRequest($"El código de acceso es inválido.");
+					}
+
+					if (historialExistente.FechaCompletitud != null) {
+						LambdaLogger.Log(
+							$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"La obligación ya se encuentra completada.");
+
+						return Results.BadRequest($"La obligación ya se encuentra completada.");
+					}
+
+					NormaSuscrita? existente = await normaSuscritaDao.ObtenerPorId(historialExistente.IdNormaSuscrita);
+					if (existente == null || !existente.Vigencia) {
+						LambdaLogger.Log(
+							$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El código de acceso es inválido - la obligación es inválida.");
+
+						return Results.BadRequest($"El código de acceso es inválido.");
+					}
+
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+
+					SalNormaSuscritaCompletarNorma retorno = new();
+
+					try {
+						await historialNormaSuscritaBcp.CompletarHistorialNormaSuscrita(historialExistente, transaction);
+						retorno.FechaCompletitud = historialExistente.FechaCompletitud;
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
+
+					LambdaLogger.Log(
+						$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Se da por completada exitosamente la norma suscrita por código de acceso - ID Norma Suscrita: {historialExistente.IdNormaSuscrita} - ID Historial Norma Suscrita: {historialExistente.Id}.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al dar por completada la norma suscrita por código de acceso. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).AllowAnonymous();
+
+			return routes;
+		}
+
 
 	}
 }
