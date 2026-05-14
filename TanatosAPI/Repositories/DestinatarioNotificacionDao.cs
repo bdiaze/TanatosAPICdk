@@ -10,7 +10,7 @@ namespace TanatosAPI.Repositories {
 	public class DestinatarioNotificacionDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<List<DestinatarioNotificacion>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
-				"SELECT ID, SUB, ID_NEGOCIO, ID_TIPO_RECEPTOR, ALIAS, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, " +
+				"SELECT ID, SUB, ID_NEGOCIO, ID_EMPLEADO, ID_TIPO_RECEPTOR, ALIAS, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, " +
 				"FECHA_VALIDACION, VALIDADO, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION " +
 				"WHERE SUB = @SUB AND (ID_NEGOCIO = @IDNEGOCIO OR @IDNEGOCIO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
 
@@ -33,17 +33,18 @@ namespace TanatosAPI.Repositories {
 						Id = reader.GetInt64(0),
 						Sub = reader.GetString(1),
 						IdNegocio = reader.GetInt64(2),
-						IdTipoReceptor = reader.GetInt64(3),
-						Alias = reader.IsDBNull(4) ? null : reader.GetString(4),
-						Destino = reader.GetString(5),
-						CodigoValidacion = reader.GetString(6),
-						FechaCaducidadCodigoValidacion = reader.GetDateTime(7),
-						FechaValidacion = reader.IsDBNull(8) ? null : reader.GetDateTime(8),
-						Validado = reader.GetBoolean(9),
-						HermesIdMensaje = reader.IsDBNull(10) ? null : reader.GetString(10),
-						FechaCreacion = reader.GetDateTime(11),
-						FechaEliminacion = reader.IsDBNull(12) ? null : reader.GetDateTime(12),
-						Vigencia = reader.GetBoolean(13)
+						IdEmpleado = reader.IsDBNull(3) ? null : reader.GetInt64(3),
+						IdTipoReceptor = reader.GetInt64(4),
+						Alias = reader.IsDBNull(5) ? null : reader.GetString(5),
+						Destino = reader.GetString(6),
+						CodigoValidacion = reader.GetString(7),
+						FechaCaducidadCodigoValidacion = reader.GetDateTime(8),
+						FechaValidacion = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+						Validado = reader.GetBoolean(10),
+						HermesIdMensaje = reader.IsDBNull(11) ? null : reader.GetString(11),
+						FechaCreacion = reader.GetDateTime(12),
+						FechaEliminacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
+						Vigencia = reader.GetBoolean(14)
 					});
 				}
 
@@ -58,7 +59,7 @@ namespace TanatosAPI.Repositories {
 		public async Task<DestinatarioNotificacion?> ObtenerPorCodigoValidacion(string codigoValidacion) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return await connection.QueryFirstOrDefaultAsync<DestinatarioNotificacion>(
-				"SELECT ID, SUB, ID_NEGOCIO, ID_TIPO_RECEPTOR, ALIAS, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, " +
+				"SELECT ID, SUB, ID_NEGOCIO, ID_EMPLEADO, ID_TIPO_RECEPTOR, ALIAS, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, " +
 				"FECHA_VALIDACION, VALIDADO, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION " +
 				"WHERE CODIGO_VALIDACION = @CODIGOVALIDACION",
 				new { codigoValidacion }
@@ -68,22 +69,23 @@ namespace TanatosAPI.Repositories {
 		public async Task<long> Insertar(DestinatarioNotificacion item) {
 			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 			return await connection.ExecuteScalarAsync<long>(
-				"INSERT INTO TANATOS.DESTINATARIO_NOTIFICACION(SUB, ID_NEGOCIO, ID_TIPO_RECEPTOR, ALIAS, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
-				"VALUES (@SUB, @IDNEGOCIO, @IDTIPORECEPTOR, @ALIAS, @DESTINO, @CODIGOVALIDACION, @FECHACADUCIDADCODIGOVALIDACION, @FECHAVALIDACION, @VALIDADO, @HERMESIDMENSAJE, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
+				"INSERT INTO TANATOS.DESTINATARIO_NOTIFICACION(SUB, ID_NEGOCIO, ID_EMPLEADO, ID_TIPO_RECEPTOR, ALIAS, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
+				"VALUES (@SUB, @IDNEGOCIO, @IDEMPLEADO, @IDTIPORECEPTOR, @ALIAS, @DESTINO, @CODIGOVALIDACION, @FECHACADUCIDADCODIGOVALIDACION, @FECHAVALIDACION, @VALIDADO, @HERMESIDMENSAJE, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
 				"RETURNING ID",
-				new { item.Sub, item.IdNegocio, item.IdTipoReceptor, item.Alias, item.Destino, item.CodigoValidacion, item.FechaCaducidadCodigoValidacion, item.FechaValidacion, item.Validado, item.HermesIdMensaje, item.FechaCreacion, item.FechaEliminacion, item.Vigencia }
+				new { item.Sub, item.IdNegocio, item.IdEmpleado, item.IdTipoReceptor, item.Alias, item.Destino, item.CodigoValidacion, item.FechaCaducidadCodigoValidacion, item.FechaValidacion, item.Validado, item.HermesIdMensaje, item.FechaCreacion, item.FechaEliminacion, item.Vigencia }
 			);
 		}
 
 		public async Task Actualizar(DestinatarioNotificacion item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"UPDATE TANATOS.DESTINATARIO_NOTIFICACION SET SUB = @SUB, ID_NEGOCIO = @IDNEGOCIO, ID_TIPO_RECEPTOR = @IDTIPORECEPTOR, ALIAS = @ALIAS, DESTINO = @DESTINO, " +
+				"UPDATE TANATOS.DESTINATARIO_NOTIFICACION SET SUB = @SUB, ID_NEGOCIO = @IDNEGOCIO, ID_EMPLEADO = @IDEMPLEADO, ID_TIPO_RECEPTOR = @IDTIPORECEPTOR, ALIAS = @ALIAS, DESTINO = @DESTINO, " +
 				"CODIGO_VALIDACION = @CODIGOVALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION = @FECHACADUCIDADCODIGOVALIDACION, FECHA_VALIDACION = @FECHAVALIDACION, " +
 				"VALIDADO = @VALIDADO, HERMES_ID_MENSAJE = @HERMESIDMENSAJE, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
 				"WHERE ID = @ID";
 			DynamicParameters param = new();
 			param.Add("SUB", item.Sub);
 			param.Add("IDNEGOCIO", item.IdNegocio);
+			param.Add("IDEMPLEADO", item.IdEmpleado);
 			param.Add("IDTIPORECEPTOR", item.IdTipoReceptor);
 			param.Add("ALIAS", item.Alias);
 			param.Add("DESTINO", item.Destino);
