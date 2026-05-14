@@ -65,5 +65,8 @@ namespace TanatosAPI.Entities.Models {
 		[JsonIgnore]
 		[ForeignKey(nameof(IdCargo))]
 		public Cargo? Cargo { get; set; }
+
+		[JsonIgnore]
+		public List<DestinatarioNotificacion>? DestinatariosNotificaciones { get; set; }
 	}
 }

@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 namespace TanatosAPI.Entities.Models {
     [Table("destinatario_notificacion", Schema = "tanatos")]
     [Comment("Tabla que contiene los destinatarios de las notificaciones de un usuario.")]
-    [Index(nameof(Sub), nameof(IdNegocio), nameof(IdTipoReceptor))]
+    [Index(nameof(Sub), nameof(IdNegocio), nameof(IdEmpleado))]
     [Index(nameof(IdTipoReceptor))]
     [Index(nameof(CodigoValidacion), IsUnique = true)]
     public class DestinatarioNotificacion {
@@ -30,6 +30,11 @@ namespace TanatosAPI.Entities.Models {
 		[Column("id_negocio")]
 		[Comment("Identificador del negocio del usuario.")]
 		public required long IdNegocio { get; set; }
+
+		[UseColumnAttribute]
+		[Column("id_empleado")]
+		[Comment("Identificador del empleado al que pertenece el destino.")]
+		public long? IdEmpleado { get; set; }
 
 		[UseColumnAttribute]
 		[Required]
@@ -103,5 +108,9 @@ namespace TanatosAPI.Entities.Models {
 
 		[JsonIgnore]
 		public List<HistorialNotificacion>? HistorialNotificaciones { get; set; }
-    }
+
+		[JsonIgnore]
+		[ForeignKey(nameof(IdEmpleado))]
+		public Empleado? Empleado { get; set; }
+	}
 }

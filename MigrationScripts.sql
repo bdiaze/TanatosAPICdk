@@ -2284,3 +2284,50 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260514010908_ColumnIdEmpleadoDestinatarioNotificacion') THEN
+    DROP INDEX tanatos."IX_destinatario_notificacion_sub_id_negocio_id_tipo_receptor";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260514010908_ColumnIdEmpleadoDestinatarioNotificacion') THEN
+    ALTER TABLE tanatos.destinatario_notificacion ADD id_empleado bigint;
+    COMMENT ON COLUMN tanatos.destinatario_notificacion.id_empleado IS 'Identificador del empleado al que pertenece el destino.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260514010908_ColumnIdEmpleadoDestinatarioNotificacion') THEN
+    CREATE INDEX "IX_destinatario_notificacion_id_empleado" ON tanatos.destinatario_notificacion (id_empleado);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260514010908_ColumnIdEmpleadoDestinatarioNotificacion') THEN
+    CREATE INDEX "IX_destinatario_notificacion_sub_id_negocio_id_empleado" ON tanatos.destinatario_notificacion (sub, id_negocio, id_empleado);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260514010908_ColumnIdEmpleadoDestinatarioNotificacion') THEN
+    ALTER TABLE tanatos.destinatario_notificacion ADD CONSTRAINT "FK_destinatario_notificacion_empleado_id_empleado" FOREIGN KEY (id_empleado) REFERENCES tanatos.empleado (id) ON DELETE RESTRICT;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260514010908_ColumnIdEmpleadoDestinatarioNotificacion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260514010908_ColumnIdEmpleadoDestinatarioNotificacion', '10.0.5');
+    END IF;
+END $EF$;
+COMMIT;
+

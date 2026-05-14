@@ -93,6 +93,12 @@ namespace TanatosAPI.Entities.Contexts {
                 .HasForeignKey(o => o.IdNegocio)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<DestinatarioNotificacion>()
+                .HasOne(o => o.Empleado)
+                .WithMany(c => c.DestinatariosNotificaciones)
+                .HasForeignKey(o => o.IdEmpleado)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<NormaSuscrita>()
                 .HasOne(o => o.Negocio)
                 .WithMany(o => o.NormasSuscritas)
