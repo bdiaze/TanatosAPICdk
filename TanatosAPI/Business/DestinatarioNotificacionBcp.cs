@@ -9,19 +9,20 @@ namespace TanatosAPI.Business {
 	public class DestinatarioNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntorno, CryptoHelper cryptoHelper, CognitoHelper cognitoHelper, HermesHelper hermesHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, NormaSuscritaDao normaSuscritaDao, NegocioDao negocioDao, HistorialNormaSuscritaBcp historialNormaSuscritaBcp) {
 		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
-		public async Task<DestinatarioNotificacion> Crear(string sub, long idNegocio, long idTipoReceptor, string? alias, string destino) {
+		public async Task<DestinatarioNotificacion> Crear(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, NpgsqlTransaction? transaction = null) {
 			// Se crea un código de validación...
 			string codigoValidacion = cryptoHelper.GenerarToken();
-			DestinatarioNotificacion? mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion));
+			DestinatarioNotificacion? mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion), transaction);
 			while (mismoCodigo != null) {
 				codigoValidacion = cryptoHelper.GenerarToken();
-				mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion));
+				mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion), transaction);
 			}
 
 			DestinatarioNotificacion nuevoDestinatario = new() {
 				Id = 0,
 				Sub = sub,
 				IdNegocio = idNegocio,
+				IdEmpleado = idEmpleado,
 				IdTipoReceptor = idTipoReceptor,
 				Alias = alias,
 				Destino = destino,
@@ -31,11 +32,11 @@ namespace TanatosAPI.Business {
 				FechaCreacion = DateTime.UtcNow,
 				Vigencia = true
 			};
-			nuevoDestinatario.Id = await destinatarioNotificacionDao.Insertar(nuevoDestinatario);
+			nuevoDestinatario.Id = await destinatarioNotificacionDao.Insertar(nuevoDestinatario, transaction);
 
 			// Se envía mensaje con el código de validación...
 			if (nuevoDestinatario.IdTipoReceptor == 1 /* Correo electrónico */) {
-				Negocio negocio = (await negocioDao.ObtenerPorSub(sub)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new Exception("ID de negocio no válido");
+				Negocio negocio = (await negocioDao.ObtenerPorSub(sub, true, transaction)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new Exception("ID de negocio no válido");
 				Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
 
 				string strTemplateCorreo;
@@ -65,10 +66,10 @@ namespace TanatosAPI.Business {
 				});
 
 				nuevoDestinatario.HermesIdMensaje = retorno.IdMensaje;
-				await destinatarioNotificacionDao.Actualizar(nuevoDestinatario);
+				await destinatarioNotificacionDao.Actualizar(nuevoDestinatario, transaction);
 
 			} else if (nuevoDestinatario.IdTipoReceptor == 2 /* Whatsapp */) {
-				Negocio negocio = (await negocioDao.ObtenerPorSub(sub)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new Exception("ID de negocio no válido");
+				Negocio negocio = (await negocioDao.ObtenerPorSub(sub, true, transaction)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new Exception("ID de negocio no válido");
 				Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
 
 				SalHermesEnviar retorno = await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {
@@ -85,7 +86,7 @@ namespace TanatosAPI.Business {
 				});
 
 				nuevoDestinatario.HermesIdMensaje = retorno.IdMensaje;
-				await destinatarioNotificacionDao.Actualizar(nuevoDestinatario);
+				await destinatarioNotificacionDao.Actualizar(nuevoDestinatario, transaction);
 			}
 
 			return nuevoDestinatario;

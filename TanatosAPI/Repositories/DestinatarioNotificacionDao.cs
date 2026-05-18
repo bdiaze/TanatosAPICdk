@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Microsoft.AspNetCore.SignalR;
 using Npgsql;
 using System.Data.Common;
 using TanatosAPI.Entities.Models;
@@ -56,24 +57,77 @@ namespace TanatosAPI.Repositories {
 			}
 		}
 
-		public async Task<DestinatarioNotificacion?> ObtenerPorCodigoValidacion(string codigoValidacion) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return await connection.QueryFirstOrDefaultAsync<DestinatarioNotificacion>(
+		public async Task<DestinatarioNotificacion?> ObtenerPorCodigoValidacion(string codigoValidacion, NpgsqlTransaction? transaction = null) {
+			string query =
 				"SELECT ID, SUB, ID_NEGOCIO, ID_EMPLEADO, ID_TIPO_RECEPTOR, ALIAS, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, " +
 				"FECHA_VALIDACION, VALIDADO, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION " +
-				"WHERE CODIGO_VALIDACION = @CODIGOVALIDACION",
-				new { codigoValidacion }
-			);
+				"WHERE CODIGO_VALIDACION = @CODIGOVALIDACION";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+				command.Parameters.AddWithValue("CODIGOVALIDACION", codigoValidacion);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				DestinatarioNotificacion? retorno = null;
+				if (await reader.ReadAsync()) {
+					retorno = new DestinatarioNotificacion {
+						Id = reader.GetInt64(0),
+						Sub = reader.GetString(1),
+						IdNegocio = reader.GetInt64(2),
+						IdEmpleado = reader.IsDBNull(3) ? null : reader.GetInt64(3),
+						IdTipoReceptor = reader.GetInt64(4),
+						Alias = reader.IsDBNull(5) ? null : reader.GetString(5),
+						Destino = reader.GetString(6),
+						CodigoValidacion = reader.GetString(7),
+						FechaCaducidadCodigoValidacion = reader.GetDateTime(8),
+						FechaValidacion = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+						Validado = reader.GetBoolean(10),
+						HermesIdMensaje = reader.IsDBNull(11) ? null : reader.GetString(11),
+						FechaCreacion = reader.GetDateTime(12),
+						FechaEliminacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
+						Vigencia = reader.GetBoolean(14)
+					};
+				}
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
 		}
 
-		public async Task<long> Insertar(DestinatarioNotificacion item) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			return await connection.ExecuteScalarAsync<long>(
+		public async Task<long> Insertar(DestinatarioNotificacion item, NpgsqlTransaction? transaction = null) {
+			string query =
 				"INSERT INTO TANATOS.DESTINATARIO_NOTIFICACION(SUB, ID_NEGOCIO, ID_EMPLEADO, ID_TIPO_RECEPTOR, ALIAS, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
 				"VALUES (@SUB, @IDNEGOCIO, @IDEMPLEADO, @IDTIPORECEPTOR, @ALIAS, @DESTINO, @CODIGOVALIDACION, @FECHACADUCIDADCODIGOVALIDACION, @FECHAVALIDACION, @VALIDADO, @HERMESIDMENSAJE, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
-				"RETURNING ID",
-				new { item.Sub, item.IdNegocio, item.IdEmpleado, item.IdTipoReceptor, item.Alias, item.Destino, item.CodigoValidacion, item.FechaCaducidadCodigoValidacion, item.FechaValidacion, item.Validado, item.HermesIdMensaje, item.FechaCreacion, item.FechaEliminacion, item.Vigencia }
-			);
+				"RETURNING ID";
+			DynamicParameters param = new();
+			param.Add("SUB", item.Sub);
+			param.Add("IDNEGOCIO", item.IdNegocio);
+			param.Add("IDEMPLEADO", item.IdEmpleado);
+			param.Add("IDTIPORECEPTOR", item.IdTipoReceptor);
+			param.Add("ALIAS", item.Alias);
+			param.Add("DESTINO", item.Destino);
+			param.Add("CODIGOVALIDACION", item.CodigoValidacion);
+			param.Add("FECHACADUCIDADCODIGOVALIDACION", item.FechaCaducidadCodigoValidacion);
+			param.Add("FECHAVALIDACION", item.FechaValidacion);
+			param.Add("VALIDADO", item.Validado);
+			param.Add("HERMESIDMENSAJE", item.HermesIdMensaje);
+			param.Add("FECHACREACION", item.FechaCreacion);
+			param.Add("FECHAELIMINACION", item.FechaEliminacion);
+			param.Add("VIGENCIA", item.Vigencia);
+
+			if (transaction?.Connection != null) {
+				return await transaction!.Connection!.ExecuteScalarAsync<long>(query, param, transaction);
+			} else {
+				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+				return await connection.ExecuteScalarAsync<long>(query, param);
+			}
 		}
 
 		public async Task Actualizar(DestinatarioNotificacion item, NpgsqlTransaction? transaction = null) {

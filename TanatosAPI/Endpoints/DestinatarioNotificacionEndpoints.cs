@@ -136,6 +136,7 @@ namespace TanatosAPI.Endpoints {
 					DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionBcp.Crear(
 						sub,
 						negocio.Id,
+						null,
 						entrada.IdTipoReceptor,
 						entrada.Alias,
 						entrada.Destino
