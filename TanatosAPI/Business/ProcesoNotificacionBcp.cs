@@ -81,9 +81,8 @@ namespace TanatosAPI.Business {
 
 						// Se arman los cron a programar según los próximos vencimientos...
 						HashSet<string> crons = [];
-						List<HistorialNormaSuscrita> historialNormaSuscritas = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction);
-						foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormaSuscritas.Where(hns => hns.FechaVencimiento > DateTime.UtcNow)) {
-
+						List<HistorialNormaSuscrita> historialNormaSuscritas = [.. (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).Where(hns => hns.FechaVencimiento > DateTime.UtcNow)];
+						foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormaSuscritas) {
 							cronVencimiento.Add(CronHelper.GenerarCronDesdeFecha(CronHelper.TransformarFechaUTCATimezone(historialNormaSuscrita.FechaVencimiento), tipoPeriodicidad.Cron));
 
 							foreach ((long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion) antelacion in configNotifPrevias) {

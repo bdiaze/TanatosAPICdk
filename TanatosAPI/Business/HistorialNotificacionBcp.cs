@@ -3,67 +3,7 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class HistorialNotificacionBcp(HistorialNotificacionDao historialNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) {
-		public async Task ActualizarPorHistorialNormaSuscrita(HistorialNormaSuscrita historialNormaSuscrita, HashSet<(long IdDestinatarioNotificacion, long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> historialesNotificaciones, NpgsqlTransaction? transaction = null) {
-			List<HistorialNotificacion> historialNotificacionesExistentes = await historialNotificacionDao.ObtenerPorHistorial(historialNormaSuscrita.Id, null, true, transaction);
-			
-			// Se eliminan los historiales de notificaciones existentes que no se incluyen en la entrada...
-			foreach (HistorialNotificacion historialExistente in historialNotificacionesExistentes) {
-				if (!historialesNotificaciones.Any(n => n.IdDestinatarioNotificacion == historialExistente.IdDestinatarioNotificacion && n.IdTipoUnidadTiempoAntelacion == historialExistente.IdTipoUnidadTiempoAntelacion && n.CantAntelacion == historialExistente.CantAntelacion)) {
-					await Eliminar(historialExistente, transaction);
-				}
-			}
-
-			List<TipoUnidadTiempo> tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true, transaction);
-
-			// Se agregan los nuevos historiales de  notificaciones...
-			foreach ((long IdDestinatarioNotificacion, long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion) historialNotificacion in historialesNotificaciones) {
-				if (!historialNotificacionesExistentes.Any(ne => ne.IdDestinatarioNotificacion == historialNotificacion.IdDestinatarioNotificacion && ne.IdTipoUnidadTiempoAntelacion == historialNotificacion.IdTipoUnidadTiempoAntelacion && ne.CantAntelacion == historialNotificacion.CantAntelacion)) {
-					
-					// Si viene la antelación, se calcula la fecha de programación y se registra...
-					if (historialNotificacion.IdTipoUnidadTiempoAntelacion != null && historialNotificacion.CantAntelacion != null) {
-						TipoUnidadTiempo? tipoUnidadTiempo = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == historialNotificacion.IdTipoUnidadTiempoAntelacion);
-						
-						if (tipoUnidadTiempo != null) {
-							DateTime fechaProgramacion;
-							if (tipoUnidadTiempo.CantDias != null) {
-								long diasPrevios = historialNotificacion.CantAntelacion.Value * tipoUnidadTiempo.CantDias.Value;
-								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddDays(-1 * diasPrevios);
-							} else if (tipoUnidadTiempo.CantHoras != null) {
-								long horasPrevias = historialNotificacion.CantAntelacion.Value * tipoUnidadTiempo.CantHoras.Value;
-								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddHours(-1 * horasPrevias);
-							} else if (tipoUnidadTiempo.CantMinutos != null) {
-								long minutosPrevios = historialNotificacion.CantAntelacion.Value * tipoUnidadTiempo.CantMinutos.Value;
-								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddMinutes(-1 * minutosPrevios);
-							} else {
-								long segundosPrevios = historialNotificacion.CantAntelacion.Value * tipoUnidadTiempo.CantSegundos;
-								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
-							}
-
-							await Crear(
-								historialNormaSuscrita.Id,
-								historialNotificacion.IdDestinatarioNotificacion,
-								historialNotificacion.IdTipoUnidadTiempoAntelacion,
-								historialNotificacion.CantAntelacion,
-								fechaProgramacion,
-								transaction
-							);
-						}
-					// Si no viene la antelación, se programa para la fecha de vencimiento...
-					} else {
-						await Crear(
-							historialNormaSuscrita.Id, 
-							historialNotificacion.IdDestinatarioNotificacion, 
-							null, 
-							null, 
-							historialNormaSuscrita.FechaVencimiento,
-							transaction
-						);
-					}
-				}
-			}
-		}
-
+	public class HistorialNotificacionBcp(HistorialNotificacionDao historialNotificacionDao) {
 		public async Task EliminarPorHistorialNormaSuscrita(long idHistorialNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			List<HistorialNotificacion> historialNotificacionesEliminar = await historialNotificacionDao.ObtenerPorHistorial(idHistorialNormaSuscrita, null, true, transaction);
 			foreach (HistorialNotificacion historialNotificacionEliminar in historialNotificacionesEliminar) {

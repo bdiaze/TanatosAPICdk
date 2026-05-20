@@ -7,36 +7,6 @@ using TimeZoneConverter;
 
 namespace TanatosAPI.Business {
 	public class HistorialNormaSuscritaBcp(HistorialNotificacionBcp historialNotificacionBcp, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TipoPeriodicidadDao tipoPeriodicidadDao) {
-		public async Task ActualizarHistorialNotificacionPorNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
-			List<DestinatarioNotificacion> destinatarios = [.. (await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).Where(d => d.Validado)];
-			List<NotificacionNormaSuscrita> notificacionNormaSuscritas = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
-			List<TemplateNormaNotificacion> templateNormaNotificaciones = (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null && notificacionNormaSuscritas.Count == 0)
-				? await templateNormaNotificacionDao.ObtenerPorTemplateNorma(normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma, transaction)
-				: [];
-
-			HashSet<(long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> notificacionesAntelacion = [];
-			notificacionesAntelacion.Add((null, null));
-			foreach (NotificacionNormaSuscrita notificacionNormaSuscrita in notificacionNormaSuscritas) {
-				notificacionesAntelacion.Add((notificacionNormaSuscrita.IdTipoUnidadTiempoAntelacion, notificacionNormaSuscrita.CantAntelacion));
-			}
-			foreach (TemplateNormaNotificacion templateNormaNotificacion in templateNormaNotificaciones) {
-				notificacionesAntelacion.Add((templateNormaNotificacion.IdTipoUnidadTiempoAntelacion, templateNormaNotificacion.CantAntelacion));
-			}
-
-			HashSet<(long idDestinatarioNotificacion, long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> historialNotificaciones = [];
-			foreach (DestinatarioNotificacion destinatarioNotificacion in destinatarios) {
-				foreach ((long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion) antelacion in notificacionesAntelacion) {
-					historialNotificaciones.Add((destinatarioNotificacion.Id, antelacion.IdTipoUnidadTiempoAntelacion, antelacion.CantAntelacion));
-				}
-			}
-
-			List<HistorialNormaSuscrita> historialNormasSuscritasVigentes = [.. (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true, transaction)).Where(hns => hns.FechaVencimiento > DateTime.UtcNow)];
-			foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormasSuscritasVigentes) {
-				await historialNotificacionBcp.ActualizarPorHistorialNormaSuscrita(historialNormaSuscrita, historialNotificaciones, transaction);
-			}
-		}
-
-
 		public async Task Crear(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			historialNormaSuscrita.Id = await historialNormaSuscritaDao.Insertar(historialNormaSuscrita, transaction);
 
