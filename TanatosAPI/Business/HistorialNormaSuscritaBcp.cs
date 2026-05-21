@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.SignalR;
 using Npgsql;
 using System.Formats.Asn1;
 using TanatosAPI.Entities.Models;
@@ -6,97 +7,9 @@ using TanatosAPI.Repositories;
 using TimeZoneConverter;
 
 namespace TanatosAPI.Business {
-	public class HistorialNormaSuscritaBcp(HistorialNotificacionBcp historialNotificacionBcp, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TipoPeriodicidadDao tipoPeriodicidadDao) {
+	public class HistorialNormaSuscritaBcp(DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateNormaDao templateNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao) {
 		public async Task Crear(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			historialNormaSuscrita.Id = await historialNormaSuscritaDao.Insertar(historialNormaSuscrita, transaction);
-
-			// Se obtienen los destinatarios para crear los historiales de notificación...
-			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(historialNormaSuscrita.IdNormaSuscrita, transaction) ?? throw new Exception("Norma suscrita no encontrada");
-			List<DestinatarioNotificacion> destinatariosNotificaciones = [.. (await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).Where(dn => dn.Validado)];
-
-			List<TipoUnidadTiempo> tiposUnidadesTiempo = [];
-
-			// Se obtienen las notificaciones asociadas a la norma suscrita, o al template de norma...
-			List<NotificacionNormaSuscrita> notificacionesNormaSuscrita = [];
-			List<TemplateNormaNotificacion> templateNormaNotificaciones = [];
-			if (destinatariosNotificaciones.Count > 0) {
-				notificacionesNormaSuscrita = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
-
-				if (notificacionesNormaSuscrita.Count == 0 && normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
-					templateNormaNotificaciones = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma, transaction);
-				}
-
-				if (notificacionesNormaSuscrita.Count > 0 || templateNormaNotificaciones.Count > 0) {
-					tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true, transaction);
-				}
-			}
-
-			// Se crean los historiales de notificación...
-			foreach (DestinatarioNotificacion destinatarioNotificacion in destinatariosNotificaciones) {
-				await historialNotificacionBcp.Crear(historialNormaSuscrita.Id, destinatarioNotificacion.Id, null, null, historialNormaSuscrita.FechaVencimiento, transaction);
-
-				if (notificacionesNormaSuscrita.Count > 0) {
-					foreach (NotificacionNormaSuscrita notificacionNormaSuscrita in notificacionesNormaSuscrita) {
-						TipoUnidadTiempo? unidadTiempo = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == notificacionNormaSuscrita.IdTipoUnidadTiempoAntelacion);
-
-						if (unidadTiempo != null) {
-							DateTime fechaProgramacion;
-							if (unidadTiempo.CantDias != null) {
-								long diasPrevios = notificacionNormaSuscrita.CantAntelacion * unidadTiempo.CantDias.Value;
-								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddDays(-1 * diasPrevios);
-							} else if (unidadTiempo.CantHoras != null) {
-								long horasPrevias = notificacionNormaSuscrita.CantAntelacion * unidadTiempo.CantHoras.Value;
-								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddHours(-1 * horasPrevias);
-							} else if (unidadTiempo.CantMinutos != null) {
-								long minutosPrevios = notificacionNormaSuscrita.CantAntelacion * unidadTiempo.CantMinutos.Value;
-								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddMinutes(-1 * minutosPrevios);
-							} else {
-								long segundosPrevios = notificacionNormaSuscrita.CantAntelacion * unidadTiempo.CantSegundos;
-								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
-							}
-
-							await historialNotificacionBcp.Crear(
-								historialNormaSuscrita.Id, 
-								destinatarioNotificacion.Id, 
-								notificacionNormaSuscrita.IdTipoUnidadTiempoAntelacion, 
-								notificacionNormaSuscrita.CantAntelacion, 
-								fechaProgramacion, 
-								transaction
-							);
-						}
-					}
-				} else if (templateNormaNotificaciones.Count > 0) {
-					foreach (TemplateNormaNotificacion templateNormaNotificacion in templateNormaNotificaciones) {
-						TipoUnidadTiempo? unidadTiempo = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == templateNormaNotificacion.IdTipoUnidadTiempoAntelacion);
-
-						if (unidadTiempo != null) {
-							DateTime fechaProgramacion;
-							if (unidadTiempo.CantDias != null) {
-								long diasPrevios = templateNormaNotificacion.CantAntelacion * unidadTiempo.CantDias.Value;
-								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddDays(-1 * diasPrevios);
-							} else if (unidadTiempo.CantHoras != null) {
-								long horasPrevias = templateNormaNotificacion.CantAntelacion * unidadTiempo.CantHoras.Value;
-								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddHours(-1 * horasPrevias);
-							} else if (unidadTiempo.CantMinutos != null) {
-								long minutosPrevios = templateNormaNotificacion.CantAntelacion * unidadTiempo.CantMinutos.Value;
-								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddMinutes(-1 * minutosPrevios);
-							} else {
-								long segundosPrevios = templateNormaNotificacion.CantAntelacion * unidadTiempo.CantSegundos;
-								fechaProgramacion = historialNormaSuscrita.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
-							}
-
-							await historialNotificacionBcp.Crear(
-								historialNormaSuscrita.Id,
-								destinatarioNotificacion.Id,
-								templateNormaNotificacion.IdTipoUnidadTiempoAntelacion,
-								templateNormaNotificacion.CantAntelacion,
-								fechaProgramacion,
-								transaction
-							);
-						}
-					}
-				}
-			}
 		}
 
 		public async Task EliminarPorNormaSuscrita(NormaSuscrita normaSuscrita, bool ignorarVencidos = false, NpgsqlTransaction? transaction = null) {
@@ -111,60 +24,7 @@ namespace TanatosAPI.Business {
 				historial.Vigencia = false;
 				await historialNormaSuscritaDao.Actualizar(historial, transaction);
 
-				await historialNotificacionBcp.EliminarPorHistorialNormaSuscrita(historial.Id, transaction);
 				await documentoAdjuntoBcp.EliminarPorHistorialNormaSuscrita(historial.Id, transaction);
-			}
-		}
-
-		public async Task EliminarHistorialNotificacionesPorNormaSuscritaYAntelacion(long idNormaSuscrita, long idTipoUnidadTiempoAntelacion, int cantAntelacion, NpgsqlTransaction? transaction = null) {
-			List<HistorialNormaSuscrita> historialesVigentes = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction);
-			foreach (HistorialNormaSuscrita historial in historialesVigentes) {
-				await historialNotificacionBcp.EliminarPorHistorialNormaSuscritaYAntelacion(historial.Id, idTipoUnidadTiempoAntelacion, cantAntelacion, transaction);
-			}
-		}
-
-		public async Task CrearHistorialNotificacionesPorNormaSuscritaYAntelacion(long idNormaSuscrita, long idTipoUnidadTiempoAntelacion, int cantAntelacion, NpgsqlTransaction? transaction = null) {
-			// Se obtienen los historiales de norma suscrita que estén vigentes y no completados...
-			List<HistorialNormaSuscrita> historialesVigentes = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction);
-
-			// Se obtienen los destinatarios para crear los historiales de notificación...
-			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new Exception("Norma suscrita no encontrada");
-			List<DestinatarioNotificacion> destinatariosNotificaciones = [.. (await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).Where(dn => dn.Validado)];
-
-			// Se obtiene el tipo de unidad de tiempo para calcular la fecha de programación...
-			TipoUnidadTiempo? tipoUnidadTiempo = await tipoUnidadTiempoDao.ObtenerPorId(idTipoUnidadTiempoAntelacion, transaction);
-
-			if (tipoUnidadTiempo != null && tipoUnidadTiempo.Vigencia) {
-				// Por cada historial de norma suscrita, se crea el historial de notificación...
-				foreach (HistorialNormaSuscrita historial in historialesVigentes) {
-					// Se obtienen los historiales de notificación existentes, que estén vigentes y pertenezcan a la misma antelación...
-					List<HistorialNotificacion> notificacionesVigentes = [.. (await historialNotificacionDao.ObtenerPorHistorial(historial.Id, null, true, transaction)).Where(n => n.IdTipoUnidadTiempoAntelacion == idTipoUnidadTiempoAntelacion && n.CantAntelacion == cantAntelacion)];
-
-					DateTime fechaProgramacion;
-					if (tipoUnidadTiempo.CantDias != null) {
-						long diasPrevios = cantAntelacion * tipoUnidadTiempo.CantDias.Value;
-						fechaProgramacion = historial.FechaVencimiento.AddDays(-1 * diasPrevios);
-					} else if (tipoUnidadTiempo.CantHoras != null) {
-						long horasPrevias = cantAntelacion * tipoUnidadTiempo.CantHoras.Value;
-						fechaProgramacion = historial.FechaVencimiento.AddHours(-1 * horasPrevias);
-					} else if (tipoUnidadTiempo.CantMinutos != null) {
-						long minutosPrevios = cantAntelacion * tipoUnidadTiempo.CantMinutos.Value;
-						fechaProgramacion = historial.FechaVencimiento.AddMinutes(-1 * minutosPrevios);
-					} else {
-						long segundosPrevios = cantAntelacion * tipoUnidadTiempo.CantSegundos;
-						fechaProgramacion = historial.FechaVencimiento.AddSeconds(-1 * segundosPrevios);
-					}
-
-					// Solo se programan las notificaciones cuya fecha de programación sea futura...
-					if (fechaProgramacion > DateTime.UtcNow) {
-						foreach (DestinatarioNotificacion destinatario in destinatariosNotificaciones) {
-							// Solo se crean las notificaciones que no existan aún...
-							if (!notificacionesVigentes.Any(nv => nv.IdDestinatarioNotificacion == destinatario.Id)) {
-								await historialNotificacionBcp.Crear(historial.Id, destinatario.Id, idTipoUnidadTiempoAntelacion, cantAntelacion, fechaProgramacion, transaction);
-							}
-						}
-					}
-				}
 			}
 		}
 
@@ -172,15 +32,17 @@ namespace TanatosAPI.Business {
 			if (historialNormaSuscrita.FechaCompletitud == null) {
 				historialNormaSuscrita.FechaCompletitud = DateTime.UtcNow;
 				await historialNormaSuscritaDao.Actualizar(historialNormaSuscrita, transaction);
-				await historialNotificacionBcp.EliminarPorHistorialNormaSuscrita(historialNormaSuscrita.Id, transaction);
 
 				await ProgramarSiguienteVencimiento(historialNormaSuscrita, transaction);
 			}
 		}
 
 		public async Task ProgramarSiguienteVencimiento(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			// Solo se programa el siguiente vencimiento si no existe otro vencimiento futuro...
-			List<HistorialNormaSuscrita> historialesFuturos = [.. (await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(historialNormaSuscrita.IdNormaSuscrita, null, true, transaction)).Where(hns => hns.FechaVencimiento > historialNormaSuscrita.FechaVencimiento)];
+			// Solo se programa el siguiente vencimiento si no existe otro vencimiento futuro, no completado, distinto a la referencia...
+			List<HistorialNormaSuscrita> historialesFuturos = [.. 
+				(await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(historialNormaSuscrita.IdNormaSuscrita, true, transaction))
+					.Where(hns => hns.FechaCompletitud == null && hns.Id != historialNormaSuscrita.Id && hns.FechaVencimiento > DateTime.UtcNow)
+			];
 			if (historialesFuturos.Count > 0) {
 				return;
 			}
