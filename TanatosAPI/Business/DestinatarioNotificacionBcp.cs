@@ -6,7 +6,7 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class DestinatarioNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntorno, CryptoHelper cryptoHelper, CognitoHelper cognitoHelper, HermesHelper hermesHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, NormaSuscritaDao normaSuscritaDao, NegocioDao negocioDao, HistorialNormaSuscritaBcp historialNormaSuscritaBcp) {
+	public class DestinatarioNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntorno, CryptoHelper cryptoHelper, CognitoHelper cognitoHelper, HermesHelper hermesHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, NegocioDao negocioDao) {
 		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
 		public async Task<DestinatarioNotificacion> Crear(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, NpgsqlTransaction? transaction = null) {
@@ -97,11 +97,6 @@ namespace TanatosAPI.Business {
 				destinatarioNotificacion.Validado = true;
 				destinatarioNotificacion.FechaValidacion = DateTime.UtcNow;
 				await destinatarioNotificacionDao.Actualizar(destinatarioNotificacion, transaction);
-
-				List<NormaSuscrita> normasSuscritas = [.. (await normaSuscritaDao.ObtenerPorSub(destinatarioNotificacion.Sub, destinatarioNotificacion.IdNegocio, true, transaction)).Where(ns => ns.Activado)];
-				foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
-					await historialNormaSuscritaBcp.ActualizarHistorialNotificacionPorNormaSuscrita(normaSuscrita, transaction);
-				}
 			}
 		}
 
@@ -110,11 +105,6 @@ namespace TanatosAPI.Business {
 				destinatarioNotificacion.FechaEliminacion = DateTime.UtcNow;
 				destinatarioNotificacion.Vigencia = false;
 				await destinatarioNotificacionDao.Actualizar(destinatarioNotificacion, transaction);
-
-				List<NormaSuscrita> normasSuscritas = [.. (await normaSuscritaDao.ObtenerPorSub(destinatarioNotificacion.Sub, destinatarioNotificacion.IdNegocio, true, transaction)).Where(ns => ns.Activado)];
-				foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
-					await historialNormaSuscritaBcp.ActualizarHistorialNotificacionPorNormaSuscrita(normaSuscrita, transaction);
-				}
 			}
 		}
 	}

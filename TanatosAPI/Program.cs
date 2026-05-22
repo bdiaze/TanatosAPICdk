@@ -142,7 +142,6 @@ builder.Services.AddSingleton<EmpleadoDao>();
 #region Singleton BCP
 builder.Services.AddSingleton<NormaSuscritaBcp>();
 builder.Services.AddSingleton<HistorialNormaSuscritaBcp>();
-builder.Services.AddSingleton<HistorialNotificacionBcp>();
 builder.Services.AddSingleton<FiscalizadorNormaSuscritaBcp>();
 builder.Services.AddSingleton<NotificacionNormaSuscritaBcp>();
 builder.Services.AddSingleton<ProcesoNotificacionBcp>();
@@ -151,6 +150,7 @@ builder.Services.AddSingleton<DocumentoAdjuntoBcp>();
 builder.Services.AddSingleton<MensajeBcp>();
 builder.Services.AddSingleton<SuscripcionBcp>();
 builder.Services.AddSingleton<TemplateNormaBcp>();
+builder.Services.AddSingleton<NegocioBcp>();
 #endregion
 
 string cognitoRegion;

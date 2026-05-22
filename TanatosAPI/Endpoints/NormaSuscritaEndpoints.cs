@@ -170,17 +170,9 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true);
-					HistorialNormaSuscrita? historialNormaSuscrita;
-					if (vencimientos.Any(v => v.FechaVencimiento >= DateTime.UtcNow)) {
-						historialNormaSuscrita = vencimientos
-							.Where(hns => hns.FechaVencimiento >= DateTime.UtcNow)
-							.OrderBy(hns => hns.FechaVencimiento)
+					HistorialNormaSuscrita? historialNormaSuscrita = vencimientos
+							.OrderByDescending(hns => hns.FechaVencimiento)
 							.FirstOrDefault();
-					} else {
-						historialNormaSuscrita = vencimientos
-							.OrderBy(hns => hns.FechaVencimiento)
-							.FirstOrDefault();
-					}
 
 					SalNormaSuscrita retorno = new() {
 						Id = existente.Id,
@@ -297,7 +289,7 @@ namespace TanatosAPI.Endpoints {
 						CategoriaNorma? categoriaNorma = categorias.FirstOrDefault(c => c.Id == (normaSuscrita.IdCategoriaNorma ?? templateNorma?.IdCategoriaNorma));
 						TipoPeriodicidad? tipoPeriodicidad = periodicidades.FirstOrDefault(p => p.Id == (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad));
 
-						List<HistorialNormaSuscrita> historialesNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, null, true);
+						List<HistorialNormaSuscrita> historialesNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true);
 
 						// Solo se consideran en la salida las normas vigentes y activas, o los vencimientos ya completados
 						if ((normaSuscrita.Vigencia && normaSuscrita.Activado) || historialesNormaSuscrita.Any(h => h.FechaCompletitud != null)) {
@@ -825,17 +817,9 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true);
-					HistorialNormaSuscrita? proximoVencimientoExistente;
-					if (vencimientos.Any(v => v.FechaVencimiento >= DateTime.UtcNow)) {
-						proximoVencimientoExistente = vencimientos
-							.Where(hns => hns.FechaVencimiento >= DateTime.UtcNow)
-							.OrderBy(hns => hns.FechaVencimiento)
+					HistorialNormaSuscrita? proximoVencimientoExistente = vencimientos
+							.OrderByDescending(hns => hns.FechaVencimiento)
 							.FirstOrDefault();
-					} else {
-						proximoVencimientoExistente = vencimientos
-							.OrderBy(hns => hns.FechaVencimiento)
-							.FirstOrDefault();
-					}
 
 					// En caso de estar modificando la fecha del próximo vencimiento, se valida que el próximo vencimiento sea una fecha futura...
 					if (entrada.Activado && proximoVencimientoExistente?.FechaVencimiento != entrada.ProximoVencimiento && entrada.ProximoVencimiento <= DateTime.UtcNow) {
@@ -924,14 +908,13 @@ namespace TanatosAPI.Endpoints {
 									await historialNormaSuscritaBcp.EliminarPorNormaSuscrita(existente, true, transaction);
 								}
 
-								HistorialNormaSuscrita historialNormaSuscrita = new HistorialNormaSuscrita {
+								HistorialNormaSuscrita historialNormaSuscrita = new() {
 									Id = 0,
 									IdNormaSuscrita = existente.Id,
 									FechaVencimiento = entrada.ProximoVencimiento!.Value,
 									FechaCreacion = DateTime.UtcNow,
 									Vigencia = true
 								};
-
 								await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
 							}
 						// En caso de que norma suscrita esté inactiva, se elimina el próximo vencimiento existente...
@@ -1133,7 +1116,7 @@ namespace TanatosAPI.Endpoints {
                     await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
                     try {
-                        await procesoNotificacionBcp.ProcesarNotificacion(entrada.IdNormaSuscrita, entrada.Cron, entrada.ProgramarSiguienteEjecucion, transaction);
+                        await procesoNotificacionBcp.ProcesarNotificacion(entrada.IdNormaSuscrita, entrada.Cron, entrada.IdTipoUnidadTiempoAntelacion, entrada.CantAntelacion, entrada.EsVencimiento, entrada.ProgramarSiguienteEjecucion, transaction);
 						
 						await transaction.CommitAsync();
 					} catch {
@@ -1143,13 +1126,13 @@ namespace TanatosAPI.Endpoints {
 
 					LambdaLogger.Log(
                         $"[POST] - [NormaSuscrita] - [ProcesarNotificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-                        $"Se procesó exitosamente la notificación - ID Norma Suscrita: {entrada.IdNormaSuscrita} - Cron: {entrada.Cron} - Programar Siguiente Ejecución: {entrada.ProgramarSiguienteEjecucion}.");
+                        $"Se procesó exitosamente la notificación - ID Norma Suscrita: {entrada.IdNormaSuscrita} - Cron: {entrada.Cron} - ID Tipo Unidad Tiempo Antelacion: {entrada.IdTipoUnidadTiempoAntelacion} - Cant. Antelación: {entrada.CantAntelacion} - Programar Siguiente Ejecución: {entrada.ProgramarSiguienteEjecucion}.");
 
                     return Results.Ok();
                 } catch (Exception ex) {
                     LambdaLogger.Log(
                         $"[POST] - [NormaSuscrita] - [ProcesarNotificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-                        $"Ocurrió un error al procesar notificación - ID Norma Suscrita: {entrada.IdNormaSuscrita} - Cron: {entrada.Cron} - Programar Siguiente Ejecución: {entrada.ProgramarSiguienteEjecucion}. " +
+                        $"Ocurrió un error al procesar notificación - ID Norma Suscrita: {entrada.IdNormaSuscrita} - Cron: {entrada.Cron} - ID Tipo Unidad Tiempo Antelacion: {entrada.IdTipoUnidadTiempoAntelacion} - Cant. Antelación: {entrada.CantAntelacion} - Programar Siguiente Ejecución: {entrada.ProgramarSiguienteEjecucion}. " +
                         $"{ex}");
                     return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
                 }

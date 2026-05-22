@@ -17,9 +17,10 @@ namespace TanatosAPI.Endpoints {
 	public static class DestinatarioNotificacionEndpoints {
 		public static IEndpointRouteBuilder MapDestinatarioNotificacionEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/DestinatarioNotificacion");
-			group.MapObtenerVigentes();
-			group.MapCrearEndpoint();
-			group.MapEliminarEndpoint();
+			// Se quitan los endpoints de DestinatarioNotificacion, dado que ahora se administran desde endpoints de Empleado...
+			// group.MapObtenerVigentes();
+			// group.MapCrearEndpoint();
+			// group.MapEliminarEndpoint();
 
 			RouteGroupBuilder publicGroup = routes.MapGroup("/public/DestinatarioNotificacion");
 			publicGroup.MapValidarEndpoint();

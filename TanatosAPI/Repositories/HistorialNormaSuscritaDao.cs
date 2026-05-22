@@ -45,10 +45,10 @@ namespace TanatosAPI.Repositories {
 			}
 		}
 
-		public async Task<List<HistorialNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, DateTime? fechaVencimiento = null, bool vigencia = true, NpgsqlTransaction? transaction = null) {
+		public async Task<List<HistorialNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, bool vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_NORMA_SUSCRITA, FECHA_VENCIMIENTO, FECHA_COMPLETITUD, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.HISTORIAL_NORMA_SUSCRITA " +
-				"WHERE ID_NORMA_SUSCRITA = @IDNORMASUSCRITA AND (FECHA_VENCIMIENTO = @FECHAVENCIMIENTO OR @FECHAVENCIMIENTO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
+				"WHERE ID_NORMA_SUSCRITA = @IDNORMASUSCRITA AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
 
 			bool disposeConnection = transaction?.Connection == null;
 			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
@@ -57,7 +57,6 @@ namespace TanatosAPI.Repositories {
 				await using NpgsqlCommand command = new(query, connection, transaction);
 
 				command.Parameters.AddWithValue("IDNORMASUSCRITA", idNormaSuscrita);
-				command.Parameters.AddWithValue("FECHAVENCIMIENTO", (object?)fechaVencimiento ?? DBNull.Value);
 				command.Parameters.AddWithValue("VIGENCIA", vigencia);
 
 				await using DbDataReader reader = await command.ExecuteReaderAsync();

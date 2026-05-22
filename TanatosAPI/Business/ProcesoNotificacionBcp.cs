@@ -80,10 +80,9 @@ namespace TanatosAPI.Business {
 						HashSet<string> cronVencimiento = [];
 
 						// Se arman los cron a programar según los próximos vencimientos...
-						HashSet<string> crons = [];
-						List<HistorialNormaSuscrita> historialNormaSuscritas = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction);
-						foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormaSuscritas.Where(hns => hns.FechaVencimiento > DateTime.UtcNow)) {
-
+						Dictionary<string, (long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> crons = [];
+						List<HistorialNormaSuscrita> historialNormaSuscritas = [.. (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).Where(hns => hns.FechaVencimiento > DateTime.UtcNow)];
+						foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormaSuscritas) {
 							cronVencimiento.Add(CronHelper.GenerarCronDesdeFecha(CronHelper.TransformarFechaUTCATimezone(historialNormaSuscrita.FechaVencimiento), tipoPeriodicidad.Cron));
 
 							foreach ((long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion) antelacion in configNotifPrevias) {
@@ -105,10 +104,12 @@ namespace TanatosAPI.Business {
 											long segundosPrevios = antelacion.CantAntelacion.Value * tipoUnidadTiempo.CantSegundos;
 											fechaProgramacion = fechaProgramacion.AddSeconds(-1 * segundosPrevios);
 										}
+									} else {
+										continue;
 									}
 								}
 
-								crons.Add(CronHelper.GenerarCronDesdeFecha(fechaProgramacion, tipoPeriodicidad.Cron));
+								crons.Add(CronHelper.GenerarCronDesdeFecha(fechaProgramacion, tipoPeriodicidad.Cron), (antelacion.IdTipoUnidadTiempoAntelacion, antelacion.CantAntelacion));
 							}
 						}
 
@@ -126,7 +127,7 @@ namespace TanatosAPI.Business {
 						// Se eliminan los procesos programados que ya no aplican...
 						List<Dictionary<string, JsonElement>> aEliminar = [];
 						foreach (string cronExistente in cronsExistentes) {
-							if (!crons.Any(c => c == cronExistente)) {
+							if (!crons.Keys.Any(c => c == cronExistente)) {
 								aEliminar.AddRange(normaSuscrita.ProcesosNotificaciones!.Where(p =>
 									p.TryGetValue("Cron", out JsonElement jsonCron) &&
 									jsonCron.ValueKind == JsonValueKind.String &&
@@ -161,13 +162,16 @@ namespace TanatosAPI.Business {
 						}
 
 						// Se crean los procesos programados que faltan...
-						foreach (string cronNuevo in crons) {
+						foreach (string cronNuevo in crons.Keys) {
 							if (!cronsExistentes.Any(ce => ce == cronNuevo)) {
 								string nombreProceso = $"{variableEntornoHelper.Obtener("APP_NAME")} - NormaSuscrita {idNormaSuscrita} - Cron {cronNuevo}";
 
 								EntKairosParametrosProceso parametros = new() {
 									IdNormaSuscrita = idNormaSuscrita,
 									Cron = cronNuevo,
+									IdTipoUnidadTiempoAntelacion = crons[cronNuevo].IdTipoUnidadTiempoAntelacion,
+									CantAntelacion = crons[cronNuevo].CantAntelacion,
+									EsVencimiento = cronVencimiento.Contains(cronNuevo),
 									ProgramarSiguienteEjecucion = cronVencimiento.Contains(cronNuevo)
 								};
 
@@ -206,9 +210,11 @@ namespace TanatosAPI.Business {
 			}
 		}
 
-		public async Task ProcesarNotificacion(long idNormaSuscrita, string cron, bool programarSiguienteEjecucion, NpgsqlTransaction? transaction = null) {
-			// Se obtiene norma suscrita y/o template...
-			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new Exception("ID norma suscrita inválida");
+		public async Task ProcesarNotificacion(long idNormaSuscrita, string cron, long? idTipoUnidadTiempoAntelacion, int? cantAntelacion, bool? esVencimiento, bool programarSiguienteEjecucion, NpgsqlTransaction? transaction = null) {
+			esVencimiento ??= programarSiguienteEjecucion;
+
+            // Se obtiene norma suscrita y/o template...
+            NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new Exception("ID norma suscrita inválida");
             TemplateNorma? templateNorma = null;
             if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
                 templateNorma = (await templateNormaDao.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
@@ -220,99 +226,101 @@ namespace TanatosAPI.Business {
 
 			// Se obtienen los tipos de unidades de tiempo...
 			List<TipoUnidadTiempo> tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true, transaction);
-								
-			// Se obtienen los historiales de norma suscrita que aún no se completan...
-			List<HistorialNormaSuscrita> historialNormaSuscritas = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction);
-			foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormaSuscritas) {
-						
-				// Se obtienen los historiales de notificación no ejecutados que estén vencidos...
-				List<HistorialNotificacion> historialNotificaciones = [.. (await historialNotificacionDao.ObtenerPorHistorial(historialNormaSuscrita.Id, null, true, transaction)).Where(hn => hn.FechaProgramacion <= DateTime.UtcNow)];
-				foreach (HistorialNotificacion historialNotificacion in historialNotificaciones) {
-					// Se valida que el destinatario este vigente, si no lo esta entonces no se manda la notificación...
-					DestinatarioNotificacion? destinatario = destinatariosValidados.FirstOrDefault(d => d.Id == historialNotificacion.IdDestinatarioNotificacion);
-					if (destinatario == null) {
-								
-						historialNotificacion.FechaEjecucion = DateTime.UtcNow;
-						historialNotificacion.Estado = 2; // Omitido
-						historialNotificacion.Observacion = "El destinatario no está vigente o validado.";
-						await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
+            TipoUnidadTiempo? unidadTiempo = tiposUnidadesTiempo.FirstOrDefault(ut => ut.Id == idTipoUnidadTiempoAntelacion);
 
-						continue;
-					}
+            // Se obtiene el último vencimiento...
+            HistorialNormaSuscrita? ultimoVencimiento = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).OrderByDescending(v => v.FechaVencimiento).FirstOrDefault();
+			if (ultimoVencimiento != null) {
+                // Se definen textos a incluirse en la notificación...
+                string? tiempoFaltante = null;
+                string? deLosProximos = null;
+                if (cantAntelacion != null && idTipoUnidadTiempoAntelacion != null && unidadTiempo != null) {
+                    if (cantAntelacion > 1) tiempoFaltante = $"{cantAntelacion} {unidadTiempo.NombrePlural?.ToLower()}";
+                    else tiempoFaltante = $"{cantAntelacion} {unidadTiempo.Nombre.ToLower()}";
 
-					// Se valida que según suscripción el destinatario esté habilitado, si no lo esta entonces no se manda la notificación...
-					if (!await suscripcionBcp.DestinatarioHabilitado(normaSuscrita.Sub, normaSuscrita.IdNegocio, destinatario.Id, transaction)) {
-						historialNotificacion.FechaEjecucion = DateTime.UtcNow;
-						historialNotificacion.Estado = 2; // Omitido
-						historialNotificacion.Observacion = "El destinatario no está habilitado según la suscripción del usuario.";
-						await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
-
-						continue;
-					}
-
-					// Se calcula la cantidad de tiempo faltante a vencimiento...
-					string? tiempoFaltante = null;
-					string? deLosProximos = null;
-					if (historialNotificacion.IdTipoUnidadTiempoAntelacion != null && historialNotificacion.CantAntelacion != null) {
-                        TipoUnidadTiempo? unidadTiempo = tiposUnidadesTiempo.FirstOrDefault(ut => ut.Id == historialNotificacion.IdTipoUnidadTiempoAntelacion);
-						if (unidadTiempo == null) {
-							historialNotificacion.FechaEjecucion = DateTime.UtcNow;
-							historialNotificacion.Estado = 2; // Omitido
-							historialNotificacion.Observacion = "El tipo de unidad de tiempo no está vigente.";
-							await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
-
-							continue;
-						}
-
-						tiempoFaltante = $"{historialNotificacion.CantAntelacion} {unidadTiempo.Nombre.ToLower()}";
-						if (historialNotificacion.CantAntelacion > 1) tiempoFaltante += "s";
-
-						if (historialNotificacion.CantAntelacion > 1) {
-							if (historialNotificacion.IdTipoUnidadTiempoAntelacion == 1 ||
-								historialNotificacion.IdTipoUnidadTiempoAntelacion == 3) {
-                                deLosProximos = $"de los próximos {historialNotificacion.CantAntelacion} {unidadTiempo.Nombre.ToLower()}s";
-                            } else {
-                                deLosProximos = $"de las próximas {historialNotificacion.CantAntelacion} {unidadTiempo.Nombre.ToLower()}s";
-                            }
+                    if (cantAntelacion > 1) {
+                        if (idTipoUnidadTiempoAntelacion == 1 || idTipoUnidadTiempoAntelacion == 3) {
+                            deLosProximos = $"de los próximos {cantAntelacion} {unidadTiempo.NombrePlural?.ToLower()}";
                         } else {
-							if (historialNotificacion.IdTipoUnidadTiempoAntelacion == 1) {
-								deLosProximos = $"del próximo {unidadTiempo.Nombre.ToLower()}";
-                            } else if (historialNotificacion.IdTipoUnidadTiempoAntelacion == 3) {
-								deLosProximos = $"de mañana";
-                            } else {
-                                deLosProximos = $"de la próxima {unidadTiempo.Nombre.ToLower()}";
-                            }
+                            deLosProximos = $"de las próximas {cantAntelacion} {unidadTiempo.NombrePlural?.ToLower()}";
+                        }
+                    } else {
+                        if (idTipoUnidadTiempoAntelacion == 1) {
+                            deLosProximos = $"del próximo {unidadTiempo.Nombre.ToLower()}";
+                        } else if (idTipoUnidadTiempoAntelacion == 3) {
+                            deLosProximos = $"de mañana";
+                        } else {
+                            deLosProximos = $"de la próxima {unidadTiempo.Nombre.ToLower()}";
                         }
                     }
+                } else if (!esVencimiento.Value) {
+                    tiempoFaltante = "poco tiempo";
+                    deLosProximos = $"del {ultimoVencimiento.FechaVencimiento:dd 'de' MMMM}";
+                }
 
-					// Se genera código de acceso para notificación...
-					string codigoAcceso = cryptoHelper.GenerarToken();
-					HistorialNotificacion? mismoCodigo = await historialNotificacionDao.ObtenerPorCodigoAcceso(cryptoHelper.HashSHA256(codigoAcceso), true, transaction);
-					while (mismoCodigo != null) {
-						codigoAcceso = cryptoHelper.GenerarToken();
-						mismoCodigo = await historialNotificacionDao.ObtenerPorCodigoAcceso(cryptoHelper.HashSHA256(codigoAcceso), true, transaction);
-					}
+                // Se procesan las notificaciones de todos los destinatarios validados...
+                foreach (DestinatarioNotificacion destinatario in destinatariosValidados) {
+					DateTime now = DateTime.UtcNow;
+                    HistorialNotificacion historialNotificacion = new() {
+                        Id = 0,
+                        IdHistorialNormaSuscrita = ultimoVencimiento.Id,
+						IdDestinatarioNotificacion = destinatario.Id,
+						IdTipoUnidadTiempoAntelacion = idTipoUnidadTiempoAntelacion,
+						CantAntelacion = cantAntelacion,
+						FechaProgramacion = now,
+						FechaCreacion = now,
+						Vigencia = true
+                    };
+                    historialNotificacion.Id = await historialNotificacionDao.Insertar(historialNotificacion, transaction);
 
-					// Si el destinatario es email, se manda correo electrónico...
-					if (destinatario.IdTipoReceptor == 1) {
+                    // Se valida que según suscripción el destinatario esté habilitado, si no lo esta entonces no se manda la notificación...
+                    if (!await suscripcionBcp.DestinatarioHabilitado(normaSuscrita.Sub, normaSuscrita.IdNegocio, destinatario.Id, transaction)) {
+                        historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+                        historialNotificacion.Estado = 2; // Omitido
+                        historialNotificacion.Observacion = "El destinatario no está habilitado según la suscripción del usuario.";
+                        await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
+
+                        continue;
+                    }
+
+					// Se valida que la unidad de tiempo este vigente, solo si viene como entrada...
+                    if (idTipoUnidadTiempoAntelacion != null && unidadTiempo == null) {
+                        historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+                        historialNotificacion.Estado = 2; // Omitido
+                        historialNotificacion.Observacion = "El tipo de unidad de tiempo no está vigente.";
+                        await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
+
+                        continue;
+                    }
+					
+                    // Se genera código de acceso para notificación...
+                    string codigoAcceso = cryptoHelper.GenerarToken();
+                    HistorialNotificacion? mismoCodigo = await historialNotificacionDao.ObtenerPorCodigoAcceso(cryptoHelper.HashSHA256(codigoAcceso), true, transaction);
+                    while (mismoCodigo != null) {
+                        codigoAcceso = cryptoHelper.GenerarToken();
+                        mismoCodigo = await historialNotificacionDao.ObtenerPorCodigoAcceso(cryptoHelper.HashSHA256(codigoAcceso), true, transaction);
+                    }
+
+                    // Si el destinatario es email, se manda correo electrónico...
+                    if (destinatario.IdTipoReceptor == 1) {
                         string strTemplateCorreo;
-						string asunto;
-						if (tiempoFaltante != null) {
+                        string asunto;
+                        if (!esVencimiento.Value) {
                             if (environment.IsProduction()) {
                                 strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "NotificacionPrevia.html"));
                             } else {
                                 strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "NotificacionPrevia.html"));
                             }
-							asunto = "¡Tu obligación vence en [TIEMPO_FALTANTE]!";
+                            asunto = "¡Tu obligación vence en [TIEMPO_FALTANTE]!";
                         } else {
                             if (environment.IsProduction()) {
                                 strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "NormaVencida.html"));
                             } else {
                                 strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "NormaVencida.html"));
                             }
-							asunto = "¡Tu obligación venció!";
+                            asunto = "¡Tu obligación venció!";
 
-						}
+                        }
 
                         SalHermesEnviar response = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
                             De = new DireccionCorreo() {
@@ -321,80 +329,78 @@ namespace TanatosAPI.Business {
                             },
                             Para = [
                                 new DireccionCorreo() {
-									Correo = destinatario.Destino
-								}
+                                    Correo = destinatario.Destino
+                                }
                             ],
                             Asunto = asunto.Replace("[TIEMPO_FALTANTE]", tiempoFaltante ?? ""),
                             Cuerpo = strTemplateCorreo
                                         .Replace("[NOMBRE_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado"))
                                         .Replace("[MULTA_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"))
                                         .Replace("[TIEMPO_FALTANTE]", WebUtility.HtmlEncode(tiempoFaltante ?? ""))
-										.Replace("[DE_LOS_PROXIMOS]", WebUtility.HtmlEncode(deLosProximos ?? ""))
-										.Replace("[CODIGO_ACCESO]", Uri.EscapeDataString(codigoAcceso))
+                                        .Replace("[DE_LOS_PROXIMOS]", WebUtility.HtmlEncode(deLosProximos ?? ""))
+                                        .Replace("[CODIGO_ACCESO]", Uri.EscapeDataString(codigoAcceso))
                         });
 
-						historialNotificacion.FechaEjecucion = DateTime.UtcNow;
-						historialNotificacion.Estado = 1; // Enviado
-						historialNotificacion.CodigoAcceso = cryptoHelper.HashSHA256(codigoAcceso);
-						historialNotificacion.FechaCaducidadCodigoAcceso = DateTime.UtcNow.AddDays(DIAS_CADUCIDAD_CODIGO_ACCESO);
-						historialNotificacion.HermesIdMensaje = response.IdMensaje;
-						await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
+                        historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+                        historialNotificacion.Estado = 1; // Enviado
+                        historialNotificacion.CodigoAcceso = cryptoHelper.HashSHA256(codigoAcceso);
+                        historialNotificacion.FechaCaducidadCodigoAcceso = DateTime.UtcNow.AddDays(DIAS_CADUCIDAD_CODIGO_ACCESO);
+                        historialNotificacion.HermesIdMensaje = response.IdMensaje;
+                        await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
 
 					// Si el destinatario es Whatsapp, se manda mensaje de Whatsapp...
-					} else if (destinatario.IdTipoReceptor == 2) {
-						string nombreTemplate; 
-						string[]? parametrosTitulo;
-						string[]? parametrosCuerpo;
-						if (tiempoFaltante != null) {
-							nombreTemplate = "notificacion_previa";
-							parametrosTitulo = [
-								tiempoFaltante
-							];
-							parametrosCuerpo = [
-								normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado",
-								deLosProximos!,
-								normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"
-							];
-						} else {
-							nombreTemplate = "norma_vencida";
-							parametrosTitulo = null;
-							parametrosCuerpo = [
-								normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado",
-								normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"
-							];
-						}
+                    } else if (destinatario.IdTipoReceptor == 2) {
+                        string nombreTemplate;
+                        string[]? parametrosTitulo;
+                        string[]? parametrosCuerpo;
+                        if (!esVencimiento.Value) {
+                            nombreTemplate = "notificacion_previa";
+                            parametrosTitulo = [
+                                tiempoFaltante!
+                            ];
+                            parametrosCuerpo = [
+                                normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado",
+                                deLosProximos!,
+                                normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"
+                            ];
+                        } else {
+                            nombreTemplate = "norma_vencida";
+                            parametrosTitulo = null;
+                            parametrosCuerpo = [
+                                normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado",
+                                normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"
+                            ];
+                        }
 
-						SalHermesEnviar response = await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {
-							De = variableEntornoHelper.Obtener("HERMES_DE_WHATSAPP"),
-							Para = destinatario.Destino,
-							NombreTemplate = nombreTemplate,
-							ParametrosTitulo = parametrosTitulo,
-							ParametrosCuerpo = parametrosCuerpo,
-							ParametrosBoton = [Uri.EscapeDataString(codigoAcceso) ]
-						});
+                        SalHermesEnviar response = await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {
+                            De = variableEntornoHelper.Obtener("HERMES_DE_WHATSAPP"),
+                            Para = destinatario.Destino,
+                            NombreTemplate = nombreTemplate,
+                            ParametrosTitulo = parametrosTitulo,
+                            ParametrosCuerpo = parametrosCuerpo,
+                            ParametrosBoton = [Uri.EscapeDataString(codigoAcceso)]
+                        });
 
-						historialNotificacion.FechaEjecucion = DateTime.UtcNow;
-						historialNotificacion.Estado = 1; // Enviado
-						historialNotificacion.CodigoAcceso = cryptoHelper.HashSHA256(codigoAcceso);
-						historialNotificacion.FechaCaducidadCodigoAcceso = DateTime.UtcNow.AddDays(DIAS_CADUCIDAD_CODIGO_ACCESO);
-						historialNotificacion.HermesIdMensaje = response.IdMensaje;
-						await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
+                        historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+                        historialNotificacion.Estado = 1; // Enviado
+                        historialNotificacion.CodigoAcceso = cryptoHelper.HashSHA256(codigoAcceso);
+                        historialNotificacion.FechaCaducidadCodigoAcceso = DateTime.UtcNow.AddDays(DIAS_CADUCIDAD_CODIGO_ACCESO);
+                        historialNotificacion.HermesIdMensaje = response.IdMensaje;
+                        await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
+                    
 					// En cualquier otro caso, se omite la notificación por falta de implementación...
-					} else {
-						historialNotificacion.FechaEjecucion = DateTime.UtcNow;
-						historialNotificacion.Estado = 2; // Omitido
-						historialNotificacion.Observacion = "El tipo de receptor asociado al destinatario no tiene lógica de notificación implementada.";
-						await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
-					}
+                    } else {
+                        historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+                        historialNotificacion.Estado = 2; // Omitido
+                        historialNotificacion.Observacion = "El tipo de receptor asociado al destinatario no tiene lógica de notificación implementada.";
+                        await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
+                    }
+                }
+
+                if (programarSiguienteEjecucion) {
+					await historialNormaSuscritaBcp.ProgramarSiguienteVencimiento(ultimoVencimiento, transaction);
                 }
             }
-
-			if (programarSiguienteEjecucion) {
-				HistorialNormaSuscrita? ultimoHistorial = historialNormaSuscritas.OrderByDescending(hns => hns.FechaVencimiento).FirstOrDefault();
-				if (ultimoHistorial != null) {
-					await historialNormaSuscritaBcp.ProgramarSiguienteVencimiento(ultimoHistorial, transaction);
-				}
-			}
 		}
 
 		public async Task Programar(List<EntKairosIngresarProceso> procesosProgramar) {
