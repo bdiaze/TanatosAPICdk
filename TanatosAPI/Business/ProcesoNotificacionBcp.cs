@@ -80,7 +80,7 @@ namespace TanatosAPI.Business {
 						HashSet<string> cronVencimiento = [];
 
 						// Se arman los cron a programar según los próximos vencimientos...
-						HashSet<string> crons = [];
+						Dictionary<string, (long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> crons = [];
 						List<HistorialNormaSuscrita> historialNormaSuscritas = [.. (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).Where(hns => hns.FechaVencimiento > DateTime.UtcNow)];
 						foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormaSuscritas) {
 							cronVencimiento.Add(CronHelper.GenerarCronDesdeFecha(CronHelper.TransformarFechaUTCATimezone(historialNormaSuscrita.FechaVencimiento), tipoPeriodicidad.Cron));
@@ -104,10 +104,12 @@ namespace TanatosAPI.Business {
 											long segundosPrevios = antelacion.CantAntelacion.Value * tipoUnidadTiempo.CantSegundos;
 											fechaProgramacion = fechaProgramacion.AddSeconds(-1 * segundosPrevios);
 										}
+									} else {
+										continue;
 									}
 								}
 
-								crons.Add(CronHelper.GenerarCronDesdeFecha(fechaProgramacion, tipoPeriodicidad.Cron));
+								crons.Add(CronHelper.GenerarCronDesdeFecha(fechaProgramacion, tipoPeriodicidad.Cron), (antelacion.IdTipoUnidadTiempoAntelacion, antelacion.CantAntelacion));
 							}
 						}
 
@@ -125,7 +127,7 @@ namespace TanatosAPI.Business {
 						// Se eliminan los procesos programados que ya no aplican...
 						List<Dictionary<string, JsonElement>> aEliminar = [];
 						foreach (string cronExistente in cronsExistentes) {
-							if (!crons.Any(c => c == cronExistente)) {
+							if (!crons.Keys.Any(c => c == cronExistente)) {
 								aEliminar.AddRange(normaSuscrita.ProcesosNotificaciones!.Where(p =>
 									p.TryGetValue("Cron", out JsonElement jsonCron) &&
 									jsonCron.ValueKind == JsonValueKind.String &&
@@ -160,13 +162,16 @@ namespace TanatosAPI.Business {
 						}
 
 						// Se crean los procesos programados que faltan...
-						foreach (string cronNuevo in crons) {
+						foreach (string cronNuevo in crons.Keys) {
 							if (!cronsExistentes.Any(ce => ce == cronNuevo)) {
 								string nombreProceso = $"{variableEntornoHelper.Obtener("APP_NAME")} - NormaSuscrita {idNormaSuscrita} - Cron {cronNuevo}";
 
 								EntKairosParametrosProceso parametros = new() {
 									IdNormaSuscrita = idNormaSuscrita,
 									Cron = cronNuevo,
+									IdTipoUnidadTiempoAntelacion = crons[cronNuevo].IdTipoUnidadTiempoAntelacion,
+									CantAntelacion = crons[cronNuevo].CantAntelacion,
+									EsVencimiento = cronVencimiento.Contains(cronNuevo),
 									ProgramarSiguienteEjecucion = cronVencimiento.Contains(cronNuevo)
 								};
 
