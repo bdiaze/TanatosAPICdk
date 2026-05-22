@@ -14,7 +14,7 @@ namespace TanatosAPI.Helpers {
 				fecha.Hour.ToString(),				// HO
 				fecha.Day.ToString(),				// DM
 				fecha.Month.ToString(),				// MO
-				((int)fecha.DayOfWeek).ToString(),	// DW
+				(((int)fecha.DayOfWeek) + 1).ToString(),	// DW - Se suma 1 dado que AWS usa 1 para domingo y 7 para sábado
 				fecha.Year.ToString()				// YE
 			];
 
