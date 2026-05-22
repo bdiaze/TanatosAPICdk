@@ -1,4 +1,5 @@
 ﻿using Amazon.Lambda.Core;
+using Npgsql;
 using System.Diagnostics;
 using System.Security.Claims;
 using TanatosAPI.Business;
@@ -64,17 +65,21 @@ namespace TanatosAPI.Endpoints {
 
 					List<TipoActividad> tiposActividades = [];
 					if (negocios.Count > 0) {
-						tiposActividades = await tipoActividadDao.ObtenerPorVigencia(null);
+						tiposActividades = await tipoActividadDao.ObtenerPorVigencia(true);
 					}
 
 					List<SalNegocio> retorno = [.. negocios
-						.Select(d => new SalNegocio() {
-							Id = d.Id,
-							Nombre = d.Nombre,
-							Direccion = d.Direccion,
-							IdTipoActividad = d.IdTipoActividad,
-							NombreTipoActividad = tiposActividades.FirstOrDefault(ta => ta.Id == d.IdTipoActividad)?.Nombre,
-							FechaCreacion = d.FechaCreacion,
+						.Select(d => {
+							TipoActividad? tipoActividad = tiposActividades.FirstOrDefault(ta => ta.Id == d.IdTipoActividad);
+
+							return new SalNegocio() {
+								Id = d.Id,
+								Nombre = d.Nombre,
+								Direccion = d.Direccion,
+								IdTipoActividad = tipoActividad?.Id,
+								NombreTipoActividad = tipoActividad?.Nombre,
+								FechaCreacion = d.FechaCreacion,
+							}; 
 						})
 					];
 
@@ -218,11 +223,13 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
-					existente.Nombre = entrada.Nombre;
-					existente.Direccion = entrada.Direccion;
-					existente.IdTipoActividad = entrada.IdTipoActividad;
+					if (existente.Nombre != entrada.Nombre || existente.Direccion != entrada.Direccion || existente.IdTipoActividad != entrada.IdTipoActividad) {
+						existente.Nombre = entrada.Nombre;
+						existente.Direccion = entrada.Direccion;
+						existente.IdTipoActividad = entrada.IdTipoActividad;
 
-					await negocioDao.Actualizar(existente);
+						await negocioDao.Actualizar(existente);
+					}
 
 					SalNegocio retorno = new() {
 						Id = existente.Id,
@@ -251,7 +258,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, NegocioBcp negocioBcp, NegocioDao negocioDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -268,9 +275,16 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El usuario no posee un negocio con ID {id}.");
 					}
 
-					existente.FechaEliminacion = DateTime.UtcNow;
-					existente.Vigencia = false;
-					await negocioDao.Actualizar(existente);
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+					try {
+						await negocioBcp.EliminarNegocio(existente, transaction);
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
 
 					LambdaLogger.Log(
 						$"[DELETE] - [Negocio] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
