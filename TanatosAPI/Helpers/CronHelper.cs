@@ -3,6 +3,19 @@ using TimeZoneConverter;
 
 namespace TanatosAPI.Helpers {
 	public static class CronHelper {
+		private static string DayOfWeekToCronValue(DayOfWeek dayOfWeek) {
+			return dayOfWeek switch {
+				DayOfWeek.Sunday => "SUN",
+				DayOfWeek.Monday => "MON",
+				DayOfWeek.Tuesday => "TUE",
+				DayOfWeek.Wednesday => "WED",
+				DayOfWeek.Thursday => "THU",
+				DayOfWeek.Friday => "FRI",
+				DayOfWeek.Saturday => "SAT",
+				_ => throw new ArgumentException("Día de la semana inválido"),
+			};
+		}
+
 		public static string GenerarCronDesdeFecha(DateTime fecha, string? baseCron = null) {
 			baseCron = baseCron?.Trim();
 			if (baseCron != null) baseCron = Regex.Replace(baseCron, @"\s+", " ");
@@ -10,12 +23,12 @@ namespace TanatosAPI.Helpers {
 
 			// Se desglosa la fecha en sus elementos...
 			string[] elementosFecha = [
-				fecha.Minute.ToString(),			// MI
-				fecha.Hour.ToString(),				// HO
-				fecha.Day.ToString(),				// DM
-				fecha.Month.ToString(),				// MO
-				(((int)fecha.DayOfWeek) + 1).ToString(),	// DW - Se suma 1 dado que AWS usa 1 para domingo y 7 para sábado
-				fecha.Year.ToString()				// YE
+				fecha.Minute.ToString(),				// MI
+				fecha.Hour.ToString(),					// HO
+				fecha.Day.ToString(),					// DM
+				fecha.Month.ToString(),					// MO
+				DayOfWeekToCronValue(fecha.DayOfWeek),	//DW
+				fecha.Year.ToString()					// YE
 			];
 
 			// Se desglosa el base cron en sus elementos...
