@@ -41,20 +41,27 @@ namespace TanatosAPI.Business {
 			DestinatarioNotificacion? destinatarioSeleccionado = destinatarios.FirstOrDefault(d => d.Id == idDestinatario);
 			if (destinatarioSeleccionado == null || !destinatarioSeleccionado.Validado) return false;
 
-			// Se valida si el usuario tiene plan Empresa...
-			bool tienePlanEmpresa = await TienePlanEmpresa(sub, transaction);
-			if (tienePlanEmpresa) return true;
-
-			// Dado que no tiene plan Empresa, se valida si el tipo de receptor requiere plan Empresa...
+			// Se valida que el tipo de receptor esté vigente...
 			TipoReceptorNotificacion? tipoReceptorDestinatario = await tipoReceptorNotificacionDao.ObtenerPorId(destinatarioSeleccionado.IdTipoReceptor, transaction);
-			if (tipoReceptorDestinatario == null || !tipoReceptorDestinatario.Vigencia || tipoReceptorDestinatario.RequierePlanEmpresa) {
+			if (tipoReceptorDestinatario == null || !tipoReceptorDestinatario.Vigencia) {
 				return false;
 			}
 
-			// Dado que no tiene plan Empresa, se valida si el destinatario corresponde al primer destinatario creado por el usuario...
-			DestinatarioNotificacion primerDestinatario = destinatarios.OrderBy(d => d.FechaCreacion).First();
-			if (primerDestinatario.Id != destinatarioSeleccionado.Id) return false;
-			else return true;
+			// Se valida si el usuario tiene plan Empresa...
+			bool tienePlanEmpresa = await TienePlanEmpresa(sub, transaction);
+			if (!tienePlanEmpresa) {
+				// Dado que no tiene plan Empresa, se valida si el tipo de receptor requiere plan Empresa...
+				if (tipoReceptorDestinatario.RequierePlanEmpresa) {
+					return false;
+				}
+
+				// Dado que no tiene plan Empresa, se valida si el destinatario es de un empleado...
+				if (destinatarioSeleccionado.IdEmpleado != null) {
+					return false;
+				}
+			}
+
+			return true;
 		}
 	}
 }
