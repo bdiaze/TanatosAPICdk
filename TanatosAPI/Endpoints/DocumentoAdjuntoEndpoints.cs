@@ -112,14 +112,13 @@ namespace TanatosAPI.Endpoints {
 
 					// Se valida que el tipo de archivo sea permitido...
 					string[] ALLOWED_FILES_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
-					if (!ALLOWED_FILES_TYPES.Contains(entrada.Mime)) {
+					if (!ALLOWED_FILES_TYPES.Contains(entrada.Mime, StringComparer.OrdinalIgnoreCase)) {
 						LambdaLogger.Log(
 							$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El MIME del archivo es inválido.");
 
 						return Results.BadRequest($"El MIME del archivo es inválido.");
 					}
-
 
 					HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorId(entrada.IdHistorialNormaSuscrita);
 					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia || historialNormaSuscrita.FechaCompletitud != null) {
