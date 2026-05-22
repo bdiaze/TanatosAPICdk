@@ -9,7 +9,7 @@ namespace TanatosAPI.Business {
 	public class DestinatarioNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntorno, CryptoHelper cryptoHelper, CognitoHelper cognitoHelper, HermesHelper hermesHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, NegocioDao negocioDao) {
 		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
-		public async Task<DestinatarioNotificacion> Crear(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, NpgsqlTransaction? transaction = null) {
+		public async Task<DestinatarioNotificacion> Crear(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null) {
 			// Se crea un código de validación...
 			string codigoValidacion = cryptoHelper.GenerarToken();
 			DestinatarioNotificacion? mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion), transaction);
@@ -28,11 +28,13 @@ namespace TanatosAPI.Business {
 				Destino = destino,
 				CodigoValidacion = cryptoHelper.HashSHA256(codigoValidacion),
 				FechaCaducidadCodigoValidacion = DateTime.UtcNow.AddHours(HORAS_CADUCIDAD_CODIGO_VALIDACION),
-				Validado = false,
+				Validado = yaValidado,
 				FechaCreacion = DateTime.UtcNow,
 				Vigencia = true
 			};
 			nuevoDestinatario.Id = await destinatarioNotificacionDao.Insertar(nuevoDestinatario, transaction);
+
+			if (yaValidado) return nuevoDestinatario;
 
 			// Se envía mensaje con el código de validación...
 			if (nuevoDestinatario.IdTipoReceptor == 1 /* Correo electrónico */) {
