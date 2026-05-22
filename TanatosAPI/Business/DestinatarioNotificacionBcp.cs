@@ -6,7 +6,7 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class DestinatarioNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntorno, CryptoHelper cryptoHelper, CognitoHelper cognitoHelper, HermesHelper hermesHelper, DestinatarioNotificacionDao destinatarioNotificacionDao, NegocioDao negocioDao) {
+	public class DestinatarioNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntorno, CryptoHelper cryptoHelper, HermesHelper hermesHelper, UsuarioBcp usuarioBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, NegocioDao negocioDao) {
 		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
 		public async Task<DestinatarioNotificacion> Crear(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null) {
@@ -40,7 +40,7 @@ namespace TanatosAPI.Business {
 			// Se envía mensaje con el código de validación...
 			if (nuevoDestinatario.IdTipoReceptor == 1 /* Correo electrónico */) {
 				Negocio negocio = (await negocioDao.ObtenerPorSub(sub, true, transaction)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new Exception("ID de negocio no válido");
-				Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
+				Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(sub, transaction);
 
 				string strTemplateCorreo;
 				if (environment.IsProduction()) {
@@ -60,10 +60,10 @@ namespace TanatosAPI.Business {
 							}
 					],
 					Asunto = "¡[NOMBRE_USUARIO] te añadió como destinatario de notificaciones de [NOMBRE_NEGOCIO]!"
-								.Replace("[NOMBRE_USUARIO]", atributosUsuario["given_name"])
+								.Replace("[NOMBRE_USUARIO]", usuario.Nombre ?? "")
 								.Replace("[NOMBRE_NEGOCIO]", negocio.Nombre),
 					Cuerpo = strTemplateCorreo
-								.Replace("[NOMBRE_USUARIO]", WebUtility.HtmlEncode(atributosUsuario["given_name"]))
+								.Replace("[NOMBRE_USUARIO]", WebUtility.HtmlEncode(usuario.Nombre ?? ""))
 								.Replace("[NOMBRE_NEGOCIO]", WebUtility.HtmlEncode(negocio.Nombre))
 								.Replace("[CODIGO_VALIDACION]", Uri.EscapeDataString(codigoValidacion)),
 				});
@@ -73,14 +73,14 @@ namespace TanatosAPI.Business {
 
 			} else if (nuevoDestinatario.IdTipoReceptor == 2 /* Whatsapp */) {
 				Negocio negocio = (await negocioDao.ObtenerPorSub(sub, true, transaction)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new Exception("ID de negocio no válido");
-				Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
+				Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(sub, transaction);
 
 				SalHermesEnviar retorno = await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {
 					De = variableEntorno.Obtener("HERMES_DE_WHATSAPP"),
 					Para = nuevoDestinatario.Destino,
 					NombreTemplate = "validacion_destinatario",
 					ParametrosCuerpo = [
-						atributosUsuario["given_name"],
+						usuario.Nombre ?? "",
 						negocio.Nombre
 					],
 					ParametrosBoton = [

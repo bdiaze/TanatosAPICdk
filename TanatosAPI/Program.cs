@@ -151,6 +151,7 @@ builder.Services.AddSingleton<MensajeBcp>();
 builder.Services.AddSingleton<SuscripcionBcp>();
 builder.Services.AddSingleton<TemplateNormaBcp>();
 builder.Services.AddSingleton<NegocioBcp>();
+builder.Services.AddSingleton<UsuarioBcp>();
 #endregion
 
 string cognitoRegion;

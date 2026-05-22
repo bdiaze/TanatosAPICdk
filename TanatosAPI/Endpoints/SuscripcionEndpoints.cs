@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Numerics;
 using System.Security.Claims;
 using System.Text.Json;
+using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
@@ -76,7 +77,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntSuscripcionCrear entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, CognitoHelper cognitoHelper, PlanDao planDao, SuscripcionDao suscripcionDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
+			routes.MapPost("/", async (EntSuscripcionCrear entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, UsuarioBcp usuarioBcp, PlanDao planDao, SuscripcionDao suscripcionDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -173,32 +174,24 @@ namespace TanatosAPI.Endpoints {
 
 						// Si es un plan Flow, se crea el usuario y se solicita el registro del medio de pago...
 						if (nuevo.Estado == 4 /* Pago Pendiente */ && planExistente.FlowPlanId != null) {
-							Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
-							string nombre = atributosUsuario.TryGetValue("given_name", out string? givenName) ? givenName : "";
-							string apellido = atributosUsuario.TryGetValue("family_name", out string? familyName) ? familyName : "";
-							string correo = atributosUsuario.TryGetValue("email", out string? email) ? email : throw new Exception("No se encuentra registro del correo electrónico del usuario.");
+							Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(sub, transaction);
 
-							// Se crea el usuario en el sistema interno si no existe...
-							Usuario? usuarioExistente = await usuarioDao.Obtener(sub);
-							if (usuarioExistente == null) {
-								usuarioExistente = new Usuario() {
-									Sub = sub
-								};
-								await usuarioDao.Insertar(usuarioExistente, transaction);
-							}
+							string nombre = usuario.Nombre ?? "";
+							string apellido = usuario.Apellido ?? "";
+							string correo = usuario.CorreoElectronico ?? throw new Exception("No se encuentra registro del correo electrónico del usuario.");
 
 							// Se crea el usuario en flow si no existe...
-							if (usuarioExistente.FlowCustomerId == null) {
+							if (usuario.FlowCustomerId == null) {
 								SalFlowCustomerCreate salFlowCustomerCreate = await flowHelper.CustomerCreate($"{nombre} {apellido}".Trim(), correo, sub);
-								usuarioExistente.FlowCustomerId = salFlowCustomerCreate.CustomerId;
-								await usuarioDao.Actualizar(usuarioExistente, transaction);
+								usuario.FlowCustomerId = salFlowCustomerCreate.CustomerId;
+								await usuarioDao.Actualizar(usuario, transaction);
 							}
 
-							nuevo.FlowCustomerId = usuarioExistente.FlowCustomerId;
+							nuevo.FlowCustomerId = usuario.FlowCustomerId;
 							await suscripcionDao.Actualizar(nuevo, transaction);
 
 							// Se valida si el usuario ya tiene registrada su tarjeta...
-							SalFlowUrlToken salFlowUrlToken =  await flowHelper.CustomerRegister(usuarioExistente.FlowCustomerId!);
+							SalFlowUrlToken salFlowUrlToken =  await flowHelper.CustomerRegister(usuario.FlowCustomerId!);
 							urlRedirect = $"{salFlowUrlToken.Url}?token={salFlowUrlToken.Token}";
 						}
 

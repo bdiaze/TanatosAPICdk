@@ -22,18 +22,18 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerInformacionUsuario(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/InformacionUsuario", async (IHostEnvironment environment, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, CognitoHelper cognitoHelper) => {
+			routes.MapGet("/InformacionUsuario", async (IHostEnvironment environment, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, UsuarioBcp usuarioBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
-					Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
+					Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(sub);
 
 					SalNegocioInformacionUsuario retorno = new() {
-						Nombre = atributosUsuario.TryGetValue("given_name", out string? givenName) ? givenName : null,
-						Apellido = atributosUsuario.TryGetValue("family_name", out string? familyName) ? familyName : null,
-						Email = atributosUsuario.TryGetValue("email", out string? email) ? email : null,
+						Nombre = usuario.Nombre,
+						Apellido = usuario.Apellido,
+						Email = usuario.CorreoElectronico,
 						TienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub)
 					};
 

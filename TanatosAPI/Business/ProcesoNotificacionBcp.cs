@@ -14,7 +14,7 @@ using TimeZoneConverter;
 using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace TanatosAPI.Business {
-	public class ProcesoNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, CryptoHelper cryptoHelper, CognitoHelper cognitoHelper, DestinatarioNotificacionBcp destinatarioNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) {
+	public class ProcesoNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, CryptoHelper cryptoHelper, CognitoHelper cognitoHelper, UsuarioBcp usuarioBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) {
 		private const int DIAS_CADUCIDAD_CODIGO_ACCESO = 30;
 
 		public async Task ActualizarProgramacionProcesosNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
@@ -215,8 +215,8 @@ namespace TanatosAPI.Business {
 			List<DestinatarioNotificacion> destinatariosValidados = [.. destinatariosVigentes.Where(dn => dn.Validado)];
 
 			// Se valida que exista un destinatario correspondiente a la cuenta del usuario...
-			Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(normaSuscrita.Sub);
-			string? correoUsuario = atributosUsuario.TryGetValue("email", out string? email) ? email : null;
+			Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(normaSuscrita.Sub, transaction);
+			string? correoUsuario = usuario.CorreoElectronico;
 			if (correoUsuario != null && !destinatariosValidados.Any(d => d.IdEmpleado == null && d.IdTipoReceptor == 1 /* Correo electrónico */ && d.Destino == correoUsuario)) {
 				DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionBcp.Crear(
 					normaSuscrita.Sub,
