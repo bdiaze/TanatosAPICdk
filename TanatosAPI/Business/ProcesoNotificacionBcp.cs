@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Cronos;
+using Microsoft.AspNetCore.SignalR;
 using Npgsql;
 using System;
 using System.Diagnostics;
@@ -84,7 +85,7 @@ namespace TanatosAPI.Business {
 						Dictionary<string, (long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> crons = [];
 						List<HistorialNormaSuscrita> historialNormaSuscritas = [.. (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).Where(hns => hns.FechaVencimiento > DateTime.UtcNow)];
 						foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormaSuscritas) {
-							cronVencimiento.Add(CronHelper.GenerarCronDesdeFecha(CronHelper.TransformarFechaUTCATimezone(historialNormaSuscrita.FechaVencimiento), tipoPeriodicidad.Cron));
+							cronVencimiento.Add(CronHelper.GenerarCronAWSDesdeFecha(CronHelper.TransformarFechaUTCATimezone(historialNormaSuscrita.FechaVencimiento), tipoPeriodicidad.Cron));
 
 							foreach ((long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion) antelacion in configNotifPrevias) {
 								DateTime fechaProgramacion = CronHelper.TransformarFechaUTCATimezone(historialNormaSuscrita.FechaVencimiento);
@@ -92,25 +93,13 @@ namespace TanatosAPI.Business {
 								if (antelacion.IdTipoUnidadTiempoAntelacion != null && antelacion.CantAntelacion != null) {
 									TipoUnidadTiempo? tipoUnidadTiempo = tiposUnidadTiempo.FirstOrDefault(ut => ut.Id == antelacion.IdTipoUnidadTiempoAntelacion);
 									if (tipoUnidadTiempo != null) {
-										if (tipoUnidadTiempo.CantDias != null) {
-											long diasPrevios = antelacion.CantAntelacion.Value * tipoUnidadTiempo.CantDias.Value;
-											fechaProgramacion = fechaProgramacion.AddDays(-1 * diasPrevios);
-										} else if (tipoUnidadTiempo.CantHoras != null) {
-											long horasPrevias = antelacion.CantAntelacion.Value * tipoUnidadTiempo.CantHoras.Value;
-											fechaProgramacion = fechaProgramacion.AddHours(-1 * horasPrevias);
-										} else if (tipoUnidadTiempo.CantMinutos != null) {
-											long minutosPrevios = antelacion.CantAntelacion.Value * tipoUnidadTiempo.CantMinutos.Value;
-											fechaProgramacion = fechaProgramacion.AddMinutes(-1 * minutosPrevios);
-										} else {
-											long segundosPrevios = antelacion.CantAntelacion.Value * tipoUnidadTiempo.CantSegundos;
-											fechaProgramacion = fechaProgramacion.AddSeconds(-1 * segundosPrevios);
-										}
+										fechaProgramacion = NotificacionPreviaHelper.ObtenerFechaChileNotificacionPrevia(fechaProgramacion, antelacion.CantAntelacion.Value, tipoUnidadTiempo);
 									} else {
 										continue;
 									}
 								}
 
-								crons.Add(CronHelper.GenerarCronDesdeFecha(fechaProgramacion, tipoPeriodicidad.Cron), (antelacion.IdTipoUnidadTiempoAntelacion, antelacion.CantAntelacion));
+								crons.Add(CronHelper.GenerarCronAWSDesdeFecha(fechaProgramacion, tipoPeriodicidad.Cron), (antelacion.IdTipoUnidadTiempoAntelacion, antelacion.CantAntelacion));
 							}
 						}
 
@@ -245,10 +234,44 @@ namespace TanatosAPI.Business {
 			// Se obtienen los tipos de unidades de tiempo...
 			List<TipoUnidadTiempo> tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true, transaction);
             TipoUnidadTiempo? unidadTiempo = tiposUnidadesTiempo.FirstOrDefault(ut => ut.Id == idTipoUnidadTiempoAntelacion);
+						
+			string timezone = "America/Santiago";
+			if (OperatingSystem.IsWindows()) {
+				timezone = TZConvert.IanaToWindows(timezone);
+			}
+			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
 
-            // Se obtiene el último vencimiento...
-            HistorialNormaSuscrita? ultimoVencimiento = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).OrderByDescending(v => v.FechaVencimiento).FirstOrDefault();
-			if (ultimoVencimiento != null) {
+			// Se calcula la fecha a la que corresponde la ejecución actual, según la ocurrencia del cron más cercana...
+			CronExpression cronExpression = CronExpression.Parse(CronHelper.TransformarCronAWSAStandard(cron));
+			DateTime utcNow = DateTime.UtcNow;
+			DateTime? siguienteUTC = cronExpression.GetNextOccurrence(utcNow, timeZoneInfo);
+			DateTime? anteriorUTC = cronExpression.GetPreviousOccurrence(utcNow, timeZoneInfo, true);
+			DateTime masCercanaUTC = (siguienteUTC, anteriorUTC) switch {
+				(null, null) => throw new InvalidOperationException($"El cron '{cron}' no tiene ocurrencias válidas."),
+				(null, _) => anteriorUTC!.Value,
+				(_, null) => siguienteUTC!.Value,
+				_ => (siguienteUTC!.Value - utcNow) <= (utcNow - anteriorUTC!.Value) ? siguienteUTC!.Value : anteriorUTC!.Value
+			};
+
+			// Se calcula el vencimiento al que corresponde la ejecución actual...
+			HistorialNormaSuscrita? vencimiento = null;
+			if (cantAntelacion != null && idTipoUnidadTiempoAntelacion != null && unidadTiempo != null) {
+				// Si tenemos información de la notificación previa, se calculca la fecha de vencimiento...
+				DateTime masCercanaChile = CronHelper.TransformarFechaUTCATimezone(masCercanaUTC);
+				DateTime fechaVencimientoChile = NotificacionPreviaHelper.ObtenerFechaReferenciaChileSegunNotificacionPrevia(masCercanaChile, cantAntelacion.Value, unidadTiempo);
+				DateTime fechaVencimientoUTC = CronHelper.TransformarFechaTimezoneAUTC(fechaVencimientoChile);
+
+				vencimiento = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).FirstOrDefault(v => v.FechaVencimiento == fechaVencimientoUTC);
+			} else if (!esVencimiento.Value) {
+				// Si no estamos en una fecha de vencimiento, pero tampoco tenemos información de la notificación previa, se asume último vencimiento...
+				vencimiento = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).OrderByDescending(v => v.FechaVencimiento).FirstOrDefault();
+
+			} else {
+				// Si estamos en una fecha de vencimiento, se busca el vencimiento que coincide con la fecha del cron...
+				vencimiento = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).FirstOrDefault(v => v.FechaVencimiento == masCercanaUTC);
+			}
+
+			if (vencimiento != null) {
                 // Se definen textos a incluirse en la notificación...
                 string? tiempoFaltante = null;
                 string? deLosProximos = null;
@@ -273,7 +296,7 @@ namespace TanatosAPI.Business {
                     }
                 } else if (!esVencimiento.Value) {
                     tiempoFaltante = "poco tiempo";
-                    deLosProximos = $"del {ultimoVencimiento.FechaVencimiento:dd 'de' MMMM}";
+                    deLosProximos = $"del {vencimiento.FechaVencimiento:dd 'de' MMMM}";
                 }
 
                 // Se procesan las notificaciones de todos los destinatarios validados...
@@ -281,7 +304,7 @@ namespace TanatosAPI.Business {
 					DateTime now = DateTime.UtcNow;
                     HistorialNotificacion historialNotificacion = new() {
                         Id = 0,
-                        IdHistorialNormaSuscrita = ultimoVencimiento.Id,
+                        IdHistorialNormaSuscrita = vencimiento.Id,
 						IdDestinatarioNotificacion = destinatario.Id,
 						IdTipoUnidadTiempoAntelacion = idTipoUnidadTiempoAntelacion,
 						CantAntelacion = cantAntelacion,
@@ -416,7 +439,7 @@ namespace TanatosAPI.Business {
                 }
 
                 if (programarSiguienteEjecucion) {
-					await historialNormaSuscritaBcp.ProgramarSiguienteVencimiento(ultimoVencimiento, transaction);
+					await historialNormaSuscritaBcp.ProgramarSiguienteVencimiento(vencimiento, transaction);
                 }
             }
 		}
