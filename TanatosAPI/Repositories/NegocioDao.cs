@@ -3,6 +3,7 @@ using Npgsql;
 using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace TanatosAPI.Repositories {
 	[DapperAot]
@@ -55,13 +56,26 @@ namespace TanatosAPI.Repositories {
 			);
 		}
 
-		public async Task Actualizar(Negocio item) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			await connection.ExecuteAsync(
+		public async Task Actualizar(Negocio item, NpgsqlTransaction? transaction = null) {
+			string query =
 				"UPDATE TANATOS.NEGOCIO SET SUB = @SUB, NOMBRE = @NOMBRE, DIRECCION = @DIRECCION, ID_TIPO_ACTIVIDAD = @IDTIPOACTIVIDAD, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, " +
-				"VIGENCIA = @VIGENCIA WHERE ID = @ID",
-				new { item.Sub, item.Nombre, item.Direccion, item.IdTipoActividad, item.FechaCreacion, item.FechaEliminacion, item.Vigencia, item.Id }
-			);
+				"VIGENCIA = @VIGENCIA WHERE ID = @ID";
+			DynamicParameters param = new();
+			param.Add("SUB", item.Sub);
+			param.Add("NOMBRE", item.Nombre);
+			param.Add("DIRECCION", item.Direccion);
+			param.Add("IDTIPOACTIVIDAD", item.IdTipoActividad);
+			param.Add("FECHACREACION", item.FechaCreacion);
+			param.Add("FECHAELIMINACION", item.FechaEliminacion);
+			param.Add("VIGENCIA", item.Vigencia);
+			param.Add("ID", item.Id);
+
+			if (transaction?.Connection != null) {
+				await transaction!.Connection!.ExecuteAsync(query, param, transaction);
+			} else {
+				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+				await connection.ExecuteAsync(query, param);
+			}
 		}
 	}
 }
