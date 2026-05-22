@@ -29,6 +29,7 @@ namespace TanatosAPI.Business {
 				CodigoValidacion = cryptoHelper.HashSHA256(codigoValidacion),
 				FechaCaducidadCodigoValidacion = DateTime.UtcNow.AddHours(HORAS_CADUCIDAD_CODIGO_VALIDACION),
 				Validado = yaValidado,
+				FechaValidacion = yaValidado ? DateTime.UtcNow : null,
 				FechaCreacion = DateTime.UtcNow,
 				Vigencia = true
 			};
