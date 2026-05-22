@@ -16,10 +16,10 @@ namespace TanatosAPI.Helpers {
 			};
 		}
 
-		public static string GenerarCronDesdeFecha(DateTime fecha, string? baseCron = null) {
-			baseCron = baseCron?.Trim();
-			if (baseCron != null) baseCron = Regex.Replace(baseCron, @"\s+", " ");
-			baseCron ??= "MI HO DM MO ? YE";
+		public static string GenerarCronAWSDesdeFecha(DateTime fecha, string? baseCronAWS = null) {
+			baseCronAWS = baseCronAWS?.Trim();
+			if (baseCronAWS != null) baseCronAWS = Regex.Replace(baseCronAWS, @"\s+", " ");
+			baseCronAWS ??= "MI HO DM MO ? YE";
 
 			// Se desglosa la fecha en sus elementos...
 			string[] elementosFecha = [
@@ -32,7 +32,7 @@ namespace TanatosAPI.Helpers {
 			];
 
 			// Se desglosa el base cron en sus elementos...
-			string[] cronConfigs = baseCron.Split(' ');
+			string[] cronConfigs = baseCronAWS.Split(' ');
 			if (cronConfigs.Length != 6) throw new ArgumentException("baseCron inválido");
 
 			// Se edita cada elemento del cron según la configuración...
@@ -78,6 +78,26 @@ namespace TanatosAPI.Helpers {
 			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
 
 			return TimeZoneInfo.ConvertTimeFromUtc(fecha, timeZoneInfo);
+		}
+
+		public static DateTime TransformarFechaTimezoneAUTC(DateTime fecha, string timezone = "America/Santiago") {
+			if (OperatingSystem.IsWindows()) {
+				timezone = TZConvert.IanaToWindows(timezone);
+			}
+
+			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+
+			// Especificamos que la fecha es local (de esa timezone)
+			fecha = DateTime.SpecifyKind(fecha, DateTimeKind.Unspecified);
+
+			return TimeZoneInfo.ConvertTimeToUtc(fecha, timeZoneInfo);
+		}
+
+		public static string TransformarCronAWSAStandard(string awsCron) {
+			awsCron = awsCron.Trim();
+			awsCron = Regex.Replace(awsCron, @"\s+", " ");
+			string[] campos = awsCron.Split(' ');
+			return string.Join(' ', campos[..5].Select(f => f.Replace("?", "*")));
 		}
 	}
 }
