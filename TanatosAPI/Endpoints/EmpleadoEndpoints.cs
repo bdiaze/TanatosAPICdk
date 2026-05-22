@@ -328,16 +328,18 @@ namespace TanatosAPI.Endpoints {
 					}
 					#endregion
 
-					List<DestinatarioNotificacion> destinatariosExistentes = [.. (await destinatarioNotificacionDao.ObtenerPorSub(sub, existente.IdNegocio, true)).Where(d => d.IdEmpleado == existente.Id)];
 					List<SalEmpleadoDestinatario> nuevosDestinatarios = [];
 
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 					try {
-						existente.Nombre = entrada.Nombre;
-						existente.IdCargo = entrada.IdCargo;
-						await empleadoDao.Actualizar(existente, transaction);
+						if (existente.Nombre != entrada.Nombre || existente.IdCargo != entrada.IdCargo) {
+							existente.Nombre = entrada.Nombre;
+							existente.IdCargo = entrada.IdCargo;
+							await empleadoDao.Actualizar(existente, transaction);
+						}
 
+						List<DestinatarioNotificacion> destinatariosExistentes = [.. (await destinatarioNotificacionDao.ObtenerPorSub(sub, existente.IdNegocio, true, transaction)).Where(d => d.IdEmpleado == existente.Id)];
 						// Se eliminan los destinatarios existentes que no se encuentran en la entrada...
 						foreach (DestinatarioNotificacion destinatario in destinatariosExistentes.Where(de => !entrada.Destinatarios.Any(d => d.IdTipoReceptor == de.IdTipoReceptor && d.Destino == de.Destino))) {
 							await destinatarioNotificacionBcp.Eliminar(destinatario, transaction);
@@ -421,8 +423,8 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
-					Empleado? existente = (await empleadoDao.ObtenerPorSub(sub, null, true)).FirstOrDefault(d => d.Id == id);
-					if (existente == null || !existente.Vigencia) {
+					Empleado? existente = (await empleadoDao.ObtenerPorSub(sub, null, null)).FirstOrDefault(d => d.Id == id);
+					if (existente == null) {
 						LambdaLogger.Log(
 							$"[DELETE] - [Empleado] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El usuario no posee un empleado con ID {id}.");
@@ -430,24 +432,25 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El usuario no posee un empleado con ID {id}.");
 					}
 
-					List<DestinatarioNotificacion> destinatariosExistentes = [.. (await destinatarioNotificacionDao.ObtenerPorSub(sub, existente.IdNegocio, true)).Where(d => d.IdEmpleado == existente.Id)];
+					if (existente.Vigencia) {
+						await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+						await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+						
+						try {
+							existente.FechaEliminacion = DateTime.UtcNow;
+							existente.Vigencia = false;
+							await empleadoDao.Actualizar(existente, transaction);
 
-					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
-					try {
-						existente.FechaEliminacion = DateTime.UtcNow;
-						existente.Vigencia = false;
+							List<DestinatarioNotificacion> destinatariosExistentes = [.. (await destinatarioNotificacionDao.ObtenerPorSub(sub, existente.IdNegocio, true, transaction)).Where(d => d.IdEmpleado == existente.Id)];
+							foreach (DestinatarioNotificacion destinatario in destinatariosExistentes) {
+								await destinatarioNotificacionBcp.Eliminar(destinatario, transaction);
+							}
 
-						await empleadoDao.Actualizar(existente, transaction);
-
-						foreach (DestinatarioNotificacion destinatario in destinatariosExistentes) {
-							await destinatarioNotificacionBcp.Eliminar(destinatario, transaction);
+							await transaction.CommitAsync();
+						} catch {
+							await transaction.RollbackAsync();
+							throw;
 						}
-
-						await transaction.CommitAsync();
-					} catch {
-						await transaction.RollbackAsync();
-						throw;
 					}
 
 					LambdaLogger.Log(
