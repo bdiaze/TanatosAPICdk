@@ -228,7 +228,7 @@ namespace TanatosAPI.Business {
 			// Se valida que exista un destinatario correspondiente a la cuenta del usuario...
 			Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(normaSuscrita.Sub);
 			string? correoUsuario = atributosUsuario.TryGetValue("email", out string? email) ? email : null;
-			if (correoUsuario != null && !destinatariosValidados.Any(d => d.IdTipoReceptor == 1 /* Correo electrónico */ && d.Destino == correoUsuario)) {
+			if (correoUsuario != null && !destinatariosValidados.Any(d => d.IdEmpleado == null && d.IdTipoReceptor == 1 /* Correo electrónico */ && d.Destino == correoUsuario)) {
 				DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionBcp.Crear(
 					normaSuscrita.Sub,
 					normaSuscrita.IdNegocio,
