@@ -170,17 +170,9 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true);
-					HistorialNormaSuscrita? historialNormaSuscrita;
-					if (vencimientos.Any(v => v.FechaVencimiento >= DateTime.UtcNow)) {
-						historialNormaSuscrita = vencimientos
-							.Where(hns => hns.FechaVencimiento >= DateTime.UtcNow)
-							.OrderBy(hns => hns.FechaVencimiento)
+					HistorialNormaSuscrita? historialNormaSuscrita = vencimientos
+							.OrderByDescending(hns => hns.FechaVencimiento)
 							.FirstOrDefault();
-					} else {
-						historialNormaSuscrita = vencimientos
-							.OrderBy(hns => hns.FechaVencimiento)
-							.FirstOrDefault();
-					}
 
 					SalNormaSuscrita retorno = new() {
 						Id = existente.Id,
@@ -825,17 +817,9 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true);
-					HistorialNormaSuscrita? proximoVencimientoExistente;
-					if (vencimientos.Any(v => v.FechaVencimiento >= DateTime.UtcNow)) {
-						proximoVencimientoExistente = vencimientos
-							.Where(hns => hns.FechaVencimiento >= DateTime.UtcNow)
-							.OrderBy(hns => hns.FechaVencimiento)
+					HistorialNormaSuscrita? proximoVencimientoExistente = vencimientos
+							.OrderByDescending(hns => hns.FechaVencimiento)
 							.FirstOrDefault();
-					} else {
-						proximoVencimientoExistente = vencimientos
-							.OrderBy(hns => hns.FechaVencimiento)
-							.FirstOrDefault();
-					}
 
 					// En caso de estar modificando la fecha del próximo vencimiento, se valida que el próximo vencimiento sea una fecha futura...
 					if (entrada.Activado && proximoVencimientoExistente?.FechaVencimiento != entrada.ProximoVencimiento && entrada.ProximoVencimiento <= DateTime.UtcNow) {
@@ -924,14 +908,13 @@ namespace TanatosAPI.Endpoints {
 									await historialNormaSuscritaBcp.EliminarPorNormaSuscrita(existente, true, transaction);
 								}
 
-								HistorialNormaSuscrita historialNormaSuscrita = new HistorialNormaSuscrita {
+								HistorialNormaSuscrita historialNormaSuscrita = new() {
 									Id = 0,
 									IdNormaSuscrita = existente.Id,
 									FechaVencimiento = entrada.ProximoVencimiento!.Value,
 									FechaCreacion = DateTime.UtcNow,
 									Vigencia = true
 								};
-
 								await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
 							}
 						// En caso de que norma suscrita esté inactiva, se elimina el próximo vencimiento existente...
