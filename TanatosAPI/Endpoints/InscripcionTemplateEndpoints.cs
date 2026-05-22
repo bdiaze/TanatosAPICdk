@@ -168,9 +168,9 @@ namespace TanatosAPI.Endpoints {
 										FechaCreacion = DateTime.UtcNow,
 										Vigencia = true
 									};
-
 									await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
 
+									normaSuscrita.FechaActivacion = DateTime.UtcNow;
 									normaSuscrita.Activado = true;
 									await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 								}
