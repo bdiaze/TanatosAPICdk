@@ -77,17 +77,6 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El template es inválido.");
 					}
 										
-					// Se valida que el cliente no cuente con esa inscripción ya activa...
-					List<InscripcionTemplate> inscripcionesExistentes = await inscripcionTemplateDao.ObtenerPorSub(sub, entrada.IdNegocio, null);
-					InscripcionTemplate? inscripcionExistente = inscripcionesExistentes.FirstOrDefault(it => it.IdTemplate == entrada.IdTemplate);
-					if (inscripcionExistente != null && inscripcionExistente.Vigencia) {
-						LambdaLogger.Log(
-							$"[POST] - [InscripcionTemplate] - [Activar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"La inscripción al template ya se encuentra activa.");
-
-						return Results.BadRequest($"La inscripción al template ya se encuentra activa.");
-					}
-
 					// Se valida que el usuario tenga plan empresa si este template requiere de dicho plan...
 					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
 					if (templateExistente.RequierePlanEmpresa && !tienePlanEmpresa) {
@@ -113,12 +102,20 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
+
+					List<InscripcionTemplate> inscripcionesExistentes = await inscripcionTemplateDao.ObtenerPorSub(sub, entrada.IdNegocio, null);
+					InscripcionTemplate? inscripcionExistente = inscripcionesExistentes.FirstOrDefault(it => it.IdTemplate == entrada.IdTemplate);
+
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
 					try {
 						foreach(Template templateAInscribir in templatesAInscribir) {
 							inscripcionExistente = inscripcionesExistentes.FirstOrDefault(it => it.IdTemplate == templateAInscribir.Id);
+							// Si la inscripción ya está vigente, se omite...
+							if (inscripcionExistente != null && inscripcionExistente.Vigencia) {
+								continue;
+							}
 
 							// Si nunca se ha registrado una inscripción, se crea el registro...
 							if (inscripcionExistente == null) {
@@ -131,10 +128,6 @@ namespace TanatosAPI.Endpoints {
 								}, transaction);
 							// Si no, se actualiza la existente...
 							} else {
-								if (inscripcionExistente.Vigencia) {
-									continue;
-								}
-
 								inscripcionExistente.FechaActivacion = DateTime.UtcNow;
 								inscripcionExistente.FechaDesactivacion = null;
 								inscripcionExistente.Vigencia = true;
@@ -179,7 +172,6 @@ namespace TanatosAPI.Endpoints {
 									await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
 
 									normaSuscrita.Activado = true;
-
 									await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 								}
 
@@ -218,7 +210,7 @@ namespace TanatosAPI.Endpoints {
 					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
 
 					// Se valida que el cliente cuente con esa inscripción ya activa...
-					InscripcionTemplate? inscripcionExistente = (await inscripcionTemplateDao.ObtenerPorSub(sub, entrada.IdNegocio, true)).FirstOrDefault(it => it.IdTemplate == entrada.IdTemplate);
+					InscripcionTemplate? inscripcionExistente = (await inscripcionTemplateDao.ObtenerPorSub(sub, entrada.IdNegocio, null)).FirstOrDefault(it => it.IdTemplate == entrada.IdTemplate);
 					if (inscripcionExistente == null) {
 						LambdaLogger.Log(
 							$"[POST] - [InscripcionTemplate] - [Desactivar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
@@ -227,25 +219,27 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"La inscripción al template no se encuentra activa.");
 					}
 
-					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+					if (inscripcionExistente.Vigencia) {
+						await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+						await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
-					try {
-						inscripcionExistente.FechaDesactivacion = DateTime.UtcNow;
-						inscripcionExistente.Vigencia = false;
-						await inscripcionTemplateDao.Actualizar(inscripcionExistente, transaction);
+						try {
+							inscripcionExistente.FechaDesactivacion = DateTime.UtcNow;
+							inscripcionExistente.Vigencia = false;
+							await inscripcionTemplateDao.Actualizar(inscripcionExistente, transaction);
 
-						// Se actualizan las normas suscritas correspondientes al template...
-						List<NormaSuscrita> normasSuscritas = await normaSuscritaDao.ObtenerPorSub(sub, entrada.IdNegocio, true);
-						foreach (NormaSuscrita normaSuscrita in normasSuscritas.Where(ns => ns.IdTemplate == entrada.IdTemplate)) {
-                            await normaSuscritaBcp.EliminarNormaSuscrita(normaSuscrita, transaction);
-                            await procesoNotificacionBcp.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
-                        }
+							// Se actualizan las normas suscritas correspondientes al template...
+							List<NormaSuscrita> normasSuscritas = [.. (await normaSuscritaDao.ObtenerPorSub(sub, entrada.IdNegocio, true)).Where(ns => ns.IdTemplate == entrada.IdTemplate)];
+							foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
+								await normaSuscritaBcp.EliminarNormaSuscrita(normaSuscrita, transaction);
+								await procesoNotificacionBcp.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
+							}
 
-						await transaction.CommitAsync();
-					} catch {
-						await transaction.RollbackAsync();
-						throw;
+							await transaction.CommitAsync();
+						} catch {
+							await transaction.RollbackAsync();
+							throw;
+						}
 					}
 
 					LambdaLogger.Log(
