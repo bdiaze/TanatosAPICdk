@@ -301,15 +301,14 @@ namespace TanatosAPI.Business {
 
                 // Se procesan las notificaciones de todos los destinatarios validados...
                 foreach (DestinatarioNotificacion destinatario in destinatariosValidados) {
-					DateTime now = DateTime.UtcNow;
                     HistorialNotificacion historialNotificacion = new() {
                         Id = 0,
                         IdHistorialNormaSuscrita = vencimiento.Id,
 						IdDestinatarioNotificacion = destinatario.Id,
 						IdTipoUnidadTiempoAntelacion = idTipoUnidadTiempoAntelacion,
 						CantAntelacion = cantAntelacion,
-						FechaProgramacion = now,
-						FechaCreacion = now,
+						FechaProgramacion = masCercanaUTC,
+						FechaCreacion = DateTime.UtcNow,
 						Vigencia = true
                     };
                     historialNotificacion.Id = await historialNotificacionDao.Insertar(historialNotificacion, transaction);
