@@ -10,7 +10,7 @@ namespace TanatosAPI.Repositories {
 	public class NormaSuscritaDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<List<NormaSuscrita>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
-				"SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ORDEN_VISUAL, " +
+				"SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ID_CARGO, ORDEN_VISUAL, " +
 				"EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, PROCESOS_NOTIFICACIONES, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NORMA_SUSCRITA " +
 				"WHERE SUB = @SUB AND (ID_NEGOCIO = @IDNEGOCIO OR @IDNEGOCIO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
 
@@ -40,15 +40,16 @@ namespace TanatosAPI.Repositories {
 						IdTipoPeriodicidad = reader.IsDBNull(7) ? null : reader.GetInt64(7),
 						Multa = reader.IsDBNull(8) ? null : reader.GetString(8),
 						IdCategoriaNorma = reader.IsDBNull(9) ? null : reader.GetInt64(9),
-						OrdenVisual = reader.IsDBNull(10) ? null : reader.GetInt64(10),
-						Editable = reader.GetBoolean(11),
-						FechaActivacion = reader.IsDBNull(12) ? null : reader.GetDateTime(12),
-						FechaDesactivacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
-						Activado = reader.GetBoolean(14),
-						ProcesosNotificaciones = reader.IsDBNull(15) ? null : JsonSerializer.Deserialize(reader.GetString(15), AppJsonSerializerContext.Default.ListDictionaryStringJsonElement),
-						FechaCreacion = reader.IsDBNull(16) ? null : reader.GetDateTime(16),
-						FechaEliminacion = reader.IsDBNull(17) ? null : reader.GetDateTime(17),
-						Vigencia = reader.GetBoolean(18)
+                        IdCargo = reader.IsDBNull(10) ? null : reader.GetInt64(10),
+                        OrdenVisual = reader.IsDBNull(11) ? null : reader.GetInt64(11),
+						Editable = reader.GetBoolean(12),
+						FechaActivacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
+						FechaDesactivacion = reader.IsDBNull(14) ? null : reader.GetDateTime(14),
+						Activado = reader.GetBoolean(15),
+						ProcesosNotificaciones = reader.IsDBNull(16) ? null : JsonSerializer.Deserialize(reader.GetString(16), AppJsonSerializerContext.Default.ListDictionaryStringJsonElement),
+						FechaCreacion = reader.IsDBNull(17) ? null : reader.GetDateTime(17),
+						FechaEliminacion = reader.IsDBNull(18) ? null : reader.GetDateTime(18),
+						Vigencia = reader.GetBoolean(19)
 					});
 				}
 
@@ -62,7 +63,7 @@ namespace TanatosAPI.Repositories {
 
 		public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			string query =
-				"SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ORDEN_VISUAL, " +
+				"SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ID_CARGO, ORDEN_VISUAL, " +
 				"EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, PROCESOS_NOTIFICACIONES, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NORMA_SUSCRITA " +
 				"WHERE ID = @IDNORMASUSCRITA";
 
@@ -90,15 +91,16 @@ namespace TanatosAPI.Repositories {
 						IdTipoPeriodicidad = reader.IsDBNull(7) ? null : reader.GetInt64(7),
 						Multa = reader.IsDBNull(8) ? null : reader.GetString(8),
 						IdCategoriaNorma = reader.IsDBNull(9) ? null : reader.GetInt64(9),
-						OrdenVisual = reader.IsDBNull(10) ? null : reader.GetInt64(10),
-						Editable = reader.GetBoolean(11),
-						FechaActivacion = reader.IsDBNull(12) ? null : reader.GetDateTime(12),
-						FechaDesactivacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
-						Activado = reader.GetBoolean(14),
-						ProcesosNotificaciones = reader.IsDBNull(15) ? null : JsonSerializer.Deserialize(reader.GetString(15), AppJsonSerializerContext.Default.ListDictionaryStringJsonElement),
-						FechaCreacion = reader.IsDBNull(16) ? null : reader.GetDateTime(16),
-						FechaEliminacion = reader.IsDBNull(17) ? null : reader.GetDateTime(17),
-						Vigencia = reader.GetBoolean(18)
+						IdCargo = reader.IsDBNull(10) ? null : reader.GetInt64(10),
+                        OrdenVisual = reader.IsDBNull(11) ? null : reader.GetInt64(11),
+						Editable = reader.GetBoolean(12),
+						FechaActivacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
+						FechaDesactivacion = reader.IsDBNull(14) ? null : reader.GetDateTime(14),
+						Activado = reader.GetBoolean(15),
+						ProcesosNotificaciones = reader.IsDBNull(16) ? null : JsonSerializer.Deserialize(reader.GetString(16), AppJsonSerializerContext.Default.ListDictionaryStringJsonElement),
+						FechaCreacion = reader.IsDBNull(17) ? null : reader.GetDateTime(17),
+						FechaEliminacion = reader.IsDBNull(18) ? null : reader.GetDateTime(18),
+						Vigencia = reader.GetBoolean(19)
 					};
 				}
 
@@ -112,7 +114,7 @@ namespace TanatosAPI.Repositories {
 
         public async Task<List<NormaSuscrita>> ObtenerPorTemplate(long idTemplate, long? idNorma = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
             string query =
-                "SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ORDEN_VISUAL, " +
+                "SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ID_CARGO, ORDEN_VISUAL, " +
                 "EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, PROCESOS_NOTIFICACIONES, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NORMA_SUSCRITA " +
                 "WHERE ID_TEMPLATE = @IDTEMPLATE AND (ID_NORMA = @IDNORMA OR @IDNORMA IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
 
@@ -142,15 +144,16 @@ namespace TanatosAPI.Repositories {
                         IdTipoPeriodicidad = reader.IsDBNull(7) ? null : reader.GetInt64(7),
                         Multa = reader.IsDBNull(8) ? null : reader.GetString(8),
                         IdCategoriaNorma = reader.IsDBNull(9) ? null : reader.GetInt64(9),
-                        OrdenVisual = reader.IsDBNull(10) ? null : reader.GetInt64(10),
-                        Editable = reader.GetBoolean(11),
-                        FechaActivacion = reader.IsDBNull(12) ? null : reader.GetDateTime(12),
-                        FechaDesactivacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
-                        Activado = reader.GetBoolean(14),
-                        ProcesosNotificaciones = reader.IsDBNull(15) ? null : JsonSerializer.Deserialize(reader.GetString(15), AppJsonSerializerContext.Default.ListDictionaryStringJsonElement),
-                        FechaCreacion = reader.IsDBNull(16) ? null : reader.GetDateTime(16),
-                        FechaEliminacion = reader.IsDBNull(17) ? null : reader.GetDateTime(17),
-                        Vigencia = reader.GetBoolean(18)
+                        IdCargo = reader.IsDBNull(10) ? null : reader.GetInt64(10),
+                        OrdenVisual = reader.IsDBNull(11) ? null : reader.GetInt64(11),
+                        Editable = reader.GetBoolean(12),
+                        FechaActivacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
+                        FechaDesactivacion = reader.IsDBNull(14) ? null : reader.GetDateTime(14),
+                        Activado = reader.GetBoolean(15),
+                        ProcesosNotificaciones = reader.IsDBNull(16) ? null : JsonSerializer.Deserialize(reader.GetString(16), AppJsonSerializerContext.Default.ListDictionaryStringJsonElement),
+                        FechaCreacion = reader.IsDBNull(17) ? null : reader.GetDateTime(17),
+                        FechaEliminacion = reader.IsDBNull(18) ? null : reader.GetDateTime(18),
+                        Vigencia = reader.GetBoolean(19)
                     });
                 }
 
@@ -164,8 +167,8 @@ namespace TanatosAPI.Repositories {
 
         public async Task<long> Insertar(NormaSuscrita item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"INSERT INTO TANATOS.NORMA_SUSCRITA(SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ORDEN_VISUAL, EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, PROCESOS_NOTIFICACIONES, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
-				"VALUES (@SUB, @IDNEGOCIO, @IDTEMPLATE, @IDNORMA, @NOMBRE, @DESCRIPCION, @IDTIPOPERIODICIDAD, @MULTA, @IDCATEGORIANORMA, @ORDENVISUAL, @EDITABLE, @FECHAACTIVACION, @FECHADESACTIVACION, @ACTIVADO, @PROCESOSNOTIFICACIONES::JSONB, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
+				"INSERT INTO TANATOS.NORMA_SUSCRITA(SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ID_CARGO, ORDEN_VISUAL, EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, PROCESOS_NOTIFICACIONES, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
+                "VALUES (@SUB, @IDNEGOCIO, @IDTEMPLATE, @IDNORMA, @NOMBRE, @DESCRIPCION, @IDTIPOPERIODICIDAD, @MULTA, @IDCATEGORIANORMA, @IDCARGO, @ORDENVISUAL, @EDITABLE, @FECHAACTIVACION, @FECHADESACTIVACION, @ACTIVADO, @PROCESOSNOTIFICACIONES::JSONB, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
 				"RETURNING ID";
 			DynamicParameters param = new();
 			param.Add("SUB", item.Sub);
@@ -177,7 +180,8 @@ namespace TanatosAPI.Repositories {
 			param.Add("IDTIPOPERIODICIDAD", item.IdTipoPeriodicidad);
 			param.Add("MULTA", item.Multa);
 			param.Add("IDCATEGORIANORMA", item.IdCategoriaNorma);
-			param.Add("ORDENVISUAL", item.OrdenVisual);
+            param.Add("IDCARGO", item.IdCargo);
+            param.Add("ORDENVISUAL", item.OrdenVisual);
 			param.Add("EDITABLE", item.Editable);
 			param.Add("FECHAACTIVACION", item.FechaActivacion);
 			param.Add("FECHADESACTIVACION", item.FechaDesactivacion);
@@ -198,7 +202,7 @@ namespace TanatosAPI.Repositories {
 		public async Task Actualizar(NormaSuscrita item, NpgsqlTransaction? transaction = null) {
 			string query =
 				"UPDATE TANATOS.NORMA_SUSCRITA SET SUB = @SUB, ID_NEGOCIO = @IDNEGOCIO, ID_TEMPLATE = @IDTEMPLATE, ID_NORMA = @IDNORMA, NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, " +
-				"ID_TIPO_PERIODICIDAD = @IDTIPOPERIODICIDAD, MULTA = @MULTA, ID_CATEGORIA_NORMA = @IDCATEGORIANORMA, ORDEN_VISUAL = @ORDENVISUAL, EDITABLE = @EDITABLE, " +
+                "ID_TIPO_PERIODICIDAD = @IDTIPOPERIODICIDAD, MULTA = @MULTA, ID_CATEGORIA_NORMA = @IDCATEGORIANORMA, ID_CARGO = @IDCARGO, ORDEN_VISUAL = @ORDENVISUAL, EDITABLE = @EDITABLE, " +
 				"FECHA_ACTIVACION = @FECHAACTIVACION, FECHA_DESACTIVACION = @FECHADESACTIVACION, ACTIVADO = @ACTIVADO, PROCESOS_NOTIFICACIONES = @PROCESOSNOTIFICACIONES::JSONB, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
 				"WHERE ID = @ID";
 			DynamicParameters param = new();
@@ -211,7 +215,8 @@ namespace TanatosAPI.Repositories {
 			param.Add("IDTIPOPERIODICIDAD", item.IdTipoPeriodicidad);
 			param.Add("MULTA", item.Multa);
 			param.Add("IDCATEGORIANORMA", item.IdCategoriaNorma);
-			param.Add("ORDENVISUAL", item.OrdenVisual);
+            param.Add("IDCARGO", item.IdCargo);
+            param.Add("ORDENVISUAL", item.OrdenVisual);
 			param.Add("EDITABLE", item.Editable);
 			param.Add("FECHAACTIVACION", item.FechaActivacion);
 			param.Add("FECHADESACTIVACION", item.FechaDesactivacion);
