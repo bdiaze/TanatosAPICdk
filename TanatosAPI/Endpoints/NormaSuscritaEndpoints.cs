@@ -169,7 +169,7 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
-					List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true);
+					List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(existente.Id, true);
 					HistorialNormaSuscrita? historialNormaSuscrita = vencimientos
 							.OrderByDescending(hns => hns.FechaVencimiento)
 							.FirstOrDefault();
@@ -816,7 +816,7 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"Debe incluir la fecha de próximo vencimiento.");
 					}
 
-					List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(existente.Id, null, true);
+					List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(existente.Id, true);
 					HistorialNormaSuscrita? proximoVencimientoExistente = vencimientos
 							.OrderByDescending(hns => hns.FechaVencimiento)
 							.FirstOrDefault();
