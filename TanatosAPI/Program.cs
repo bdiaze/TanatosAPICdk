@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Routing.Constraints;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Npgsql;
 using Scalar.AspNetCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -99,6 +100,14 @@ builder.Services.AddSingleton<CognitoHelper>();
 builder.Services.AddSingleton<HermesHelper>();
 builder.Services.AddSingleton<KairosHelper>();
 builder.Services.AddSingleton<ConnectionStringHelper>();
+builder.Services.AddSingleton<NpgsqlDataSource>(serviceProvider => {
+	ConnectionStringHelper connectionString = serviceProvider.GetRequiredService<ConnectionStringHelper>();
+    string connString = connectionString.Obtener().GetAwaiter().GetResult();
+    NpgsqlConnectionStringBuilder stringBuilder = new(connString) {
+        MaxPoolSize = 5
+    };
+	return new NpgsqlDataSourceBuilder(stringBuilder.ToString()).Build();
+});
 builder.Services.AddSingleton<DatabaseConnectionHelper>();
 builder.Services.AddSingleton<CryptoHelper>();
 builder.Services.AddSingleton<S3Helper>();
