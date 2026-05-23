@@ -3,7 +3,7 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class NormaSuscritaBcp(NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, NotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp) {		
+	public class NormaSuscritaBcp(NormaSuscritaDao normaSuscritaDao, ProcesoNotificacionBcp procesoNotificacionBcp, FiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, NotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp) {		
 		public async Task EliminarNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
 			if (normaSuscrita.Vigencia) {
 				DateTime utcNow = DateTime.UtcNow;
@@ -15,6 +15,7 @@ namespace TanatosAPI.Business {
 				normaSuscrita.FechaEliminacion = utcNow;
 				normaSuscrita.Vigencia = false;
 				await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
+				await procesoNotificacionBcp.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
 
 
 				await fiscalizadorNormaSuscritaBcp.EliminarPorNormaSuscrita(normaSuscrita, transaction);

@@ -6,7 +6,7 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class NotificacionNormaSuscritaBcp(NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaBcp historialNormaSuscritaBcp) {
+	public class NotificacionNormaSuscritaBcp(NotificacionNormaSuscritaDao notificacionNormaSuscritaDao) {
 		public async Task ActualizarPorNormaSuscrita(NormaSuscrita normaSuscrita, HashSet<(long IdTipoUnidadTiempoAntelacion, int CantAntelacion)> notificacionesNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			List<NotificacionNormaSuscrita> notificacionesExistentes = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
 			

@@ -1083,7 +1083,6 @@ namespace TanatosAPI.Endpoints {
 					try { 
 						await normaSuscritaBcp.EliminarNormaSuscrita(existente, transaction);
 
-
 						await transaction.CommitAsync();
 					} catch {
 						await transaction.RollbackAsync();

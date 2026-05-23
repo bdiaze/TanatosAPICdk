@@ -203,7 +203,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapDesactivarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Desactivar", async (EntInscripcionTemplateDesactivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaBcp normaSuscritaBcp, ProcesoNotificacionBcp procesoNotificacionBcp, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
+			routes.MapPost("/Desactivar", async (EntInscripcionTemplateDesactivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaBcp normaSuscritaBcp, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -229,10 +229,9 @@ namespace TanatosAPI.Endpoints {
 							await inscripcionTemplateDao.Actualizar(inscripcionExistente, transaction);
 
 							// Se actualizan las normas suscritas correspondientes al template...
-							List<NormaSuscrita> normasSuscritas = [.. (await normaSuscritaDao.ObtenerPorSub(sub, entrada.IdNegocio, true)).Where(ns => ns.IdTemplate == entrada.IdTemplate)];
+							List<NormaSuscrita> normasSuscritas = [.. (await normaSuscritaDao.ObtenerPorSub(sub, entrada.IdNegocio, true, transaction)).Where(ns => ns.IdTemplate == entrada.IdTemplate)];
 							foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
 								await normaSuscritaBcp.EliminarNormaSuscrita(normaSuscrita, transaction);
-								await procesoNotificacionBcp.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
 							}
 
 							await transaction.CommitAsync();
