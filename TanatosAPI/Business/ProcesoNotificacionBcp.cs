@@ -79,27 +79,27 @@ namespace TanatosAPI.Business {
 
 						List<TipoUnidadTiempo> tiposUnidadTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true, transaction);
 
-						HashSet<string> cronVencimiento = [];
-
 						// Se arman los cron a programar según los próximos vencimientos...
+						HashSet<string> cronVencimiento = [];
 						Dictionary<string, (long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> crons = [];
-						List<HistorialNormaSuscrita> historialNormaSuscritas = [.. (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).Where(hns => hns.FechaVencimiento > DateTime.UtcNow)];
-						foreach (HistorialNormaSuscrita historialNormaSuscrita in historialNormaSuscritas) {
-							cronVencimiento.Add(CronHelper.GenerarCronAWSDesdeFecha(CronHelper.TransformarFechaUTCATimezone(historialNormaSuscrita.FechaVencimiento), tipoPeriodicidad.Cron));
+
+						HistorialNormaSuscrita? proximoVencimiento = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).OrderByDescending(v => v.FechaVencimiento).FirstOrDefault();
+						if (proximoVencimiento != null) {
+							cronVencimiento.Add(CronHelper.GenerarCronAWSDesdeFecha(CronHelper.TransformarFechaUTCATimezone(proximoVencimiento.FechaVencimiento), tipoPeriodicidad.Cron));
 
 							foreach ((long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion) antelacion in configNotifPrevias) {
-								DateTime fechaProgramacion = CronHelper.TransformarFechaUTCATimezone(historialNormaSuscrita.FechaVencimiento);
+								DateTime fechaProgramacionChile = CronHelper.TransformarFechaUTCATimezone(proximoVencimiento.FechaVencimiento);
 
 								if (antelacion.IdTipoUnidadTiempoAntelacion != null && antelacion.CantAntelacion != null) {
 									TipoUnidadTiempo? tipoUnidadTiempo = tiposUnidadTiempo.FirstOrDefault(ut => ut.Id == antelacion.IdTipoUnidadTiempoAntelacion);
 									if (tipoUnidadTiempo != null) {
-										fechaProgramacion = NotificacionPreviaHelper.ObtenerFechaChileNotificacionPrevia(fechaProgramacion, antelacion.CantAntelacion.Value, tipoUnidadTiempo);
+										fechaProgramacionChile = NotificacionPreviaHelper.ObtenerFechaChileNotificacionPrevia(fechaProgramacionChile, antelacion.CantAntelacion.Value, tipoUnidadTiempo);
 									} else {
 										continue;
 									}
 								}
 
-								crons.Add(CronHelper.GenerarCronAWSDesdeFecha(fechaProgramacion, tipoPeriodicidad.Cron), (antelacion.IdTipoUnidadTiempoAntelacion, antelacion.CantAntelacion));
+								crons.Add(CronHelper.GenerarCronAWSDesdeFecha(fechaProgramacionChile, tipoPeriodicidad.Cron), (antelacion.IdTipoUnidadTiempoAntelacion, antelacion.CantAntelacion));
 							}
 						}
 
