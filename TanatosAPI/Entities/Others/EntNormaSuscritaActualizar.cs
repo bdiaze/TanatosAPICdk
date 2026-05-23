@@ -7,7 +7,8 @@
 		public long? IdTipoPeriodicidad { get; set; }
 		public string? Multa { get; set; }
 		public long? IdCategoriaNorma { get; set; }
-		public required bool Activado { get; set; }
+        public long? IdCargo { get; set; }
+        public required bool Activado { get; set; }
 		public List<EntFiscalizadorNormaSuscritaActualizar>? Fiscalizadores { get; set; }
 		public List<EntNotificacionNormaSuscritaActualizar>? Notificaciones { get; set; }
 		public DateTime? ProximoVencimiento { get; set; }

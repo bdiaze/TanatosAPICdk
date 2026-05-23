@@ -11,5 +11,7 @@
 		public string? NombreCategoriaNorma { get; set; }
 		public long? IdTipoPeriodicidad { get; set; }
 		public string? NombreTipoPeriodicidad { get; set; }
+		public long? IdCargo { get; set; }
+		public string? NombreCargo { get; set; }
 	}
 }

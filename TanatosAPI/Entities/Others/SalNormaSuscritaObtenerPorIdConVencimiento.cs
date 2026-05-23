@@ -11,6 +11,8 @@
 		public string? Multa { get; set; }
 		public long? IdCategoriaNorma { get; set; }
 		public string? NombreCategoriaNorma { get; set; }
+		public long? IdCargo { get; set; }
+		public string? NombreCargo { get; set; }
 		public List<SalFiscalizadorNormaSuscrita>? Fiscalizadores { get; set; }
 		public SalTemplateNormaObtenerPorIdConVencimiento? TemplateNorma { get; set; }
 		public required DateTime FechaVencimiento { get; set; }
@@ -26,7 +28,7 @@
 		public long? IdTipoPeriodicidad { get; set; }
 		public string? NombreTipoPeriodicidad { get; set; }
 		public string? Multa { get; set; }
-		public required long IdCategoriaNorma { get; set; }
+		public long? IdCategoriaNorma { get; set; }
 		public string? NombreCategoriaNorma { get; set; }
 		public List<SalFiscalizadorNormaSuscrita>? Fiscalizadores { get; set; }
 	}

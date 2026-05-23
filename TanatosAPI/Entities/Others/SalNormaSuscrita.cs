@@ -8,6 +8,8 @@
 		public string? Multa { get; set; }
 		public long? IdCategoriaNorma { get; set; }
 		public string? NombreCategoriaNorma { get; set; }
+		public long? IdCargo { get; set; }
+		public string? NombreCargo { get; set; }
 		public long? OrdenVisual { get; set; }
 		public bool Editable { get; set; }
 		public required bool Activado { get; set; }
@@ -25,7 +27,7 @@
 		public long? IdTipoPeriodicidad { get; set; }
 		public string? NombreTipoPeriodicidad { get; set; }
 		public string? Multa { get; set; }
-		public required long IdCategoriaNorma { get; set; }
+		public long? IdCategoriaNorma { get; set; }
 		public string? NombreCategoriaNorma { get; set; }
 		public List<SalFiscalizadorNormaSuscrita>? Fiscalizadores { get; set; }
 		public List<SalNotificacionNormaSuscrita>? Notificaciones { get; set; }
