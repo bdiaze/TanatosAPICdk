@@ -2366,3 +2366,36 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260523201453_ColumnIdCargoNormaSuscrita') THEN
+    ALTER TABLE tanatos.norma_suscrita ADD id_cargo bigint;
+    COMMENT ON COLUMN tanatos.norma_suscrita.id_cargo IS 'Identificador del cargo responsable de la norma.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260523201453_ColumnIdCargoNormaSuscrita') THEN
+    CREATE INDEX "IX_norma_suscrita_id_cargo" ON tanatos.norma_suscrita (id_cargo);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260523201453_ColumnIdCargoNormaSuscrita') THEN
+    ALTER TABLE tanatos.norma_suscrita ADD CONSTRAINT "FK_norma_suscrita_cargo_id_cargo" FOREIGN KEY (id_cargo) REFERENCES tanatos.cargo (id) ON DELETE RESTRICT;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260523201453_ColumnIdCargoNormaSuscrita') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260523201453_ColumnIdCargoNormaSuscrita', '10.0.8');
+    END IF;
+END $EF$;
+COMMIT;
+

@@ -68,7 +68,12 @@ namespace TanatosAPI.Entities.Models {
 		[Comment("Identificador de la categoría a la que pertenece la norma.")]
 		public long? IdCategoriaNorma { get; set; }
 
-		[UseColumnAttribute]
+        [UseColumnAttribute]
+        [Column("id_cargo")]
+        [Comment("Identificador del cargo responsable de la norma.")]
+        public long? IdCargo { get; set; }
+
+        [UseColumnAttribute]
 		[Column("orden_visual")]
 		[Comment("Orden en que se deben presentar las normas.")]
 		public long? OrdenVisual { get; set; }
@@ -131,7 +136,11 @@ namespace TanatosAPI.Entities.Models {
 		[JsonIgnore]
 		public TemplateNorma? TemplateNorma { get; set; }
 
-		[JsonIgnore]
+        [JsonIgnore]
+        [ForeignKey(nameof(IdCargo))]
+        public Cargo? Cargo { get; set; }
+
+        [JsonIgnore]
 		public List<FiscalizadorNormaSuscrita>? FiscalizadoresNormaSuscrita { get; set; }
 
 		[JsonIgnore]

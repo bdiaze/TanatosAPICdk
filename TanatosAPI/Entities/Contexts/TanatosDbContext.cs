@@ -123,6 +123,12 @@ namespace TanatosAPI.Entities.Contexts {
                 .HasForeignKey(o => new { o.IdTemplate, o.IdNorma })
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<NormaSuscrita>()
+                .HasOne(o => o.Cargo)
+                .WithMany(o => o.NormasSuscritas)
+                .HasForeignKey(o => o.IdCargo)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<FiscalizadorNormaSuscrita>()
                 .HasOne(o => o.NormaSuscrita)
                 .WithMany(o => o.FiscalizadoresNormaSuscrita)
