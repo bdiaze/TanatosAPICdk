@@ -594,11 +594,13 @@ namespace TanatosAPI.Endpoints {
                     Cargo? cargo = null;
                     if (entrada.IdCargo != null) {
                         cargo = (await cargoDao.ObtenerPorSub(sub, entrada.IdNegocio, true)).FirstOrDefault(c => c.Id == entrada.IdCargo);
-                        LambdaLogger.Log(
-                            $"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-                            $"El cargo es inválido.");
+						if (cargo == null || !cargo.Vigencia) {
+							LambdaLogger.Log(
+							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El cargo es inválido.");
 
-                        return Results.BadRequest($"El cargo es inválido.");
+							return Results.BadRequest($"El cargo es inválido.");
+						}
                     }
 
                     List<TipoFiscalizador> tiposFiscalizadores = [];
@@ -844,11 +846,13 @@ namespace TanatosAPI.Endpoints {
                     Cargo? cargo = null;
                     if (entrada.IdCargo != null) {
                         cargo = (await cargoDao.ObtenerPorSub(sub, entrada.IdNegocio, true)).FirstOrDefault(c => c.Id == entrada.IdCargo);
-                        LambdaLogger.Log(
-                            $"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-                            $"El cargo es inválido.");
+						if (cargo == null || !cargo.Vigencia) {
+							LambdaLogger.Log(
+							$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"El cargo es inválido.");
 
-                        return Results.BadRequest($"El cargo es inválido.");
+							return Results.BadRequest($"El cargo es inválido.");
+						}
                     }
 
                     List<TipoFiscalizador> tiposFiscalizadores = [];
