@@ -534,7 +534,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntNormaSuscritaCrear entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, FiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, NotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, ProcesoNotificacionBcp procesoNotificacionBcp, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, CargoDao cargoDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapPost("/", async (EntNormaSuscritaCrear entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, FiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, NotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, ProcesoNotificacionBcp procesoNotificacionBcp, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, CargoDao cargoDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoPeriodicidadDao tipoPeriodicidadDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -590,8 +590,18 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El negocio es inválido.");
 					}
 
-                    // Se valida que el cargo sea válido...
-                    Cargo? cargo = null;
+					// Se valida que si no tiene plan empresa, no se incluya un cargo...
+					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
+					if (!tienePlanEmpresa && entrada.IdCargo != null) {
+						LambdaLogger.Log(
+							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Tu plan no permite asignar un cargo responsable a la obligación.");
+
+						return Results.BadRequest($"Tu plan no permite asignar un cargo responsable a la obligación.");
+					}
+
+					// Se valida que el cargo sea válido...
+					Cargo? cargo = null;
                     if (entrada.IdCargo != null) {
                         cargo = (await cargoDao.ObtenerPorSub(sub, entrada.IdNegocio, true)).FirstOrDefault(c => c.Id == entrada.IdCargo);
 						if (cargo == null || !cargo.Vigencia) {
@@ -785,7 +795,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async(EntNormaSuscritaActualizar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, FiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, NotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, ProcesoNotificacionBcp procesoNotificacionBcp, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CargoDao cargoDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) => {
+			routes.MapPut("/", async(EntNormaSuscritaActualizar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, FiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, NotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, ProcesoNotificacionBcp procesoNotificacionBcp, NormaSuscritaDao normaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, CargoDao cargoDao, CategoriaNormaDao categoriaNormaDao, NegocioDao negocioDao, TipoFiscalizadorDao tipoFiscalizadorDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao) => {
 				
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -842,8 +852,18 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El negocio es inválido.");
 					}
 
+					// Se valida que si no tiene plan empresa, no se incluya un cargo...
+					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
+					if (!tienePlanEmpresa && entrada.IdCargo != null) {
+						LambdaLogger.Log(
+							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+							$"Tu plan no permite asignar un cargo responsable a la obligación.");
+
+						return Results.BadRequest($"Tu plan no permite asignar un cargo responsable a la obligación.");
+					}
+
 					// Se valida que el cargo sea válido...
-                    Cargo? cargo = null;
+					Cargo? cargo = null;
                     if (entrada.IdCargo != null) {
                         cargo = (await cargoDao.ObtenerPorSub(sub, entrada.IdNegocio, true)).FirstOrDefault(c => c.Id == entrada.IdCargo);
 						if (cargo == null || !cargo.Vigencia) {
