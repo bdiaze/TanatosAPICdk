@@ -14,7 +14,7 @@ using TimeZoneConverter;
 using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace TanatosAPI.Business {
-	public class ProcesoNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, CryptoHelper cryptoHelper, UsuarioBcp usuarioBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) {
+	public class ProcesoNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, CryptoHelper cryptoHelper, UsuarioBcp usuarioBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao, CargoDao cargoDao, EmpleadoDao empleadoDao) {
 		private const int DIAS_CADUCIDAD_CODIGO_ACCESO = 30;
 
 		public async Task ActualizarProgramacionProcesosNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
@@ -216,19 +216,47 @@ namespace TanatosAPI.Business {
 
 			// Se valida que exista un destinatario correspondiente a la cuenta del usuario...
 			Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(normaSuscrita.Sub, transaction);
-			string? correoUsuario = usuario.CorreoElectronico;
-			if (correoUsuario != null && !destinatariosValidados.Any(d => d.IdEmpleado == null && d.IdTipoReceptor == 1 /* Correo electrónico */ && d.Destino == correoUsuario)) {
+			if (usuario.CorreoElectronico != null && !destinatariosValidados.Any(d => d.IdEmpleado == null && d.IdTipoReceptor == 1 /* Correo electrónico */ && d.Destino == usuario.CorreoElectronico)) {
 				DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionBcp.Crear(
 					normaSuscrita.Sub,
 					normaSuscrita.IdNegocio,
 					null,
 					1, // Correo electrónico
 					"Mi correo electrónico",
-					correoUsuario,
+					usuario.CorreoElectronico,
 					true,
 					transaction
 				);
 				destinatariosValidados.Add(nuevoDestinatario);
+			}
+
+			// Se sobreescribe el cargo responsable si el usuario no tiene plan empresa o si el cargo no está vigente...
+			long? idCargoResponsable = normaSuscrita.IdCargo;
+
+			bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(normaSuscrita.Sub, transaction);
+			if (!tienePlanEmpresa) idCargoResponsable = null;
+
+			if (idCargoResponsable != null) {
+				Cargo? cargo = (await cargoDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).FirstOrDefault(c => c.Id == idCargoResponsable);
+				if (cargo == null || !cargo.Vigencia) {
+					idCargoResponsable = null;
+				}
+			}
+
+			// Se filtra lista de destinatario habilitados según cargo responsable de la obligación...
+			if (idCargoResponsable == null) {
+				// Si no tiene un cargo responsable, solo se dejan los destinatarios que no son de un empleado...
+				destinatariosValidados = [.. destinatariosValidados.Where(d => d.IdEmpleado == null)];
+			} else {
+				// Si tiene un cargo responsable, solo se dejan los destinatarios que posean dicho cargo...
+				List<Empleado> empleadosResponsables = [.. (await empleadoDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).Where(e => e.IdCargo == idCargoResponsable)];
+				List<DestinatarioNotificacion> destinatariosEmpleadosResponsables = [.. destinatariosValidados.Where(d => empleadosResponsables.Any(e => e.Id == d.IdEmpleado))];
+				if (destinatariosEmpleadosResponsables.Count == 0) {
+					// Si no tengo empleados responsables, se dejan los destinatarios que no son de un empleado...
+					destinatariosValidados = [.. destinatariosValidados.Where(d => d.IdEmpleado == null)];
+				} else {
+					destinatariosValidados = destinatariosEmpleadosResponsables;
+				}
 			}
 
 			// Se obtienen los tipos de unidades de tiempo...
