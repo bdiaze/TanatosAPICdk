@@ -167,13 +167,13 @@ string cognitoRegion;
 string cognitoBaseUrl;
 string cognitoUserPoolId;
 if (builder.Environment.IsDevelopment()) {
-	cognitoRegion = builder.Configuration[$"VariableEntorno:COGNITO_REGION"] ?? throw new Exception($"Debes agregar el atributo VariableEntorno > COGNITO_REGION en el archivo appsettings.Development.json para ejecutar localmente.");
-	cognitoBaseUrl = builder.Configuration[$"VariableEntorno:COGNITO_BASE_URL"] ?? throw new Exception($"Debes agregar el atributo VariableEntorno > COGNITO_BASE_URL en el archivo appsettings.Development.json para ejecutar localmente.");
-	cognitoUserPoolId = builder.Configuration[$"VariableEntorno:COGNITO_USER_POOL_ID"] ?? throw new Exception($"Debes agregar el atributo VariableEntorno > COGNITO_USER_POOL_ID en el archivo appsettings.Development.json para ejecutar localmente.");
+	cognitoRegion = builder.Configuration[$"VariableEntorno:COGNITO_REGION"] ?? throw new InvalidOperationException($"Debes agregar el atributo VariableEntorno > COGNITO_REGION en el archivo appsettings.Development.json para ejecutar localmente.");
+	cognitoBaseUrl = builder.Configuration[$"VariableEntorno:COGNITO_BASE_URL"] ?? throw new InvalidOperationException($"Debes agregar el atributo VariableEntorno > COGNITO_BASE_URL en el archivo appsettings.Development.json para ejecutar localmente.");
+	cognitoUserPoolId = builder.Configuration[$"VariableEntorno:COGNITO_USER_POOL_ID"] ?? throw new InvalidOperationException($"Debes agregar el atributo VariableEntorno > COGNITO_USER_POOL_ID en el archivo appsettings.Development.json para ejecutar localmente.");
 } else {
-	cognitoRegion = Environment.GetEnvironmentVariable("COGNITO_REGION") ?? throw new Exception($"No se ha configurado la variable de entorno COGNITO_REGION.");
-	cognitoBaseUrl = Environment.GetEnvironmentVariable("COGNITO_BASE_URL") ?? throw new Exception($"No se ha configurado la variable de entorno COGNITO_BASE_URL.");
-	cognitoUserPoolId = Environment.GetEnvironmentVariable("COGNITO_USER_POOL_ID") ?? throw new Exception($"No se ha configurado la variable de entorno COGNITO_USER_POOL_ID.");
+	cognitoRegion = Environment.GetEnvironmentVariable("COGNITO_REGION") ?? throw new InvalidOperationException($"No se ha configurado la variable de entorno COGNITO_REGION.");
+	cognitoBaseUrl = Environment.GetEnvironmentVariable("COGNITO_BASE_URL") ?? throw new InvalidOperationException($"No se ha configurado la variable de entorno COGNITO_BASE_URL.");
+	cognitoUserPoolId = Environment.GetEnvironmentVariable("COGNITO_USER_POOL_ID") ?? throw new InvalidOperationException($"No se ha configurado la variable de entorno COGNITO_USER_POOL_ID.");
 }
 
 builder.Services

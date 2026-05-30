@@ -18,7 +18,7 @@ namespace TanatosAPI.Helpers {
 
 		public static string GenerarCronAWSDesdeFecha(DateTime fecha, string? baseCronAWS = null) {
 			baseCronAWS = baseCronAWS?.Trim();
-			if (baseCronAWS != null) baseCronAWS = Regex.Replace(baseCronAWS, @"\s+", " ");
+			if (baseCronAWS != null) baseCronAWS = Regex.Replace(baseCronAWS, @"\s+", " ", RegexOptions.NonBacktracking);
 			baseCronAWS ??= "MI HO DM MO ? YE";
 
 			// Se desglosa la fecha en sus elementos...
@@ -95,7 +95,7 @@ namespace TanatosAPI.Helpers {
 
 		public static string TransformarCronAWSAStandard(string awsCron) {
 			awsCron = awsCron.Trim();
-			awsCron = Regex.Replace(awsCron, @"\s+", " ");
+			awsCron = Regex.Replace(awsCron, @"\s+", " ", RegexOptions.NonBacktracking);
 			string[] campos = awsCron.Split(' ');
 			return string.Join(' ', campos[..5].Select(f => f.Replace("?", "*")));
 		}

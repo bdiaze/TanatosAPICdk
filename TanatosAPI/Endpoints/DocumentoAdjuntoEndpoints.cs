@@ -34,7 +34,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorId(idHistorialNormaSuscrita);
 					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia) {
@@ -87,7 +87,7 @@ namespace TanatosAPI.Endpoints {
 					entrada.NombreArchivo = entrada.NombreArchivo.Trim();
 					entrada.Mime = entrada.Mime.Trim();
 
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					// Se valida que el usuario tenga plan Empresa...
 					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
@@ -195,7 +195,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoDao.ObtenerPorId(entrada.IdDocumentoAdjunto);
 					if (documentoAdjunto == null || !documentoAdjunto.Vigencia) {
@@ -257,7 +257,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoDao.ObtenerPorId(entrada.IdDocumentoAdjunto);
 					if (documentoAdjunto == null || !documentoAdjunto.Vigencia) {
@@ -314,7 +314,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoDao.ObtenerPorId(id);
 					if (documentoAdjunto == null || !documentoAdjunto.Vigencia) {

@@ -13,7 +13,7 @@ namespace TanatosAPI.Helpers {
                 });
 
                 if (response == null || response.SecretString == null) {
-                    throw new Exception("No se pudo rescatar correctamente el secreto");
+                    throw new InvalidOperationException($"No se pudo rescatar correctamente el secreto: {secretArn}");
                 }
 
                 value = response.SecretString;

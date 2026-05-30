@@ -51,7 +51,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					const string ACTION = "contact_form";
 					const float MIN_SCORE = 0.7f;

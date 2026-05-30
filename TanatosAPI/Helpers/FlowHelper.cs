@@ -31,7 +31,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await httpClient.PostAsync(_flowBaseUrl + $"plans/create", formContent);
 			if (!response.IsSuccessStatusCode) {
-				throw new Exception($"Ocurrió un error al crear plan en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al crear plan en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -55,7 +59,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await httpClient.PostAsync(_flowBaseUrl + $"plans/edit", formContent);
 			if (!response.IsSuccessStatusCode) {
-				throw new Exception($"Ocurrió un error al editar plan en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al editar plan en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -72,7 +80,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await httpClient.PostAsync(_flowBaseUrl + $"plans/delete", formContent);
 			if (!response.IsSuccessStatusCode) {
-				throw new Exception($"Ocurrió un error al eliminar plan en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al eliminar plan en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -91,7 +103,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await httpClient.PostAsync(_flowBaseUrl + $"customer/create", formContent);
 			if (!response.IsSuccessStatusCode) {
-				throw new Exception($"Ocurrió un error al crear usuario en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al crear usuario en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -109,7 +125,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await httpClient.PostAsync(_flowBaseUrl + $"customer/register", formContent);
 			if (!response.IsSuccessStatusCode) {
-				throw new Exception($"Ocurrió un error al registrar tarjeta de usuario en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al registrar tarjeta de usuario en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -126,7 +146,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await httpClient.GetAsync(_flowBaseUrl + $"customer/getRegisterStatus?{query}");
 			if (!response.IsSuccessStatusCode) {
-				throw new Exception($"Ocurrió un error al obtener estado de registro de tarjeta de usuario en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al obtener estado de registro de tarjeta de usuario en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -144,7 +168,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await httpClient.PostAsync(_flowBaseUrl + $"subscription/create", formContent);
 			if (!response.IsSuccessStatusCode) {
-				throw new Exception($"Ocurrió un error al crear suscripción en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al crear suscripción en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -161,7 +189,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await httpClient.GetAsync(_flowBaseUrl + $"subscription/get?{query}");
 			if (!response.IsSuccessStatusCode) {
-				throw new Exception($"Ocurrió un error al obtener suscripción en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al obtener suscripción en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -179,7 +211,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await httpClient.PostAsync(_flowBaseUrl + $"subscription/cancel", formContent);
 			if (!response.IsSuccessStatusCode) {
-				throw new Exception($"Ocurrió un error al cancelar suscripción en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al cancelar suscripción en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -196,7 +232,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await httpClient.GetAsync(_flowBaseUrl + $"payment/getStatus?{query}");
 			if (!response.IsSuccessStatusCode) {
-				throw new Exception($"Ocurrió un error al obtener estado de pago en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al obtener estado de pago en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -213,7 +253,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await httpClient.GetAsync(_flowBaseUrl + $"invoice/get?{query}");
 			if (!response.IsSuccessStatusCode) {
-				throw new Exception($"Ocurrió un error al obtener invoice en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al obtener invoice en Flow. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();

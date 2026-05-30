@@ -15,7 +15,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await client.PostAsync(_hermesBaseUrl + $"Correo/Enviar", new StringContent(JsonSerializer.Serialize(correo, AppJsonSerializerContext.Default.EntHermesCorreoEnviar), Encoding.UTF8, "application/json"));
 			if (response.StatusCode != HttpStatusCode.OK) {
-				throw new Exception($"Ocurrió un error al enviar el correo. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al enviar el correo. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -30,7 +34,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await client.PostAsync(_hermesBaseUrl + $"Whatsapp/Enviar", new StringContent(JsonSerializer.Serialize(whatsapp, AppJsonSerializerContext.Default.EntHermesWhatsappEnviar), Encoding.UTF8, "application/json"));
 			if (response.StatusCode != HttpStatusCode.OK) {
-				throw new Exception($"Ocurrió un error al enviar el whatsapp. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al enviar el whatsapp. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -44,7 +52,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await client.GetAsync(_hermesBaseUrl + $"Whatsapp/Media/{Uri.EscapeDataString(whatsappMessageId)}");
 			if (response.StatusCode != HttpStatusCode.OK) {
-				throw new Exception($"Ocurrió un error al obtener media de whatsapp. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al obtener media de whatsapp. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -62,7 +74,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await client.GetAsync(_hermesBaseUrl + url);
 			if (response.StatusCode != HttpStatusCode.OK) {
-				throw new Exception($"Ocurrió un error al obtener conversaciones de whatsapp. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al obtener conversaciones de whatsapp. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();
@@ -80,7 +96,11 @@ namespace TanatosAPI.Helpers {
 
 			using HttpResponseMessage response = await client.GetAsync(_hermesBaseUrl + url);
 			if (response.StatusCode != HttpStatusCode.OK) {
-				throw new Exception($"Ocurrió un error al obtener mensajes de conversación de whatsapp. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+				throw new HttpRequestException(
+					$"Ocurrió un error al obtener mensajes de conversación de whatsapp. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+					inner: null,
+					statusCode: response.StatusCode
+				);
 			}
 
 			string content = await response.Content.ReadAsStringAsync();

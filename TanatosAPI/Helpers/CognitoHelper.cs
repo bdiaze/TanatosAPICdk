@@ -15,7 +15,7 @@ namespace TanatosAPI.Helpers {
 				});
 
 				if (response == null || response.UserAttributes == null) {
-					throw new Exception("No se pudo rescatar correctamente los atributos del usuario");
+					throw new InvalidOperationException($"No se pudo rescatar correctamente los atributos del usuario: {sub}");
 				}
 
 				atributos = response.UserAttributes.ToDictionary(a => a.Name, a => a.Value);

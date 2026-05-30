@@ -13,7 +13,7 @@ namespace TanatosAPI.Helpers {
 				});
 
 				if (response == null || response.Value == null) {
-					throw new Exception("No se pudo rescatar correctamente el api key");
+					throw new InvalidOperationException($"No se pudo rescatar correctamente el api key: {apiKeyId}");
 				}
 
 				value = response.Value;

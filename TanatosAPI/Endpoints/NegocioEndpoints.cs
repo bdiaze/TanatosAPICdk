@@ -26,7 +26,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(sub);
 
@@ -59,7 +59,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					List<Negocio> negocios = await negocioDao.ObtenerPorSub(sub, true);
 
@@ -108,7 +108,7 @@ namespace TanatosAPI.Endpoints {
 					entrada.Nombre = entrada.Nombre.Trim();
 					entrada.Direccion = entrada.Direccion?.Trim();
 
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					// Se valida que el usuario no tenga otro negocio igual...
 					List<Negocio> negociosVigentes = await negocioDao.ObtenerPorSub(sub, true);
@@ -187,7 +187,7 @@ namespace TanatosAPI.Endpoints {
 					entrada.Nombre = entrada.Nombre.Trim();
 					entrada.Direccion = entrada.Direccion?.Trim();
 
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					// Se valida que el negocio a actualizar pertenezca al usuario y este vigente...
 					List<Negocio> negociosVigentes = await negocioDao.ObtenerPorSub(sub, true);
@@ -262,7 +262,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					List<Negocio> negociosVigentes = await negocioDao.ObtenerPorSub(sub, true);
 					Negocio? existente = negociosVigentes.FirstOrDefault(d => d.Id == id);

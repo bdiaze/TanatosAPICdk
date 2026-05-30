@@ -37,7 +37,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					List<NormaSuscrita> normas = await normaSuscritaDao.ObtenerPorSub(sub, idNegocio, true);
 
@@ -129,7 +129,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					NormaSuscrita? existente = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita);
 
@@ -288,7 +288,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					List<NormaSuscrita> normas = [.. await normaSuscritaDao.ObtenerPorSub(sub, idNegocio, null)];
 
@@ -383,7 +383,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					NormaSuscrita? existente = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita);
 					if (existente == null || existente.Sub != sub) {
@@ -542,7 +542,7 @@ namespace TanatosAPI.Endpoints {
 					entrada.Descripcion = string.IsNullOrWhiteSpace(entrada.Descripcion) ? null : entrada.Descripcion?.Trim();
 					entrada.Multa = string.IsNullOrWhiteSpace(entrada.Multa) ? null : entrada.Multa?.Trim();
 
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					// Se valida que el usuario no tenga otra norma igual...
 					List<NormaSuscrita> normasVigentes = await normaSuscritaDao.ObtenerPorSub(sub, entrada.IdNegocio, true);
@@ -804,7 +804,7 @@ namespace TanatosAPI.Endpoints {
 					entrada.Descripcion = string.IsNullOrWhiteSpace(entrada.Descripcion) ? null : entrada.Descripcion?.Trim();
 					entrada.Multa = string.IsNullOrWhiteSpace(entrada.Multa) ? null : entrada.Multa?.Trim();
 
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					// Se valida que la norma suscrita exista...
 					NormaSuscrita? existente = (await normaSuscritaDao.ObtenerPorSub(sub, entrada.IdNegocio)).FirstOrDefault(n => n.Id == entrada.Id);
@@ -1116,7 +1116,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					NormaSuscrita? existente = await normaSuscritaDao.ObtenerPorId(entrada.IdNormaSuscrita);
 					if (existente == null || !existente.Vigencia || existente.Sub != sub) {
@@ -1181,7 +1181,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					NormaSuscrita? existente = (await normaSuscritaDao.ObtenerPorSub(sub)).FirstOrDefault(d => d.Id == id);
 

@@ -38,7 +38,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(sub, true);
 					List<Plan> planes = await planDao.ObtenerPorVigencia(null);
@@ -81,7 +81,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					// Se valida que el plan exista y este vigente...
 					Plan? planExistente = await planDao.Obtener(entrada.IdPlan);
@@ -178,7 +178,7 @@ namespace TanatosAPI.Endpoints {
 
 							string nombre = usuario.Nombre ?? "";
 							string apellido = usuario.Apellido ?? "";
-							string correo = usuario.CorreoElectronico ?? throw new Exception("No se encuentra registro del correo electrónico del usuario.");
+							string correo = usuario.CorreoElectronico ?? throw new InvalidOperationException("No se encuentra registro del correo electrónico del usuario.");
 
 							// Se crea el usuario en flow si no existe...
 							if (usuario.FlowCustomerId == null) {
@@ -225,7 +225,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					// Se valida que la suscripción exista, este vigente, pertenezca al cliente y que no esté "Cancelada"...
 					Suscripcion? existente = await suscripcionDao.Obtener(idSuscripcion);
@@ -393,7 +393,7 @@ namespace TanatosAPI.Endpoints {
 								}
 							}
 						} else {
-							throw new Exception("Tipo de webhook de Flow inválido");
+							throw new InvalidOperationException("Tipo de webhook de Flow inválido");
 						}
 
 						await transaction.CommitAsync();

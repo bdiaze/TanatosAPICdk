@@ -27,7 +27,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					List<InscripcionTemplate> inscripciones = await inscripcionTemplateDao.ObtenerPorSub(sub, idNegocio,  true);
 
@@ -64,7 +64,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					// Se valida que el template esté vigente...
 					List<Template> templatesVigentes = await templateDao.ObtenerPorVigencia(true);
@@ -160,7 +160,7 @@ namespace TanatosAPI.Endpoints {
 									}
 									TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
 
-									DateTime proximoVencimiento = cron.GetNextOccurrence(DateTime.UtcNow, timeZoneInfo) ?? throw new Exception("No se pudo calcular el próximo vencimiento para obligación con activación automática");
+									DateTime proximoVencimiento = cron.GetNextOccurrence(DateTime.UtcNow, timeZoneInfo) ?? throw new InvalidOperationException("No se pudo calcular el próximo vencimiento para obligación con activación automática");
 									HistorialNormaSuscrita historialNormaSuscrita = new() {
 										Id = 0,
 										IdNormaSuscrita = normaSuscrita.Id,
@@ -207,7 +207,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					// Se valida que el cliente cuente con esa inscripción ya activa...
 					InscripcionTemplate? inscripcionExistente = (await inscripcionTemplateDao.ObtenerPorSub(sub, entrada.IdNegocio, null)).FirstOrDefault(it => it.IdTemplate == entrada.IdTemplate);

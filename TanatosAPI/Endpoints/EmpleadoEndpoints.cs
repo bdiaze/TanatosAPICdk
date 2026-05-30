@@ -26,7 +26,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					List<Empleado> empleados = await empleadoDao.ObtenerPorSub(sub, idNegocio, true);
 					Dictionary<long, Cargo> cargos = (await cargoDao.ObtenerPorSub(sub, idNegocio, true)).ToDictionary(c => c.Id, c => c);
@@ -97,7 +97,7 @@ namespace TanatosAPI.Endpoints {
 						return d;
 					})];
 
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					// Se valida que el negocio sea válido...
 					Negocio? negocio = (await negocioDao.ObtenerPorSub(sub)).FirstOrDefault(n => n.Id == entrada.IdNegocio);
@@ -161,7 +161,7 @@ namespace TanatosAPI.Endpoints {
 						}
 
 						// Se valida regex del tipo de receptor...
-						if (!string.IsNullOrEmpty(tipoReceptor.RegexValidacion) && !Regex.IsMatch(destinatario.Destino, tipoReceptor.RegexValidacion)) {
+						if (!string.IsNullOrEmpty(tipoReceptor.RegexValidacion) && !Regex.IsMatch(destinatario.Destino, tipoReceptor.RegexValidacion, RegexOptions.NonBacktracking)) {
 							LambdaLogger.Log(
 								$"[POST] - [Empleado] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 								$"{tipoReceptor.Nombre} con formato inválido.");
@@ -189,7 +189,7 @@ namespace TanatosAPI.Endpoints {
 						nuevo.Id = await empleadoDao.Insertar(nuevo, transaction);
 
 						foreach (EntEmpleadoCrearDestinatario destinatario in entrada.Destinatarios) {
-							TipoReceptorNotificacion tipoReceptor = tiposReceptores.TryGetValue(destinatario.IdTipoReceptor, out TipoReceptorNotificacion? tr) ? tr : throw new Exception("No se encontró el tipo de receptor asociado al destinatario a crear.");
+							TipoReceptorNotificacion tipoReceptor = tiposReceptores.TryGetValue(destinatario.IdTipoReceptor, out TipoReceptorNotificacion? tr) ? tr : throw new InvalidOperationException("No se encontró el tipo de receptor asociado al destinatario a crear.");
 
 							DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionBcp.Crear(
 								sub,
@@ -254,7 +254,7 @@ namespace TanatosAPI.Endpoints {
 						return d;
 					})];
 
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					#region Validaciones
 					// Se valida que el empleado exista...
@@ -319,7 +319,7 @@ namespace TanatosAPI.Endpoints {
 						}
 
 						// Se valida regex del tipo de receptor...
-						if (!string.IsNullOrEmpty(tipoReceptor.RegexValidacion) && !Regex.IsMatch(destinatario.Destino, tipoReceptor.RegexValidacion)) {
+						if (!string.IsNullOrEmpty(tipoReceptor.RegexValidacion) && !Regex.IsMatch(destinatario.Destino, tipoReceptor.RegexValidacion, RegexOptions.NonBacktracking)) {
 							LambdaLogger.Log(
 								$"[PUT] - [Empleado] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 								$"{tipoReceptor.Nombre} con formato inválido.");
@@ -348,7 +348,7 @@ namespace TanatosAPI.Endpoints {
 
 						// Se insertan los destinatarios de la entrada que no se encuentran entre los existentes...
 						foreach (EntEmpleadoActualizarDestinatario destinatario in entrada.Destinatarios.Where(d => !destinatariosExistentes.Any(de => de.IdTipoReceptor == d.IdTipoReceptor && de.Destino == d.Destino))) {
-							TipoReceptorNotificacion tipoReceptor = tiposReceptores.TryGetValue(destinatario.IdTipoReceptor, out TipoReceptorNotificacion? tr) ? tr : throw new Exception("No se encontró el tipo de receptor asociado al destinatario a crear.");
+							TipoReceptorNotificacion tipoReceptor = tiposReceptores.TryGetValue(destinatario.IdTipoReceptor, out TipoReceptorNotificacion? tr) ? tr : throw new InvalidOperationException("No se encontró el tipo de receptor asociado al destinatario a crear.");
 
 							DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionBcp.Crear(
 								sub,
@@ -423,7 +423,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					Empleado? existente = (await empleadoDao.ObtenerPorSub(sub, null, null)).FirstOrDefault(d => d.Id == id);
 					if (existente == null) {
