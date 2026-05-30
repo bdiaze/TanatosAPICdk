@@ -35,65 +35,82 @@ namespace Cdk
     {
         internal CdkStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
-            string appName = System.Environment.GetEnvironmentVariable("APP_NAME") ?? throw new ArgumentNullException("APP_NAME");
-			string regionAws = System.Environment.GetEnvironmentVariable("REGION_AWS") ?? throw new ArgumentNullException("REGION_AWS");
+			const string CONST_APP_NAME = "APP_NAME";
+			const string CONST_SECRET_ARN = "SECRET_ARN_CONNECTION_STRING";
+			
+			const string CONST_DIR_RECURSOS = "Recursos";
+
+			const string CONST_ENABLED = "enabled";
+			const string CONST_LIGHT_MODE = "lightMode";
+			const string CONST_BACKGROUND_COLOR = "backgroundColor";
+			const string CONST_BORDER_COLOR = "borderColor";
+			const string CONST_DEFAULT = "defaults";
+			const string CONST_TEXT_COLOR = "textColor";
+
+			const string CONST_COLOR_MODE = "LIGHT";
+			const string CONST_COLOR_CALIPSO = "02b2cbff";
+			const string CONST_COLOR_NEGRO = "2a2d34cc";
+			const string CONST_COLOR_BLANCO = "ffffffff";
+
+			string appName = System.Environment.GetEnvironmentVariable(CONST_APP_NAME) ?? throw new InvalidOperationException($"No se ha configurado la variable de entorno {CONST_APP_NAME}");
+			string regionAws = System.Environment.GetEnvironmentVariable("REGION_AWS") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno REGION_AWS");
 
 			// Para cognito...
-			string emailSubject = System.Environment.GetEnvironmentVariable("VERIFICATION_SUBJECT") ?? throw new ArgumentNullException("VERIFICATION_SUBJECT");
-			string emailBody = System.Environment.GetEnvironmentVariable("VERIFICATION_BODY") ?? throw new ArgumentNullException("VERIFICATION_BODY");
+			string emailSubject = System.Environment.GetEnvironmentVariable("VERIFICATION_SUBJECT") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno VERIFICATION_SUBJECT");
+			string emailBody = System.Environment.GetEnvironmentVariable("VERIFICATION_BODY") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno VERIFICATION_BODY");
 
-			string cognitoDomainName = System.Environment.GetEnvironmentVariable("COGNITO_DOMAIN_NAME") ?? throw new ArgumentNullException("COGNITO_DOMAIN_NAME");
-			string cognitoCustomDomain = System.Environment.GetEnvironmentVariable("COGNITO_CUSTOM_DOMAIN") ?? throw new ArgumentNullException("COGNITO_CUSTOM_DOMAIN");
-			string arnCognitoCertificate = System.Environment.GetEnvironmentVariable("ARN_COGNITO_CERTIFICATE") ?? throw new ArgumentNullException("ARN_COGNITO_CERTIFICATE");
+			string cognitoDomainName = System.Environment.GetEnvironmentVariable("COGNITO_DOMAIN_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno COGNITO_DOMAIN_NAME");
+			string cognitoCustomDomain = System.Environment.GetEnvironmentVariable("COGNITO_CUSTOM_DOMAIN") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno COGNITO_CUSTOM_DOMAIN");
+			string arnCognitoCertificate = System.Environment.GetEnvironmentVariable("ARN_COGNITO_CERTIFICATE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_COGNITO_CERTIFICATE");
 
-			string[] callbackUrls = System.Environment.GetEnvironmentVariable("CALLBACK_URLS").Split(",") ?? throw new ArgumentNullException("CALLBACK_URLS");
-			string[] logoutUrls = System.Environment.GetEnvironmentVariable("LOGOUT_URLS").Split(",") ?? throw new ArgumentNullException("LOGOUT_URLS");
-			string accessTokenValidityMinutes = System.Environment.GetEnvironmentVariable("ACCESS_TOKEN_VALIDITY_MINUTES") ?? throw new ArgumentNullException("ACCESS_TOKEN_VALIDITY_MINUTES");
-			string idTokenValidityMinutes = System.Environment.GetEnvironmentVariable("ID_TOKEN_VALIDITY_MINUTES") ?? throw new ArgumentNullException("ID_TOKEN_VALIDITY_MINUTES");
-			string refreshTokenValidityMinutes = System.Environment.GetEnvironmentVariable("REFRESH_TOKEN_VALIDITY_MINUTES") ?? throw new ArgumentNullException("REFRESH_TOKEN_VALIDITY_MINUTES");
+			string[] callbackUrls = System.Environment.GetEnvironmentVariable("CALLBACK_URLS").Split(",") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno CALLBACK_URLS");
+			string[] logoutUrls = System.Environment.GetEnvironmentVariable("LOGOUT_URLS").Split(",") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno LOGOUT_URLS");
+			string accessTokenValidityMinutes = System.Environment.GetEnvironmentVariable("ACCESS_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ACCESS_TOKEN_VALIDITY_MINUTES");
+			string idTokenValidityMinutes = System.Environment.GetEnvironmentVariable("ID_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ID_TOKEN_VALIDITY_MINUTES");
+			string refreshTokenValidityMinutes = System.Environment.GetEnvironmentVariable("REFRESH_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno REFRESH_TOKEN_VALIDITY_MINUTES");
 
 			// Para proceso de notificación...
-			string notificacionesTokenValidityMinutes = System.Environment.GetEnvironmentVariable("NOTIFICACIONES_TOKEN_VALIDITY_MINUTES") ?? throw new ArgumentNullException("NOTIFICACIONES_TOKEN_VALIDITY_MINUTES");
+			string notificacionesTokenValidityMinutes = System.Environment.GetEnvironmentVariable("NOTIFICACIONES_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno NOTIFICACIONES_TOKEN_VALIDITY_MINUTES");
 
 			// Para infraestructura...
-			string publishZip = System.Environment.GetEnvironmentVariable("PUBLISH_ZIP") ?? throw new ArgumentNullException("PUBLISH_ZIP");
-            string handler = System.Environment.GetEnvironmentVariable("HANDLER") ?? throw new ArgumentNullException("HANDLER");
-            string timeout = System.Environment.GetEnvironmentVariable("TIMEOUT") ?? throw new ArgumentNullException("TIMEOUT");
-            string memorySize = System.Environment.GetEnvironmentVariable("MEMORY_SIZE") ?? throw new ArgumentNullException("MEMORY_SIZE");
-            string domainName = System.Environment.GetEnvironmentVariable("DOMAIN_NAME") ?? throw new ArgumentNullException("DOMAIN_NAME");
-            string apiMappingKey = System.Environment.GetEnvironmentVariable("API_MAPPING_KEY") ?? throw new ArgumentNullException("API_MAPPING_KEY");
-            string vpcId = System.Environment.GetEnvironmentVariable("VPC_ID") ?? throw new ArgumentNullException("VPC_ID");
-            string privateWithInternetId1 = System.Environment.GetEnvironmentVariable("PRIVATE_WITH_INTERNET_ID_1") ?? throw new ArgumentNullException("PRIVATE_WITH_INTERNET_ID_1");
-            string privateWithInternetId2 = System.Environment.GetEnvironmentVariable("PRIVATE_WITH_INTERNET_ID_2") ?? throw new ArgumentNullException("PRIVATE_WITH_INTERNET_ID_2");
-            string rdsSecurityGroupId = System.Environment.GetEnvironmentVariable("RDS_SECURITY_GROUP_ID") ?? throw new ArgumentNullException("RDS_SECURITY_GROUP_ID")!;
+			string publishZip = System.Environment.GetEnvironmentVariable("PUBLISH_ZIP") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno PUBLISH_ZIP");
+            string handler = System.Environment.GetEnvironmentVariable("HANDLER") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno HANDLER");
+            string timeout = System.Environment.GetEnvironmentVariable("TIMEOUT") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno TIMEOUT");
+            string memorySize = System.Environment.GetEnvironmentVariable("MEMORY_SIZE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno MEMORY_SIZE");
+            string domainName = System.Environment.GetEnvironmentVariable("DOMAIN_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno DOMAIN_NAME");
+            string apiMappingKey = System.Environment.GetEnvironmentVariable("API_MAPPING_KEY") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno API_MAPPING_KEY");
+            string vpcId = System.Environment.GetEnvironmentVariable("VPC_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno VPC_ID");
+            string privateWithInternetId1 = System.Environment.GetEnvironmentVariable("PRIVATE_WITH_INTERNET_ID_1") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno PRIVATE_WITH_INTERNET_ID_1");
+            string privateWithInternetId2 = System.Environment.GetEnvironmentVariable("PRIVATE_WITH_INTERNET_ID_2") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno PRIVATE_WITH_INTERNET_ID_2");
+            string rdsSecurityGroupId = System.Environment.GetEnvironmentVariable("RDS_SECURITY_GROUP_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno RDS_SECURITY_GROUP_ID")!;
 
             // Variables de entorno de la lambda...
-            string secretArnConnectionString = System.Environment.GetEnvironmentVariable("SECRET_ARN_CONNECTION_STRING") ?? throw new ArgumentNullException("SECRET_ARN_CONNECTION_STRING");
-            string allowedDomains = System.Environment.GetEnvironmentVariable("ALLOWED_DOMAINS") ?? throw new ArgumentNullException("ALLOWED_DOMAINS");
-			string arnParameterHermesApiUrl = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_HERMES_API_URL") ?? throw new ArgumentNullException("ARN_PARAMETER_HERMES_API_URL");
-			string arnParameterHermesApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_HERMES_API_KEY_ID") ?? throw new ArgumentNullException("ARN_PARAMETER_HERMES_API_KEY_ID");
-			string hermesDeNombre = System.Environment.GetEnvironmentVariable("HERMES_DE_NOMBRE") ?? throw new ArgumentNullException("HERMES_DE_NOMBRE");
-			string hermesDeCorreo = System.Environment.GetEnvironmentVariable("HERMES_DE_CORREO") ?? throw new ArgumentNullException("HERMES_DE_CORREO");
-			string hermesDeWhatsapp = System.Environment.GetEnvironmentVariable("HERMES_DE_WHATSAPP") ?? throw new ArgumentNullException("HERMES_DE_WHATSAPP");
-			string arnParameterKairosApiUrl = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_KAIROS_API_URL") ?? throw new ArgumentNullException("ARN_PARAMETER_KAIROS_API_URL");
-			string arnParameterKairosApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_KAIROS_API_KEY_ID") ?? throw new ArgumentNullException("ARN_PARAMETER_KAIROS_API_KEY_ID");
-			string arnParameterNotificacionesLambdaArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_NOTIFICACIONES_LAMBDA_ARN") ?? throw new ArgumentNullException("ARN_PARAMETER_NOTIFICACIONES_LAMBDA_ARN");
-			string arnParameterNotificacionesEjecucionRoleArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_NOTIFICACIONES_EJECUCION_ROLE_ARN") ?? throw new ArgumentNullException("ARN_PARAMETER_NOTIFICACIONES_EJECUCION_ROLE_ARN");
-			string googleRecaptchaCredential = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_CREDENTIAL") ?? throw new ArgumentNullException("GOOGLE_RECAPTCHA_CREDENTIAL");
-			string googleRecaptchaProjectId = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_PROJECT_ID") ?? throw new ArgumentNullException("GOOGLE_RECAPTCHA_PROJECT_ID");
-			string googleRecaptchaSiteKey = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_SITE_KEY") ?? throw new ArgumentNullException("GOOGLE_RECAPTCHA_SITE_KEY");
-			string destinatariosNuevoMensaje = System.Environment.GetEnvironmentVariable("DESTINATARIOS_NUEVO_MENSAJE") ?? throw new ArgumentNullException("DESTINATARIOS_NUEVO_MENSAJE");
-			string flowApiKey = System.Environment.GetEnvironmentVariable("FLOW_API_KEY") ?? throw new ArgumentNullException("FLOW_API_KEY");
-			string flowSecretKey = System.Environment.GetEnvironmentVariable("FLOW_SECRET_KEY") ?? throw new ArgumentNullException("FLOW_SECRET_KEY");
-			string flowApiUrl = System.Environment.GetEnvironmentVariable("FLOW_API_URL") ?? throw new ArgumentNullException("FLOW_API_URL");
-			string flowUrlCallback = System.Environment.GetEnvironmentVariable("FLOW_URL_CALLBACK") ?? throw new ArgumentNullException("FLOW_URL_CALLBACK");
-			string flowUrlRetorno = System.Environment.GetEnvironmentVariable("FLOW_URL_RETORNO") ?? throw new ArgumentNullException("FLOW_URL_RETORNO");
+            string secretArnConnectionString = System.Environment.GetEnvironmentVariable(CONST_SECRET_ARN) ?? throw new InvalidOperationException($"No se ha configurado la variable de entorno {CONST_SECRET_ARN}");
+            string allowedDomains = System.Environment.GetEnvironmentVariable("ALLOWED_DOMAINS") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ALLOWED_DOMAINS");
+			string arnParameterHermesApiUrl = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_HERMES_API_URL") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_PARAMETER_HERMES_API_URL");
+			string arnParameterHermesApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_HERMES_API_KEY_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_PARAMETER_HERMES_API_KEY_ID");
+			string hermesDeNombre = System.Environment.GetEnvironmentVariable("HERMES_DE_NOMBRE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno HERMES_DE_NOMBRE");
+			string hermesDeCorreo = System.Environment.GetEnvironmentVariable("HERMES_DE_CORREO") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno HERMES_DE_CORREO");
+			string hermesDeWhatsapp = System.Environment.GetEnvironmentVariable("HERMES_DE_WHATSAPP") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno HERMES_DE_WHATSAPP");
+			string arnParameterKairosApiUrl = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_KAIROS_API_URL") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_PARAMETER_KAIROS_API_URL");
+			string arnParameterKairosApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_KAIROS_API_KEY_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_PARAMETER_KAIROS_API_KEY_ID");
+			string arnParameterNotificacionesLambdaArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_NOTIFICACIONES_LAMBDA_ARN") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_PARAMETER_NOTIFICACIONES_LAMBDA_ARN");
+			string arnParameterNotificacionesEjecucionRoleArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_NOTIFICACIONES_EJECUCION_ROLE_ARN") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_PARAMETER_NOTIFICACIONES_EJECUCION_ROLE_ARN");
+			string googleRecaptchaCredential = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_CREDENTIAL") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_RECAPTCHA_CREDENTIAL");
+			string googleRecaptchaProjectId = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_PROJECT_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_RECAPTCHA_PROJECT_ID");
+			string googleRecaptchaSiteKey = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_SITE_KEY") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_RECAPTCHA_SITE_KEY");
+			string destinatariosNuevoMensaje = System.Environment.GetEnvironmentVariable("DESTINATARIOS_NUEVO_MENSAJE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno DESTINATARIOS_NUEVO_MENSAJE");
+			string flowApiKey = System.Environment.GetEnvironmentVariable("FLOW_API_KEY") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno FLOW_API_KEY");
+			string flowSecretKey = System.Environment.GetEnvironmentVariable("FLOW_SECRET_KEY") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno FLOW_SECRET_KEY");
+			string flowApiUrl = System.Environment.GetEnvironmentVariable("FLOW_API_URL") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno FLOW_API_URL");
+			string flowUrlCallback = System.Environment.GetEnvironmentVariable("FLOW_URL_CALLBACK") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno FLOW_URL_CALLBACK");
+			string flowUrlRetorno = System.Environment.GetEnvironmentVariable("FLOW_URL_RETORNO") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno FLOW_URL_RETORNO");
 
 			// Variables de entorno para la lambda de ejecución inicial...
-			string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new ArgumentNullException("APP_SCHEMA_NAME");
-            string initialCreationHandler = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_HANDLER") ?? throw new ArgumentNullException("INITIAL_CREATION_HANDLER");
-            string initialCreationPublishZip = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_PUBLISH_ZIP") ?? throw new ArgumentNullException("INITIAL_CREATION_PUBLISH_ZIP");
-            string migrationScript = System.Environment.GetEnvironmentVariable("MIGRATION_SCRIPT") ?? throw new ArgumentNullException("MIGRATION_SCRIPT");
+			string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno APP_SCHEMA_NAME");
+            string initialCreationHandler = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_HANDLER") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno INITIAL_CREATION_HANDLER");
+            string initialCreationPublishZip = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_PUBLISH_ZIP") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno INITIAL_CREATION_PUBLISH_ZIP");
+            string migrationScript = System.Environment.GetEnvironmentVariable("MIGRATION_SCRIPT") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno MIGRATION_SCRIPT");
 
             // Se obtiene la VPC y subnets...
             IVpc vpc = Vpc.FromLookup(this, $"{appName}Vpc", new VpcLookupOptions {
@@ -377,11 +394,10 @@ namespace Cdk
 				AccessTokenValidity = Duration.Minutes(double.Parse(notificacionesTokenValidityMinutes))
 			});
 
-			string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FAVICON.ico")));
-			// string base64FormLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "FORM_LOGO.png")));
-			string base64PageHeaderLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "PAGE_HEADER_LOGO.svg")));
-			string base64PageFooterLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "PAGE_FOOTER_LOGO.svg")));
-			string base64BackgroundImage = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos", "BACKGROUND_IMAGE.jpeg")));
+			string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, CONST_DIR_RECURSOS, "FAVICON.ico")));
+			string base64PageHeaderLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, CONST_DIR_RECURSOS, "PAGE_HEADER_LOGO.svg")));
+			string base64PageFooterLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, CONST_DIR_RECURSOS, "PAGE_FOOTER_LOGO.svg")));
+			string base64BackgroundImage = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, CONST_DIR_RECURSOS, "BACKGROUND_IMAGE.jpeg")));
 
 			_ = new CfnManagedLoginBranding(this, $"{appName}ManagedLoginBranding", new CfnManagedLoginBrandingProps {
 				UserPoolId = userPool.UserPoolId,
@@ -391,16 +407,16 @@ namespace Cdk
 					{ "categories", new Dictionary<string, object> {
 						{ "form", new Dictionary<string, object> {
 							{ "languageSelector", new Dictionary<string, object> {
-								{ "enabled", true }
+								{ CONST_ENABLED, true }
 							}}
 						}},
 						{ "global", new Dictionary<string, object> {
-							{ "colorSchemeMode", "LIGHT" },
+							{ "colorSchemeMode", CONST_COLOR_MODE },
 							{ "pageHeader", new Dictionary<string, object> {
-								{ "enabled", true }
+								{ CONST_ENABLED, true }
 							}},
 							{ "pageFooter", new Dictionary<string, object> {
-								{ "enabled", true }
+								{ CONST_ENABLED, true }
 							}}
 						}}
 					}},
@@ -409,37 +425,37 @@ namespace Cdk
 							{ "borderRadius", 16.0 }
 						}},
 						{ "optionControls", new Dictionary<string, object>{
-							{ "lightMode", new Dictionary<string, object> {
+							{ CONST_LIGHT_MODE, new Dictionary<string, object> {
 								{ "selected", new Dictionary<string, object>{
-									{ "backgroundColor", "005db2ff" }
+									{ CONST_BACKGROUND_COLOR, "005db2ff" }
 								}},
 							}}
 						}},
 						{ "focusState", new Dictionary<string, object>{
-							{ "lightMode", new Dictionary<string, object> {
-								{ "borderColor", "02b2cbff" }
+							{ CONST_LIGHT_MODE, new Dictionary<string, object> {
+								{ CONST_BORDER_COLOR, CONST_COLOR_CALIPSO }
 							}}
 						}},
 						{ "input", new Dictionary<string, object>{
-							{ "lightMode", new Dictionary<string, object> {
-								{ "defaults", new Dictionary<string, object>{
-                                    { "borderColor", "2a2d34cc" }
+							{ CONST_LIGHT_MODE, new Dictionary<string, object> {
+								{ CONST_DEFAULT, new Dictionary<string, object>{
+                                    { CONST_BORDER_COLOR, CONST_COLOR_NEGRO }
                                 }},
 								{ "placeholderColor", "2a2d34b3" },
 							}}
 						}},
 						{ "inputLabel", new Dictionary<string, object>{
-							{ "lightMode", new Dictionary<string, object> {
-								{ "textColor", "2a2d34cc" }
+							{ CONST_LIGHT_MODE, new Dictionary<string, object> {
+								{ CONST_TEXT_COLOR, CONST_COLOR_NEGRO }
                             }}
 						}},
 						{ "link", new Dictionary<string, object>{
-							{ "lightMode", new Dictionary<string, object> {
-								{ "defaults", new Dictionary<string, object>{
-									{ "textColor", "005db2ff" }
+							{ CONST_LIGHT_MODE, new Dictionary<string, object> {
+								{ CONST_DEFAULT, new Dictionary<string, object>{
+									{ CONST_TEXT_COLOR, "005db2ff" }
 								}},
 								{ "hover", new Dictionary<string, object>{
-									{ "textColor", "005db2cc" }
+									{ CONST_TEXT_COLOR, "005db2cc" }
 								}},
 							}}
 						}}
@@ -450,135 +466,118 @@ namespace Cdk
 						}},
 						{ "pageHeader", new Dictionary<string, object> {
 							{ "backgroundImage", new Dictionary<string, object> {
-								{ "enabled", false }
+								{ CONST_ENABLED, false }
 							}},
 							{ "logo", new Dictionary<string, object> {
-								{ "enabled", true },
+								{ CONST_ENABLED, true },
 								{ "location", "START" }
 							}},
-							{ "lightMode", new Dictionary<string, object> {
+							{ CONST_LIGHT_MODE, new Dictionary<string, object> {
 								{ "background", new Dictionary<string, object>{
-                                    { "color", "ffffffff" }
+                                    { "color", CONST_COLOR_BLANCO }
                                 }},
-								{ "borderColor", "f5f5f5ff" }
+								{ CONST_BORDER_COLOR, "f5f5f5ff" }
 							}}
 						}},
 						{ "pageFooter", new Dictionary<string, object> {
 							{ "backgroundImage", new Dictionary<string, object> {
-								{ "enabled", false }
+								{ CONST_ENABLED, false }
 							}},
 							{ "logo", new Dictionary<string, object> {
-								{ "enabled", true },
+								{ CONST_ENABLED, true },
 								{ "location", "START" }
 							}},
-							{ "lightMode", new Dictionary<string, object> {
+							{ CONST_LIGHT_MODE, new Dictionary<string, object> {
 								{ "background", new Dictionary<string, object>{
 									{ "color", "2a2d34ff" }
 								}},
-								{ "borderColor", "2a2d34ff" }
+								{ CONST_BORDER_COLOR, "2a2d34ff" }
 							}}
 						}},
 						{ "form", new Dictionary<string, object> {
 							{ "borderRadius", 0.0 },
 							{ "logo", new Dictionary<string, object> {
-								// { "enabled", true },
-								{ "enabled", false },
+								{ CONST_ENABLED, false },
 							}},
-							{ "lightMode", new Dictionary<string, object> {
-								{ "backgroundColor", "ffffffff" },
-								{ "borderColor", "ffffffff" },
+							{ CONST_LIGHT_MODE, new Dictionary<string, object> {
+								{ CONST_BACKGROUND_COLOR, CONST_COLOR_BLANCO },
+								{ CONST_BORDER_COLOR, CONST_COLOR_BLANCO },
 							}}
 						}},
 						{ "pageBackground", new Dictionary<string, object> {
 							{ "image", new Dictionary<string, object> {
-								{ "enabled", true }
+								{ CONST_ENABLED, true }
 							}},
 						}},
 						{ "pageText", new Dictionary<string, object> {
-							{ "lightMode", new Dictionary<string, object> {
-								{ "headingColor", "2a2d34cc" },
-								{ "bodyColor", "2a2d34cc" },
-								{ "descriptionColor", "2a2d34cc" },
+							{ CONST_LIGHT_MODE, new Dictionary<string, object> {
+								{ "headingColor", CONST_COLOR_NEGRO },
+								{ "bodyColor", CONST_COLOR_NEGRO },
+								{ "descriptionColor", CONST_COLOR_NEGRO },
 							}},
 						}},
 						{ "primaryButton", new Dictionary<string, object> {
-							{ "lightMode", new Dictionary<string, object> {
-								{ "defaults", new Dictionary<string, object>{
-									{ "backgroundColor", "02b2cbff" },
-									{ "textColor", "ffffffff" }
+							{ CONST_LIGHT_MODE, new Dictionary<string, object> {
+								{ CONST_DEFAULT, new Dictionary<string, object>{
+									{ CONST_BACKGROUND_COLOR, CONST_COLOR_CALIPSO },
+									{ CONST_TEXT_COLOR, CONST_COLOR_BLANCO }
 								}},
 								{ "hover", new Dictionary<string, object>{
-									{ "backgroundColor", "02b2cbcc" },
-									{ "textColor", "ffffffff" }
+									{ CONST_BACKGROUND_COLOR, "02b2cbcc" },
+									{ CONST_TEXT_COLOR, CONST_COLOR_BLANCO }
 								}},
 								{ "active", new Dictionary<string, object>{
-									{ "backgroundColor", "02b2cbff" },
-									{ "textColor", "ffffffff" }
+									{ CONST_BACKGROUND_COLOR, CONST_COLOR_CALIPSO },
+									{ CONST_TEXT_COLOR, CONST_COLOR_BLANCO }
 								}},
 							}},
 						}},
 						{ "secondaryButton", new Dictionary<string, object> {
-							{ "lightMode", new Dictionary<string, object> {
-								{ "defaults", new Dictionary<string, object>{
-									{ "backgroundColor", "ffffffff" },
-									{ "borderColor", "02b2cbff" },
-									{ "textColor", "02b2cbff" }
+							{ CONST_LIGHT_MODE, new Dictionary<string, object> {
+								{ CONST_DEFAULT, new Dictionary<string, object>{
+									{ CONST_BACKGROUND_COLOR, CONST_COLOR_BLANCO },
+									{ CONST_BORDER_COLOR, CONST_COLOR_CALIPSO },
+									{ CONST_TEXT_COLOR, CONST_COLOR_CALIPSO }
 								}},
 								{ "hover", new Dictionary<string, object>{
-									{ "backgroundColor", "ffffffff" },
-									{ "borderColor", "02b2cbcc" },
-									{ "textColor", "02b2cbff" }
+									{ CONST_BACKGROUND_COLOR, CONST_COLOR_BLANCO },
+									{ CONST_BORDER_COLOR, "02b2cbcc" },
+									{ CONST_TEXT_COLOR, CONST_COLOR_CALIPSO }
 								}},
 								{ "active", new Dictionary<string, object>{
-									{ "backgroundColor", "ffffffff" },
-									{ "borderColor", "02b2cbff" },
-									{ "textColor", "02b2cbff" }
+									{ CONST_BACKGROUND_COLOR, CONST_COLOR_BLANCO },
+									{ CONST_BORDER_COLOR, CONST_COLOR_CALIPSO },
+									{ CONST_TEXT_COLOR, CONST_COLOR_CALIPSO }
 								}},
 							}},
 						}}
 					}}
 				},
 				Assets = (new List<CfnManagedLoginBranding.AssetTypeProperty>() {
-					/*
-					new() {
-						Category = "FORM_LOGO",
-						ColorMode = "LIGHT",
-						Extension = "PNG",
-						Bytes = base64FormLogo,
-					},
-					*/
 					new() {
 						Category = "PAGE_HEADER_LOGO",
-						ColorMode = "LIGHT",
+						ColorMode = CONST_COLOR_MODE,
 						Extension = "SVG",
 						Bytes = base64PageHeaderLogo,
 					},
 					new() {
 						Category = "PAGE_FOOTER_LOGO",
-						ColorMode = "LIGHT",
+						ColorMode = CONST_COLOR_MODE,
 						Extension = "SVG",
 						Bytes = base64PageFooterLogo,
 					},
 					new() {
 						Category = "PAGE_BACKGROUND",
-						ColorMode = "LIGHT",
+						ColorMode = CONST_COLOR_MODE,
 						Extension = "JPEG",
 						Bytes = base64BackgroundImage,
 					},
 					new() {
 						Category = "FAVICON_ICO",
-						ColorMode = "LIGHT",
+						ColorMode = CONST_COLOR_MODE,
 						Extension = "ICO",
 						Bytes = base64Favicon,
 					},
-					/*
-					new() {
-						Category = "FAVICON_ICO",
-						ColorMode = "DARK",
-						Extension = "ICO",
-						Bytes = base64FaviconBlanco,
-					},
-					*/
 				}).ToArray()
 			});
 
@@ -747,8 +746,8 @@ namespace Cdk
                 Architecture = Architecture.X86_64,
                 LogGroup = logGroup,
                 Environment = new Dictionary<string, string> {
-                    { "APP_NAME", appName },
-                    { "SECRET_ARN_CONNECTION_STRING", secretArnConnectionString },
+                    { CONST_APP_NAME, appName },
+                    { CONST_SECRET_ARN, secretArnConnectionString },
 					{ "COGNITO_REGION", regionAws },
 					{ "COGNITO_BASE_URL", domain.BaseUrl() },
 					{ "COGNITO_USER_POOL_ID", userPool.UserPoolId },
@@ -939,8 +938,8 @@ namespace Cdk
                 Architecture = Architecture.ARM_64,
                 LogGroup = logGroupInitialLambda,
                 Environment = new Dictionary<string, string> {
-                    { "SECRET_ARN_CONNECTION_STRING", secretArnConnectionString },
-                    { "APP_NAME", appName },
+					{ CONST_APP_NAME, appName },
+					{ CONST_SECRET_ARN, secretArnConnectionString },
                     { "APP_SCHEMA_NAME", appSchemaName },
                     { "MIGRATION_SCRIPT", migrationScript }
                 },

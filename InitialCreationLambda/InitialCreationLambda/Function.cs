@@ -45,13 +45,13 @@ public class Function
         Stopwatch sw = Stopwatch.StartNew();
         LambdaLogger.Log($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Iniciando proceso de creacion inicial del schema y sus usuarios de aplicacion...");
 
-        string secretArnConnectionString = Environment.GetEnvironmentVariable("SECRET_ARN_CONNECTION_STRING") ?? throw new ArgumentNullException("SECRET_ARN_CONNECTION_STRING");
-        string appName = Environment.GetEnvironmentVariable("APP_NAME") ?? throw new ArgumentNullException("APP_NAME");
-        string appSchemaName = Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new ArgumentNullException("APP_SCHEMA_NAME");
-        string migrationScript = Environment.GetEnvironmentVariable("MIGRATION_SCRIPT") ?? throw new ArgumentNullException("MIGRATION_SCRIPT");
+        string secretArnConnectionString = Environment.GetEnvironmentVariable("SECRET_ARN_CONNECTION_STRING") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno SECRET_ARN_CONNECTION_STRING");
+        string appName = Environment.GetEnvironmentVariable("APP_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno APP_NAME");
+        string appSchemaName = Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno APP_SCHEMA_NAME");
+        string migrationScript = Environment.GetEnvironmentVariable("MIGRATION_SCRIPT") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno MIGRATION_SCRIPT");
 
         if (appSchemaName.Contains('"')) {
-            throw new Exception($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Error con el nombre del schema para app \"{appName}\" - Caracteres invalidos...");
+            throw new InvalidOperationException($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Error con el nombre del schema para app \"{appName}\" - Caracteres invalidos...");
         }
 
         LambdaLogger.Log($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Obteniendo secreto de conexion a base de datos...");
@@ -82,11 +82,11 @@ public class Function
             // Se crea usuario de aplicación...
             string appUsername = connectionStringSecrets[$"{appName}AppUsername"];
             if (appUsername.Contains('"')) {
-                throw new Exception($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Error con el nombre de usuario de aplicacion para app \"{appName}\" - Caracteres invalidos...");
+                throw new InvalidOperationException($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Error con el nombre de usuario de aplicacion para app \"{appName}\" - Caracteres invalidos...");
             }
             string appPassword = connectionStringSecrets[$"{appName}AppPassword"];
             if (appPassword.Contains('\'')) {
-                throw new Exception($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Error con la contraseña del usuario de aplicacion para app \"{appName}\" - Caracteres invalidos...");
+                throw new InvalidOperationException($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Error con la contraseña del usuario de aplicacion para app \"{appName}\" - Caracteres invalidos...");
             }
 
             LambdaLogger.Log($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Creando usuario de aplicacion para app \"{appName}\"...");

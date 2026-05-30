@@ -16,197 +16,13 @@ using TanatosAPI.Repositories;
 namespace TanatosAPI.Endpoints {
 	public static class DestinatarioNotificacionEndpoints {
 		public static IEndpointRouteBuilder MapDestinatarioNotificacionEndpoints(this IEndpointRouteBuilder routes) {
-			RouteGroupBuilder group = routes.MapGroup("/DestinatarioNotificacion");
-			// Se quitan los endpoints de DestinatarioNotificacion, dado que ahora se administran desde endpoints de Empleado...
-			// group.MapObtenerVigentes();
-			// group.MapCrearEndpoint();
-			// group.MapEliminarEndpoint();
-
 			RouteGroupBuilder publicGroup = routes.MapGroup("/public/DestinatarioNotificacion");
 			publicGroup.MapValidarEndpoint();
 
 			return routes;
 		}
 
-		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
-				Stopwatch stopwatch = Stopwatch.StartNew();
-
-				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
-
-					List<TipoReceptorNotificacion> receptores = await tipoReceptorNotificacionDao.ObtenerPorVigencia(true);
-
-					List<SalDestinatarioNotificacion> retorno = [.. (await destinatarioNotificacionDao.ObtenerPorSub(sub, idNegocio, true))
-						.Select(d => new SalDestinatarioNotificacion() {
-							Id = d.Id,
-							IdTipoReceptor = d.IdTipoReceptor,
-							NombreTipoReceptor = receptores.FirstOrDefault(r => r.Id == d.IdTipoReceptor)?.Nombre,
-							RequierePlanEmpresa = receptores.FirstOrDefault(r => r.Id == d.IdTipoReceptor)?.RequierePlanEmpresa,
-							Alias = d.Alias,
-							Destino = d.Destino,
-							Validado = d.Validado
-						})
-					];
-
-					LambdaLogger.Log(
-						$"[GET] - [DestinatarioNotificacion] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Obtención exitosa de los destinatarios de notificaciones vigentes - Cant. Registros: {retorno.Count}.");
-
-					return Results.Ok(retorno);
-				} catch (Exception ex) {
-					LambdaLogger.Log(
-						$"[GET] - [DestinatarioNotificacion] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error al obtener los destinatarios de notificaciones vigentes. " +
-						$"{ex}");
-					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
-				}
-			}).RequireAuthorization("Negocios.Read.Self", "Sistema.Read.Public");
-
-			return routes;
-		}
-
-		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntDestinatarioNotificacionCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, CryptoHelper cryptoHelper, VariableEntornoHelper variableEntorno, CognitoHelper cognitoHelper, DestinatarioNotificacionBcp destinatarioNotificacionBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, NegocioDao negocioDao, HermesHelper hermesHelper) => {
-				Stopwatch stopwatch = Stopwatch.StartNew();
-
-				try {
-					entrada.Alias = entrada.Alias?.Trim();
-					entrada.Destino = entrada.Destino.Trim();
-
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
-
-					// Se valida que el usuario no tenga otro destinatario igual...
-					List<DestinatarioNotificacion> destVigentes = await destinatarioNotificacionDao.ObtenerPorSub(sub, entrada.IdNegocio, true);
-					if (destVigentes.Any(d => d.IdTipoReceptor == entrada.IdTipoReceptor && d.Destino == entrada.Destino)) {
-						LambdaLogger.Log(
-							$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"Ya tienes registrado dicho destinatario.");
-
-						return Results.BadRequest($"Ya tienes registrado dicho destinatario.");
-					}
-
-					// Se valida que el usuario tenga plan Empresa en caso de tener más de un destinatario...
-					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
-					if (destVigentes.Count > 0 && !tienePlanEmpresa) {
-						LambdaLogger.Log(
-							$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"Tu plan no permite registrar un destinatario adicional.");
-
-						return Results.BadRequest($"Tu plan no permite registrar un destinatario adicional.");
-					}
-
-					// Se valida que el tipo de receptor sea válido...
-					TipoReceptorNotificacion? tipoReceptor = await tipoReceptorNotificacionDao.ObtenerPorId(entrada.IdTipoReceptor);
-					if (tipoReceptor == null || !tipoReceptor.Vigencia) {
-						LambdaLogger.Log(
-							$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El tipo de receptor de notificación es inválido.");
-
-						return Results.BadRequest($"El tipo de receptor de notificación es inválido.");
-					}
-
-					// Se valida que el tipo de receptor seleccionado no se restringa según el plan del usuario...
-					if (tipoReceptor!.RequierePlanEmpresa && !tienePlanEmpresa) {
-						LambdaLogger.Log(
-							$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"Tu plan no permite registrar un destinatario de dicho tipo.");
-
-						return Results.BadRequest($"Tu plan no permite registrar un destinatario de dicho tipo.");
-					}
-
-					// Se valida regex del tipo de receptor...
-					if (!string.IsNullOrEmpty(tipoReceptor.RegexValidacion) && !Regex.IsMatch(entrada.Destino, tipoReceptor.RegexValidacion)) {
-						LambdaLogger.Log(
-							$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El formato del destino no es válido.");
-
-						return Results.BadRequest($"El formato del destino no es válido.");
-					}
-
-					// Se valida que el negocio sea válido...
-					Negocio? negocio = (await negocioDao.ObtenerPorSub(sub)).FirstOrDefault(n => n.Id == entrada.IdNegocio);
-					if (negocio == null || !negocio.Vigencia) {
-						LambdaLogger.Log(
-							$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El negocio es inválido.");
-
-						return Results.BadRequest($"El negocio es inválido.");
-					}
-
-					DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionBcp.Crear(
-						sub,
-						negocio.Id,
-						null,
-						entrada.IdTipoReceptor,
-						entrada.Alias,
-						entrada.Destino
-					);
-
-					SalDestinatarioNotificacion retorno = new() {
-						Id = nuevoDestinatario.Id,
-						IdTipoReceptor = nuevoDestinatario.IdTipoReceptor,
-						NombreTipoReceptor = tipoReceptor.Nombre,
-						RequierePlanEmpresa = tipoReceptor.RequierePlanEmpresa,
-						Alias = nuevoDestinatario.Alias,
-						Destino = nuevoDestinatario.Destino,
-						Validado = nuevoDestinatario.Validado
-					};
-
-					LambdaLogger.Log(
-						$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Creación exitosa del destinatario de notificación - ID: {retorno.Id}.");
-
-					return Results.Ok(retorno);
-				} catch (Exception ex) {
-					LambdaLogger.Log(
-						$"[POST] - [DestinatarioNotificacion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error en la creación del destinatario de notificación. " +
-						$"{ex}");
-					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
-				}
-			}).RequireAuthorization("Negocios.Write.Self");
-
-			return routes;
-		}
-
-		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, DestinatarioNotificacionDao destinatarioNotificacionDao, DestinatarioNotificacionBcp destinatarioNotificacionBcp) => {
-				Stopwatch stopwatch = Stopwatch.StartNew();
-
-				try {
-					string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
-
-					DestinatarioNotificacion? existente = (await destinatarioNotificacionDao.ObtenerPorSub(sub)).FirstOrDefault(d => d.Id == id);
-
-					if (existente == null) {
-						LambdaLogger.Log(
-							$"[DELETE] - [DestinatarioNotificacion] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El usuario no posee un destinatario de notificación con ID {id}.");
-
-						return Results.BadRequest($"El usuario no posee un destinatario de notificación con ID {id}.");
-					}
-
-					await destinatarioNotificacionBcp.Eliminar(existente);
-
-					LambdaLogger.Log(
-						$"[DELETE] - [DestinatarioNotificacion] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Eliminación exitosa del destinatario de notificación - ID: {id}.");
-
-					return Results.Ok();
-				} catch (Exception ex) {
-					LambdaLogger.Log(
-						$"[DELETE] - [DestinatarioNotificacion] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error en la eliminación del destinatario de notificación - ID: {id}. " +
-						$"{ex}");
-					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
-				}
-			}).RequireAuthorization("Negocios.Write.Self");
-
-			return routes;
-		}
-
-		private static IEndpointRouteBuilder MapValidarEndpoint(this IEndpointRouteBuilder routes) {
+		private static void MapValidarEndpoint(this IEndpointRouteBuilder routes) {
 			routes.MapPost("/Validar/", async (EntDestinatarioNotificacionValidar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, DestinatarioNotificacionBcp destinatarioNotificacionBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, CryptoHelper cryptoHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -258,8 +74,6 @@ namespace TanatosAPI.Endpoints {
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 			}).AllowAnonymous();
-
-			return routes;
 		}
 	}
 }

@@ -85,7 +85,7 @@ jobs:
                   node-version: ${{ vars.VERSION_NODEJS }}
                                                       
             - name: Instalar AWS CDK
-              run: npm install -g aws-cdk
+              run: npm install --ignore-scripts -g aws-cdk@2.1125.0
               
             - name: Instalar .NET EF
               run: dotnet tool install --global dotnet-ef --version ${{ vars.VERSION_DOTNET_EF }}

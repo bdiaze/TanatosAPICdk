@@ -1,6 +1,7 @@
 ﻿using Amazon.Lambda.Core;
 using System.Diagnostics;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -16,7 +17,7 @@ namespace TanatosAPI.Endpoints {
 			return routes;
 		}
 
-		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
+		private static void MapObtenerVigentes(this IEndpointRouteBuilder routes) {
 			routes.MapGet("/Vigentes", async (IHostEnvironment environment, CategoriaNormaDao categoriaNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -36,11 +37,9 @@ namespace TanatosAPI.Endpoints {
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 			}).RequireAuthorization("Sistema.Read.Public");
-
-			return routes;
 		}
 
-		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
+		private static void MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
 			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, CategoriaNormaDao categoriaNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -65,12 +64,10 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Admin");
-
-			return routes;
+			}).RequireAuthorization(Constant.CONST_ADMIN);
 		}
 
-		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
+		private static void MapCrearEndpoint(this IEndpointRouteBuilder routes) {
 			routes.MapPost("/", async (CategoriaNorma entrada, IHostEnvironment environment, CategoriaNormaDao categoriaNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -100,12 +97,10 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Admin");
-
-			return routes;
+			}).RequireAuthorization(Constant.CONST_ADMIN);
 		}
 
-		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
+		private static void MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
 			routes.MapPut("/", async (CategoriaNorma entrada, IHostEnvironment environment, CategoriaNormaDao categoriaNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -135,12 +130,10 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Admin");
-
-			return routes;
+			}).RequireAuthorization(Constant.CONST_ADMIN);
 		}
 
-		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
+		private static void MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
 			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, CategoriaNormaDao categoriaNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -169,9 +162,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Admin");
-
-			return routes;
+			}).RequireAuthorization(Constant.CONST_ADMIN);
 		}
 	}
 }

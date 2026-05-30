@@ -26,8 +26,6 @@ namespace TanatosAPI.Design {
                 .AddEnvironmentVariables()
                 .Build();
 
-            string appName = config["VariableEntorno:APP_NAME"]!;
-
             string connectionString =
                 $"Server={config["ConnectionStrings:Host"]!};" +
                 $"Port={config["ConnectionStrings:Port"]!};" +

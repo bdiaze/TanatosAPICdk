@@ -21,7 +21,7 @@ namespace TanatosAPI.Business {
 			List<string> procesosProgramados = [];
 			List<EntKairosIngresarProceso> procesosDesprogramados = [];
 			try {
-				NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new Exception("Norma suscrita inválida");
+				NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new InvalidOperationException("Norma suscrita inválida");
 				TemplateNorma? templateNorma = null;
 				if (normaSuscrita.IdTipoPeriodicidad == null && normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
 					templateNorma = (await templateNormaDao.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
@@ -58,7 +58,7 @@ namespace TanatosAPI.Business {
 
 					// Si la norma suscrita está activada, se programan las notificaciones que no están programadas, y desprograman las que no son necesarias...
 				} else if ((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) != null) {
-					TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad!).Value, transaction) ?? throw new Exception("Tipo periodicidad inválido");
+					TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad!).Value, transaction) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
 
 					if (!string.IsNullOrWhiteSpace(tipoPeriodicidad.Cron)) {
 						// Se arma listado de las configuraciones de notificaciones previas...
@@ -201,10 +201,12 @@ namespace TanatosAPI.Business {
 		}
 
 		public async Task ProcesarNotificacion(long idNormaSuscrita, string cron, long? idTipoUnidadTiempoAntelacion, int? cantAntelacion, bool? esVencimiento, bool programarSiguienteEjecucion, NpgsqlTransaction? transaction = null) {
+			const string CONST_DIR_TEMPLATES = "TemplatesCorreos";
+
 			esVencimiento ??= programarSiguienteEjecucion;
 
             // Se obtiene norma suscrita y/o template...
-            NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new Exception("ID norma suscrita inválida");
+            NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new InvalidOperationException("ID norma suscrita inválida");
             TemplateNorma? templateNorma = null;
             if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
                 templateNorma = (await templateNormaDao.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
@@ -375,16 +377,16 @@ namespace TanatosAPI.Business {
                         string asunto;
                         if (!esVencimiento.Value) {
                             if (environment.IsProduction()) {
-                                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "NotificacionPrevia.html"));
+                                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, CONST_DIR_TEMPLATES, "NotificacionPrevia.html"));
                             } else {
-                                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "NotificacionPrevia.html"));
+                                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), CONST_DIR_TEMPLATES, "NotificacionPrevia.html"));
                             }
                             asunto = "¡Tu obligación vence en [TIEMPO_FALTANTE]!";
                         } else {
                             if (environment.IsProduction()) {
-                                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "NormaVencida.html"));
+                                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, CONST_DIR_TEMPLATES, "NormaVencida.html"));
                             } else {
-                                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "NormaVencida.html"));
+                                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), CONST_DIR_TEMPLATES, "NormaVencida.html"));
                             }
                             asunto = "¡Tu obligación venció!";
 

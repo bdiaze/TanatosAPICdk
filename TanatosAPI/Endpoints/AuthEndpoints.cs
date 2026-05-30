@@ -27,7 +27,7 @@ namespace TanatosAPI.Endpoints {
 			return routes;
 		}
 
-		private static IEndpointRouteBuilder MapObtenerAccessToken(this IEndpointRouteBuilder routes) {
+		private static void MapObtenerAccessToken(this IEndpointRouteBuilder routes) {
 			routes.MapPost("/ObtenerAccessToken", async (EntAuthObtenerAccessToken entrada, HttpContext httpContext, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -64,7 +64,11 @@ namespace TanatosAPI.Endpoints {
 					// Se obtienen los tokens...
 					HttpResponseMessage response = await client.SendAsync(request);
 					if (!response.IsSuccessStatusCode) {
-						throw new Exception($"Ocurrio un error al obtener token. Status Code: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+						throw new HttpRequestException(
+							$"Ocurrio un error al obtener token. Status Code: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+							inner: null,
+							statusCode: response.StatusCode
+						);
 					}
 
 					// Se arma salida de access token con su expires in...
@@ -74,15 +78,11 @@ namespace TanatosAPI.Endpoints {
 
 					// Se revisa si request llega desde localhost para setear cookies como SameSiteMode.None...
 					bool sameSiteStrict = true;
-					if (httpContext.Request.Headers.TryGetValue("Origin", out StringValues originHeader)) {
-						if (Uri.TryCreate(originHeader.ToString(), UriKind.Absolute, out Uri? uri)) {
-							if (uri.IsLoopback) {
-								sameSiteStrict = false;
-							}
-						}
+					if (httpContext.Request.Headers.TryGetValue("Origin", out StringValues originHeader) && Uri.TryCreate(originHeader.ToString(), UriKind.Absolute, out Uri? uri) && uri.IsLoopback) {
+						sameSiteStrict = false;
 					}
 
-					httpResponse.Cookies.Append("refresh_token", tokens["refresh_token"].ToString(), new CookieOptions {
+					httpResponse.Cookies.Append(Constant.CONST_REFRESH_TOKEN, tokens[Constant.CONST_REFRESH_TOKEN].ToString(), new CookieOptions {
 						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
 						IsEssential = true,
 						Expires = refreshExpiration,
@@ -109,20 +109,18 @@ namespace TanatosAPI.Endpoints {
 					return Results.Problem($"Ocurrio un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 			}).AllowAnonymous();
-
-			return routes;
 		}
 
-		private static IEndpointRouteBuilder MapRefreshAccessToken(this IEndpointRouteBuilder routes) {
+		private static void MapRefreshAccessToken(this IEndpointRouteBuilder routes) {
 			routes.MapPost("/RefreshAccessToken", async(HttpRequest httpRequest, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
 					// Se valida que venga el refresh token...
-					if (!httpRequest.Cookies.TryGetValue("refresh_token", out string? refreshToken)) {
+					if (!httpRequest.Cookies.TryGetValue(Constant.CONST_REFRESH_TOKEN, out string? refreshToken)) {
 						LambdaLogger.Log(
 							$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"No se incluyo cookie refresh_token.");
+							$"No se incluyo cookie {Constant.CONST_REFRESH_TOKEN}.");
 
 						return Results.BadRequest();
 					}
@@ -130,9 +128,9 @@ namespace TanatosAPI.Endpoints {
 					string baseUrl = variableEntorno.Obtener("COGNITO_BASE_URL");
 
 					Dictionary<string, string> parametros = new() {
-							{ "grant_type", "refresh_token" },
+							{ "grant_type", Constant.CONST_REFRESH_TOKEN },
 							{ "client_id", variableEntorno.Obtener("COGNITO_USER_POOL_CLIENT_ID") },
-							{ "refresh_token", refreshToken }
+							{ Constant.CONST_REFRESH_TOKEN, refreshToken }
 						};
 
 					using HttpClient client = new();
@@ -143,7 +141,11 @@ namespace TanatosAPI.Endpoints {
 					// Se obtienen los tokens...
 					HttpResponseMessage response = await client.SendAsync(request);
 					if (!response.IsSuccessStatusCode) {
-						throw new Exception($"Ocurrio un error al refrescar token. Status Code: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}");
+						throw new HttpRequestException(
+							$"Ocurrio un error al refrescar token. Status Code: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
+							inner: null,
+							statusCode: response.StatusCode
+						);
 					}
 
 					// Se arma salida de access token con su expires in...
@@ -167,11 +169,9 @@ namespace TanatosAPI.Endpoints {
 				}
 
 			}).AllowAnonymous();
-
-			return routes;
 		}
 
-		private static IEndpointRouteBuilder MapLimpiarAuthCookies(this IEndpointRouteBuilder routes) {
+		private static void MapLimpiarAuthCookies(this IEndpointRouteBuilder routes) {
 			routes.MapPost("/LimpiarAuthCookies", (HttpContext httpContext, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -183,15 +183,11 @@ namespace TanatosAPI.Endpoints {
 
 					// Se revisa si request llega desde localhost para setear cookies como SameSiteMode.None...
 					bool sameSiteStrict = true;
-					if (httpContext.Request.Headers.TryGetValue("Origin", out StringValues originHeader)) {
-						if (Uri.TryCreate(originHeader.ToString(), UriKind.Absolute, out Uri? uri)) {
-							if (uri.IsLoopback) {
-								sameSiteStrict = false;
-							}
-						}
+					if (httpContext.Request.Headers.TryGetValue("Origin", out StringValues originHeader) && Uri.TryCreate(originHeader.ToString(), UriKind.Absolute, out Uri? uri) && uri.IsLoopback) {
+						sameSiteStrict = false;
 					}
 
-					httpResponse.Cookies.Delete("refresh_token", new CookieOptions {
+					httpResponse.Cookies.Delete(Constant.CONST_REFRESH_TOKEN, new CookieOptions {
 						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
 						IsEssential = true,
 						HttpOnly = true,
@@ -213,8 +209,6 @@ namespace TanatosAPI.Endpoints {
 				}
 
 			}).RequireAuthorization();
-
-			return routes;
 		}
 	}
 }

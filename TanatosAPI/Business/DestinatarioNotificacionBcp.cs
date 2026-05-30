@@ -39,7 +39,7 @@ namespace TanatosAPI.Business {
 
 			// Se envía mensaje con el código de validación...
 			if (nuevoDestinatario.IdTipoReceptor == 1 /* Correo electrónico */) {
-				Negocio negocio = (await negocioDao.ObtenerPorSub(sub, true, transaction)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new Exception("ID de negocio no válido");
+				Negocio negocio = (await negocioDao.ObtenerPorSub(sub, true, transaction)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new InvalidOperationException("ID de negocio no válido");
 				Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(sub, transaction);
 
 				string strTemplateCorreo;
@@ -72,7 +72,7 @@ namespace TanatosAPI.Business {
 				await destinatarioNotificacionDao.Actualizar(nuevoDestinatario, transaction);
 
 			} else if (nuevoDestinatario.IdTipoReceptor == 2 /* Whatsapp */) {
-				Negocio negocio = (await negocioDao.ObtenerPorSub(sub, true, transaction)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new Exception("ID de negocio no válido");
+				Negocio negocio = (await negocioDao.ObtenerPorSub(sub, true, transaction)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new InvalidOperationException("ID de negocio no válido");
 				Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(sub, transaction);
 
 				SalHermesEnviar retorno = await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {

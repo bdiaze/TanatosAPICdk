@@ -20,12 +20,12 @@ namespace TanatosAPI.Endpoints {
             return routes;
         }
 
-        private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
+        private static void MapObtenerVigentes(this IEndpointRouteBuilder routes) {
             routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, CargoDao cargoDao) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
-                    string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+                    string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
                     List<Cargo> cargos = await cargoDao.ObtenerPorSub(sub,idNegocio, true);
 
@@ -49,18 +49,16 @@ namespace TanatosAPI.Endpoints {
                     return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
                 }
             }).RequireAuthorization("Negocios.Read.Self");
-
-            return routes;
         }
 
-        private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
+        private static void MapCrearEndpoint(this IEndpointRouteBuilder routes) {
             routes.MapPost("/", async (EntCargoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CargoDao cargoDao, NegocioDao negocioDao) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
                     entrada.Nombre = entrada.Nombre.Trim();
 
-                    string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+                    string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
                     // Se valida que el negocio sea válido...
                     Negocio? negocio = (await negocioDao.ObtenerPorSub(sub)).FirstOrDefault(n => n.Id == entrada.IdNegocio);
@@ -101,18 +99,16 @@ namespace TanatosAPI.Endpoints {
                     return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
                 }
             }).RequireAuthorization("Negocios.Write.Self");
-
-            return routes;
         }
 
-        private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
+        private static void MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
             routes.MapPut("/", async (EntCargoActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, CargoDao cargoDao) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
                     entrada.Nombre = entrada.Nombre.Trim();
 
-                    string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+                    string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
                     Cargo? existente = (await cargoDao.ObtenerPorSub(sub, null, true)).FirstOrDefault(d => d.Id == entrada.Id);
                     if (existente == null) {
@@ -144,16 +140,14 @@ namespace TanatosAPI.Endpoints {
                     return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
                 }
             }).RequireAuthorization("Negocios.Write.Self");
-
-            return routes;
         }
 
-        private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
+        private static void MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
             routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, CargoDao cargoDao, EmpleadoDao empleadoDao) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
-                    string sub = user.Identity?.Name ?? throw new Exception("No se incluye la información del usuario.");
+                    string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					// Se valida que el cargo exista y pertenezca al usuario...
 					Cargo? existente = (await cargoDao.ObtenerPorSub(sub, null, true)).FirstOrDefault(d => d.Id == id);
@@ -200,8 +194,6 @@ namespace TanatosAPI.Endpoints {
                     return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
                 }
             }).RequireAuthorization("Negocios.Write.Self");
-
-            return routes;
         }
     }
 }
