@@ -34,7 +34,7 @@ namespace TanatosAPI.Repositories {
                         IdNegocio = reader.GetInt64(2),
                         Nombre = reader.GetString(3),
                         FechaCreacion = reader.GetDateTime(4),
-                        FechaEliminacion = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+                        FechaEliminacion = await reader.IsDBNullAsync(5) ? null : reader.GetDateTime(5),
                         Vigencia = reader.GetBoolean(6)
                     });
                 }

@@ -30,9 +30,9 @@ namespace TanatosAPI.Repositories {
 						Id = reader.GetInt64(0),
 						IdNormaSuscrita = reader.GetInt64(1),
 						FechaVencimiento = reader.GetDateTime(2),
-						FechaCompletitud = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+						FechaCompletitud = await reader.IsDBNullAsync(3) ? null : reader.GetDateTime(3),
 						FechaCreacion = reader.GetDateTime(4),
-						FechaEliminacion = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+						FechaEliminacion = await reader.IsDBNullAsync(5) ? null : reader.GetDateTime(5),
 						Vigencia = reader.GetBoolean(6)
 					};
 				}
@@ -68,9 +68,9 @@ namespace TanatosAPI.Repositories {
 						Id = reader.GetInt64(0),
 						IdNormaSuscrita = reader.GetInt64(1),
 						FechaVencimiento = reader.GetDateTime(2),
-						FechaCompletitud = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+						FechaCompletitud = await reader.IsDBNullAsync(3) ? null : reader.GetDateTime(3),
 						FechaCreacion = reader.GetDateTime(4),
-						FechaEliminacion = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+						FechaEliminacion = await reader.IsDBNullAsync(5) ? null : reader.GetDateTime(5),
 						Vigencia = reader.GetBoolean(6)
 					});
 				}
@@ -107,9 +107,9 @@ namespace TanatosAPI.Repositories {
 						Id = reader.GetInt64(0),
 						IdNormaSuscrita = reader.GetInt64(1),
 						FechaVencimiento = reader.GetDateTime(2),
-						FechaCompletitud = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+						FechaCompletitud = await reader.IsDBNullAsync(3) ? null : reader.GetDateTime(3),
 						FechaCreacion = reader.GetDateTime(4),
-						FechaEliminacion = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+						FechaEliminacion = await reader.IsDBNullAsync(5) ? null : reader.GetDateTime(5),
 						Vigencia = reader.GetBoolean(6)
 					});
 				}

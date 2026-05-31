@@ -128,11 +128,7 @@ namespace TanatosAPI.Endpoints {
 							DateTime fechaUTC = DateTime.SpecifyKind(fechaInicio.Value, DateTimeKind.Utc);
 
 							// Se transforma la fecha a zona horaria de Chile...
-							string timezone = "America/Santiago";
-							if (OperatingSystem.IsWindows()) {
-								timezone = TZConvert.IanaToWindows(timezone);
-							}
-							TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+							TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
 							DateTime fechaTimezone = TimeZoneInfo.ConvertTimeFromUtc(fechaUTC, timeZoneInfo);
 
 							// Se añade la duración en meses del plan...
@@ -365,17 +361,18 @@ namespace TanatosAPI.Endpoints {
 
 											// Se actualiza fecha de expiración de la suscripción...
 											suscripcion.FechaInicio ??= ahora;
-											DateTime fechaReferencia = suscripcion.FechaExpiracion == null ? suscripcion.FechaInicio.Value : (ahora > suscripcion.FechaExpiracion.Value ? ahora : suscripcion.FechaExpiracion.Value);
-											
+											DateTime fechaReferencia;
+											if (suscripcion.FechaExpiracion == null) {
+												fechaReferencia = suscripcion.FechaInicio!.Value;
+											} else {
+												fechaReferencia = ahora > suscripcion.FechaExpiracion.Value ? ahora : suscripcion.FechaExpiracion.Value;
+											}
+
 											// Nos aseguramos de que la fecha esté en UTC...
 											DateTime fechaUTC = DateTime.SpecifyKind(fechaReferencia, DateTimeKind.Utc);
 
 											// Se transforma la fecha a zona horaria de Chile...
-											string timezone = "America/Santiago";
-											if (OperatingSystem.IsWindows()) {
-												timezone = TZConvert.IanaToWindows(timezone);
-											}
-											TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+											TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
 											DateTime fechaTimezone = TimeZoneInfo.ConvertTimeFromUtc(fechaUTC, timeZoneInfo);
 
 											// Se añade la duración en meses del plan...

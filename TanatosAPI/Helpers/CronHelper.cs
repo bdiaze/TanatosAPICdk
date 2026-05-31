@@ -70,21 +70,12 @@ namespace TanatosAPI.Helpers {
 			// Nos aseguramos de que la fecha esté en UTC...
 			fecha = DateTime.SpecifyKind(fecha, DateTimeKind.Utc);
 
-			// Si estamos en Windows, convertimos la zona horaria de IANA a Windows...
-			if (OperatingSystem.IsWindows()) {
-				timezone = TZConvert.IanaToWindows(timezone);
-			}
-
 			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
 
 			return TimeZoneInfo.ConvertTimeFromUtc(fecha, timeZoneInfo);
 		}
 
 		public static DateTime TransformarFechaTimezoneAUTC(DateTime fecha, string timezone = "America/Santiago") {
-			if (OperatingSystem.IsWindows()) {
-				timezone = TZConvert.IanaToWindows(timezone);
-			}
-
 			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
 
 			// Especificamos que la fecha es local (de esa timezone)

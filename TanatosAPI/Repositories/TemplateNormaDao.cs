@@ -28,11 +28,11 @@ namespace TanatosAPI.Repositories {
 						IdTemplate = reader.GetInt64(0),
 						IdNorma = reader.GetInt64(1),
 						Nombre = reader.GetString(2),
-						Descripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
-						IdTipoPeriodicidad = reader.IsDBNull(4) ? null : reader.GetInt64(4),
-						Multa = reader.IsDBNull(5) ? null : reader.GetString(5),
+						Descripcion = await reader.IsDBNullAsync(3) ? null : reader.GetString(3),
+						IdTipoPeriodicidad = await reader.IsDBNullAsync(4) ? null : reader.GetInt64(4),
+						Multa = await reader.IsDBNullAsync(5) ? null : reader.GetString(5),
 						IdCategoriaNorma = reader.GetInt64(6),
-						CronActivacionAutomatica = reader.IsDBNull(7) ? null : reader.GetString(7)
+						CronActivacionAutomatica = await reader.IsDBNullAsync(7) ? null : reader.GetString(7)
 					});
 				}
 

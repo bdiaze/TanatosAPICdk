@@ -29,7 +29,7 @@ namespace TanatosAPI.Repositories {
 					retorno = new TipoReceptorNotificacion {
 						Id = reader.GetInt64(0),
                         Nombre = reader.GetString(1),
-                        RegexValidacion = reader.IsDBNull(2) ? null : reader.GetString(2),
+                        RegexValidacion = await reader.IsDBNullAsync(2) ? null : reader.GetString(2),
                         RequierePlanEmpresa = reader.GetBoolean(3),
                         Vigencia = reader.GetBoolean(4)
 					};

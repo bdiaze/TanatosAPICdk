@@ -27,11 +27,11 @@ namespace TanatosAPI.Repositories {
 					retorno = new TipoPeriodicidad {
 						Id = reader.GetInt64(0),
 						Nombre = reader.GetString(1),
-						Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
-						Cron = reader.IsDBNull(3) ? null : reader.GetString(3),
-						DeltaDias = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-						DeltaMeses = reader.IsDBNull(5) ? null : reader.GetInt32(5),
-                        DeltaAnnos = reader.IsDBNull(6) ? null : reader.GetInt32(6),
+						Descripcion = await reader.IsDBNullAsync(2) ? null : reader.GetString(2),
+						Cron = await reader.IsDBNullAsync(3) ? null : reader.GetString(3),
+						DeltaDias = await reader.IsDBNullAsync(4) ? null : reader.GetInt32(4),
+						DeltaMeses = await reader.IsDBNullAsync(5) ? null : reader.GetInt32(5),
+                        DeltaAnnos = await reader.IsDBNullAsync(6) ? null : reader.GetInt32(6),
                         Vigencia = reader.GetBoolean(7),
 					};
 				}

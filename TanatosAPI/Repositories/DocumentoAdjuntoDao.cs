@@ -35,13 +35,13 @@ namespace TanatosAPI.Repositories {
 						NombreArchivo = reader.GetString(4),
 						MimeEsperado = reader.GetString(5),
 						TamannoEsperado = reader.GetInt64(6),
-						MimeReal = reader.IsDBNull(7) ? null : reader.GetString(7),
-						TamannoReal = reader.IsDBNull(8) ? null : reader.GetInt64(8),
+						MimeReal = await reader.IsDBNullAsync(7) ? null : reader.GetString(7),
+						TamannoReal = await reader.IsDBNullAsync(8) ? null : reader.GetInt64(8),
 						EstadoSubida = reader.GetInt16(9),
 						FechaEmisionUrlPrefirmadaPut = reader.GetDateTime(10),
-						FechaConfirmacionSubida = reader.IsDBNull(11) ? null : reader.GetDateTime(11),
+						FechaConfirmacionSubida = await reader.IsDBNullAsync(11) ? null : reader.GetDateTime(11),
 						FechaCreacion = reader.GetDateTime(12),
-						FechaEliminacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
+						FechaEliminacion = await reader.IsDBNullAsync(13) ? null : reader.GetDateTime(13),
 						Vigencia = reader.GetBoolean(14)
 					});
 				}
@@ -80,13 +80,13 @@ namespace TanatosAPI.Repositories {
 						NombreArchivo = reader.GetString(4),
 						MimeEsperado = reader.GetString(5),
 						TamannoEsperado = reader.GetInt64(6),
-						MimeReal = reader.IsDBNull(7) ? null : reader.GetString(7),
-						TamannoReal = reader.IsDBNull(8) ? null : reader.GetInt64(8),
+						MimeReal = await reader.IsDBNullAsync(7) ? null : reader.GetString(7),
+						TamannoReal = await reader.IsDBNullAsync(8) ? null : reader.GetInt64(8),
 						EstadoSubida = reader.GetInt16(9),
 						FechaEmisionUrlPrefirmadaPut = reader.GetDateTime(10),
-						FechaConfirmacionSubida = reader.IsDBNull(11) ? null : reader.GetDateTime(11),
+						FechaConfirmacionSubida = await reader.IsDBNullAsync(11) ? null : reader.GetDateTime(11),
 						FechaCreacion = reader.GetDateTime(12),
-						FechaEliminacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
+						FechaEliminacion = await reader.IsDBNullAsync(13) ? null : reader.GetDateTime(13),
 						Vigencia = reader.GetBoolean(14)
 					};
 				}

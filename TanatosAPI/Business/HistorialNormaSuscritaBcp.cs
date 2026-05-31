@@ -54,17 +54,14 @@ namespace TanatosAPI.Business {
 				templateNorma = (await templateNormaDao.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
 			}
 
-			TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad!).Value, transaction) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
+			long idTipoPeriodicidad = (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
+			TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId(idTipoPeriodicidad, transaction) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
 			if (!string.IsNullOrWhiteSpace(tipoPeriodicidad.Cron)) {
 				// Nos aseguramos de que la fecha esté en UTC...
 				DateTime vencimientoActual = DateTime.SpecifyKind(historialNormaSuscrita.FechaVencimiento, DateTimeKind.Utc);
 
 				// Se transforma la fecha de vencimiento actual a zona horaria de Chile...
-				string timezone = "America/Santiago";
-				if (OperatingSystem.IsWindows()) {
-					timezone = TZConvert.IanaToWindows(timezone);
-				}
-				TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+				TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
 				DateTime proximoVencimiento = TimeZoneInfo.ConvertTimeFromUtc(vencimientoActual, timeZoneInfo);
 
 				// Se añaden los deltas de la periodicidad...

@@ -48,14 +48,14 @@ namespace TanatosAPI.Repositories {
 						Id = reader.GetInt64(0),
 						Sub = reader.GetString(1),
 						IdPlan = reader.GetInt64(2),
-						FechaInicio = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
-						FechaExpiracion = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
-						FechaCancelacion = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+						FechaInicio = await reader.IsDBNullAsync(3) ? null : reader.GetDateTime(3),
+						FechaExpiracion = await reader.IsDBNullAsync(4) ? null : reader.GetDateTime(4),
+						FechaCancelacion = await reader.IsDBNullAsync(5) ? null : reader.GetDateTime(5),
 						Estado = reader.GetInt16(6),
-						FlowCustomerId = reader.IsDBNull(7) ? null : reader.GetString(7),
-						FlowSubscriptionId = reader.IsDBNull(8) ? null : reader.GetString(8),
+						FlowCustomerId = await reader.IsDBNullAsync(7) ? null : reader.GetString(7),
+						FlowSubscriptionId = await reader.IsDBNullAsync(8) ? null : reader.GetString(8),
 						FechaCreacion = reader.GetDateTime(9),
-						FechaEliminacion = reader.IsDBNull(10) ? null : reader.GetDateTime(10),
+						FechaEliminacion = await reader.IsDBNullAsync(10) ? null : reader.GetDateTime(10),
 						Vigencia = reader.GetBoolean(11)
 					});
 				}

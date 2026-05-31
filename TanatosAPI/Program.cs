@@ -273,5 +273,5 @@ app.MapSuscripcionEndpoints();
 app.MapCargoEndpoints();
 app.MapEmpleadoEndpoints();
 
-app.Run();
+await app.RunAsync();
 

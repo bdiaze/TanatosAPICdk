@@ -19,7 +19,7 @@ namespace TanatosAPI.Repositories {
 			try {
 				await using NpgsqlCommand command = new(query, connection, transaction);
 				command.Parameters.AddWithValue("SUB", sub);
-				command.Parameters.AddWithValue("VIGENCIA", (object?)vigencia ?? DBNull.Value);
+				command.Parameters.AddWithValue("VIGENCIA", vigencia);
 
 				await using DbDataReader reader = await command.ExecuteReaderAsync();
 
@@ -30,10 +30,10 @@ namespace TanatosAPI.Repositories {
 						Id = reader.GetInt64(0),
 						Sub = reader.GetString(1),
 						Nombre = reader.GetString(2),
-						Direccion = reader.IsDBNull(3) ? null : reader.GetString(3),
-						IdTipoActividad = reader.IsDBNull(4) ? null : reader.GetInt64(4),
+						Direccion = await reader.IsDBNullAsync(3) ? null : reader.GetString(3),
+						IdTipoActividad = await reader.IsDBNullAsync(4) ? null : reader.GetInt64(4),
 						FechaCreacion = reader.GetDateTime(5),
-						FechaEliminacion = reader.IsDBNull(6) ? null : reader.GetDateTime(6),
+						FechaEliminacion = await reader.IsDBNullAsync(6) ? null : reader.GetDateTime(6),
 						Vigencia = reader.GetBoolean(7)
 					});
 				}

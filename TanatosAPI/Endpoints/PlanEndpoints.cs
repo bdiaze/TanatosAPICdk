@@ -152,7 +152,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					entrada.Nombre = entrada.Nombre;
+					entrada.Nombre = entrada.Nombre.Trim();
 
 					Plan? existente = (await planDao.ObtenerPorVigencia(null)).FirstOrDefault(p => p.Id == entrada.Id);
 

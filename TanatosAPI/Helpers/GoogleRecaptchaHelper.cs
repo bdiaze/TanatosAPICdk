@@ -12,9 +12,9 @@ namespace TanatosAPI.Helpers {
 			)!;
 
 			GoogleCredential credential = CredentialFactory.FromJson<ServiceAccountCredential>(secretApp["GoogleRecaptchaCredential"]).ToGoogleCredential();
-			RecaptchaEnterpriseServiceClient client = new RecaptchaEnterpriseServiceClientBuilder {
+			RecaptchaEnterpriseServiceClient client = await new RecaptchaEnterpriseServiceClientBuilder {
 				Credential = credential
-			}.Build();
+			}.BuildAsync();
 			ProjectName projectName = new(variableEntorno.Obtener("GOOGLE_RECAPTCHA_PROJECT_ID"));
 			CreateAssessmentRequest request = new() {
 				ParentAsProjectName = projectName,

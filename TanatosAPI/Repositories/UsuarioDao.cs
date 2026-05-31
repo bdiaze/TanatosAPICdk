@@ -24,10 +24,10 @@ namespace TanatosAPI.Repositories {
 				if (await reader.ReadAsync()) {
 					retorno = new Usuario {
 						Sub = reader.GetString(0),
-						FlowCustomerId = reader.IsDBNull(1) ? null : reader.GetString(1),
-						Nombre = reader.IsDBNull(2) ? null : reader.GetString(2),
-						Apellido = reader.IsDBNull(3) ? null : reader.GetString(3),
-						CorreoElectronico = reader.IsDBNull(4) ? null : reader.GetString(4)
+						FlowCustomerId = await reader.IsDBNullAsync(1) ? null : reader.GetString(1),
+						Nombre = await reader.IsDBNullAsync(2) ? null : reader.GetString(2),
+						Apellido = await reader.IsDBNullAsync(3) ? null : reader.GetString(3),
+						CorreoElectronico = await reader.IsDBNullAsync(4) ? null : reader.GetString(4)
 					};
 				}
 

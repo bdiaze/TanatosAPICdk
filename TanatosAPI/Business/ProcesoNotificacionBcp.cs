@@ -58,7 +58,8 @@ namespace TanatosAPI.Business {
 
 					// Si la norma suscrita está activada, se programan las notificaciones que no están programadas, y desprograman las que no son necesarias...
 				} else if ((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) != null) {
-					TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad!).Value, transaction) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
+					long idTipoPeriodicidad = (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
+					TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId(idTipoPeriodicidad, transaction) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
 
 					if (!string.IsNullOrWhiteSpace(tipoPeriodicidad.Cron)) {
 						// Se arma listado de las configuraciones de notificaciones previas...
@@ -264,12 +265,8 @@ namespace TanatosAPI.Business {
 			// Se obtienen los tipos de unidades de tiempo...
 			List<TipoUnidadTiempo> tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true, transaction);
             TipoUnidadTiempo? unidadTiempo = tiposUnidadesTiempo.FirstOrDefault(ut => ut.Id == idTipoUnidadTiempoAntelacion);
-						
-			string timezone = "America/Santiago";
-			if (OperatingSystem.IsWindows()) {
-				timezone = TZConvert.IanaToWindows(timezone);
-			}
-			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+			
+			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
 
 			// Se calcula la fecha a la que corresponde la ejecución actual, según la ocurrencia del cron más cercana...
 			CronExpression cronExpression = CronExpression.Parse(CronHelper.TransformarCronAWSAStandard(cron));

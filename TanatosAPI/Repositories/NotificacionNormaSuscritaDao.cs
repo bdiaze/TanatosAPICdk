@@ -33,8 +33,8 @@ namespace TanatosAPI.Repositories {
 						IdNormaSuscrita = reader.GetInt64(1),
 						IdTipoUnidadTiempoAntelacion = reader.GetInt64(2),
 						CantAntelacion = reader.GetInt32(3),
-						FechaCreacion = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
-						FechaEliminacion = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+						FechaCreacion = await reader.IsDBNullAsync(4) ? null : reader.GetDateTime(4),
+						FechaEliminacion = await reader.IsDBNullAsync(5) ? null : reader.GetDateTime(5),
 						Vigencia = reader.GetBoolean(6)
 					});
 				}

@@ -241,27 +241,29 @@ namespace TanatosAPI.Endpoints {
 								};
 							}).Where(nns => nns != null).Select(nns => nns!)],
 						},
-						Fiscalizadores = [.. fiscalizadoresNormaSuscrita.Select(fns => {
-                            TipoFiscalizador? fiscalizador = fiscalizadores.TryGetValue(fns.IdTipoFiscalizador, out TipoFiscalizador? ftn) ? ftn : null;
-							if (fiscalizador == null) return null;
-
-                            return new SalFiscalizadorNormaSuscrita() {
-								Id = fns.Id,
-								IdTipoFiscalizador = fiscalizador.Id,
-								NombreTipoFiscalizador = fiscalizador.Nombre
-							};
-						}).Where(fns => fns != null).Select(fns => fns!)],
-						Notificaciones = [.. notificacionesNormaSuscrita.Select(nns => {
-                            TipoUnidadTiempo? unidadTiempo = unidadesTiempo.TryGetValue(nns.IdTipoUnidadTiempoAntelacion, out TipoUnidadTiempo? tut) ? tut : null;
-							if (unidadTiempo == null) return null;
-
-                            return new SalNotificacionNormaSuscrita() {
-								Id = nns.Id,
-								IdTipoUnidadTiempoAntelacion = unidadTiempo.Id,
-								NombreTipoUnidadTiempoAntelacion = unidadTiempo.Nombre,
-								CantAntelacion = nns.CantAntelacion
-							};
-						}).Where(nns => nns != null).Select(nns => nns!)],
+						Fiscalizadores = [.. fiscalizadoresNormaSuscrita
+							.Where(fns => fiscalizadores.ContainsKey(fns.IdTipoFiscalizador))
+							.Select(fns => {
+								TipoFiscalizador fiscalizador = fiscalizadores[fns.IdTipoFiscalizador];
+								return new SalFiscalizadorNormaSuscrita() {
+									Id = fns.Id,
+									IdTipoFiscalizador = fiscalizador.Id,
+									NombreTipoFiscalizador = fiscalizador.Nombre
+								};
+							})
+						],
+						Notificaciones = [.. notificacionesNormaSuscrita
+							.Where(nns => unidadesTiempo.ContainsKey(nns.IdTipoUnidadTiempoAntelacion))
+							.Select(nns => {
+								TipoUnidadTiempo unidadTiempo = unidadesTiempo[nns.IdTipoUnidadTiempoAntelacion];
+								return new SalNotificacionNormaSuscrita() {
+									Id = nns.Id,
+									IdTipoUnidadTiempoAntelacion = unidadTiempo.Id,
+									NombreTipoUnidadTiempoAntelacion = unidadTiempo.Nombre,
+									CantAntelacion = nns.CantAntelacion
+								};
+							})
+						],
 						ProximoVencimiento = historialNormaSuscrita?.FechaVencimiento,
 					};
 
@@ -321,14 +323,15 @@ namespace TanatosAPI.Endpoints {
 					List<SalNormaSuscritaObtenerConVencimiento> retorno = [];
 					foreach (NormaSuscrita normaSuscrita in normas) {
 						TemplateNorma? templateNorma = null;
-						if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
-							if (templateNormas.TryGetValue((normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma.Value), out TemplateNorma? templateNormaAux)) {
-								templateNorma = templateNormaAux;
-							}
+						if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null && templateNormas.TryGetValue((normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma.Value), out TemplateNorma? templateNormaAux)) {
+							templateNorma = templateNormaAux;
 						}
 
-						CategoriaNorma? categoriaNorma = (normaSuscrita.IdCategoriaNorma ?? templateNorma?.IdCategoriaNorma) != null && categorias.TryGetValue((normaSuscrita.IdCategoriaNorma ?? templateNorma?.IdCategoriaNorma)!.Value, out CategoriaNorma? c) ? c : null;
-						TipoPeriodicidad? tipoPeriodicidad = (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) != null && periodicidades.TryGetValue((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad)!.Value, out TipoPeriodicidad? p) ? p : null;
+						long? idCategoriaNorma = (normaSuscrita.IdCategoriaNorma ?? templateNorma?.IdCategoriaNorma);
+						long? idTipoPeriodicidad = (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad);
+
+						CategoriaNorma? categoriaNorma = idCategoriaNorma != null && categorias.TryGetValue(idCategoriaNorma!.Value, out CategoriaNorma? c) ? c : null;
+						TipoPeriodicidad? tipoPeriodicidad = idTipoPeriodicidad != null && periodicidades.TryGetValue(idTipoPeriodicidad!.Value, out TipoPeriodicidad? p) ? p : null;
 						Cargo? cargo = (normaSuscrita.IdCargo != null && cargos.TryGetValue(normaSuscrita.IdCargo.Value, out Cargo? car)) ? car : null;
 
 						List<HistorialNormaSuscrita> historialesNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true);
@@ -476,16 +479,17 @@ namespace TanatosAPI.Endpoints {
 						NombreCategoriaNorma = categoria?.Nombre,
 						IdCargo = cargo?.Id,
 						NombreCargo = cargo?.Nombre,
-						Fiscalizadores = [.. fiscalizadoresNormaSuscrita.Select(fns => {
-							TipoFiscalizador? fiscalizador = fiscalizadores.TryGetValue(fns.IdTipoFiscalizador, out TipoFiscalizador? f) ? f : null;
-							if (fiscalizador == null) return null;
-
-							return new SalFiscalizadorNormaSuscrita() {
-								Id = fns.Id,
-								IdTipoFiscalizador = fiscalizador.Id,
-								NombreTipoFiscalizador = fiscalizador.Nombre
-							};
-						}).Where(fns => fns != null).Select(fns => fns!)],
+						Fiscalizadores = [.. fiscalizadoresNormaSuscrita
+							.Where(fns => fiscalizadores.ContainsKey(fns.IdTipoFiscalizador))
+							.Select(fns => {
+								TipoFiscalizador fiscalizador = fiscalizadores[fns.IdTipoFiscalizador];
+								return new SalFiscalizadorNormaSuscrita() {
+									Id = fns.Id,
+									IdTipoFiscalizador = fiscalizador.Id,
+									NombreTipoFiscalizador = fiscalizador.Nombre
+								};
+							})
+						],
 						TemplateNorma = (template == null || templateNorma == null) ? null : new SalTemplateNormaObtenerPorIdConVencimiento() {
 							IdTemplate = template.Id,
 							NombreTemplate = template.Nombre,

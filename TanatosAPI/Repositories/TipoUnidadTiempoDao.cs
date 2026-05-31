@@ -30,11 +30,11 @@ namespace TanatosAPI.Repositories {
 					retorno = new TipoUnidadTiempo {
 						Id = reader.GetInt64(0),
 						Nombre = reader.GetString(1),
-						NombrePlural = reader.IsDBNull(2) ? null : reader.GetString(2),
+						NombrePlural = await reader.IsDBNullAsync(2) ? null : reader.GetString(2),
 						CantSegundos = reader.GetInt64(3),
-						CantMinutos = reader.IsDBNull(4) ? null : reader.GetInt64(4),
-						CantHoras = reader.IsDBNull(5) ? null : reader.GetInt64(5),
-						CantDias = reader.IsDBNull(6) ? null : reader.GetInt64(6),
+						CantMinutos = await reader.IsDBNullAsync(4) ? null : reader.GetInt64(4),
+						CantHoras = await reader.IsDBNullAsync(5) ? null : reader.GetInt64(5),
+						CantDias = await reader.IsDBNullAsync(6) ? null : reader.GetInt64(6),
 						Vigencia = reader.GetBoolean(7)
 					};
 				}
@@ -68,11 +68,11 @@ namespace TanatosAPI.Repositories {
 					retorno.Add(new TipoUnidadTiempo {
 						Id = reader.GetInt64(0),
 						Nombre = reader.GetString(1),
-                        NombrePlural = reader.IsDBNull(2) ? null : reader.GetString(2),
+                        NombrePlural = await reader.IsDBNullAsync(2) ? null : reader.GetString(2),
                         CantSegundos = reader.GetInt64(3),
-						CantMinutos = reader.IsDBNull(4) ? null : reader.GetInt64(4),
-						CantHoras = reader.IsDBNull(5) ? null : reader.GetInt64(5),
-						CantDias = reader.IsDBNull(6) ? null : reader.GetInt64(6),
+						CantMinutos = await reader.IsDBNullAsync(4) ? null : reader.GetInt64(4),
+						CantHoras = await reader.IsDBNullAsync(5) ? null : reader.GetInt64(5),
+						CantDias = await reader.IsDBNullAsync(6) ? null : reader.GetInt64(6),
 						Vigencia = reader.GetBoolean(7)
 					});
 				}

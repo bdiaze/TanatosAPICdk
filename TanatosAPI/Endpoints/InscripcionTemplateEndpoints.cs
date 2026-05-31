@@ -36,8 +36,7 @@ namespace TanatosAPI.Endpoints {
 						templates = await templateDao.ObtenerPorVigencia(null);
 					}
 
-					List<SalInscripcionTemplate> retorno = [];
-					retorno = [.. inscripciones.Select(i => new SalInscripcionTemplate { 
+					List<SalInscripcionTemplate> retorno = [.. inscripciones.Select(i => new SalInscripcionTemplate { 
 						IdTemplate = i.IdTemplate,
 						NombreTemplate = templates.FirstOrDefault(t => t.Id == i.IdTemplate)?.Nombre
 					})];
@@ -104,14 +103,13 @@ namespace TanatosAPI.Endpoints {
 
 
 					List<InscripcionTemplate> inscripcionesExistentes = await inscripcionTemplateDao.ObtenerPorSub(sub, entrada.IdNegocio, null);
-					InscripcionTemplate? inscripcionExistente = inscripcionesExistentes.FirstOrDefault(it => it.IdTemplate == entrada.IdTemplate);
 
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
 					try {
 						foreach(Template templateAInscribir in templatesAInscribir) {
-							inscripcionExistente = inscripcionesExistentes.FirstOrDefault(it => it.IdTemplate == templateAInscribir.Id);
+							InscripcionTemplate? inscripcionExistente = inscripcionesExistentes.FirstOrDefault(it => it.IdTemplate == templateAInscribir.Id);
 							// Si la inscripción ya está vigente, se omite...
 							if (inscripcionExistente != null && inscripcionExistente.Vigencia) {
 								continue;
@@ -154,11 +152,7 @@ namespace TanatosAPI.Endpoints {
 								if (!string.IsNullOrWhiteSpace(templateNorma.CronActivacionAutomatica)) {
 									CronExpression cron = CronExpression.Parse(templateNorma.CronActivacionAutomatica);
 
-									string timezone = "America/Santiago";
-									if (OperatingSystem.IsWindows()) {
-										timezone = TZConvert.IanaToWindows(timezone);
-									}
-									TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+									TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
 
 									DateTime proximoVencimiento = cron.GetNextOccurrence(DateTime.UtcNow, timeZoneInfo) ?? throw new InvalidOperationException("No se pudo calcular el próximo vencimiento para obligación con activación automática");
 									HistorialNormaSuscrita historialNormaSuscrita = new() {
