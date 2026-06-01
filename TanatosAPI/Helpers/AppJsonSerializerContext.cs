@@ -90,6 +90,7 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(EntSuscripcionCrear))]
 	[JsonSerializable(typeof(SalSuscripcionCrear))]
 	[JsonSerializable(typeof(EntSuscripcionWebhook))]
+	[JsonSerializable(typeof(EntSuscripcionActivarSuscripcionGratuita))]
 	[JsonSerializable(typeof(SalFlowUrlToken))]
 	[JsonSerializable(typeof(SalFlowPlanCreate))]
 	[JsonSerializable(typeof(SalFlowPlanEdit))]
