@@ -112,7 +112,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapRefreshAccessToken(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/RefreshAccessToken", async(HttpRequest httpRequest, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
+			routes.MapPost("/RefreshAccessToken", async(HttpContext httpContext, HttpRequest httpRequest, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -141,6 +141,26 @@ namespace TanatosAPI.Endpoints {
 					// Se obtienen los tokens...
 					HttpResponseMessage response = await client.SendAsync(request);
 					if (!response.IsSuccessStatusCode) {
+
+						// Si no se logra efectuar el refresh, se manda request con limpieza de cookies...
+						string apiMapping = $"/{variableEntorno.Obtener("API_GATEWAY_MAPPING_KEY")}";
+						if (environment.IsDevelopment()) {
+							apiMapping = "";
+						}
+
+						bool sameSiteStrict = true;
+						if (httpContext.Request.Headers.TryGetValue("Origin", out StringValues originHeader) && Uri.TryCreate(originHeader.ToString(), UriKind.Absolute, out Uri? uri) && uri.IsLoopback) {
+							sameSiteStrict = false;
+						}
+
+						httpResponse.Cookies.Delete(Constant.CONST_REFRESH_TOKEN, new CookieOptions {
+							Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
+							IsEssential = true,
+							HttpOnly = true,
+							Secure = true,
+							SameSite = sameSiteStrict ? SameSiteMode.Strict : SameSiteMode.None
+						});
+
 						throw new HttpRequestException(
 							$"Ocurrio un error al refrescar token. Status Code: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
 							inner: null,
@@ -165,6 +185,7 @@ namespace TanatosAPI.Endpoints {
 						$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrio un error al refrescar el access token. " +
 						$"{ex}");
+
 					return Results.Problem($"Ocurrio un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 
