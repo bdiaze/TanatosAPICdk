@@ -117,7 +117,7 @@ namespace TanatosAPI.Endpoints {
 
 				try {
 					// Se valida que venga el refresh token...
-					if (!httpRequest.Cookies.TryGetValue(Constant.CONST_REFRESH_TOKEN, out string? refreshToken)) {
+					if (!httpRequest.Cookies.TryGetValue(Constant.CONST_REFRESH_TOKEN, out string? refreshToken) || string.IsNullOrWhiteSpace(refreshToken)) {
 						LambdaLogger.Log(
 							$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"No se incluyo cookie {Constant.CONST_REFRESH_TOKEN}.");
