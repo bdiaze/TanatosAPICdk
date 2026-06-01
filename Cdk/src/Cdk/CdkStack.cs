@@ -71,6 +71,7 @@ namespace Cdk
 
 			// Para procesos de cognito...
 			string cognitoTriggerTokenValidityMinutes = System.Environment.GetEnvironmentVariable("COGNITO_TRIGGER_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno COGNITO_TRIGGER_TOKEN_VALIDITY_MINUTES");
+			string arnParameterCognitoTriggerLambdaArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_COGNITO_TRIGGER_LAMBDA_ARN") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_PARAMETER_COGNITO_TRIGGER_LAMBDA_ARN");
 
 			// Para procesos de notificación...
 			string notificacionesTokenValidityMinutes = System.Environment.GetEnvironmentVariable("NOTIFICACIONES_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno NOTIFICACIONES_TOKEN_VALIDITY_MINUTES");
@@ -126,6 +127,10 @@ namespace Cdk
 			// Se busca certificado de cognito creado anteriormente...
 			ICertificate certificate = Certificate.FromCertificateArn(this, $"{appName}CognitoCertificate", arnCognitoCertificate);
 
+			// Se busca Lambda Function para procesar PostConfirmation...
+			IStringParameter cognitoTriggerLambdaArnStringParameter =  StringParameter.FromStringParameterArn(this, $"{appName}CognitoTriggerLambdaArnStringParameter", arnParameterCognitoTriggerLambdaArn);
+			IFunction postConfirmationFunction = Function.FromFunctionArn(this, $"{appName}CognitoTriggerLambda", cognitoTriggerLambdaArnStringParameter.StringValue);
+
 			#region Cognito
 			UserPool userPool = new(this, $"{appName}UserPool", new UserPoolProps {
 				UserPoolName = $"{appName}UserPool",
@@ -173,6 +178,9 @@ namespace Cdk
 					RequireSymbols = false,
 				},
 				DeletionProtection = true,
+				LambdaTriggers = new UserPoolTriggers {
+					PostConfirmation = postConfirmationFunction,
+				}
 			});
 
 			_ = new UserPoolGroup(this, $"{appName}AdminUserGroup", new UserPoolGroupProps {
