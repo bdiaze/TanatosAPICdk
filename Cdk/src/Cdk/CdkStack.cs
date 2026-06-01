@@ -186,7 +186,7 @@ namespace Cdk
 			_ = new CfnPermission(this, $"{appName}PostConfirmationFunctionInvokePermission", new CfnPermissionProps {
 				FunctionName = postConfirmationFunction.FunctionArn,
 				Action = "lambda:InvokeFunction",
-				Principal = new ServicePrincipal("cognito-idp.amazonaws.com"),
+				Principal = "cognito-idp.amazonaws.com",
 				SourceArn = userPool.UserPoolArn
 			});
 
