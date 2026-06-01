@@ -238,7 +238,9 @@ builder.Services.AddAuthorizationBuilder()
 	.AddPolicy("Templates.Read.All", policy => policy.RequireClaim("scope", "api/templates.read.all"))
 	.AddPolicy("Templates.Write.All", policy => policy.RequireClaim("scope", "api/templates.write.all"))
 	.AddPolicy("Sistema.Read.All", policy => policy.RequireClaim("scope", "api/sistema.read.all"))
-	.AddPolicy("Sistema.Write.All", policy => policy.RequireClaim("scope", "api/sistema.write.all"));
+	.AddPolicy("Sistema.Write.All", policy => policy.RequireClaim("scope", "api/sistema.write.all"))
+	.AddPolicy("Suscripciones.Read.All", policy => policy.RequireClaim("scope", "api/suscripciones.read.all"))
+	.AddPolicy("Suscripciones.Write.All", policy => policy.RequireClaim("scope", "api/suscripciones.write.all"));
 
 
 

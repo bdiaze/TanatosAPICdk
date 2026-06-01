@@ -69,7 +69,10 @@ namespace Cdk
 			string idTokenValidityMinutes = System.Environment.GetEnvironmentVariable("ID_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ID_TOKEN_VALIDITY_MINUTES");
 			string refreshTokenValidityMinutes = System.Environment.GetEnvironmentVariable("REFRESH_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno REFRESH_TOKEN_VALIDITY_MINUTES");
 
-			// Para proceso de notificación...
+			// Para procesos de cognito...
+			string cognitoTriggerTokenValidityMinutes = System.Environment.GetEnvironmentVariable("COGNITO_TRIGGER_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno COGNITO_TRIGGER_TOKEN_VALIDITY_MINUTES");
+
+			// Para procesos de notificación...
 			string notificacionesTokenValidityMinutes = System.Environment.GetEnvironmentVariable("NOTIFICACIONES_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno NOTIFICACIONES_TOKEN_VALIDITY_MINUTES");
 
 			// Para infraestructura...
@@ -394,6 +397,31 @@ namespace Cdk
 				AccessTokenValidity = Duration.Minutes(double.Parse(notificacionesTokenValidityMinutes))
 			});
 
+			// Se crea userpoolclient a ser usado por aplicación de cognito...
+			UserPoolClient cognitoTriggerUserPoolClient = new(this, $"{appName}CognitoTriggerUserPoolClient", new UserPoolClientProps {
+				UserPoolClientName = $"{appName}CognitoTriggerUserPoolClient",
+				UserPool = userPool,
+				GenerateSecret = true,
+				AuthFlows = new AuthFlow {
+					AdminUserPassword = false,
+					UserPassword = false,
+					UserSrp = false,
+				},
+				SupportedIdentityProviders = [
+					UserPoolClientIdentityProvider.COGNITO
+				],
+				OAuth = new OAuthSettings {
+					Flows = new OAuthFlows { ClientCredentials = true },
+					Scopes = [
+						OAuthScope.ResourceServer(resourceServer, scopeSuscripcionesReadAll),
+						OAuthScope.ResourceServer(resourceServer, scopeSuscripcionesWriteAll),
+						OAuthScope.ResourceServer(resourceServer, scopeSistemaReadPublic),
+
+					]
+				},
+				AccessTokenValidity = Duration.Minutes(double.Parse(cognitoTriggerTokenValidityMinutes))
+			});
+
 			string base64Favicon = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, CONST_DIR_RECURSOS, "FAVICON.ico")));
 			string base64PageHeaderLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, CONST_DIR_RECURSOS, "PAGE_HEADER_LOGO.svg")));
 			string base64PageFooterLogo = Convert.ToBase64String(File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, CONST_DIR_RECURSOS, "PAGE_FOOTER_LOGO.svg")));
@@ -601,6 +629,8 @@ namespace Cdk
                     { "CognitoBaseUrl", SecretValue.UnsafePlainText(domain.BaseUrl()) },
                     { "NotificacionesUserPoolClientId", SecretValue.UnsafePlainText(notificacionesUserPoolClient.UserPoolClientId) },
                     { "NotificacionesUserPoolClientSecret", notificacionesUserPoolClient.UserPoolClientSecret },
+					{ "CognitoTriggerUserPoolClientId", SecretValue.UnsafePlainText(cognitoTriggerUserPoolClient.UserPoolClientId) },
+					{ "CognitoTriggerUserPoolClientSecret", cognitoTriggerUserPoolClient.UserPoolClientSecret },
 					{ "GoogleRecaptchaCredential", SecretValue.UnsafePlainText(googleRecaptchaCredential) },
 					{ "FlowApiKey", SecretValue.UnsafePlainText(flowApiKey) },
 					{ "FlowSecretKey", SecretValue.UnsafePlainText(flowSecretKey) },
@@ -752,7 +782,6 @@ namespace Cdk
 					{ "COGNITO_BASE_URL", domain.BaseUrl() },
 					{ "COGNITO_USER_POOL_ID", userPool.UserPoolId },
 					{ "COGNITO_USER_POOL_CLIENT_ID", userPoolClient.UserPoolClientId },
-					{ "COGNITO_NOTIFICACIONES_USER_POOL_CLIENT_ID", notificacionesUserPoolClient.UserPoolClientId },
 					{ "COGNITO_CALLBACK_URLS", string.Join(',', callbackUrls) },
 					{ "COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES", refreshTokenValidityMinutes },
 					{ "API_GATEWAY_MAPPING_KEY", apiMappingKey },
@@ -836,7 +865,8 @@ namespace Cdk
 					new HttpJwtAuthorizerProps {
 						JwtAudience = [
 							userPoolClient.UserPoolClientId,
-							notificacionesUserPoolClient.UserPoolClientId
+							notificacionesUserPoolClient.UserPoolClientId,
+							cognitoTriggerUserPoolClient.UserPoolClientId,
 						]
 					}
 				),
