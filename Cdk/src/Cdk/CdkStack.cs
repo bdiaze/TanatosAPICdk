@@ -183,9 +183,10 @@ namespace Cdk
 				}
 			});
 
-			postConfirmationFunction.AddPermission($"{appName}PostConfirmationFunctionInvokePermission", new Permission {
-				Principal = new ServicePrincipal("cognito-idp.amazonaws.com"),
+			_ = new CfnPermission(this, $"{appName}PostConfirmationFunctionInvokePermission", new CfnPermissionProps {
+				FunctionName = postConfirmationFunction.FunctionArn,
 				Action = "lambda:InvokeFunction",
+				Principal = new ServicePrincipal("cognito-idp.amazonaws.com"),
 				SourceArn = userPool.UserPoolArn
 			});
 
