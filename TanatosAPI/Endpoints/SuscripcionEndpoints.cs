@@ -26,6 +26,7 @@ namespace TanatosAPI.Endpoints {
 			group.MapObtenerVigentesEndpoint();
 			group.MapCrearEndpoint();
 			group.MapCancelarEndpoint();
+			group.MapActivarSuscripcionGratuitaEndpoint();
 
 			RouteGroupBuilder publicGroup = routes.MapGroup("/public/Suscripcion");
 			publicGroup.MapWebhookEndpoint();
@@ -215,6 +216,40 @@ namespace TanatosAPI.Endpoints {
 
 			return routes;
 		}
+
+		private static IEndpointRouteBuilder MapActivarSuscripcionGratuitaEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPost("/ActivarSuscripcionGratuita", async (EntSuscripcionActivarSuscripcionGratuita entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, PlanDao planDao, SuscripcionDao suscripcionDao) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+
+					try {
+
+						await transaction.CommitAsync();
+					} catch {
+						await transaction.RollbackAsync();
+						throw;
+					}
+
+					LambdaLogger.Log(
+						$"[POST] - [Suscripcion] - [ActivarSuscripcionGratuita] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Activación exitosa de la suscripción gratuita - Sub: {entrada.Sub}.");
+
+					return Results.Ok();
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[POST] - [Suscripcion] - [ActivarSuscripcionGratuita] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error en la activación de la suscripción gratuita - Sub: {entrada.Sub}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Suscripciones.Read.All", "Suscripciones.Write.All", "Sistema.Read.Public");
+
+			return routes;
+		}
+
 
 		private static IEndpointRouteBuilder MapCancelarEndpoint(this IEndpointRouteBuilder routes) {
 			routes.MapDelete("/{idSuscripcion}", async (long idSuscripcion, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, SuscripcionDao suscripcionDao, FlowHelper flowHelper) => {
