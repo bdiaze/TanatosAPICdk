@@ -130,7 +130,7 @@ namespace Cdk
 			// Se busca Lambda Function para procesar PostConfirmation...
 			IStringParameter cognitoTriggerLambdaArnStringParameter =  StringParameter.FromStringParameterArn(this, $"{appName}CognitoTriggerLambdaArnStringParameter", arnParameterCognitoTriggerLambdaArn);
 			IFunction postConfirmationFunction = Function.FromFunctionArn(this, $"{appName}CognitoTriggerLambda", cognitoTriggerLambdaArnStringParameter.StringValue);
-
+			
 			#region Cognito
 			UserPool userPool = new(this, $"{appName}UserPool", new UserPoolProps {
 				UserPoolName = $"{appName}UserPool",
@@ -181,6 +181,12 @@ namespace Cdk
 				LambdaTriggers = new UserPoolTriggers {
 					PostConfirmation = postConfirmationFunction,
 				}
+			});
+
+			postConfirmationFunction.AddPermission($"{appName}PostConfirmationFunctionInvokePermission", new Permission {
+				Principal = new ServicePrincipal("cognito-idp.amazonaws.com"),
+				Action = "lambda:InvokeFunction",
+				SourceArn = userPool.UserPoolArn
 			});
 
 			_ = new UserPoolGroup(this, $"{appName}AdminUserGroup", new UserPoolGroupProps {
