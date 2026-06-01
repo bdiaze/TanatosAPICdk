@@ -222,22 +222,81 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+					// Se valida que el usuario no tenga otra suscripción vigente...
+					List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(entrada.Sub, true);
+					if (suscripciones.Any(s => s.FechaExpiracion != null && s.FechaExpiracion > DateTime.UtcNow)) {
+						LambdaLogger.Log(
+							$"[POST] - [Suscripcion] - [ActivarSuscripcionGratuita] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+							$"El usuario ya cuenta con una suscripción activa - Sub: {entrada.Sub}.");
 
-					try {
-
-						await transaction.CommitAsync();
-					} catch {
-						await transaction.RollbackAsync();
-						throw;
+						return Results.Ok();
 					}
 
-					LambdaLogger.Log(
-						$"[POST] - [Suscripcion] - [ActivarSuscripcionGratuita] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Activación exitosa de la suscripción gratuita - Sub: {entrada.Sub}.");
+					Plan? planGratuito = (await planDao.ObtenerPorVigencia(true)).Where(p => p.Precio == 0).OrderByDescending(p => p.DuracionMeses).FirstOrDefault();
+					if (planGratuito != null) {
+						// Si es una suscripción única, se valida que no tenga otra suscripción anterior del mismo tipo...
+						if (planGratuito.SuscripcionUnica && suscripciones.Any(s => s.IdPlan == planGratuito.Id)) {
+							LambdaLogger.Log(
+								$"[POST] - [Suscripcion] - [ActivarSuscripcionGratuita] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+								$"El usuario ya se suscribió con anterioridad al plan - Sub: {entrada.Sub} - ID Plan: {planGratuito.Id}.");
 
-					return Results.Ok();
+							return Results.Ok();
+						}
+
+						await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
+						await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+
+						try {
+							DateTime fechaInicio = DateTime.UtcNow;
+
+							// Nos aseguramos de que la fecha esté en UTC...
+							DateTime fechaUTC = DateTime.SpecifyKind(fechaInicio, DateTimeKind.Utc);
+
+							// Se transforma la fecha a zona horaria de Chile...
+							TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
+							DateTime fechaTimezone = TimeZoneInfo.ConvertTimeFromUtc(fechaUTC, timeZoneInfo);
+
+							// Se añade la duración en meses del plan...
+							fechaTimezone = fechaTimezone.AddMonths(planGratuito.DuracionMeses);
+
+							// Se transforma de vuelta a UTC...
+							DateTime fechaExpiracion = TimeZoneInfo.ConvertTimeToUtc(fechaTimezone, timeZoneInfo);
+
+							// Se crea la suscripción en el sistema interno...
+							Suscripcion nuevo = new() {
+								Id = 0,
+								Sub = entrada.Sub,
+								IdPlan = planGratuito.Id,
+								FechaInicio = fechaInicio,
+								FechaExpiracion = fechaExpiracion,
+								FechaCancelacion = null,
+								Estado = 1, // Activa,
+								FlowCustomerId = null,
+								FlowSubscriptionId = null,
+								FechaCreacion = DateTime.UtcNow,
+								FechaEliminacion = null,
+								Vigencia = true
+							};
+							nuevo.Id = await suscripcionDao.Insertar(nuevo, transaction);
+
+							await transaction.CommitAsync();
+						} catch {
+							await transaction.RollbackAsync();
+							throw;
+						}
+
+						LambdaLogger.Log(
+							$"[POST] - [Suscripcion] - [ActivarSuscripcionGratuita] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+							$"Activación exitosa de la suscripción gratuita - Sub: {entrada.Sub} - ID Plan: {planGratuito.Id}.");
+
+						return Results.Ok();
+					} else {
+						LambdaLogger.Log(
+							$"[POST] - [Suscripcion] - [ActivarSuscripcionGratuita] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+							$"No se encontró un plan gratuito vigente para activar la suscripción gratuita - Sub: {entrada.Sub}.");
+
+						return Results.Ok();
+					}
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [Suscripcion] - [ActivarSuscripcionGratuita] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
