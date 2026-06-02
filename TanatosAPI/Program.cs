@@ -1,27 +1,19 @@
 using Amazon.APIGateway;
 using Amazon.CognitoIdentityProvider;
-using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.S3;
 using Amazon.SecretsManager;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Routing.Constraints;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Npgsql;
 using Scalar.AspNetCore;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text.Json;
 using TanatosAPI.Business;
 using TanatosAPI.Endpoints;
-using TanatosAPI.Entities.Contexts;
 using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using TanatosAPI.UseCases;
 
 WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
 
@@ -161,6 +153,10 @@ builder.Services.AddSingleton<SuscripcionBcp>();
 builder.Services.AddSingleton<TemplateNormaBcp>();
 builder.Services.AddSingleton<NegocioBcp>();
 builder.Services.AddSingleton<UsuarioBcp>();
+#endregion
+
+#region Singleton UseCases
+builder.Services.AddSingleton<DocumentoAdjuntoUseCase>();
 #endregion
 
 string cognitoRegion;

@@ -8,6 +8,18 @@ using TimeZoneConverter;
 
 namespace TanatosAPI.Business {
 	public class HistorialNormaSuscritaBcp(DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateNormaDao templateNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao) {
+		public bool EstaVigente(HistorialNormaSuscrita? historialNormaSuscrita) {
+			return historialNormaSuscrita != null && historialNormaSuscrita.Vigencia;
+		}
+
+		public bool EstaCompletada(HistorialNormaSuscrita historialNormaSuscrita) {
+			return historialNormaSuscrita.FechaCompletitud != null;
+        }
+
+		public async Task<HistorialNormaSuscrita?> ObtenerPorId(long idHistorialNormaSuscrita) {
+			return await historialNormaSuscritaDao.ObtenerPorId(idHistorialNormaSuscrita);
+		}
+		
 		public async Task Crear(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			historialNormaSuscrita.Id = await historialNormaSuscritaDao.Insertar(historialNormaSuscrita, transaction);
 		}

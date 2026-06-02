@@ -3,8 +3,20 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class NormaSuscritaBcp(NormaSuscritaDao normaSuscritaDao, ProcesoNotificacionBcp procesoNotificacionBcp, FiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, NotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp) {		
-		public async Task EliminarNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+	public class NormaSuscritaBcp(NormaSuscritaDao normaSuscritaDao, ProcesoNotificacionBcp procesoNotificacionBcp, FiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, NotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp) {
+        public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita) {
+            return await normaSuscritaDao.ObtenerPorId(idNormaSuscrita);
+        }
+
+        public bool EstaVigente(NormaSuscrita? normaSuscrita) {
+            return normaSuscrita != null && normaSuscrita.Vigencia;
+        }
+
+        public bool Pertenece(NormaSuscrita normaSuscrita, string sub) {
+            return normaSuscrita.Sub == sub;
+        }
+
+        public async Task EliminarNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
 			if (normaSuscrita.Vigencia) {
 				DateTime utcNow = DateTime.UtcNow;
 				if (normaSuscrita.Activado) {

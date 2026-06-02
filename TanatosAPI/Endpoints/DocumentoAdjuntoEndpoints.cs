@@ -1,14 +1,15 @@
 ﻿using Amazon.Lambda.Core;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Npgsql;
 using System.Diagnostics;
 using System.Security.Claims;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
+using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
 	public static class DocumentoAdjuntoEndpoints {
@@ -79,8 +80,8 @@ namespace TanatosAPI.Endpoints {
 			return routes;
 		}
 
-		private static IEndpointRouteBuilder MapGenerarUrlSubidaEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/GenerarUrlSubida", async (EntDocumentoAdjuntoGenerarUrlSubida entrada, IHostEnvironment environment, ClaimsPrincipal user, DocumentoAdjuntoHelper documentoAdjuntoHelper, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, DocumentoAdjuntoDao documentoAdjuntoDao) => {
+		private static void MapGenerarUrlSubidaEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPost("/GenerarUrlSubida", async (EntDocumentoAdjuntoGenerarUrlSubida entrada, IHostEnvironment environment, ClaimsPrincipal user, DocumentoAdjuntoUseCase documentoAdjuntoUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -89,96 +90,30 @@ namespace TanatosAPI.Endpoints {
 
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-					// Se valida que el usuario tenga plan Empresa...
-					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
-					if (!tienePlanEmpresa) {
-						LambdaLogger.Log(
-							$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"Tu plan no permite adjuntar documentos.");
-
-						return Results.BadRequest($"Tu plan no permite adjuntar documentos.");
-					}
-
-
-					// Se valida el tamaño del archivo...
-					const long MAX_FILE_SIZE = 10 * 1024 * 1024;
-					if (entrada.Tamanno > MAX_FILE_SIZE) {
-						LambdaLogger.Log(
-							$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El tamaño del archivo es inválido.");
-
-						return Results.BadRequest($"El tamaño del archivo es inválido.");
-					}
-
-					// Se valida que el tipo de archivo sea permitido...
-					string[] ALLOWED_FILES_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
-					if (!ALLOWED_FILES_TYPES.Contains(entrada.Mime, StringComparer.OrdinalIgnoreCase)) {
-						LambdaLogger.Log(
-							$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El MIME del archivo es inválido.");
-
-						return Results.BadRequest($"El MIME del archivo es inválido.");
-					}
-
-					HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorId(entrada.IdHistorialNormaSuscrita);
-					if (historialNormaSuscrita == null || !historialNormaSuscrita.Vigencia || historialNormaSuscrita.FechaCompletitud != null) {
-						LambdaLogger.Log(
-							$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El ID de historial norma suscrita es inválido.");
-
-						return Results.BadRequest($"El ID de historial norma suscrita es inválido.");
-					}
-
-					NormaSuscrita? normaSuscrita = await normaSuscritaDao.ObtenerPorId(historialNormaSuscrita.IdNormaSuscrita);
-					if (normaSuscrita == null || !normaSuscrita.Vigencia || normaSuscrita.Sub != sub) {
-						LambdaLogger.Log(
-							$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El ID de historial norma suscrita es inválido.");
-
-						return Results.BadRequest($"El ID de historial norma suscrita es inválido.");
-					}
-					
-					(string bucketName, string bucketKey, string preSignedUrl, Dictionary<string, string> fields) presignedPost = await documentoAdjuntoHelper.ObtenerPostPreSignedUrl(
+					(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto) = await documentoAdjuntoUseCase.GenerarUrlSubida(
 						sub,
-						normaSuscrita.IdNegocio,
-						normaSuscrita.Id,
-						historialNormaSuscrita.Id,
+						entrada.IdHistorialNormaSuscrita,
+						entrada.NombreArchivo,
 						entrada.Mime,
-						MAX_FILE_SIZE
+						entrada.Tamanno
 					);
-
-					DateTime utcNow = DateTime.UtcNow;
-
-					DocumentoAdjunto nuevo = new() {
-						Id = 0,
-						IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
-						BucketName = presignedPost.bucketName,
-						BucketKey = presignedPost.bucketKey,
-						NombreArchivo = entrada.NombreArchivo,
-						MimeEsperado = entrada.Mime,
-						TamannoEsperado = entrada.Tamanno,
-						MimeReal = null,
-						TamannoReal = null,
-						EstadoSubida = 0 /* Generada URL prefirmada para PUT */,
-						FechaEmisionUrlPrefirmadaPut = utcNow,
-						FechaConfirmacionSubida = null,
-						FechaCreacion = utcNow,
-						FechaEliminacion = null,
-						Vigencia = true
-					};
-
-					nuevo.Id = await documentoAdjuntoDao.Insertar(nuevo);
 
 					LambdaLogger.Log(
 						$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Creación exitosa de URL prefirmada para subida de documento - ID: {nuevo.Id}.");
+						$"Creación exitosa de URL prefirmada para subida de documento - ID: {documentoAdjunto.Id}.");
 
 					return Results.Ok(new SalDocumentoAdjuntoGenerarUrlSubida {
-						IdDocumentoAdjunto = nuevo.Id,
-						PreSignedUrl = presignedPost.preSignedUrl,
-						PreSignedFields = presignedPost.fields
+						IdDocumentoAdjunto = documentoAdjunto.Id,
+						PreSignedUrl = preSignedUrl,
+						PreSignedFields = fields
 					});
-				} catch (Exception ex) {
+				} catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+						$"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error en la creación de URL prefirmada para subida de documento. " +
@@ -186,8 +121,6 @@ namespace TanatosAPI.Endpoints {
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 			}).RequireAuthorization("Vencimientos.Write.Self");
-
-			return routes;
 		}
 
 		private static IEndpointRouteBuilder MapConfirmarSubidaEndpoint(this IEndpointRouteBuilder routes) {
