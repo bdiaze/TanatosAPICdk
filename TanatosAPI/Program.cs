@@ -153,6 +153,7 @@ builder.Services.AddSingleton<SuscripcionBcp>();
 builder.Services.AddSingleton<TemplateNormaBcp>();
 builder.Services.AddSingleton<NegocioBcp>();
 builder.Services.AddSingleton<UsuarioBcp>();
+builder.Services.AddSingleton<HistorialNotificacionBcp>();
 #endregion
 
 #region Singleton UseCases

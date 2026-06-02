@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using Microsoft.AspNetCore.SignalR;
+using Npgsql;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
@@ -6,12 +7,8 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-    public class DocumentoAdjuntoUseCase(DatabaseConnectionHelper connectionHelper, SuscripcionBcp suscripcionBcp, DocumentoAdjuntoBcp documentoAdjuntoBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, NormaSuscritaBcp normaSuscritaBcp) {
-        public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string sub, long idHistorialNormaSuscrita, string nombreArchivo, string mime, long tamanno) {
-            if (!await suscripcionBcp.TienePlanEmpresa(sub)) {
-                throw new ErrorValidacion($"Tu plan no permite adjuntar documentos.");
-            }
-
+    public class DocumentoAdjuntoUseCase(DatabaseConnectionHelper connectionHelper, SuscripcionBcp suscripcionBcp, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaBcp normaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, HistorialNotificacionBcp historialNotificacionBcp) {
+        public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string? sub, long idHistorialNormaSuscrita, string nombreArchivo, string mime, long tamanno) {
             if (!documentoAdjuntoBcp.TamannoValido(tamanno)) {
                 throw new ErrorValidacion($"El tamaño del archivo es inválido.");
             }
@@ -34,12 +31,17 @@ namespace TanatosAPI.UseCases {
                 throw new ErrorValidacion("La obligación no existe o no está vigente", "El vencimiento es inválido.");
             }
 
-            if (!normaSuscritaBcp.Pertenece(normaSuscrita!, sub)) {
+            // Si no se especifica el sub, se omite validación de pertenencia...
+            if (sub != null && !normaSuscritaBcp.Pertenece(normaSuscrita!, sub)) {
                 throw new ErrorValidacion("La obligación no pertenece al usuario", "El vencimiento es inválido.");
             }
 
+            if (!await suscripcionBcp.TienePlanEmpresa(normaSuscrita!.Sub)) {
+                throw new ErrorValidacion($"Tu plan no permite adjuntar documentos.");
+            }
+
             return await documentoAdjuntoBcp.GenerarUrlSubida(
-                sub,
+                normaSuscrita!.Sub,
                 normaSuscrita!.IdNegocio,
                 normaSuscrita!.Id,
                 historialNormaSuscrita.Id,
@@ -47,6 +49,19 @@ namespace TanatosAPI.UseCases {
                 mime,
                 tamanno
             );
+        }
+
+        public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubidaPorCodigoAcceso(string codigoAcceso, string nombreArchivo, string mime, long tamanno) {
+            HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAcceso(codigoAcceso);
+            if (!historialNotificacionBcp.EstaVigente(historialNotificacion)) {
+                throw new ErrorValidacion("La notificación no está vigente", "El código de acceso es inválido.");
+            }
+
+            if (!historialNotificacionBcp.CodigoAccesoVigente(historialNotificacion!)) {
+                throw new ErrorValidacion("El código de acceso ha caducado", "El código de acceso es inválido.");
+            }
+
+            return await GenerarUrlSubida(null, historialNotificacion!.IdHistorialNormaSuscrita, nombreArchivo, mime, tamanno);
         }
     }
 }
