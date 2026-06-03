@@ -104,7 +104,7 @@ builder.Services.AddSingleton<DatabaseConnectionHelper>();
 builder.Services.AddSingleton<CryptoHelper>();
 builder.Services.AddSingleton<S3Helper>();
 builder.Services.AddSingleton<DocumentoAdjuntoHelper>();
-builder.Services.AddSingleton<GoogleRecaptchaHelper>();
+builder.Services.AddHttpClient<GoogleRecaptchaHelper>();
 builder.Services.AddHttpClient<FlowHelper>();
 #endregion
 

@@ -1,17 +1,11 @@
 ﻿using Cronos;
-using Microsoft.AspNetCore.SignalR;
 using Npgsql;
-using System;
-using System.Diagnostics;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
-using TimeZoneConverter;
-using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace TanatosAPI.Business {
 	public class ProcesoNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, CryptoHelper cryptoHelper, UsuarioBcp usuarioBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao, CargoDao cargoDao, EmpleadoDao empleadoDao) {

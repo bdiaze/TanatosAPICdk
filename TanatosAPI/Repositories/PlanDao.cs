@@ -2,7 +2,6 @@
 using Npgsql;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
-using static Google.Cloud.RecaptchaEnterprise.V1.TransactionData.Types;
 
 namespace TanatosAPI.Repositories {
 	[DapperAot]

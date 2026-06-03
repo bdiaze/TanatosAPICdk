@@ -1,6 +1,5 @@
 ﻿using Amazon.Lambda.Core;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Npgsql;
 using System.Diagnostics;
 using System.Security.Claims;
@@ -9,7 +8,6 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
-using static Google.Api.FieldInfo.Types;
 
 namespace TanatosAPI.Endpoints {
 	public static class NormaSuscritaEndpoints {

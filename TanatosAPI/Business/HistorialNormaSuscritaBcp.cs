@@ -1,10 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.Formatters;
-using Microsoft.AspNetCore.SignalR;
-using Npgsql;
-using System.Formats.Asn1;
+﻿using Npgsql;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Repositories;
-using TimeZoneConverter;
 
 namespace TanatosAPI.Business {
 	public class HistorialNormaSuscritaBcp(DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateNormaDao templateNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao) {

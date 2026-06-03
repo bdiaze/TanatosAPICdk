@@ -111,6 +111,10 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(List<SalEmpleado>))]
 	[JsonSerializable(typeof(EntEmpleadoCrear))]
 	[JsonSerializable(typeof(EntEmpleadoActualizar))]
-	internal partial class AppJsonSerializerContext : JsonSerializerContext {
+    [JsonSerializable(typeof(GoogleRecaptchaCredential))]
+    [JsonSerializable(typeof(GoogleAssessmentResponse))]
+    [JsonSerializable(typeof(GoogleAssessmentParams))]
+    [JsonSerializable(typeof(GoogleTokenResponse))]
+    internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }

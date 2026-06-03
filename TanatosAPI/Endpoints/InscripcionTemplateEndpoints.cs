@@ -9,7 +9,6 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
-using TimeZoneConverter;
 
 namespace TanatosAPI.Endpoints {
 	public static class InscripcionTemplateEndpoints {

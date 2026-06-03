@@ -1,12 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json.Linq;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using TanatosAPI.Entities.Others;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TanatosAPI.Helpers {
 	public class FlowHelper(VariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper, HttpClient httpClient) {

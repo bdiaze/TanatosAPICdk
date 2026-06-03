@@ -7,7 +7,6 @@ using Npgsql;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Globalization;
-using System.Numerics;
 using System.Security.Claims;
 using System.Text.Json;
 using TanatosAPI.Business;
@@ -15,9 +14,6 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
-using TimeZoneConverter;
-using static Google.Cloud.RecaptchaEnterprise.V1.TransactionData.Types;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TanatosAPI.Endpoints {
 	public static class SuscripcionEndpoints {

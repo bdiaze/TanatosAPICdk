@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using TimeZoneConverter;
 
 namespace TanatosAPI.Helpers {
 	public static class CronHelper {
