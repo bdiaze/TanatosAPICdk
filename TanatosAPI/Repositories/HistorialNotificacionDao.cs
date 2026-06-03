@@ -1,10 +1,8 @@
 ﻿using Dapper;
 using Npgsql;
-using System.Data;
 using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace TanatosAPI.Repositories {
 	[DapperAot]

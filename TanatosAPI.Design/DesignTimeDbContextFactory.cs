@@ -6,16 +6,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TanatosAPI.Entities.Contexts;
+using TanatosAPI.Design.Contexts;
 
 namespace TanatosAPI.Design {
     public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<TanatosDbContext> {
 
         // Proyecto .Design para la creación de migrations y compiled models
         // Migrations: 
-        //     dotnet ef migrations add [MigrationName] --project TanatosAPI --startup-project TanatosAPI.Design --context TanatosDbContext --output-dir Migrations
-        //     dotnet ef migrations remove --project TanatosAPI --startup-project TanatosAPI.Design --context TanatosDbContext
-        //     dotnet ef migrations script --idempotent --project TanatosAPI --startup-project TanatosAPI.Design --context TanatosDbContext --output MigrationScripts.sql
+        //     dotnet ef migrations add [MigrationName] --project TanatosAPI.Design --context TanatosDbContext --output-dir Migrations
+        //     dotnet ef migrations remove --project TanatosAPI.Design --context TanatosDbContext --force
+        //     dotnet ef migrations script --idempotent --project TanatosAPI.Design --context TanatosDbContext --output MigrationScripts.sql
         public TanatosDbContext CreateDbContext(string[] args) {
             string basePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "TanatosAPI");
 

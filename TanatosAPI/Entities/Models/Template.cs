@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -7,41 +6,34 @@ using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("template", Schema = "tanatos")]
-	[Comment("Tabla que contiene los templates de normas a inscribirse.")]
 	public class Template {
 		[UseColumnAttribute]
 		[Required]
 		[Column("id")]
 		[Key]
 		[DatabaseGenerated(DatabaseGeneratedOption.None)]
-		[Comment("Identificador del template.")]
 		public required long Id { get; set; }
 
 		[UseColumnAttribute]
 		[Column("id_template_padre")]
-		[Comment("Identificador del template padre.")]
 		public long? IdTemplatePadre { get; set; }
 
 		[UseColumnAttribute]
 		[Column("nombre")]
-		[Comment("Nombre del template.")]
 		public required string Nombre { get; set; }
 
 		[UseColumnAttribute]
 		[Column("descripcion")]
-		[Comment("Descripcion del template.")]
 		public required string Descripcion { get; set; }
 
 		[UseColumnAttribute]
 		[Required]
 		[DefaultValue(false)]
 		[Column("requiere_plan_empresa")]
-		[Comment("Indicador de si el template requiere de que el usuario tenga plan Empresa.")]
 		public required bool RequierePlanEmpresa { get; set; } = false;
 
 		[UseColumnAttribute]
 		[Column("vigencia")]
-		[Comment("Vigencia del template.")]
 		public required bool Vigencia { get; set; }
 
 		[JsonIgnore]

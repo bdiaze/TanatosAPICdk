@@ -1,31 +1,24 @@
 ﻿using Dapper;
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("template_norma_fiscalizador", Schema = "tanatos")]
-	[Comment("Tabla que contiene la relación entre un template norma y un fiscalizador.")]
-	[PrimaryKey(nameof(IdTemplate), nameof(IdNorma), nameof(IdTipoFiscalizador))]
-	[Index(nameof(IdTipoFiscalizador))]
 	public class TemplateNormaFiscalizador {
 		[UseColumnAttribute]
 		[Required]
 		[Column("id_template")]
-		[Comment("Identificador del template al que pertenece la norma.")]
 		public required long IdTemplate { get; set; }
 
 		[UseColumnAttribute]
 		[Required]
 		[Column("id_norma")]
-		[Comment("Identificador de la norma asociada al template.")]
 		public required long IdNorma { get; set; }
 
 		[UseColumnAttribute]
 		[Required]
 		[Column("id_tipo_fiscalizador")]
-		[Comment("Identificador del tipo de fiscalizador.")]
 		public required long IdTipoFiscalizador { get; set; }
 
 		[JsonIgnore]

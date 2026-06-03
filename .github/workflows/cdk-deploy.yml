@@ -33,9 +33,7 @@ jobs:
             ARN_PARAMETER_COGNITO_TRIGGER_LAMBDA_ARN: ${{ vars.ARN_PARAMETER_COGNITO_TRIGGER_LAMBDA_ARN }}
             
             NOTIFICACIONES_TOKEN_VALIDITY_MINUTES: ${{ vars.NOTIFICACIONES_TOKEN_VALIDITY_MINUTES }}
-            
-            # API_AUTHORIZER_PUBLISH_ZIP: ${{ vars.API_AUTHORIZER_PUBLISH_ZIP }}
-            
+                        
             PUBLISH_ZIP: ${{ vars.PUBLISH_ZIP }}
             HANDLER: ${{ vars.HANDLER }}
             TIMEOUT: ${{ vars.TIMEOUT }}
@@ -101,7 +99,7 @@ jobs:
               run: dotnet publish /p:PublishDir=../publish /p:PublishReadyToRun=true -r linux-arm64 --no-self-contained
               
             - name: Creación de bundle EF Migrations
-              run: dotnet ef migrations script --idempotent -o ${{ vars.INITIAL_CREATION_DIRECTORY }}/publish/${{ vars.MIGRATION_SCRIPT }} --project ${{ vars.PROJECT_NAME }} --startup-project ${{ vars.PROJECT_NAME_DESIGN }}
+              run: dotnet ef migrations script --idempotent -o ${{ vars.INITIAL_CREATION_DIRECTORY }}/publish/${{ vars.MIGRATION_SCRIPT }} --project ${{ vars.PROJECT_NAME_DESIGN }}
               
             - name: Compress Publish Directory .NET Initial Creation Lambda
               working-directory: ${{ vars.INITIAL_CREATION_DIRECTORY }}/publish

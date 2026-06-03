@@ -1,16 +1,10 @@
 ﻿using Amazon.Lambda.Core;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Storage.Json;
 using Microsoft.Extensions.Primitives;
 using System;
 using System.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using System.Text.Json;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
-using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
 	public static class AuthEndpoints {
