@@ -1,11 +1,9 @@
-﻿using Dapper;
-using Npgsql;
+﻿using Npgsql;
 using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	[DapperAot]
 	public class DestinatarioNotificacionDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<List<DestinatarioNotificacion>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
@@ -18,7 +16,6 @@ namespace TanatosAPI.Repositories {
 
 			try {
 				await using NpgsqlCommand command = new(query, connection, transaction);
-
 				command.Parameters.AddWithValue("SUB", sub);
 				command.Parameters.AddWithValue("IDNEGOCIO", (object?)idNegocio ?? DBNull.Value);
 				command.Parameters.AddWithValue("VIGENCIA", (object?)vigencia ?? DBNull.Value);
@@ -26,7 +23,6 @@ namespace TanatosAPI.Repositories {
 				await using DbDataReader reader = await command.ExecuteReaderAsync();
 
 				List<DestinatarioNotificacion> retorno = [];
-
 				while (await reader.ReadAsync()) {
 					retorno.Add(new DestinatarioNotificacion {
 						Id = reader.GetInt64(0),
@@ -46,7 +42,6 @@ namespace TanatosAPI.Repositories {
 						Vigencia = reader.GetBoolean(14)
 					});
 				}
-
 				return retorno;
 			} finally {
 				if (disposeConnection && connection != null) {
@@ -90,7 +85,6 @@ namespace TanatosAPI.Repositories {
 						Vigencia = reader.GetBoolean(14)
 					};
 				}
-
 				return retorno;
 			} finally {
 				if (disposeConnection && connection != null) {
@@ -104,28 +98,34 @@ namespace TanatosAPI.Repositories {
 				"INSERT INTO TANATOS.DESTINATARIO_NOTIFICACION(SUB, ID_NEGOCIO, ID_EMPLEADO, ID_TIPO_RECEPTOR, ALIAS, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, FECHA_VALIDACION, VALIDADO, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
 				"VALUES (@SUB, @IDNEGOCIO, @IDEMPLEADO, @IDTIPORECEPTOR, @ALIAS, @DESTINO, @CODIGOVALIDACION, @FECHACADUCIDADCODIGOVALIDACION, @FECHAVALIDACION, @VALIDADO, @HERMESIDMENSAJE, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
 				"RETURNING ID";
-			DynamicParameters param = new();
-			param.Add("SUB", item.Sub);
-			param.Add("IDNEGOCIO", item.IdNegocio);
-			param.Add("IDEMPLEADO", item.IdEmpleado);
-			param.Add("IDTIPORECEPTOR", item.IdTipoReceptor);
-			param.Add("ALIAS", item.Alias);
-			param.Add("DESTINO", item.Destino);
-			param.Add("CODIGOVALIDACION", item.CodigoValidacion);
-			param.Add("FECHACADUCIDADCODIGOVALIDACION", item.FechaCaducidadCodigoValidacion);
-			param.Add("FECHAVALIDACION", item.FechaValidacion);
-			param.Add("VALIDADO", item.Validado);
-			param.Add("HERMESIDMENSAJE", item.HermesIdMensaje);
-			param.Add("FECHACREACION", item.FechaCreacion);
-			param.Add("FECHAELIMINACION", item.FechaEliminacion);
-			param.Add("VIGENCIA", item.Vigencia);
 
-			if (transaction?.Connection != null) {
-				return await transaction!.Connection!.ExecuteScalarAsync<long>(query, param, transaction);
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				return await connection.ExecuteScalarAsync<long>(query, param);
-			}
+            bool disposeConnection = transaction?.Connection == null;
+            NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+            try {
+                await using NpgsqlCommand command = new(query, connection, transaction);
+
+                command.Parameters.AddWithValue("SUB", item.Sub);
+                command.Parameters.AddWithValue("IDNEGOCIO", item.IdNegocio);
+                command.Parameters.AddWithValue("IDEMPLEADO", (object?)item.IdEmpleado ?? DBNull.Value);
+                command.Parameters.AddWithValue("IDTIPORECEPTOR", item.IdTipoReceptor);
+                command.Parameters.AddWithValue("ALIAS", (object?)item.Alias ?? DBNull.Value);
+                command.Parameters.AddWithValue("DESTINO", item.Destino);
+                command.Parameters.AddWithValue("CODIGOVALIDACION", item.CodigoValidacion);
+                command.Parameters.AddWithValue("FECHACADUCIDADCODIGOVALIDACION", item.FechaCaducidadCodigoValidacion);
+                command.Parameters.AddWithValue("FECHAVALIDACION", (object?)item.FechaValidacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("VALIDADO", item.Validado);
+                command.Parameters.AddWithValue("HERMESIDMENSAJE", (object?)item.HermesIdMensaje ?? DBNull.Value);
+                command.Parameters.AddWithValue("FECHACREACION", item.FechaCreacion);
+                command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
+
+                return Convert.ToInt64(await command.ExecuteScalarAsync());
+            } finally {
+                if (disposeConnection && connection != null) {
+                    await connection.DisposeAsync();
+                }
+            }
 		}
 
 		public async Task Actualizar(DestinatarioNotificacion item, NpgsqlTransaction? transaction = null) {
@@ -134,29 +134,35 @@ namespace TanatosAPI.Repositories {
 				"CODIGO_VALIDACION = @CODIGOVALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION = @FECHACADUCIDADCODIGOVALIDACION, FECHA_VALIDACION = @FECHAVALIDACION, " +
 				"VALIDADO = @VALIDADO, HERMES_ID_MENSAJE = @HERMESIDMENSAJE, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
 				"WHERE ID = @ID";
-			DynamicParameters param = new();
-			param.Add("SUB", item.Sub);
-			param.Add("IDNEGOCIO", item.IdNegocio);
-			param.Add("IDEMPLEADO", item.IdEmpleado);
-			param.Add("IDTIPORECEPTOR", item.IdTipoReceptor);
-			param.Add("ALIAS", item.Alias);
-			param.Add("DESTINO", item.Destino);
-			param.Add("CODIGOVALIDACION", item.CodigoValidacion);
-			param.Add("FECHACADUCIDADCODIGOVALIDACION", item.FechaCaducidadCodigoValidacion);
-			param.Add("FECHAVALIDACION", item.FechaValidacion);
-			param.Add("VALIDADO", item.Validado);
-			param.Add("HERMESIDMENSAJE", item.HermesIdMensaje);
-			param.Add("FECHACREACION", item.FechaCreacion);
-			param.Add("FECHAELIMINACION", item.FechaEliminacion);
-			param.Add("VIGENCIA", item.Vigencia);
-			param.Add("ID", item.Id);
 
-			if (transaction?.Connection != null) {
-				await transaction!.Connection!.ExecuteAsync(query, param, transaction);
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				await connection.ExecuteAsync(query, param);
-			}
-		}
+            bool disposeConnection = transaction?.Connection == null;
+            NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+            try {
+                await using NpgsqlCommand command = new(query, connection, transaction);
+
+                command.Parameters.AddWithValue("SUB", item.Sub);
+                command.Parameters.AddWithValue("IDNEGOCIO", item.IdNegocio);
+                command.Parameters.AddWithValue("IDEMPLEADO", (object?)item.IdEmpleado ?? DBNull.Value);
+                command.Parameters.AddWithValue("IDTIPORECEPTOR", item.IdTipoReceptor);
+                command.Parameters.AddWithValue("ALIAS", (object?)item.Alias ?? DBNull.Value);
+                command.Parameters.AddWithValue("DESTINO", item.Destino);
+                command.Parameters.AddWithValue("CODIGOVALIDACION", item.CodigoValidacion);
+                command.Parameters.AddWithValue("FECHACADUCIDADCODIGOVALIDACION", item.FechaCaducidadCodigoValidacion);
+                command.Parameters.AddWithValue("FECHAVALIDACION", (object?)item.FechaValidacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("VALIDADO", item.Validado);
+                command.Parameters.AddWithValue("HERMESIDMENSAJE", (object?)item.HermesIdMensaje ?? DBNull.Value);
+                command.Parameters.AddWithValue("FECHACREACION", item.FechaCreacion);
+                command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
+                command.Parameters.AddWithValue("ID", item.Id);
+
+                await command.ExecuteNonQueryAsync();
+            } finally {
+                if (disposeConnection && connection != null) {
+                    await connection.DisposeAsync();
+                }
+            }
+        }
 	}
 }
