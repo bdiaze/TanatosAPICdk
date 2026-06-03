@@ -1,12 +1,9 @@
-﻿using Amazon.S3.Model;
-using Dapper;
-using Npgsql;
+﻿using Npgsql;
 using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	[DapperAot]
 	public class DocumentoAdjuntoDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<List<DocumentoAdjunto>> ObtenerPorHistorial(long idHistorialNormaSuscrita, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
@@ -25,7 +22,6 @@ namespace TanatosAPI.Repositories {
 				await using DbDataReader reader = await command.ExecuteReaderAsync();
 
 				List<DocumentoAdjunto> retorno = [];
-
 				while (await reader.ReadAsync()) {
 					retorno.Add(new DocumentoAdjunto {
 						Id = reader.GetInt64(0),
@@ -45,7 +41,6 @@ namespace TanatosAPI.Repositories {
 						Vigencia = reader.GetBoolean(14)
 					});
 				}
-
 				return retorno;
 			} finally {
 				if (disposeConnection && connection != null) {
@@ -70,7 +65,6 @@ namespace TanatosAPI.Repositories {
 				await using DbDataReader reader = await command.ExecuteReaderAsync();
 
 				DocumentoAdjunto? retorno = null;
-
 				if (await reader.ReadAsync()) {
 					retorno = new DocumentoAdjunto {
 						Id = reader.GetInt64(0),
@@ -90,7 +84,6 @@ namespace TanatosAPI.Repositories {
 						Vigencia = reader.GetBoolean(14)
 					};
 				}
-
 				return retorno;
 			} finally {
 				if (disposeConnection && connection != null) {
@@ -106,28 +99,32 @@ namespace TanatosAPI.Repositories {
 				"VALUES (@IDHISTORIALNORMASUSCRITA, @BUCKETNAME, @BUCKETKEY, @NOMBREARCHIVO, @MIMEESPERADO, @TAMANNOESPERADO, " +
 				"@MIMEREAL, @TAMANNOREAL, @ESTADOSUBIDA, @FECHAEMISIONURLPREFIRMADAPUT, @FECHACONFIRMACIONSUBIDA, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
 				"RETURNING ID";
-			DynamicParameters param = new();
-			param.Add("IDHISTORIALNORMASUSCRITA", item.IdHistorialNormaSuscrita);
-			param.Add("BUCKETNAME", item.BucketName);
-			param.Add("BUCKETKEY", item.BucketKey);
-			param.Add("NOMBREARCHIVO", item.NombreArchivo);
-			param.Add("MIMEESPERADO", item.MimeEsperado);
-			param.Add("TAMANNOESPERADO", item.TamannoEsperado);
-			param.Add("MIMEREAL", item.MimeReal);
-			param.Add("TAMANNOREAL", item.TamannoReal);
-			param.Add("ESTADOSUBIDA", item.EstadoSubida);
-			param.Add("FECHAEMISIONURLPREFIRMADAPUT", item.FechaEmisionUrlPrefirmadaPut);
-			param.Add("FECHACONFIRMACIONSUBIDA", item.FechaConfirmacionSubida);
-			param.Add("FECHACREACION", item.FechaCreacion);
-			param.Add("FECHAELIMINACION", item.FechaEliminacion);
-			param.Add("VIGENCIA", item.Vigencia);
 
-			if (transaction?.Connection != null) {
-				return await transaction!.Connection!.ExecuteScalarAsync<long>(query, param, transaction);
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				return await connection.ExecuteScalarAsync<long>(query, param);
-			}
+            bool disposeConnection = transaction?.Connection == null;
+            NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+            try {
+                await using NpgsqlCommand command = new(query, connection, transaction);
+                command.Parameters.AddWithValue("IDHISTORIALNORMASUSCRITA", item.IdHistorialNormaSuscrita);
+                command.Parameters.AddWithValue("BUCKETNAME", item.BucketName);
+                command.Parameters.AddWithValue("BUCKETKEY", item.BucketKey);
+                command.Parameters.AddWithValue("NOMBREARCHIVO", item.NombreArchivo);
+                command.Parameters.AddWithValue("MIMEESPERADO", item.MimeEsperado);
+                command.Parameters.AddWithValue("TAMANNOESPERADO", item.TamannoEsperado);
+                command.Parameters.AddWithValue("MIMEREAL", (object?)item.MimeReal ?? DBNull.Value);
+                command.Parameters.AddWithValue("TAMANNOREAL", (object?)item.TamannoReal ?? DBNull.Value);
+                command.Parameters.AddWithValue("ESTADOSUBIDA", item.EstadoSubida);
+                command.Parameters.AddWithValue("FECHAEMISIONURLPREFIRMADAPUT", item.FechaEmisionUrlPrefirmadaPut);
+                command.Parameters.AddWithValue("FECHACONFIRMACIONSUBIDA", (object?)item.FechaConfirmacionSubida ?? DBNull.Value);
+                command.Parameters.AddWithValue("FECHACREACION", item.FechaCreacion);
+                command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
+                return Convert.ToInt64(await command.ExecuteScalarAsync());
+            } finally {
+                if (disposeConnection && connection != null) {
+                    await connection.DisposeAsync();
+                }
+            }
 		}
 
 		public async Task Actualizar(DocumentoAdjunto item, NpgsqlTransaction? transaction = null) {
@@ -137,29 +134,33 @@ namespace TanatosAPI.Repositories {
 				"ESTADO_SUBIDA = @ESTADOSUBIDA, FECHA_EMISION_URL_PREFIRMADA_PUT = @FECHAEMISIONURLPREFIRMADAPUT, FECHA_CONFIRMACION_SUBIDA = @FECHACONFIRMACIONSUBIDA, " +
 				"FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
 				"WHERE ID = @ID";
-			DynamicParameters param = new();
-			param.Add("IDHISTORIALNORMASUSCRITA", item.IdHistorialNormaSuscrita);
-			param.Add("BUCKETNAME", item.BucketName);
-			param.Add("BUCKETKEY", item.BucketKey);
-			param.Add("NOMBREARCHIVO", item.NombreArchivo);
-			param.Add("MIMEESPERADO", item.MimeEsperado);
-			param.Add("TAMANNOESPERADO", item.TamannoEsperado);
-			param.Add("MIMEREAL", item.MimeReal);
-			param.Add("TAMANNOREAL", item.TamannoReal);
-			param.Add("ESTADOSUBIDA", item.EstadoSubida);
-			param.Add("FECHAEMISIONURLPREFIRMADAPUT", item.FechaEmisionUrlPrefirmadaPut);
-			param.Add("FECHACONFIRMACIONSUBIDA", item.FechaConfirmacionSubida);
-			param.Add("FECHACREACION", item.FechaCreacion);
-			param.Add("FECHAELIMINACION", item.FechaEliminacion);
-			param.Add("VIGENCIA", item.Vigencia);
-			param.Add("ID", item.Id);
 
-			if (transaction?.Connection != null) {
-				await transaction!.Connection!.ExecuteAsync(query, param, transaction);
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				await connection.ExecuteAsync(query, param);
-			}
+            bool disposeConnection = transaction?.Connection == null;
+            NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+            try {
+                await using NpgsqlCommand command = new(query, connection, transaction);
+                command.Parameters.AddWithValue("IDHISTORIALNORMASUSCRITA", item.IdHistorialNormaSuscrita);
+                command.Parameters.AddWithValue("BUCKETNAME", item.BucketName);
+                command.Parameters.AddWithValue("BUCKETKEY", item.BucketKey);
+                command.Parameters.AddWithValue("NOMBREARCHIVO", item.NombreArchivo);
+                command.Parameters.AddWithValue("MIMEESPERADO", item.MimeEsperado);
+                command.Parameters.AddWithValue("TAMANNOESPERADO", item.TamannoEsperado);
+                command.Parameters.AddWithValue("MIMEREAL", (object?)item.MimeReal ?? DBNull.Value);
+                command.Parameters.AddWithValue("TAMANNOREAL", (object?)item.TamannoReal ?? DBNull.Value);
+                command.Parameters.AddWithValue("ESTADOSUBIDA", item.EstadoSubida);
+                command.Parameters.AddWithValue("FECHAEMISIONURLPREFIRMADAPUT", item.FechaEmisionUrlPrefirmadaPut);
+                command.Parameters.AddWithValue("FECHACONFIRMACIONSUBIDA", (object?)item.FechaConfirmacionSubida ?? DBNull.Value);
+                command.Parameters.AddWithValue("FECHACREACION", item.FechaCreacion);
+                command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
+                command.Parameters.AddWithValue("ID", item.Id);
+                await command.ExecuteNonQueryAsync();
+            } finally {
+                if (disposeConnection && connection != null) {
+                    await connection.DisposeAsync();
+                }
+            }
 		}
 	}
 }
