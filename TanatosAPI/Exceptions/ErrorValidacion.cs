@@ -1,7 +1,19 @@
 ﻿namespace TanatosAPI.Exceptions {
-    public class ErrorValidacion(string mensaje, string? mensajeGenerico = null) : Exception(mensaje) {
+    public enum TipoErrorValidacion {
+        AccesoCaducado,
+        NoVigente,
+        TamannoNoValido,
+        TipoNoValido,
+        EstadoNoValido,
+        NoPertenece,
+        RestringidoPorPlan
+    }
+
+    public class ErrorValidacion(TipoErrorValidacion tipoErrorValidacion, string mensaje, string? mensajeGenerico = null) : Exception(mensaje) {
+        public TipoErrorValidacion TipoErrorValidacion => tipoErrorValidacion;
+
         public string MensajeGenerico => mensajeGenerico ?? base.Message;
 
-        public override string ToString() => mensajeGenerico != null ? $"{mensajeGenerico} - {base.ToString()}" : base.ToString();
+        public override string ToString() => mensajeGenerico != null ? $"{tipoErrorValidacion} - {mensajeGenerico} - {base.ToString()}" : $"{tipoErrorValidacion} - {base.ToString()}";
     }
 }

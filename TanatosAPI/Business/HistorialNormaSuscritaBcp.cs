@@ -16,6 +16,10 @@ namespace TanatosAPI.Business {
 			return historialNormaSuscrita.FechaCompletitud != null;
         }
 
+		public bool VigenteOCompletada(HistorialNormaSuscrita? historialNormaSuscrita) {
+			return EstaVigente(historialNormaSuscrita) || (historialNormaSuscrita != null && EstaCompletada(historialNormaSuscrita));
+		}
+
 		public async Task<HistorialNormaSuscrita?> ObtenerPorId(long idHistorialNormaSuscrita) {
 			return await historialNormaSuscritaDao.ObtenerPorId(idHistorialNormaSuscrita);
 		}

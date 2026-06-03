@@ -1,4 +1,5 @@
 ﻿using Npgsql;
+using System.Runtime.CompilerServices;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
@@ -16,7 +17,22 @@ namespace TanatosAPI.Business {
 			return ALLOWED_FILES_TYPES.Contains(mime, StringComparer.OrdinalIgnoreCase);
 		}
 
-		public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string sub, long idNegocio, long idNormaSuscrita, long idHistorialNormaSuscrita, string nombreArchivo, string mimeArchivo, long tamannoArchivo) {
+        public bool EstaVigente(DocumentoAdjunto? documentoAdjunto) {
+            return documentoAdjunto != null && documentoAdjunto.Vigencia;
+        }
+        public bool PerteneceAVencimiento(DocumentoAdjunto documentoAdjunto, long idHistorialNormaSuscrita) {
+            return documentoAdjunto.IdHistorialNormaSuscrita == idHistorialNormaSuscrita;
+        }
+
+        public async Task<DocumentoAdjunto?> ObtenerPorId(long idDocumentoAdjunto) {
+            return await documentoAdjuntoDao.ObtenerPorId(idDocumentoAdjunto);
+        }
+
+        public async Task<List<DocumentoAdjunto>> ObtenerVigentesPorHistorialNormaSuscrita(long idHistorialNormaSuscrita) {
+            return await documentoAdjuntoDao.ObtenerPorHistorial(idHistorialNormaSuscrita, true);
+        }
+
+        public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string sub, long idNegocio, long idNormaSuscrita, long idHistorialNormaSuscrita, string nombreArchivo, string mimeArchivo, long tamannoArchivo) {
             (string bucketName, string bucketKey, string preSignedUrl, Dictionary<string, string> fields) presignedPost = await documentoAdjuntoHelper.ObtenerPostPreSignedUrl(
                 sub,
                 idNegocio,
@@ -48,6 +64,23 @@ namespace TanatosAPI.Business {
             nuevo.Id = await documentoAdjuntoDao.Insertar(nuevo);
             
             return (presignedPost.preSignedUrl, presignedPost.fields, nuevo);
+        }
+
+        public async Task ConfirmarSubida(DocumentoAdjunto documentoAdjunto) {
+            if (documentoAdjunto.EstadoSubida != 1 /* Documento recepcionado */) {
+                (long contentLength, string contentType) = await documentoAdjuntoHelper.ObtenerMetadata(documentoAdjunto.BucketKey);
+
+                documentoAdjunto.MimeReal = contentType;
+                documentoAdjunto.TamannoReal = contentLength;
+                documentoAdjunto.EstadoSubida = 1 /* Documento recepcionado */;
+                documentoAdjunto.FechaConfirmacionSubida = DateTime.UtcNow;
+
+                await documentoAdjuntoDao.Actualizar(documentoAdjunto);
+            }
+        }
+
+        public async Task<string> GenerarUrlBajada(DocumentoAdjunto documentoAdjunto) {
+            return await documentoAdjuntoHelper.ObtenerGetPreSignedUrl(documentoAdjunto.BucketKey, documentoAdjunto.NombreArchivo);
         }
 
 		public async Task Eliminar(DocumentoAdjunto documentoAdjunto, NpgsqlTransaction? transaction = null) {
