@@ -1,22 +1,18 @@
-﻿using Dapper;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("template_norma_fiscalizador", Schema = "tanatos")]
 	public class TemplateNormaFiscalizador {
-		[UseColumnAttribute]
 		[Required]
 		[Column("id_template")]
 		public required long IdTemplate { get; set; }
 
-		[UseColumnAttribute]
 		[Required]
 		[Column("id_norma")]
 		public required long IdNorma { get; set; }
 
-		[UseColumnAttribute]
 		[Required]
 		[Column("id_tipo_fiscalizador")]
 		public required long IdTipoFiscalizador { get; set; }

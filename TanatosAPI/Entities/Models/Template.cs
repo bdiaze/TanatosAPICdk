@@ -1,5 +1,4 @@
-﻿using Dapper;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -7,32 +6,26 @@ using System.Text.Json.Serialization;
 namespace TanatosAPI.Entities.Models {
 	[Table("template", Schema = "tanatos")]
 	public class Template {
-		[UseColumnAttribute]
 		[Required]
 		[Column("id")]
 		[Key]
 		[DatabaseGenerated(DatabaseGeneratedOption.None)]
 		public required long Id { get; set; }
 
-		[UseColumnAttribute]
 		[Column("id_template_padre")]
 		public long? IdTemplatePadre { get; set; }
 
-		[UseColumnAttribute]
 		[Column("nombre")]
 		public required string Nombre { get; set; }
 
-		[UseColumnAttribute]
 		[Column("descripcion")]
 		public required string Descripcion { get; set; }
 
-		[UseColumnAttribute]
 		[Required]
 		[DefaultValue(false)]
 		[Column("requiere_plan_empresa")]
 		public required bool RequierePlanEmpresa { get; set; } = false;
 
-		[UseColumnAttribute]
 		[Column("vigencia")]
 		public required bool Vigencia { get; set; }
 

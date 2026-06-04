@@ -1,43 +1,34 @@
-﻿using Dapper;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("template_norma", Schema = "tanatos")]
 	public class TemplateNorma {
-		[UseColumnAttribute]
 		[Required]
 		[Column("id_template")]
 		public required long IdTemplate { get; set; }
 
-		[UseColumnAttribute]
 		[Required]
 		[Column("id_norma")]
 		public required long IdNorma { get; set; }
 
-		[UseColumnAttribute]
 		[Required]
 		[Column("nombre")]
 		public required string Nombre { get; set; }
 
-		[UseColumnAttribute]
 		[Column("descripcion")]
 		public string? Descripcion { get; set; }
 
-		[UseColumnAttribute]
 		[Column("id_tipo_periodicidad")]
 		public long? IdTipoPeriodicidad { get; set; }
 
-		[UseColumnAttribute]
 		[Column("multa")]
 		public string? Multa { get; set; }
 
-		[UseColumnAttribute]
 		[Column("id_categoria_norma")]
 		public required long IdCategoriaNorma { get; set; }
 
-		[UseColumnAttribute]
 		[Column("cron_activacion_automatica")]
 		public string? CronActivacionAutomatica { get; set; }
 

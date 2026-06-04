@@ -1,11 +1,9 @@
-﻿using Dapper;
-using Npgsql;
+﻿using Npgsql;
 using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	[DapperAot]
 	public class TipoUnidadTiempoDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<TipoUnidadTiempo?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
 			string query =
@@ -83,30 +81,74 @@ namespace TanatosAPI.Repositories {
 			}
 		}
 
-		public async Task Insertar(TipoUnidadTiempo item) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			await connection.ExecuteAsync(
-				"INSERT INTO TANATOS.TIPO_UNIDAD_TIEMPO(ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, CANT_MINUTOS, CANT_HORAS, CANT_DIAS, VIGENCIA) " +
-				"VALUES (@ID, @NOMBRE, @NOMBREPLURAL, @CANTSEGUNDOS, @CANTMINUTOS, @CANTHORAS, @CANTDIAS, @VIGENCIA)",
-				new { item.Id, item.Nombre, item.NombrePlural, item.CantSegundos, item.CantMinutos, item.CantHoras, item.CantDias, item.Vigencia }
-			);
-		}
+		public async Task Insertar(TipoUnidadTiempo item, NpgsqlTransaction? transaction = null) {
+			string query =
+                "INSERT INTO TANATOS.TIPO_UNIDAD_TIEMPO(ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, CANT_MINUTOS, CANT_HORAS, CANT_DIAS, VIGENCIA) " +
+                "VALUES (@ID, @NOMBRE, @NOMBREPLURAL, @CANTSEGUNDOS, @CANTMINUTOS, @CANTHORAS, @CANTDIAS, @VIGENCIA)";
 
-		public async Task Actualizar(TipoUnidadTiempo item) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			await connection.ExecuteAsync(
-				"UPDATE TANATOS.TIPO_UNIDAD_TIEMPO SET NOMBRE = @NOMBRE, NOMBRE_PLURAL = @NOMBREPLURAL, CANT_SEGUNDOS = @CANTSEGUNDOS, CANT_MINUTOS = @CANTMINUTOS, " +
-				"CANT_HORAS = @CANTHORAS, CANT_DIAS = @CANTDIAS, VIGENCIA = @VIGENCIA WHERE ID = @ID",
-				new { item.Nombre, item.NombrePlural, item.CantSegundos, item.CantMinutos, item.CantHoras, item.CantDias, item.Vigencia, item.Id }
-			);
-		}
+            bool disposeConnection = transaction?.Connection == null;
+            NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
 
-		public async Task Eliminar(long id) {
-			await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-			await connection.ExecuteAsync(
-				"DELETE FROM TANATOS.TIPO_UNIDAD_TIEMPO WHERE ID = @ID",
-				new { id }
-			);
-		}
+            try {
+                await using NpgsqlCommand command = new(query, connection, transaction);
+                command.Parameters.AddWithValue("ID", item.Id);
+                command.Parameters.AddWithValue("NOMBRE", item.Nombre);
+                command.Parameters.AddWithValue("NOMBREPLURAL", (object?)item.NombrePlural ?? DBNull.Value);
+                command.Parameters.AddWithValue("CANTSEGUNDOS", item.CantSegundos);
+                command.Parameters.AddWithValue("CANTMINUTOS", (object?)item.CantMinutos ?? DBNull.Value);
+                command.Parameters.AddWithValue("CANTHORAS", (object?)item.CantHoras ?? DBNull.Value);
+                command.Parameters.AddWithValue("CANTDIAS", (object?)item.CantDias ?? DBNull.Value);
+                command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
+                await command.ExecuteNonQueryAsync();
+            } finally {
+                if (disposeConnection && connection != null) {
+                    await connection.DisposeAsync();
+                }
+            }
+        }
+
+		public async Task Actualizar(TipoUnidadTiempo item, NpgsqlTransaction? transaction = null) {
+			string query =
+                "UPDATE TANATOS.TIPO_UNIDAD_TIEMPO SET NOMBRE = @NOMBRE, NOMBRE_PLURAL = @NOMBREPLURAL, CANT_SEGUNDOS = @CANTSEGUNDOS, CANT_MINUTOS = @CANTMINUTOS, " +
+                "CANT_HORAS = @CANTHORAS, CANT_DIAS = @CANTDIAS, VIGENCIA = @VIGENCIA WHERE ID = @ID";
+
+            bool disposeConnection = transaction?.Connection == null;
+            NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+            try {
+                await using NpgsqlCommand command = new(query, connection, transaction);
+                command.Parameters.AddWithValue("NOMBRE", item.Nombre);
+                command.Parameters.AddWithValue("NOMBREPLURAL", (object?)item.NombrePlural ?? DBNull.Value);
+                command.Parameters.AddWithValue("CANTSEGUNDOS", item.CantSegundos);
+                command.Parameters.AddWithValue("CANTMINUTOS", (object?)item.CantMinutos ?? DBNull.Value);
+                command.Parameters.AddWithValue("CANTHORAS", (object?)item.CantHoras ?? DBNull.Value);
+                command.Parameters.AddWithValue("CANTDIAS", (object?)item.CantDias ?? DBNull.Value);
+                command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
+                command.Parameters.AddWithValue("ID", item.Id);
+                await command.ExecuteNonQueryAsync();
+            } finally {
+                if (disposeConnection && connection != null) {
+                    await connection.DisposeAsync();
+                }
+            }
+        }
+
+		public async Task Eliminar(long id, NpgsqlTransaction? transaction = null) {
+			string query =
+                "DELETE FROM TANATOS.TIPO_UNIDAD_TIEMPO WHERE ID = @ID";
+
+            bool disposeConnection = transaction?.Connection == null;
+            NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+            try {
+                await using NpgsqlCommand command = new(query, connection, transaction);
+                command.Parameters.AddWithValue("ID", id);
+                await command.ExecuteNonQueryAsync();
+            } finally {
+                if (disposeConnection && connection != null) {
+                    await connection.DisposeAsync();
+                }
+            }
+        }
 	}
 }

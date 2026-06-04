@@ -16,8 +16,6 @@
     <PackageReference Include="AWSSDK.S3" Version="4.0.24" />
     <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.5" />
     <PackageReference Include="Cronos" Version="0.13.0" />
-    <PackageReference Include="Dapper" Version="2.1.79" />
-    <PackageReference Include="Dapper.AOT" Version="1.0.52" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
     <PackageReference Include="Npgsql" Version="10.0.3" />

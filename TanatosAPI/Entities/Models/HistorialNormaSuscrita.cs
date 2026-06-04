@@ -1,42 +1,34 @@
-﻿using Dapper;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("historial_norma_suscrita", Schema = "tanatos")]
 	public class HistorialNormaSuscrita {
-		[UseColumnAttribute]
 		[Required]
 		[Column("id")]
 		[Key]
 		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public required long Id { get; set; }
 
-		[UseColumnAttribute]
 		[Required]
 		[Column("id_norma_suscrita")]
 		public required long IdNormaSuscrita { get; set; }
 
-		[UseColumnAttribute]
 		[Required]
 		[Column("fecha_vencimiento", TypeName = "timestamp with time zone")]
 		public required DateTime FechaVencimiento { get; set; }
 
-		[UseColumnAttribute]
 		[Column("fecha_completitud", TypeName = "timestamp with time zone")]
 		public DateTime? FechaCompletitud { get; set; }
 
-		[UseColumnAttribute]
 		[Required]
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
 		public required DateTime FechaCreacion { get; set; }
 
-		[UseColumnAttribute]
 		[Column("fecha_eliminacion", TypeName = "timestamp with time zone")]
 		public DateTime? FechaEliminacion { get; set; }
 
-		[UseColumnAttribute]
 		[Required]
 		[Column("vigencia")]
 		public required bool Vigencia { get; set; }

@@ -1,43 +1,35 @@
-﻿using Dapper;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
     [Table("cargo", Schema = "tanatos")]
     public class Cargo {
-        [UseColumnAttribute]
         [Required]
         [Column("id")]
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
 
-        [UseColumnAttribute]
         [Required]
         [Column("sub")]
         public required string Sub { get; set; }
 
-        [UseColumnAttribute]
         [Required]
         [Column("id_negocio")]
         public required long IdNegocio { get; set; }
 
-        [UseColumnAttribute]
         [Required]
         [Column("nombre")]
         public required string Nombre { get; set; }
 
-        [UseColumnAttribute]
         [Required]
         [Column("fecha_creacion", TypeName = "timestamp with time zone")]
         public required DateTime FechaCreacion { get; set; }
 
-        [UseColumnAttribute]
         [Column("fecha_eliminacion", TypeName = "timestamp with time zone")]
         public DateTime? FechaEliminacion { get; set; }
 
-        [UseColumnAttribute]
         [Required]
         [Column("vigencia")]
         public required bool Vigencia { get; set; }

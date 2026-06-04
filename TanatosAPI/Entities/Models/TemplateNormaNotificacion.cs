@@ -1,27 +1,22 @@
-﻿using Dapper;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[Table("template_norma_notificacion", Schema = "tanatos")]
 	public class TemplateNormaNotificacion {
-		[UseColumnAttribute]
 		[Required]
 		[Column("id_template")]
 		public required long IdTemplate { get; set; }
 
-		[UseColumnAttribute]
 		[Required]
 		[Column("id_norma")]
 		public required long IdNorma { get; set; }
 
-		[UseColumnAttribute]
 		[Required]
 		[Column("id_tipo_unidad_tiempo_antelacion")]
 		public required long IdTipoUnidadTiempoAntelacion { get; set; }
 
-		[UseColumnAttribute]
 		[Required]
 		[Column("cant_antelacion")]
 		public required int CantAntelacion { get; set; }
