@@ -1,11 +1,9 @@
-﻿using Dapper;
-using Npgsql;
+﻿using Npgsql;
 using System.Data.Common;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	[DapperAot]
 	public class FiscalizadorNormaSuscritaDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<List<FiscalizadorNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
@@ -49,39 +47,49 @@ namespace TanatosAPI.Repositories {
 				"INSERT INTO TANATOS.FISCALIZADOR_NORMA_SUSCRITA(ID_NORMA_SUSCRITA, ID_TIPO_FISCALIZADOR, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
 				"VALUES (@IDNORMASUSCRITA, @IDTIPOFISCALIZADOR, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
 				"RETURNING ID";
-			DynamicParameters param = new();
-			param.Add("IDNORMASUSCRITA", item.IdNormaSuscrita);
-			param.Add("IDTIPOFISCALIZADOR", item.IdTipoFiscalizador);
-			param.Add("FECHACREACION", item.FechaCreacion);
-			param.Add("FECHAELIMINACION", item.FechaEliminacion);
-			param.Add("VIGENCIA", item.Vigencia);
 
-			if (transaction?.Connection != null) {
-				return await transaction!.Connection!.ExecuteScalarAsync<long>(query, param, transaction);
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				return await connection.ExecuteScalarAsync<long>(query, param);
-			}
+            bool disposeConnection = transaction?.Connection == null;
+            NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+            try {
+                await using NpgsqlCommand command = new(query, connection, transaction);
+                command.Parameters.AddWithValue("IDNORMASUSCRITA", item.IdNormaSuscrita);
+                command.Parameters.AddWithValue("IDTIPOFISCALIZADOR", item.IdTipoFiscalizador);
+                command.Parameters.AddWithValue("FECHACREACION", (object?)item.FechaCreacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
+                return Convert.ToInt64(await command.ExecuteScalarAsync());
+            } finally {
+                if (disposeConnection && connection != null) {
+                    await connection.DisposeAsync();
+                }
+            }
 		}
 
 		public async Task Actualizar(FiscalizadorNormaSuscrita item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"UPDATE TANATOS.FISCALIZADOR_NORMA_SUSCRITA SET ID_NORMA_SUSCRITA = @IDNORMASUSCRITA, ID_TIPO_FISCALIZADOR = @IDTIPOFISCALIZADOR, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
+				"UPDATE TANATOS.FISCALIZADOR_NORMA_SUSCRITA SET ID_NORMA_SUSCRITA = @IDNORMASUSCRITA, " +
+				"ID_TIPO_FISCALIZADOR = @IDTIPOFISCALIZADOR, FECHA_CREACION = @FECHACREACION, " +
+				"FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
 				"WHERE ID = @ID";
-			DynamicParameters param = new();
-			param.Add("IDNORMASUSCRITA", item.IdNormaSuscrita);
-			param.Add("IDTIPOFISCALIZADOR", item.IdTipoFiscalizador);
-			param.Add("FECHACREACION", item.FechaCreacion);
-			param.Add("FECHAELIMINACION", item.FechaEliminacion);
-			param.Add("VIGENCIA", item.Vigencia);
-			param.Add("ID", item.Id);
 
-			if (transaction?.Connection != null) {
-				await transaction!.Connection!.ExecuteAsync(query, param, transaction);
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				await connection.ExecuteAsync(query, param);
-			}
+            bool disposeConnection = transaction?.Connection == null;
+            NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+            try {
+                await using NpgsqlCommand command = new(query, connection, transaction);
+                command.Parameters.AddWithValue("IDNORMASUSCRITA", item.IdNormaSuscrita);
+                command.Parameters.AddWithValue("IDTIPOFISCALIZADOR", item.IdTipoFiscalizador);
+                command.Parameters.AddWithValue("FECHACREACION", (object?)item.FechaCreacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
+                command.Parameters.AddWithValue("ID", item.Id);
+                await command.ExecuteNonQueryAsync();
+            } finally {
+                if (disposeConnection && connection != null) {
+                    await connection.DisposeAsync();
+                }
+            }
 		}
 	}
 }
