@@ -1,12 +1,10 @@
-﻿using Dapper;
-using Npgsql;
+﻿using Npgsql;
 using System.Data.Common;
 using System.Text.Json;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	[DapperAot]
 	public class NormaSuscritaDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<List<NormaSuscrita>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
@@ -170,69 +168,81 @@ namespace TanatosAPI.Repositories {
 				"INSERT INTO TANATOS.NORMA_SUSCRITA(SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ID_CARGO, ORDEN_VISUAL, EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, PROCESOS_NOTIFICACIONES, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
                 "VALUES (@SUB, @IDNEGOCIO, @IDTEMPLATE, @IDNORMA, @NOMBRE, @DESCRIPCION, @IDTIPOPERIODICIDAD, @MULTA, @IDCATEGORIANORMA, @IDCARGO, @ORDENVISUAL, @EDITABLE, @FECHAACTIVACION, @FECHADESACTIVACION, @ACTIVADO, @PROCESOSNOTIFICACIONES::JSONB, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
 				"RETURNING ID";
-			DynamicParameters param = new();
-			param.Add("SUB", item.Sub);
-			param.Add("IDNEGOCIO", item.IdNegocio);
-			param.Add("IDTEMPLATE", item.IdTemplate);
-			param.Add("IDNORMA", item.IdNorma);
-			param.Add("NOMBRE", item.Nombre);
-			param.Add("DESCRIPCION", item.Descripcion);
-			param.Add("IDTIPOPERIODICIDAD", item.IdTipoPeriodicidad);
-			param.Add("MULTA", item.Multa);
-			param.Add("IDCATEGORIANORMA", item.IdCategoriaNorma);
-            param.Add("IDCARGO", item.IdCargo);
-            param.Add("ORDENVISUAL", item.OrdenVisual);
-			param.Add("EDITABLE", item.Editable);
-			param.Add("FECHAACTIVACION", item.FechaActivacion);
-			param.Add("FECHADESACTIVACION", item.FechaDesactivacion);
-			param.Add("ACTIVADO", item.Activado);
-			param.Add("PROCESOSNOTIFICACIONES", item.ProcesosNotificaciones == null ? null : JsonSerializer.Serialize(item.ProcesosNotificaciones, AppJsonSerializerContext.Default.ListDictionaryStringJsonElement));
-			param.Add("FECHACREACION", item.FechaCreacion);
-			param.Add("FECHAELIMINACION", item.FechaEliminacion);
-			param.Add("VIGENCIA", item.Vigencia);
 
-			if (transaction?.Connection != null) {
-				return await transaction!.Connection!.ExecuteScalarAsync<long>(query, param, transaction);
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				return await connection.ExecuteScalarAsync<long>(query, param);
-			}
+            bool disposeConnection = transaction?.Connection == null;
+            NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+            try {
+                await using NpgsqlCommand command = new(query, connection, transaction);
+                command.Parameters.AddWithValue("SUB", item.Sub);
+                command.Parameters.AddWithValue("IDNEGOCIO", item.IdNegocio);
+                command.Parameters.AddWithValue("IDTEMPLATE", (object?)item.IdTemplate ?? DBNull.Value);
+                command.Parameters.AddWithValue("IDNORMA", (object?)item.IdNorma ?? DBNull.Value);
+                command.Parameters.AddWithValue("NOMBRE", (object?)item.Nombre ?? DBNull.Value);
+                command.Parameters.AddWithValue("DESCRIPCION", (object?)item.Descripcion ?? DBNull.Value);
+                command.Parameters.AddWithValue("IDTIPOPERIODICIDAD", (object?)item.IdTipoPeriodicidad ?? DBNull.Value);
+                command.Parameters.AddWithValue("MULTA", (object?)item.Multa ?? DBNull.Value);
+                command.Parameters.AddWithValue("IDCATEGORIANORMA", (object?)item.IdCategoriaNorma ?? DBNull.Value);
+                command.Parameters.AddWithValue("IDCARGO", (object?)item.IdCargo ?? DBNull.Value);
+                command.Parameters.AddWithValue("ORDENVISUAL", (object?)item.OrdenVisual ?? DBNull.Value);
+                command.Parameters.AddWithValue("EDITABLE", item.Editable);
+                command.Parameters.AddWithValue("FECHAACTIVACION", (object?)item.FechaActivacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("FECHADESACTIVACION", (object?)item.FechaDesactivacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("ACTIVADO", item.Activado);
+                command.Parameters.AddWithValue("PROCESOSNOTIFICACIONES", item.ProcesosNotificaciones == null ? DBNull.Value : JsonSerializer.Serialize(item.ProcesosNotificaciones, AppJsonSerializerContext.Default.ListDictionaryStringJsonElement));
+                command.Parameters.AddWithValue("FECHACREACION", (object?)item.FechaCreacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
+                return Convert.ToInt64(await command.ExecuteScalarAsync());
+            } finally {
+                if (disposeConnection && connection != null) {
+                    await connection.DisposeAsync();
+                }
+            }
 		}
 
 		public async Task Actualizar(NormaSuscrita item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"UPDATE TANATOS.NORMA_SUSCRITA SET SUB = @SUB, ID_NEGOCIO = @IDNEGOCIO, ID_TEMPLATE = @IDTEMPLATE, ID_NORMA = @IDNORMA, NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, " +
-                "ID_TIPO_PERIODICIDAD = @IDTIPOPERIODICIDAD, MULTA = @MULTA, ID_CATEGORIA_NORMA = @IDCATEGORIANORMA, ID_CARGO = @IDCARGO, ORDEN_VISUAL = @ORDENVISUAL, EDITABLE = @EDITABLE, " +
-				"FECHA_ACTIVACION = @FECHAACTIVACION, FECHA_DESACTIVACION = @FECHADESACTIVACION, ACTIVADO = @ACTIVADO, PROCESOS_NOTIFICACIONES = @PROCESOSNOTIFICACIONES::JSONB, FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
+				"UPDATE TANATOS.NORMA_SUSCRITA SET SUB = @SUB, ID_NEGOCIO = @IDNEGOCIO, ID_TEMPLATE = @IDTEMPLATE, " +
+                "ID_NORMA = @IDNORMA, NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, " +
+                "ID_TIPO_PERIODICIDAD = @IDTIPOPERIODICIDAD, MULTA = @MULTA, ID_CATEGORIA_NORMA = @IDCATEGORIANORMA, " +
+                "ID_CARGO = @IDCARGO, ORDEN_VISUAL = @ORDENVISUAL, EDITABLE = @EDITABLE, " +
+				"FECHA_ACTIVACION = @FECHAACTIVACION, FECHA_DESACTIVACION = @FECHADESACTIVACION, ACTIVADO = @ACTIVADO, " +
+                "PROCESOS_NOTIFICACIONES = @PROCESOSNOTIFICACIONES::JSONB, FECHA_CREACION = @FECHACREACION, " +
+                "FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
 				"WHERE ID = @ID";
-			DynamicParameters param = new();
-			param.Add("SUB", item.Sub);
-			param.Add("IDNEGOCIO", item.IdNegocio);
-			param.Add("IDTEMPLATE", item.IdTemplate);
-			param.Add("IDNORMA", item.IdNorma);
-			param.Add("NOMBRE", item.Nombre);
-			param.Add("DESCRIPCION", item.Descripcion);
-			param.Add("IDTIPOPERIODICIDAD", item.IdTipoPeriodicidad);
-			param.Add("MULTA", item.Multa);
-			param.Add("IDCATEGORIANORMA", item.IdCategoriaNorma);
-            param.Add("IDCARGO", item.IdCargo);
-            param.Add("ORDENVISUAL", item.OrdenVisual);
-			param.Add("EDITABLE", item.Editable);
-			param.Add("FECHAACTIVACION", item.FechaActivacion);
-			param.Add("FECHADESACTIVACION", item.FechaDesactivacion);
-			param.Add("ACTIVADO", item.Activado);
-			param.Add("PROCESOSNOTIFICACIONES", item.ProcesosNotificaciones == null ? null : JsonSerializer.Serialize(item.ProcesosNotificaciones, AppJsonSerializerContext.Default.ListDictionaryStringJsonElement));
-			param.Add("FECHACREACION", item.FechaCreacion);
-			param.Add("FECHAELIMINACION", item.FechaEliminacion);
-			param.Add("VIGENCIA", item.Vigencia);
-			param.Add("ID", item.Id);
 
-			if (transaction?.Connection != null) {
-				await transaction!.Connection!.ExecuteAsync(query, param, transaction);
-			} else {
-				await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-				await connection.ExecuteAsync(query, param);
-			}
+            bool disposeConnection = transaction?.Connection == null;
+            NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+            try {
+                await using NpgsqlCommand command = new(query, connection, transaction);
+                command.Parameters.AddWithValue("SUB", item.Sub);
+                command.Parameters.AddWithValue("IDNEGOCIO", item.IdNegocio);
+                command.Parameters.AddWithValue("IDTEMPLATE", (object?)item.IdTemplate ?? DBNull.Value);
+                command.Parameters.AddWithValue("IDNORMA", (object?)item.IdNorma ?? DBNull.Value);
+                command.Parameters.AddWithValue("NOMBRE", (object?)item.Nombre ?? DBNull.Value);
+                command.Parameters.AddWithValue("DESCRIPCION", (object?)item.Descripcion ?? DBNull.Value);
+                command.Parameters.AddWithValue("IDTIPOPERIODICIDAD", (object?)item.IdTipoPeriodicidad ?? DBNull.Value);
+                command.Parameters.AddWithValue("MULTA", (object?)item.Multa ?? DBNull.Value);
+                command.Parameters.AddWithValue("IDCATEGORIANORMA", (object?)item.IdCategoriaNorma ?? DBNull.Value);
+                command.Parameters.AddWithValue("IDCARGO", (object?)item.IdCargo ?? DBNull.Value);
+                command.Parameters.AddWithValue("ORDENVISUAL", (object?)item.OrdenVisual ?? DBNull.Value);
+                command.Parameters.AddWithValue("EDITABLE", item.Editable);
+                command.Parameters.AddWithValue("FECHAACTIVACION", (object?)item.FechaActivacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("FECHADESACTIVACION", (object?)item.FechaDesactivacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("ACTIVADO", item.Activado);
+                command.Parameters.AddWithValue("PROCESOSNOTIFICACIONES", item.ProcesosNotificaciones == null ? DBNull.Value : JsonSerializer.Serialize(item.ProcesosNotificaciones, AppJsonSerializerContext.Default.ListDictionaryStringJsonElement));
+                command.Parameters.AddWithValue("FECHACREACION", (object?)item.FechaCreacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
+                command.Parameters.AddWithValue("ID", item.Id);
+                await command.ExecuteNonQueryAsync();
+            } finally {
+                if (disposeConnection && connection != null) {
+                    await connection.DisposeAsync();
+                }
+            }
 		}
 	}
 }
