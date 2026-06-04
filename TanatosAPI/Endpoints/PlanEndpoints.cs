@@ -107,7 +107,7 @@ namespace TanatosAPI.Endpoints {
 							Precio = entrada.Precio,
 							DuracionMeses = entrada.DuracionMeses,
 							SuscripcionUnica = entrada.SuscripcionUnica,
-							Vigencia = true
+							Vigencia = entrada.Vigencia,
 						};
 						await planDao.Insertar(nuevo, transaction);
 
