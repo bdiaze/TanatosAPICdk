@@ -1,9 +1,11 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
+    [ExcludeFromCodeCoverage]
     public class CargoDao(DatabaseConnectionHelper connectionHelper) {
         public async Task<List<Cargo>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
             string query =

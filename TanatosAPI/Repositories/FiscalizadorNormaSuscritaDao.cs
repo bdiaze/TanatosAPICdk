@@ -1,10 +1,12 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class FiscalizadorNormaSuscritaDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class FiscalizadorNormaSuscritaDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<List<FiscalizadorNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_NORMA_SUSCRITA, ID_TIPO_FISCALIZADOR, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.FISCALIZADOR_NORMA_SUSCRITA " +

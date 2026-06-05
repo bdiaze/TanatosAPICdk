@@ -1,10 +1,12 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class TemplateActividadDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class TemplateActividadDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<List<TemplateActividad>> ObtenerPorTemplate(long idTemplate, NpgsqlTransaction? transaction = null) {
             string query =
                 "SELECT ID_TEMPLATE, ID_TIPO_ACTIVIDAD FROM TANATOS.TEMPLATE_ACTIVIDAD WHERE ID_TEMPLATE = @IDTEMPLATE";

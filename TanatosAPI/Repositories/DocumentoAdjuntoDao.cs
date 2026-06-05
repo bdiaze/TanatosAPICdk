@@ -1,10 +1,13 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Repositories {
-	public class DocumentoAdjuntoDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class DocumentoAdjuntoDao(DatabaseConnectionHelper connectionHelper): IDocumentoAdjuntoDao {
 		public async Task<List<DocumentoAdjunto>> ObtenerPorHistorial(long idHistorialNormaSuscrita, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_HISTORIAL_NORMA_SUSCRITA, BUCKET_NAME, BUCKET_KEY, NOMBRE_ARCHIVO, MIME_ESPERADO, TAMANNO_ESPERADO, MIME_REAL, TAMANNO_REAL, " +

@@ -1,10 +1,12 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class PlanDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class PlanDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<Plan?> Obtener(long id, NpgsqlTransaction? transaction = null) {
             string query =
                 "SELECT ID, NOMBRE, PRECIO, DURACION_MESES, SUSCRIPCION_UNICA, FLOW_PLAN_ID, VIGENCIA " +

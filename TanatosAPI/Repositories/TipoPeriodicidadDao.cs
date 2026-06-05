@@ -1,10 +1,12 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class TipoPeriodicidadDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class TipoPeriodicidadDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<TipoPeriodicidad?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
 			string query = "SELECT ID, NOMBRE, DESCRIPCION, CRON, DELTA_DIAS, DELTA_MESES, DELTA_ANNOS, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE ID = @ID";
 

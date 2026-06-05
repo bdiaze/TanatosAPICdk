@@ -1,10 +1,12 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class HistorialNormaSuscritaDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class HistorialNormaSuscritaDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<HistorialNormaSuscrita?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_NORMA_SUSCRITA, FECHA_VENCIMIENTO, FECHA_COMPLETITUD, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.HISTORIAL_NORMA_SUSCRITA " +

@@ -1,10 +1,12 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class UsuarioDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class UsuarioDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<Usuario?> Obtener(string sub, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT SUB, FLOW_CUSTOMER_ID, NOMBRE, APELLIDO, CORREO_ELECTRONICO FROM TANATOS.USUARIO WHERE SUB = @SUB";

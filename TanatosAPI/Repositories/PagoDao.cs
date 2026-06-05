@@ -1,10 +1,12 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class PagoDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class PagoDao(DatabaseConnectionHelper connectionHelper) {
 
 		public async Task<Pago?> ObtenerPorFlow(string flowSubscriptionId, string flowInvoiceId, NpgsqlTransaction? transaction = null) {
             string query =

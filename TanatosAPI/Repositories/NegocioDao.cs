@@ -1,10 +1,12 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class NegocioDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class NegocioDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<List<Negocio>> ObtenerPorSub(string sub, bool vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, SUB, NOMBRE, DIRECCION, ID_TIPO_ACTIVIDAD, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NEGOCIO " +

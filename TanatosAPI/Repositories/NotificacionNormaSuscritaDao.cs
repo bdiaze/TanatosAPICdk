@@ -1,10 +1,12 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class NotificacionNormaSuscritaDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class NotificacionNormaSuscritaDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<List<NotificacionNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_NORMA_SUSCRITA, ID_TIPO_UNIDAD_TIEMPO_ANTELACION, CANT_ANTELACION, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NOTIFICACION_NORMA_SUSCRITA " +

@@ -1,10 +1,12 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class TipoUnidadTiempoDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class TipoUnidadTiempoDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<TipoUnidadTiempo?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, CANT_MINUTOS, CANT_HORAS, CANT_DIAS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO " +

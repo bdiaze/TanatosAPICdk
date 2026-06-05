@@ -1,10 +1,12 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class MensajeDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class MensajeDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<List<Mensaje>> ObtenerPorRangoFechas(DateTime? fechaInicial, DateTime? fechaFinal, NpgsqlTransaction? transaction = null) {
 			string query =
                 "SELECT ID, SUB, NOMBRE, CORREO, CONTENIDO, HERMES_ID_MENSAJE, FECHA_CREACION FROM TANATOS.MENSAJE " +

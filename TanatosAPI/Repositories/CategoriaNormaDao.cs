@@ -1,10 +1,12 @@
 ﻿using Npgsql;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class CategoriaNormaDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class CategoriaNormaDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<CategoriaNorma?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
             string query =
                 "SELECT ID, NOMBRE, NOMBRE_CORTO, DESCRIPCION, VIGENCIA FROM TANATOS.CATEGORIA_NORMA WHERE ID = @ID";

@@ -1,9 +1,11 @@
 ﻿using Npgsql;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 
 namespace TanatosAPI.Repositories {
-	public class EventoPagoDao(DatabaseConnectionHelper connectionHelper) {
+    [ExcludeFromCodeCoverage]
+    public class EventoPagoDao(DatabaseConnectionHelper connectionHelper) {
 		public async Task<long> Insertar(EventoPago item, NpgsqlTransaction? transaction = null) {
             string query =
                 "INSERT INTO TANATOS.EVENTO_PAGO(PROVEEDOR, EVENTO, PAYLOAD, PROCESADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
