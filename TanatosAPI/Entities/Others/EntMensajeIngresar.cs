@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class EntMensajeIngresar {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class EntMensajeIngresar {
 		public required string Nombre { get; set; }
 		public required string Correo { get; set; }
 		public required string Contenido { get; set; }

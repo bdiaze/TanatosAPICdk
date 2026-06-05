@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
-	[Table("tipo_fiscalizador", Schema = "tanatos")]
+    [ExcludeFromCodeCoverage]
+    [Table("tipo_fiscalizador", Schema = "tanatos")]
 	public class TipoFiscalizador {
 		[Required]
 		[Column("id")]

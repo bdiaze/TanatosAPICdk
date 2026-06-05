@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TanatosAPI.Entities.Models {
-	[Table("mensaje", Schema = "tanatos")]
+    [ExcludeFromCodeCoverage]
+    [Table("mensaje", Schema = "tanatos")]
 	public class Mensaje {
 		[Required]
 		[Column("id")]

@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class SalNormaSuscrita {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class SalNormaSuscrita {
 		public long Id { get; set; }
 		public string? Nombre { get; set; }
 		public string? Descripcion { get; set; }
@@ -19,7 +22,8 @@
 		public DateTime? ProximoVencimiento { get; set; }
 	}
 
-	public class SalTemplateNorma {
+    [ExcludeFromCodeCoverage]
+    public class SalTemplateNorma {
 		public required long IdTemplate { get; set; }
 		public required string NombreTemplate { get; set; }
 		public required string Nombre { get; set; }
@@ -33,13 +37,15 @@
 		public List<SalNotificacionNormaSuscrita>? Notificaciones { get; set; }
 	}
 
-	public class SalFiscalizadorNormaSuscrita {
+    [ExcludeFromCodeCoverage]
+    public class SalFiscalizadorNormaSuscrita {
 		public long Id { get; set; }
 		public long IdTipoFiscalizador { get; set; }
 		public string? NombreTipoFiscalizador { get; set; }
 	}
 
-	public class SalNotificacionNormaSuscrita {
+    [ExcludeFromCodeCoverage]
+    public class SalNotificacionNormaSuscrita {
 		public long Id { get; set; }
 		public long IdTipoUnidadTiempoAntelacion { get; set; }
 		public string? NombreTipoUnidadTiempoAntelacion { get; set; }

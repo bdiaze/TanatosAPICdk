@@ -1,10 +1,13 @@
-﻿using System.Net;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using TanatosAPI.Entities.Others;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-	public class KairosHelper(VariableEntornoHelper variableEntorno, ApiKeyHelper apiKey) {
+    [ExcludeFromCodeCoverage]
+    public class KairosHelper(IVariableEntornoHelper variableEntorno, ApiKeyHelper apiKey) {
 		private readonly string _kairosBaseUrl = variableEntorno.Obtener("KAIROS_API_URL");
 		private readonly string _kairosApiKey = apiKey.ObtenerApiKey(variableEntorno.Obtener("KAIROS_API_KEY_ID")).Result;
 

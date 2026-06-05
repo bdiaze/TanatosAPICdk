@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class SalNormaSuscritaObtenerPorIdConVencimiento {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class SalNormaSuscritaObtenerPorIdConVencimiento {
 		public required bool TienePlanEmpresa { get; set; }
 		public long? IdNegocio { get; set; }
 		public string? NombreNegocio { get; set; }
@@ -20,7 +23,8 @@
 		public List<SalDocumentoAdjunto>? DocumentosAdjuntos { get; set; }
 	}
 
-	public class SalTemplateNormaObtenerPorIdConVencimiento {
+    [ExcludeFromCodeCoverage]
+    public class SalTemplateNormaObtenerPorIdConVencimiento {
 		public required long IdTemplate { get; set; }
 		public required string NombreTemplate { get; set; }
 		public required string Nombre { get; set; }

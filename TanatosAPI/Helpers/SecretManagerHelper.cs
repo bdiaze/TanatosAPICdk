@@ -1,7 +1,9 @@
 ﻿using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TanatosAPI.Helpers {
+    [ExcludeFromCodeCoverage]
     public class SecretManagerHelper(IAmazonSecretsManager client) {
 
         private readonly Dictionary<string, string> secretsValues = [];

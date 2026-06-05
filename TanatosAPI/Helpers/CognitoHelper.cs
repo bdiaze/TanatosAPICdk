@@ -1,8 +1,11 @@
 ﻿using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
+using System.Diagnostics.CodeAnalysis;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-	public class CognitoHelper(IAmazonCognitoIdentityProvider client, VariableEntornoHelper variableEntorno) {
+    [ExcludeFromCodeCoverage]
+    public class CognitoHelper(IAmazonCognitoIdentityProvider client, IVariableEntornoHelper variableEntorno) {
 
 		private readonly Dictionary<string, Dictionary<string, string>> atributosUsuarios = [];
 

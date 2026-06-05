@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class SalKairosIngresarProceso {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class SalKairosIngresarProceso {
 		public required string IdProceso { get; set; }
 		public required string IdCalendarizacion { get; set; }
 		public required string Nombre { get; set; }

@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
-	[Table("template_norma_notificacion", Schema = "tanatos")]
+    [ExcludeFromCodeCoverage]
+    [Table("template_norma_notificacion", Schema = "tanatos")]
 	public class TemplateNormaNotificacion {
 		[Required]
 		[Column("id_template")]

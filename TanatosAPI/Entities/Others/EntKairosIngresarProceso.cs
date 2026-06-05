@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class EntKairosIngresarProceso {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class EntKairosIngresarProceso {
 		public required string Nombre { get; set; }
 		public required string Cron { get; set; }
 		public required string ArnRol { get; set; }

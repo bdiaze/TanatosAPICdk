@@ -1,7 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others {
-	public class SalFlowPaymentGetStatus {
+    [ExcludeFromCodeCoverage]
+    public class SalFlowPaymentGetStatus {
 
 		[JsonPropertyName("flowOrder")]
 		public long? FlowOrder { get; set; }
@@ -41,7 +43,8 @@ namespace TanatosAPI.Entities.Others {
 		public string? MerchantId { get; set; }
 	}
 
-	public class SalFlowPaymentPendingInfo {
+    [ExcludeFromCodeCoverage]
+    public class SalFlowPaymentPendingInfo {
 		[JsonPropertyName("media")]
 		public string? Media { get; set; }
 
@@ -49,7 +52,8 @@ namespace TanatosAPI.Entities.Others {
 		public string? Date { get; set; }
 	}
 
-	public class SalFlowPaymentData {
+    [ExcludeFromCodeCoverage]
+    public class SalFlowPaymentData {
 		[JsonPropertyName("date")]
 		public string? Date { get; set; }
 

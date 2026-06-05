@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class EntNormaSuscritaCompletarNormaPorCodigoAcceso {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class EntNormaSuscritaCompletarNormaPorCodigoAcceso {
 		public required string CodigoAcceso { get; set; }
 	}
 }

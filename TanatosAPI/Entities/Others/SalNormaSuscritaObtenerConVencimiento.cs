@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class SalNormaSuscritaObtenerConVencimiento {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class SalNormaSuscritaObtenerConVencimiento {
 		public required DateTime FechaVencimiento { get; set; }
 		public required DateTime? FechaCompletitud { get; set; }
 		public required long IdNormaSuscrita { get; set; }

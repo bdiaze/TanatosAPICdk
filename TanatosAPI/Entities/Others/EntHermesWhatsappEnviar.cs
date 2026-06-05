@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class EntHermesWhatsappEnviar {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class EntHermesWhatsappEnviar {
 		public required string De { get; set; }
 		public required string Para { get; set; }
 		public string? NombreTemplate { get; set; }

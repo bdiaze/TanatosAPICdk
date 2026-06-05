@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class EntDocumentoAdjuntoGenerarUrlSubida {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class EntDocumentoAdjuntoGenerarUrlSubida {
 		public required long IdHistorialNormaSuscrita { get; set; }
 		public required string NombreArchivo { get; set; }
 		public required string Mime { get; set; }

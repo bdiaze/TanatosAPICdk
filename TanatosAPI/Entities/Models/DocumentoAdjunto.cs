@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
-	[Table("documento_adjunto", Schema = "tanatos")]
+    [ExcludeFromCodeCoverage]
+    [Table("documento_adjunto", Schema = "tanatos")]
 	public class DocumentoAdjunto {
 		[Required]
 		[Column("id")]
@@ -41,9 +43,10 @@ namespace TanatosAPI.Entities.Models {
 		[Column("tamanno_real")]
 		public long? TamannoReal { get; set; }
 
-		[Required]
+        // Estado de subida del documento adjunto. 0: Generada URL prefirmada para PUT - 1: Documento recepcionado.
+        [Required]
 		[Column("estado_subida")]
-		public required short EstadoSubida { get; set; }
+        public required short EstadoSubida { get; set; }
 
 		[Required]
 		[Column("fecha_emision_url_prefirmada_put", TypeName = "timestamp with time zone")]

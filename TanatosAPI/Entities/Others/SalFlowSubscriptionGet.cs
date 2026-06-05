@@ -1,7 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others {
-	public class SalFlowSubscriptionGet {
+    [ExcludeFromCodeCoverage]
+    public class SalFlowSubscriptionGet {
 		[JsonPropertyName("subscriptionId")]
 		public string? SubscriptionId { get; set; }
 

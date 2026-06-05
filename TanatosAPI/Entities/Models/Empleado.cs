@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
-	[Table("empleado", Schema = "tanatos")]
+    [ExcludeFromCodeCoverage]
+    [Table("empleado", Schema = "tanatos")]
 	public class Empleado {
 		[Required]
 		[Column("id")]

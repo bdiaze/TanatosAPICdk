@@ -1,7 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others {
-	public class SalHermesWhatsappMensaje {
+    [ExcludeFromCodeCoverage]
+    public class SalHermesWhatsappMensaje {
 		[JsonPropertyName("tenantId")]
 		public required string TenantId { get; set; }
 

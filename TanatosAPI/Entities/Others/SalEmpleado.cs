@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class SalEmpleado {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class SalEmpleado {
 		public required long Id { get; set; }
 		public required string Nombre { get; set; }
 		public long? IdCargo { get; set; }
@@ -7,7 +10,8 @@
 		public List<SalEmpleadoDestinatario> Destinatarios { get; set; } = [];
 	}
 
-	public class  SalEmpleadoDestinatario {
+    [ExcludeFromCodeCoverage]
+    public class  SalEmpleadoDestinatario {
 		public required long Id { get; set; }
 		public required long IdTipoReceptor { get; set; }
 		public required string NombreTipoReceptor { get; set; }

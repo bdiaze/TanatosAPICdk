@@ -1,11 +1,14 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
     public class GoogleAssessmentParams {
         [JsonPropertyName("event")]
         public required GoogleAssesmentEvent Event { get; set; }
     }
 
+    [ExcludeFromCodeCoverage]
     public class  GoogleAssesmentEvent {
         [JsonPropertyName("siteKey")]
         public required string SiteKey { get; set; }

@@ -1,6 +1,8 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
     public class GoogleRecaptchaCredential {
         [JsonPropertyName("type")]
         public required string Type { get; set; }

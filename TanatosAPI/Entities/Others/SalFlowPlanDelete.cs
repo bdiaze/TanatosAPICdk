@@ -1,7 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others {
-	public class SalFlowPlanDelete {
+    [ExcludeFromCodeCoverage]
+    public class SalFlowPlanDelete {
 		[JsonPropertyName("planId")]
 		public string? PlanId { get; set; }
 

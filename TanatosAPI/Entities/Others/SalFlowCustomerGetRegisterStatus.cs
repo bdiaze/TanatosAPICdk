@@ -1,7 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others {
-	public class SalFlowCustomerGetRegisterStatus {
+    [ExcludeFromCodeCoverage]
+    public class SalFlowCustomerGetRegisterStatus {
 		[JsonPropertyName("status")]
 		/* 0: No registrado - 1: Registrado */
 		public string? Status { get; set; }

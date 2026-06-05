@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class SalDestinatarioNotificacion {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class SalDestinatarioNotificacion {
 		public long Id { get; set; }
 		public long IdTipoReceptor { get; set; }
 		public string? NombreTipoReceptor { get; set; }

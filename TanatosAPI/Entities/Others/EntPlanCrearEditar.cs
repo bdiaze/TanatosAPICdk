@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class EntPlanCrearEditar {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class EntPlanCrearEditar {
 		public long Id { get; set; }
 		public required string Nombre { get; set; }
 		public required decimal Precio { get; set; }

@@ -1,7 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others {
-	public class SalFlowUrlToken {
+    [ExcludeFromCodeCoverage]
+    public class SalFlowUrlToken {
 		[JsonPropertyName("token")]
 		public required string Token { get; set; }
 

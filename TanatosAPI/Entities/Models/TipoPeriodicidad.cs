@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
-	[Table("tipo_periodicidad", Schema = "tanatos")]
+    [ExcludeFromCodeCoverage]
+    [Table("tipo_periodicidad", Schema = "tanatos")]
 	public class TipoPeriodicidad {
 		[Required]
 		[Column("id")]

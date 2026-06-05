@@ -1,11 +1,14 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
 using TanatosAPI.Entities.Others;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-	public class HermesHelper(VariableEntornoHelper variableEntorno, ApiKeyHelper apiKey) {
+    [ExcludeFromCodeCoverage]
+    public class HermesHelper(IVariableEntornoHelper variableEntorno, ApiKeyHelper apiKey) {
 		private readonly string _hermesBaseUrl = variableEntorno.Obtener("HERMES_API_URL");
 		private readonly string _hermesApiKey = apiKey.ObtenerApiKey(variableEntorno.Obtener("HERMES_API_KEY_ID")).Result;
 

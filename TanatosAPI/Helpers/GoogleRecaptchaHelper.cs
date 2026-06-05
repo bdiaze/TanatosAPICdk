@@ -1,13 +1,16 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using TanatosAPI.Entities.Others;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-	public class GoogleRecaptchaHelper(VariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper, HttpClient httpClient) {
+    [ExcludeFromCodeCoverage]
+    public class GoogleRecaptchaHelper(IVariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper, HttpClient httpClient) {
         private const string GOOGLE_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
         private const string GOOGLE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 

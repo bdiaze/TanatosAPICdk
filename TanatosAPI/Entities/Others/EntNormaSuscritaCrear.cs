@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class EntNormaSuscritaCrear {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class EntNormaSuscritaCrear {
 		public required long IdNegocio { get; set; }
 		public required string Nombre { get; set; }
 		public string? Descripcion { get; set; }
@@ -13,11 +16,13 @@
 		public DateTime? ProximoVencimiento { get; set; }
 	}
 
-	public class EntFiscalizadorNormaSuscritaCrear {
+    [ExcludeFromCodeCoverage]
+    public class EntFiscalizadorNormaSuscritaCrear {
 		public required long IdTipoFiscalizador { get; set; }
 	}
 
-	public class EntNotificacionNormaSuscritaCrear {
+    [ExcludeFromCodeCoverage]
+    public class EntNotificacionNormaSuscritaCrear {
 		public required long IdTipoUnidadTiempoAntelacion { get; set; }
 		public required int CantAntelacion { get; set; }
 	}

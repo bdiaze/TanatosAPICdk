@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class SalSuscripcion {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class SalSuscripcion {
 		public required long Id { get; set; }
 		public required long IdPlan { get; set; }
 		public required string NombrePlan { get; set; }

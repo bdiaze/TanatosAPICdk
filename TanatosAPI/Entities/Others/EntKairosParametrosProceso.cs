@@ -1,5 +1,8 @@
-﻿namespace TanatosAPI.Entities.Others {
-	public class EntKairosParametrosProceso {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+    [ExcludeFromCodeCoverage]
+    public class EntKairosParametrosProceso {
 		public required long IdNormaSuscrita { get; set; }
 		public required string Cron { get; set; }
 		public long? IdTipoUnidadTiempoAntelacion { get; set; }

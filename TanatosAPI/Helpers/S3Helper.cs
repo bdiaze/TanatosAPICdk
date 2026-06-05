@@ -1,10 +1,13 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Mime;
 using System.Text.RegularExpressions;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-	public class S3Helper(IAmazonS3 amazonS3) {
+    [ExcludeFromCodeCoverage]
+    public class S3Helper(IAmazonS3 amazonS3, IDateTimeProvider dateTimeProvider): IS3Helper {
 		private readonly int PRE_SIGNED_URL_EXPIRATION_MINUTES = 5;
 
 		public async Task<string> ObtenerPutPreSignedUrl(string bucketName, string bucketKey, string contentType) {
@@ -12,7 +15,7 @@ namespace TanatosAPI.Helpers {
 				BucketName = bucketName,
 				Key = bucketKey,
 				Verb = HttpVerb.PUT,
-				Expires = DateTime.UtcNow.AddMinutes(PRE_SIGNED_URL_EXPIRATION_MINUTES),
+				Expires = dateTimeProvider.UtcNow.AddMinutes(PRE_SIGNED_URL_EXPIRATION_MINUTES),
 				ContentType = contentType,
 			};
 
@@ -24,7 +27,7 @@ namespace TanatosAPI.Helpers {
 				BucketName = bucketName,
 				Key = bucketKey,
 				Verb = HttpVerb.GET,
-				Expires = DateTime.UtcNow.AddMinutes(PRE_SIGNED_URL_EXPIRATION_MINUTES),
+				Expires = dateTimeProvider.UtcNow.AddMinutes(PRE_SIGNED_URL_EXPIRATION_MINUTES),
 				ResponseHeaderOverrides = new ResponseHeaderOverrides {
 					ContentDisposition = $"attachment; filename*=UTF-8''{Uri.EscapeDataString(nombreArchivo)}"
 				}
@@ -37,7 +40,7 @@ namespace TanatosAPI.Helpers {
 			CreatePresignedPostRequest request = new() { 
 				BucketName = bucketName,
 				Key = bucketKey,
-				Expires = DateTime.UtcNow.AddMinutes(PRE_SIGNED_URL_EXPIRATION_MINUTES),
+				Expires = dateTimeProvider.UtcNow.AddMinutes(PRE_SIGNED_URL_EXPIRATION_MINUTES),
 				Conditions = [
 					S3PostCondition.ExactMatch("Content-Type", contentType),
 					S3PostCondition.ContentLengthRange(0, maxSize),

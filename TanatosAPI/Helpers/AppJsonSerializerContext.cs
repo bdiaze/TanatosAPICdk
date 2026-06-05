@@ -1,12 +1,14 @@
 ﻿using Amazon.Lambda.APIGatewayEvents;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 
 namespace TanatosAPI.Helpers {
-	[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
+    [ExcludeFromCodeCoverage]
+    [JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
 	[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyResponse))]
 	[JsonSerializable(typeof(ProblemDetails))]
     [JsonSerializable(typeof(Dictionary<string, string>))]

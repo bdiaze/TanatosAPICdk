@@ -1,7 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others {
-	public class SalFlowInvoiceGet {
+    [ExcludeFromCodeCoverage]
+    public class SalFlowInvoiceGet {
 		[JsonPropertyName("id")]
 		public long? Id { get; set; }
 
@@ -71,7 +73,8 @@ namespace TanatosAPI.Entities.Others {
 		public SalFlowInvoiceChargeAttemp[]? ChargeAttemps { get; set; }
 	}
 
-	public class SalFlowInvoiceItem {
+    [ExcludeFromCodeCoverage]
+    public class SalFlowInvoiceItem {
 		[JsonPropertyName("id")]
 		public long? Id { get; set; }
 
@@ -89,7 +92,8 @@ namespace TanatosAPI.Entities.Others {
 		public string? Amount { get; set; }
 	}
 
-	public class SalFlowInvoiceOutsidePayment {
+    [ExcludeFromCodeCoverage]
+    public class SalFlowInvoiceOutsidePayment {
 		[JsonPropertyName("date")]
 		public string? Date { get; set; }
 
@@ -97,7 +101,8 @@ namespace TanatosAPI.Entities.Others {
 		public string? Comment { get; set; }
 	}
 
-	public class SalFlowInvoiceChargeAttemp {
+    [ExcludeFromCodeCoverage]
+    public class SalFlowInvoiceChargeAttemp {
 		[JsonPropertyName("id")]
 		public long? Id { get; set; }
 
