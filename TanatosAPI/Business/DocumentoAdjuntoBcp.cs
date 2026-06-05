@@ -2,12 +2,13 @@
 using System.Runtime.CompilerServices;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class DocumentoAdjuntoBcp(DocumentoAdjuntoDao documentoAdjuntoDao, DocumentoAdjuntoHelper documentoAdjuntoHelper) {
-		private const long MAX_FILE_SIZE = 10 * 1024 * 1024;
-		private readonly string[] ALLOWED_FILES_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+	public class DocumentoAdjuntoBcp(IDateTimeProvider dateTimeProvider, IDocumentoAdjuntoDao documentoAdjuntoDao, DocumentoAdjuntoHelper documentoAdjuntoHelper) {
+		public const long MAX_FILE_SIZE = 10 * 1024 * 1024;
+		public static readonly string[] ALLOWED_FILES_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
 
         public bool TamannoValido(long tamanno) {
 			return tamanno <= MAX_FILE_SIZE;
@@ -42,7 +43,7 @@ namespace TanatosAPI.Business {
                 tamannoArchivo
             );
 
-            DateTime utcNow = DateTime.UtcNow;
+            DateTime utcNow = dateTimeProvider.UtcNow;
 
             DocumentoAdjunto nuevo = new() {
                 Id = 0,
@@ -73,7 +74,7 @@ namespace TanatosAPI.Business {
                 documentoAdjunto.MimeReal = contentType;
                 documentoAdjunto.TamannoReal = contentLength;
                 documentoAdjunto.EstadoSubida = 1 /* Documento recepcionado */;
-                documentoAdjunto.FechaConfirmacionSubida = DateTime.UtcNow;
+                documentoAdjunto.FechaConfirmacionSubida = dateTimeProvider.UtcNow;
 
                 await documentoAdjuntoDao.Actualizar(documentoAdjunto);
             }
@@ -86,7 +87,7 @@ namespace TanatosAPI.Business {
 		public async Task Eliminar(DocumentoAdjunto documentoAdjunto, NpgsqlTransaction? transaction = null) {
 			if (documentoAdjunto.Vigencia) {
 				documentoAdjunto.Vigencia = false;
-				documentoAdjunto.FechaEliminacion = DateTime.UtcNow;
+				documentoAdjunto.FechaEliminacion = dateTimeProvider.UtcNow;
 
 				await documentoAdjuntoDao.Actualizar(documentoAdjunto, transaction);
 				await documentoAdjuntoHelper.AgregarTagEstadoEliminado(documentoAdjunto.BucketKey);

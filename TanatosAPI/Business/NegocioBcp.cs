@@ -1,12 +1,13 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class NegocioBcp(NormaSuscritaBcp normaSuscritaBcp, NegocioDao negocioDao, NormaSuscritaDao normaSuscritaDao) {
+	public class NegocioBcp(IDateTimeProvider dateTimeProvider, NormaSuscritaBcp normaSuscritaBcp, NegocioDao negocioDao, NormaSuscritaDao normaSuscritaDao) {
 		public async Task EliminarNegocio(Negocio negocio, NpgsqlTransaction? transaction = null) {
 			if (negocio.Vigencia) {
-				negocio.FechaEliminacion = DateTime.UtcNow;
+				negocio.FechaEliminacion = dateTimeProvider.UtcNow;
 				negocio.Vigencia = false;
 				await negocioDao.Actualizar(negocio, transaction);
 

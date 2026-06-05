@@ -1,9 +1,10 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class HistorialNormaSuscritaBcp(DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateNormaDao templateNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao) {
+	public class HistorialNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateNormaDao templateNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao) {
 		public bool EstaVigente(HistorialNormaSuscrita? historialNormaSuscrita) {
 			return historialNormaSuscrita != null && historialNormaSuscrita.Vigencia;
 		}
@@ -28,11 +29,11 @@ namespace TanatosAPI.Business {
 			List<HistorialNormaSuscrita> historialesVigentes = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true, transaction);
 
 			if (ignorarVencidos) {
-				historialesVigentes = [.. historialesVigentes.Where(h => h.FechaVencimiento > DateTime.UtcNow)];
+				historialesVigentes = [.. historialesVigentes.Where(h => h.FechaVencimiento > dateTimeProvider.UtcNow)];
 			}
 
 			foreach (HistorialNormaSuscrita historial in historialesVigentes) {
-				historial.FechaEliminacion = DateTime.UtcNow;
+				historial.FechaEliminacion = dateTimeProvider.UtcNow;
 				historial.Vigencia = false;
 				await historialNormaSuscritaDao.Actualizar(historial, transaction);
 
@@ -42,7 +43,7 @@ namespace TanatosAPI.Business {
 
 		public async Task CompletarHistorialNormaSuscrita(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			if (historialNormaSuscrita.FechaCompletitud == null) {
-				historialNormaSuscrita.FechaCompletitud = DateTime.UtcNow;
+				historialNormaSuscrita.FechaCompletitud = dateTimeProvider.UtcNow;
 				await historialNormaSuscritaDao.Actualizar(historialNormaSuscrita, transaction);
 
 				await ProgramarSiguienteVencimiento(historialNormaSuscrita, transaction);
@@ -53,7 +54,7 @@ namespace TanatosAPI.Business {
 			// Solo se programa el siguiente vencimiento si no existe otro vencimiento futuro, no completado, distinto a la referencia...
 			List<HistorialNormaSuscrita> historialesFuturos = [.. 
 				(await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(historialNormaSuscrita.IdNormaSuscrita, true, transaction))
-					.Where(hns => hns.FechaCompletitud == null && hns.Id != historialNormaSuscrita.Id && hns.FechaVencimiento > DateTime.UtcNow)
+					.Where(hns => hns.FechaCompletitud == null && hns.Id != historialNormaSuscrita.Id && hns.FechaVencimiento > dateTimeProvider.UtcNow)
 			];
 			if (historialesFuturos.Count > 0) {
 				return;
@@ -96,7 +97,7 @@ namespace TanatosAPI.Business {
 						Id = 0,
 						IdNormaSuscrita = historialNormaSuscrita.IdNormaSuscrita,
 						FechaVencimiento = proximoVencimiento,
-						FechaCreacion = DateTime.UtcNow,
+						FechaCreacion = dateTimeProvider.UtcNow,
 						Vigencia = true
 					};
 

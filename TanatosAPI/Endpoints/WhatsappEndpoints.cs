@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -17,7 +18,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerConversaciones(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Conversaciones", async (DateTime? desde, DateTime? hasta, IHostEnvironment environment, VariableEntornoHelper variableEntorno, HermesHelper hermesHelper) => {
+			routes.MapGet("/Conversaciones", async (DateTime? desde, DateTime? hasta, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, HermesHelper hermesHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -41,7 +42,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerMensajes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Mensajes", async (string numeroTelefono, DateTime? desde, DateTime? hasta, IHostEnvironment environment, VariableEntornoHelper variableEntorno, HermesHelper hermesHelper) => {
+			routes.MapGet("/Mensajes", async (string numeroTelefono, DateTime? desde, DateTime? hasta, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, HermesHelper hermesHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -89,7 +90,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEnviarMensaje(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Enviar", async (EntWhatsappEnviar entrada, IHostEnvironment environment, VariableEntornoHelper variableEntorno, HermesHelper hermesHelper) => {
+			routes.MapPost("/Enviar", async (EntWhatsappEnviar entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, HermesHelper hermesHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

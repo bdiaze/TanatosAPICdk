@@ -6,6 +6,7 @@ using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -52,7 +53,7 @@ namespace TanatosAPI.Endpoints {
         }
 
         private static void MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-            routes.MapPost("/", async (EntCargoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CargoDao cargoDao, NegocioDao negocioDao) => {
+            routes.MapPost("/", async (EntCargoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, CargoDao cargoDao, NegocioDao negocioDao) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
@@ -75,7 +76,7 @@ namespace TanatosAPI.Endpoints {
                         Sub = sub,
                         Nombre = entrada.Nombre,
                         IdNegocio = entrada.IdNegocio,
-                        FechaCreacion = DateTime.UtcNow,
+                        FechaCreacion = dateTimeProvider.UtcNow,
                         FechaEliminacion = null,
                         Vigencia = true
                     };
@@ -143,7 +144,7 @@ namespace TanatosAPI.Endpoints {
         }
 
         private static void MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-            routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, CargoDao cargoDao, EmpleadoDao empleadoDao) => {
+            routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, CargoDao cargoDao, EmpleadoDao empleadoDao) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
@@ -171,7 +172,7 @@ namespace TanatosAPI.Endpoints {
 						}
 
                         // Se elimina el cargo...
-						existente.FechaEliminacion = DateTime.UtcNow;
+						existente.FechaEliminacion = dateTimeProvider.UtcNow;
 						existente.Vigencia = false;
 						await cargoDao.Actualizar(existente, transaction);
 

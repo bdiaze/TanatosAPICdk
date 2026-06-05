@@ -5,6 +5,7 @@ using System.Diagnostics;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -82,7 +83,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, VariableEntornoHelper variableEntorno, DatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
+			routes.MapPost("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, DatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -148,7 +149,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, VariableEntornoHelper variableEntorno, DatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
+			routes.MapPut("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, DatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

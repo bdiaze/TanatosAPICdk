@@ -11,6 +11,7 @@ using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -23,7 +24,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapValidarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Validar/", async (EntDestinatarioNotificacionValidar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, DestinatarioNotificacionBcp destinatarioNotificacionBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, CryptoHelper cryptoHelper) => {
+			routes.MapPost("/Validar/", async (EntDestinatarioNotificacionValidar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, DestinatarioNotificacionBcp destinatarioNotificacionBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, CryptoHelper cryptoHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -40,7 +41,7 @@ namespace TanatosAPI.Endpoints {
 
 					// Si el código aun no ha sido validado, se verifica la fecha de caducidad y se valida...
 					if (!destinatarioNotificacion.Validado) {
-						if (destinatarioNotificacion.FechaCaducidadCodigoValidacion < DateTime.UtcNow) {
+						if (destinatarioNotificacion.FechaCaducidadCodigoValidacion < dateTimeProvider.UtcNow) {
 							LambdaLogger.Log(
 								$"[POST] - [DestinatarioNotificacion] - [Validar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 								$"El código ingresado ya caducó");

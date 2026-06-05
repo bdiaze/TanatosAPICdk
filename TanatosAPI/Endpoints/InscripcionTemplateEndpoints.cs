@@ -8,6 +8,7 @@ using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -58,7 +59,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActivarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Activar", async (EntInscripcionTemplateActivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, ProcesoNotificacionBcp procesoNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
+			routes.MapPost("/Activar", async (EntInscripcionTemplateActivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, ProcesoNotificacionBcp procesoNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -120,12 +121,12 @@ namespace TanatosAPI.Endpoints {
 									Sub = sub,
 									IdNegocio = entrada.IdNegocio,
 									IdTemplate = templateAInscribir.Id,
-									FechaActivacion = DateTime.UtcNow,
+									FechaActivacion = dateTimeProvider.UtcNow,
 									Vigencia = true
 								}, transaction);
 							// Si no, se actualiza la existente...
 							} else {
-								inscripcionExistente.FechaActivacion = DateTime.UtcNow;
+								inscripcionExistente.FechaActivacion = dateTimeProvider.UtcNow;
 								inscripcionExistente.FechaDesactivacion = null;
 								inscripcionExistente.Vigencia = true;
 								await inscripcionTemplateDao.Actualizar(inscripcionExistente, transaction);
@@ -143,7 +144,7 @@ namespace TanatosAPI.Endpoints {
 									IdNorma = templateNorma.IdNorma,
 									Editable = false,
 									Activado = false,
-									FechaCreacion = DateTime.UtcNow,
+									FechaCreacion = dateTimeProvider.UtcNow,
 									Vigencia = true
 								};
 								normaSuscrita.Id = await normaSuscritaDao.Insertar(normaSuscrita, transaction);
@@ -153,17 +154,17 @@ namespace TanatosAPI.Endpoints {
 
 									TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
 
-									DateTime proximoVencimiento = cron.GetNextOccurrence(DateTime.UtcNow, timeZoneInfo) ?? throw new InvalidOperationException("No se pudo calcular el próximo vencimiento para obligación con activación automática");
+									DateTime proximoVencimiento = cron.GetNextOccurrence(dateTimeProvider.UtcNow, timeZoneInfo) ?? throw new InvalidOperationException("No se pudo calcular el próximo vencimiento para obligación con activación automática");
 									HistorialNormaSuscrita historialNormaSuscrita = new() {
 										Id = 0,
 										IdNormaSuscrita = normaSuscrita.Id,
 										FechaVencimiento = proximoVencimiento,
-										FechaCreacion = DateTime.UtcNow,
+										FechaCreacion = dateTimeProvider.UtcNow,
 										Vigencia = true
 									};
 									await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
 
-									normaSuscrita.FechaActivacion = DateTime.UtcNow;
+									normaSuscrita.FechaActivacion = dateTimeProvider.UtcNow;
 									normaSuscrita.Activado = true;
 									await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 								}
@@ -196,7 +197,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapDesactivarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Desactivar", async (EntInscripcionTemplateDesactivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, NormaSuscritaBcp normaSuscritaBcp, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao) => {
+			routes.MapPost("/Desactivar", async (EntInscripcionTemplateDesactivar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, NormaSuscritaBcp normaSuscritaBcp, InscripcionTemplateDao inscripcionTemplateDao, NormaSuscritaDao normaSuscritaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -217,7 +218,7 @@ namespace TanatosAPI.Endpoints {
 						await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
 						try {
-							inscripcionExistente.FechaDesactivacion = DateTime.UtcNow;
+							inscripcionExistente.FechaDesactivacion = dateTimeProvider.UtcNow;
 							inscripcionExistente.Vigencia = false;
 							await inscripcionTemplateDao.Actualizar(inscripcionExistente, transaction);
 

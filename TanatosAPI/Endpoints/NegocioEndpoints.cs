@@ -6,6 +6,7 @@ using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -101,7 +102,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntNegocioCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, NegocioDao negocioDao, TipoActividadDao tipoActividadDao) => {
+			routes.MapPost("/", async (EntNegocioCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, SuscripcionBcp suscripcionBcp, NegocioDao negocioDao, TipoActividadDao tipoActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -148,7 +149,7 @@ namespace TanatosAPI.Endpoints {
 						Nombre = entrada.Nombre,
 						Direccion = entrada.Direccion,
 						IdTipoActividad = entrada.IdTipoActividad,
-						FechaCreacion = DateTime.UtcNow,
+						FechaCreacion = dateTimeProvider.UtcNow,
 						Vigencia = true
 					};
 					nuevo.Id = await negocioDao.Insertar(nuevo);

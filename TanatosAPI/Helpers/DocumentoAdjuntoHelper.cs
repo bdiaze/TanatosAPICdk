@@ -1,5 +1,7 @@
-﻿namespace TanatosAPI.Helpers {
-	public class DocumentoAdjuntoHelper(S3Helper s3Helper, VariableEntornoHelper variableEntorno) {
+﻿using TanatosAPI.Interfaces;
+
+namespace TanatosAPI.Helpers {
+	public class DocumentoAdjuntoHelper(IS3Helper s3Helper, IVariableEntornoHelper variableEntorno) {
 		public readonly string BUCKET_NAME = variableEntorno.Obtener("BUCKET_NAME_DOCUMENTOS_ADJUNTOS");
 
 		public async Task<(string bucketName, string bucketKey, string preSignedUrl)> ObtenerPutPreSignedUrl(string sub, long idNegocio, long idNormaSuscrita, long idHistorialNormaSuscrita, string contentType) {

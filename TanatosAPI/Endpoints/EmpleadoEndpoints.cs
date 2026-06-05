@@ -7,6 +7,7 @@ using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -87,7 +88,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntEmpleadoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, SuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, CargoDao cargoDao, NegocioDao negocioDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
+			routes.MapPost("/", async (EntEmpleadoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, SuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, CargoDao cargoDao, NegocioDao negocioDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -178,7 +179,7 @@ namespace TanatosAPI.Endpoints {
 						IdNegocio = entrada.IdNegocio,
 						Nombre = entrada.Nombre,
 						IdCargo = cargo.Id,
-						FechaCreacion = DateTime.UtcNow,
+						FechaCreacion = dateTimeProvider.UtcNow,
 						FechaEliminacion = null,
 						Vigencia = true
 					};
@@ -419,7 +420,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -439,7 +440,7 @@ namespace TanatosAPI.Endpoints {
 						await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 						
 						try {
-							existente.FechaEliminacion = DateTime.UtcNow;
+							existente.FechaEliminacion = dateTimeProvider.UtcNow;
 							existente.Vigencia = false;
 							await empleadoDao.Actualizar(existente, transaction);
 

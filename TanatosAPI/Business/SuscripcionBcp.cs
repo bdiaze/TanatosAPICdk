@@ -1,14 +1,15 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class SuscripcionBcp(SuscripcionDao suscripcionDao, NegocioDao negocioDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) {
+	public class SuscripcionBcp(IDateTimeProvider dateTimeProvider, SuscripcionDao suscripcionDao, NegocioDao negocioDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) {
 		public async Task<bool> TienePlanEmpresa(string sub, NpgsqlTransaction? transaction = null) {
 			// Se obtienen las suscripciones del usuario...
 			List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(sub, true, transaction);
 
-			if (suscripciones.Any(s => s.FechaExpiracion != null && s.FechaExpiracion > DateTime.UtcNow)) {
+			if (suscripciones.Any(s => s.FechaExpiracion != null && s.FechaExpiracion > dateTimeProvider.UtcNow)) {
 				return true;
 			}
 

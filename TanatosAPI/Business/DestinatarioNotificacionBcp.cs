@@ -3,10 +3,11 @@ using System.Net;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class DestinatarioNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntorno, CryptoHelper cryptoHelper, HermesHelper hermesHelper, UsuarioBcp usuarioBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, NegocioDao negocioDao) {
+	public class DestinatarioNotificacionBcp(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, CryptoHelper cryptoHelper, HermesHelper hermesHelper, UsuarioBcp usuarioBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, NegocioDao negocioDao) {
 		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
 		public async Task<DestinatarioNotificacion> Crear(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null) {
@@ -18,7 +19,9 @@ namespace TanatosAPI.Business {
 				mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion), transaction);
 			}
 
-			DestinatarioNotificacion nuevoDestinatario = new() {
+			DateTime nowUtc = dateTimeProvider.UtcNow;
+
+            DestinatarioNotificacion nuevoDestinatario = new() {
 				Id = 0,
 				Sub = sub,
 				IdNegocio = idNegocio,
@@ -27,10 +30,10 @@ namespace TanatosAPI.Business {
 				Alias = alias,
 				Destino = destino,
 				CodigoValidacion = cryptoHelper.HashSHA256(codigoValidacion),
-				FechaCaducidadCodigoValidacion = DateTime.UtcNow.AddHours(HORAS_CADUCIDAD_CODIGO_VALIDACION),
+				FechaCaducidadCodigoValidacion = nowUtc.AddHours(HORAS_CADUCIDAD_CODIGO_VALIDACION),
 				Validado = yaValidado,
-				FechaValidacion = yaValidado ? DateTime.UtcNow : null,
-				FechaCreacion = DateTime.UtcNow,
+				FechaValidacion = yaValidado ? nowUtc : null,
+				FechaCreacion = nowUtc,
 				Vigencia = true
 			};
 			nuevoDestinatario.Id = await destinatarioNotificacionDao.Insertar(nuevoDestinatario, transaction);
@@ -98,14 +101,14 @@ namespace TanatosAPI.Business {
 		public async Task Validar(DestinatarioNotificacion destinatarioNotificacion, NpgsqlTransaction? transaction = null) {
 			if (!destinatarioNotificacion.Validado) {
 				destinatarioNotificacion.Validado = true;
-				destinatarioNotificacion.FechaValidacion = DateTime.UtcNow;
+				destinatarioNotificacion.FechaValidacion = dateTimeProvider.UtcNow;
 				await destinatarioNotificacionDao.Actualizar(destinatarioNotificacion, transaction);
 			}
 		}
 
 		public async Task Eliminar(DestinatarioNotificacion destinatarioNotificacion, NpgsqlTransaction? transaction = null) {
 			if (destinatarioNotificacion.Vigencia) {
-				destinatarioNotificacion.FechaEliminacion = DateTime.UtcNow;
+				destinatarioNotificacion.FechaEliminacion = dateTimeProvider.UtcNow;
 				destinatarioNotificacion.Vigencia = false;
 				await destinatarioNotificacionDao.Actualizar(destinatarioNotificacion, transaction);
 			}

@@ -12,6 +12,7 @@ using System.Security.Claims;
 using TanatosAPI.Business;
 using TanatosAPI.Endpoints;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 using TanatosAPI.UseCases;
 
@@ -85,7 +86,7 @@ builder.Services.AddSingleton<IAmazonS3>(sp => {
 #endregion
 
 #region Singleton Helpers
-builder.Services.AddSingleton<VariableEntornoHelper>();
+builder.Services.AddSingleton<IVariableEntornoHelper, VariableEntornoHelper>();
 builder.Services.AddSingleton<SecretManagerHelper>();
 builder.Services.AddSingleton<ApiKeyHelper>();
 builder.Services.AddSingleton<CognitoHelper>();
@@ -102,10 +103,11 @@ builder.Services.AddSingleton<NpgsqlDataSource>(serviceProvider => {
 });
 builder.Services.AddSingleton<DatabaseConnectionHelper>();
 builder.Services.AddSingleton<CryptoHelper>();
-builder.Services.AddSingleton<S3Helper>();
+builder.Services.AddSingleton<IS3Helper, S3Helper>();
 builder.Services.AddSingleton<DocumentoAdjuntoHelper>();
 builder.Services.AddHttpClient<GoogleRecaptchaHelper>();
 builder.Services.AddHttpClient<FlowHelper>();
+builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 #endregion
 
 #region Singleton DAO
@@ -129,7 +131,7 @@ builder.Services.AddSingleton<FiscalizadorNormaSuscritaDao>();
 builder.Services.AddSingleton<NotificacionNormaSuscritaDao>();
 builder.Services.AddSingleton<HistorialNormaSuscritaDao>();
 builder.Services.AddSingleton<HistorialNotificacionDao>();
-builder.Services.AddSingleton<DocumentoAdjuntoDao>();
+builder.Services.AddSingleton<IDocumentoAdjuntoDao, DocumentoAdjuntoDao>();
 builder.Services.AddSingleton<MensajeDao>();
 builder.Services.AddSingleton<PlanDao>();
 builder.Services.AddSingleton<SuscripcionDao>();

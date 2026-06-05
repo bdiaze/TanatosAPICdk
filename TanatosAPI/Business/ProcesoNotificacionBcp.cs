@@ -5,10 +5,11 @@ using System.Text.Json;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class ProcesoNotificacionBcp(IHostEnvironment environment, VariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, CryptoHelper cryptoHelper, UsuarioBcp usuarioBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao, CargoDao cargoDao, EmpleadoDao empleadoDao) {
+	public class ProcesoNotificacionBcp(IDateTimeProvider dateTimeProvider, IHostEnvironment environment, IVariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, CryptoHelper cryptoHelper, UsuarioBcp usuarioBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao, CargoDao cargoDao, EmpleadoDao empleadoDao) {
 		private const int DIAS_CADUCIDAD_CODIGO_ACCESO = 30;
 
 		public async Task ActualizarProgramacionProcesosNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
@@ -264,7 +265,7 @@ namespace TanatosAPI.Business {
 
 			// Se calcula la fecha a la que corresponde la ejecución actual, según la ocurrencia del cron más cercana...
 			CronExpression cronExpression = CronExpression.Parse(CronHelper.TransformarCronAWSAStandard(cron));
-			DateTime utcNow = DateTime.UtcNow;
+			DateTime utcNow = dateTimeProvider.UtcNow;
 			DateTime? siguienteUTC = cronExpression.GetNextOccurrence(utcNow, timeZoneInfo);
 			DateTime? anteriorUTC = cronExpression.GetPreviousOccurrence(utcNow, timeZoneInfo, true);
 			DateTime masCercanaUTC = (siguienteUTC, anteriorUTC) switch {
@@ -329,14 +330,14 @@ namespace TanatosAPI.Business {
 						IdTipoUnidadTiempoAntelacion = idTipoUnidadTiempoAntelacion,
 						CantAntelacion = cantAntelacion,
 						FechaProgramacion = masCercanaUTC,
-						FechaCreacion = DateTime.UtcNow,
+						FechaCreacion = dateTimeProvider.UtcNow,
 						Vigencia = true
                     };
                     historialNotificacion.Id = await historialNotificacionDao.Insertar(historialNotificacion, transaction);
 
                     // Se valida que según suscripción el destinatario esté habilitado, si no lo esta entonces no se manda la notificación...
                     if (!await suscripcionBcp.DestinatarioHabilitado(normaSuscrita.Sub, normaSuscrita.IdNegocio, destinatario.Id, transaction)) {
-                        historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+                        historialNotificacion.FechaEjecucion = dateTimeProvider.UtcNow;
                         historialNotificacion.Estado = 2; // Omitido
                         historialNotificacion.Observacion = "El destinatario no está habilitado según la suscripción del usuario.";
                         await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
@@ -346,7 +347,7 @@ namespace TanatosAPI.Business {
 
 					// Se valida que la unidad de tiempo este vigente, solo si viene como entrada...
                     if (idTipoUnidadTiempoAntelacion != null && unidadTiempo == null) {
-                        historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+                        historialNotificacion.FechaEjecucion = dateTimeProvider.UtcNow;
                         historialNotificacion.Estado = 2; // Omitido
                         historialNotificacion.Observacion = "El tipo de unidad de tiempo no está vigente.";
                         await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
@@ -402,10 +403,10 @@ namespace TanatosAPI.Business {
                                         .Replace("[CODIGO_ACCESO]", Uri.EscapeDataString(codigoAcceso))
                         });
 
-                        historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+                        historialNotificacion.FechaEjecucion = dateTimeProvider.UtcNow;
                         historialNotificacion.Estado = 1; // Enviado
                         historialNotificacion.CodigoAcceso = cryptoHelper.HashSHA256(codigoAcceso);
-                        historialNotificacion.FechaCaducidadCodigoAcceso = DateTime.UtcNow.AddDays(DIAS_CADUCIDAD_CODIGO_ACCESO);
+                        historialNotificacion.FechaCaducidadCodigoAcceso = dateTimeProvider.UtcNow.AddDays(DIAS_CADUCIDAD_CODIGO_ACCESO);
                         historialNotificacion.HermesIdMensaje = response.IdMensaje;
                         await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
 
@@ -442,16 +443,16 @@ namespace TanatosAPI.Business {
                             ParametrosBoton = [Uri.EscapeDataString(codigoAcceso)]
                         });
 
-                        historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+                        historialNotificacion.FechaEjecucion = dateTimeProvider.UtcNow;
                         historialNotificacion.Estado = 1; // Enviado
                         historialNotificacion.CodigoAcceso = cryptoHelper.HashSHA256(codigoAcceso);
-                        historialNotificacion.FechaCaducidadCodigoAcceso = DateTime.UtcNow.AddDays(DIAS_CADUCIDAD_CODIGO_ACCESO);
+                        historialNotificacion.FechaCaducidadCodigoAcceso = dateTimeProvider.UtcNow.AddDays(DIAS_CADUCIDAD_CODIGO_ACCESO);
                         historialNotificacion.HermesIdMensaje = response.IdMensaje;
                         await historialNotificacionDao.Actualizar(historialNotificacion, transaction);
                     
 					// En cualquier otro caso, se omite la notificación por falta de implementación...
                     } else {
-                        historialNotificacion.FechaEjecucion = DateTime.UtcNow;
+                        historialNotificacion.FechaEjecucion = dateTimeProvider.UtcNow;
                         historialNotificacion.Estado = 2; // Omitido
                         historialNotificacion.Observacion = "El tipo de receptor asociado al destinatario no tiene lógica de notificación implementada.";
                         await historialNotificacionDao.Actualizar(historialNotificacion, transaction);

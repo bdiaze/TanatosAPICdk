@@ -13,6 +13,7 @@ using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -74,7 +75,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntSuscripcionCrear entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, UsuarioBcp usuarioBcp, PlanDao planDao, SuscripcionDao suscripcionDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
+			routes.MapPost("/", async (EntSuscripcionCrear entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, UsuarioBcp usuarioBcp, PlanDao planDao, SuscripcionDao suscripcionDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -92,7 +93,7 @@ namespace TanatosAPI.Endpoints {
 
 					// Se valida que el usuario no tenga otra suscripción vigente...
 					List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(sub, true);
-					if (suscripciones.Any(s => s.FechaExpiracion != null && s.FechaExpiracion > DateTime.UtcNow)) {
+					if (suscripciones.Any(s => s.FechaExpiracion != null && s.FechaExpiracion > dateTimeProvider.UtcNow)) {
 						LambdaLogger.Log(
 							$"[POST] - [Suscripcion] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"El usuario ya cuenta con una suscripción activa.");
@@ -119,7 +120,7 @@ namespace TanatosAPI.Endpoints {
 						DateTime? fechaExpiracion;
 						if (planExistente.Precio == 0) {
 							estado = 1; // Activa
-							fechaInicio = DateTime.UtcNow;
+							fechaInicio = dateTimeProvider.UtcNow;
 
 							// Nos aseguramos de que la fecha esté en UTC...
 							DateTime fechaUTC = DateTime.SpecifyKind(fechaInicio.Value, DateTimeKind.Utc);
@@ -142,7 +143,7 @@ namespace TanatosAPI.Endpoints {
 
 							// Se eliminan todas las suscripciones del cliente que tienen su pago pendiente...
 							foreach (Suscripcion suscripcionEliminar in suscripciones.Where(s => s.Estado == 4 /* Pago Pendiente */)) {
-								suscripcionEliminar.FechaEliminacion = DateTime.UtcNow;
+								suscripcionEliminar.FechaEliminacion = dateTimeProvider.UtcNow;
 								suscripcionEliminar.Vigencia = false;
 								await suscripcionDao.Actualizar(suscripcionEliminar, transaction);
 							}
@@ -159,7 +160,7 @@ namespace TanatosAPI.Endpoints {
 							Estado = estado,
 							FlowCustomerId = null,
 							FlowSubscriptionId = null,
-							FechaCreacion = DateTime.UtcNow,
+							FechaCreacion = dateTimeProvider.UtcNow,
 							FechaEliminacion = null,
 							Vigencia = true
 						};
@@ -214,13 +215,13 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActivarSuscripcionGratuitaEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/ActivarSuscripcionGratuita", async (EntSuscripcionActivarSuscripcionGratuita entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, PlanDao planDao, SuscripcionDao suscripcionDao) => {
+			routes.MapPost("/ActivarSuscripcionGratuita", async (EntSuscripcionActivarSuscripcionGratuita entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, PlanDao planDao, SuscripcionDao suscripcionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
 					// Se valida que el usuario no tenga otra suscripción vigente...
 					List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(entrada.Sub, true);
-					if (suscripciones.Any(s => s.FechaExpiracion != null && s.FechaExpiracion > DateTime.UtcNow)) {
+					if (suscripciones.Any(s => s.FechaExpiracion != null && s.FechaExpiracion > dateTimeProvider.UtcNow)) {
 						LambdaLogger.Log(
 							$"[POST] - [Suscripcion] - [ActivarSuscripcionGratuita] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 							$"El usuario ya cuenta con una suscripción activa - Sub: {entrada.Sub}.");
@@ -243,7 +244,7 @@ namespace TanatosAPI.Endpoints {
 						await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
 						try {
-							DateTime fechaInicio = DateTime.UtcNow;
+							DateTime fechaInicio = dateTimeProvider.UtcNow;
 
 							// Nos aseguramos de que la fecha esté en UTC...
 							DateTime fechaUTC = DateTime.SpecifyKind(fechaInicio, DateTimeKind.Utc);
@@ -269,7 +270,7 @@ namespace TanatosAPI.Endpoints {
 								Estado = 1, // Activa,
 								FlowCustomerId = null,
 								FlowSubscriptionId = null,
-								FechaCreacion = DateTime.UtcNow,
+								FechaCreacion = dateTimeProvider.UtcNow,
 								FechaEliminacion = null,
 								Vigencia = true
 							};
@@ -307,7 +308,7 @@ namespace TanatosAPI.Endpoints {
 
 
 		private static IEndpointRouteBuilder MapCancelarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{idSuscripcion}", async (long idSuscripcion, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, SuscripcionDao suscripcionDao, FlowHelper flowHelper) => {
+			routes.MapDelete("/{idSuscripcion}", async (long idSuscripcion, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, SuscripcionDao suscripcionDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -328,7 +329,7 @@ namespace TanatosAPI.Endpoints {
 
 					try {
 						existente.Estado = 2; // Cancelada
-						existente.FechaCancelacion = DateTime.UtcNow;
+						existente.FechaCancelacion = dateTimeProvider.UtcNow;
 						await suscripcionDao.Actualizar(existente, transaction);
 
 						if (existente.FlowSubscriptionId != null) {
@@ -359,7 +360,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapWebhookEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/flow-webhook/{tipo}", async (string tipo, [FromForm] string token, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, VariableEntornoHelper variableEntorno, EventoPagoDao eventoPagoDao, SuscripcionDao suscripcionDao, PlanDao planDao, PagoDao pagoDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
+			routes.MapPost("/flow-webhook/{tipo}", async (string tipo, [FromForm] string token, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, EventoPagoDao eventoPagoDao, SuscripcionDao suscripcionDao, PlanDao planDao, PagoDao pagoDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -374,7 +375,7 @@ namespace TanatosAPI.Endpoints {
 						Evento = $"{tipo}Webhook",
 						Payload = JsonSerializer.Serialize(entrada, AppJsonSerializerContext.Default.EntSuscripcionWebhook),
 						Procesado = false,
-						FechaCreacion = DateTime.UtcNow,
+						FechaCreacion = dateTimeProvider.UtcNow,
 						FechaEliminacion = null,
 						Vigencia = true,
 					};
@@ -430,7 +431,7 @@ namespace TanatosAPI.Endpoints {
 									if (plan != null) {
 										Pago? pagoExistente = await pagoDao.ObtenerPorFlow(suscripcion.FlowSubscriptionId!, flowInvoiceId);
 										if (pagoExistente == null) {
-											DateTime ahora = DateTime.UtcNow;
+											DateTime ahora = dateTimeProvider.UtcNow;
 
 											// Se crea el pago en el sistema...
 											Pago nuevoPago = new() {

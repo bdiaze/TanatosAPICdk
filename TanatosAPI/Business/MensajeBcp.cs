@@ -2,10 +2,11 @@
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class MensajeBcp(MensajeDao mensajeDao, IHostEnvironment environment, HermesHelper hermesHelper, VariableEntornoHelper variableEntorno) {
+	public class MensajeBcp(IDateTimeProvider dateTimeProvider, MensajeDao mensajeDao, IHostEnvironment environment, HermesHelper hermesHelper, IVariableEntornoHelper variableEntorno) {
 		public async Task<Mensaje> Ingresar(string nombre, string correo, string contenido, string? sub = null) {
 
 			Mensaje nuevo = new() { 
@@ -14,7 +15,7 @@ namespace TanatosAPI.Business {
 				Nombre = nombre,
 				Correo = correo, 
 				Contenido = contenido,
-				FechaCreacion = DateTime.UtcNow
+				FechaCreacion = dateTimeProvider.UtcNow
 			};
 
 			nuevo.Id = await mensajeDao.Insertar(nuevo);

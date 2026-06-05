@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Endpoints {
 	public static class AuthEndpoints {
@@ -22,7 +23,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapObtenerAccessToken(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/ObtenerAccessToken", async (EntAuthObtenerAccessToken entrada, HttpContext httpContext, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
+			routes.MapPost("/ObtenerAccessToken", async (EntAuthObtenerAccessToken entrada, HttpContext httpContext, HttpResponse httpResponse, IHostEnvironment environment, IVariableEntornoHelper variableEntorno) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -106,7 +107,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapRefreshAccessToken(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/RefreshAccessToken", async(HttpContext httpContext, HttpRequest httpRequest, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
+			routes.MapPost("/RefreshAccessToken", async(HttpContext httpContext, HttpRequest httpRequest, HttpResponse httpResponse, IHostEnvironment environment, IVariableEntornoHelper variableEntorno) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -187,7 +188,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapLimpiarAuthCookies(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/LimpiarAuthCookies", (HttpContext httpContext, HttpResponse httpResponse, IHostEnvironment environment, VariableEntornoHelper variableEntorno) => {
+			routes.MapPost("/LimpiarAuthCookies", (HttpContext httpContext, HttpResponse httpResponse, IHostEnvironment environment, IVariableEntornoHelper variableEntorno) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
