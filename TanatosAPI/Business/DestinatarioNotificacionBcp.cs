@@ -1,5 +1,7 @@
 ﻿using Npgsql;
+using System.Data.Common;
 using System.Net;
+using System.Transactions;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
@@ -7,97 +9,110 @@ using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class DestinatarioNotificacionBcp(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, CryptoHelper cryptoHelper, HermesHelper hermesHelper, UsuarioBcp usuarioBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, NegocioDao negocioDao) {
+	public class DestinatarioNotificacionBcp(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, CryptoHelper cryptoHelper, HermesHelper hermesHelper, DestinatarioNotificacionDao destinatarioNotificacionDao) {
 		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
-		public async Task<DestinatarioNotificacion> Crear(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null) {
-			// Se crea un código de validación...
-			string codigoValidacion = cryptoHelper.GenerarToken();
-			DestinatarioNotificacion? mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion), transaction);
-			while (mismoCodigo != null) {
-				codigoValidacion = cryptoHelper.GenerarToken();
-				mismoCodigo = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion), transaction);
-			}
+        public bool EstaVigente(DestinatarioNotificacion? destinatarioNotificacion) {
+            return destinatarioNotificacion != null && destinatarioNotificacion.Vigencia;
+        }
 
+		public bool EstaValidado(DestinatarioNotificacion destinatarioNotificacion) {
+			return destinatarioNotificacion.Validado;
+		}
+
+        public bool CodigoValidacionVigente(DestinatarioNotificacion destinatarioNotificacion) {
+            return destinatarioNotificacion.FechaCaducidadCodigoValidacion >= dateTimeProvider.UtcNow;
+        }
+
+        public async Task<string> GenerarCodigoValidacion(NpgsqlTransaction? transaction = null) {
+            string codigoValidacion = cryptoHelper.GenerarToken();
+            DestinatarioNotificacion? mismoCodigo = await ObtenerPorCodigoValidacion(codigoValidacion, transaction);
+            while (mismoCodigo != null) {
+                codigoValidacion = cryptoHelper.GenerarToken();
+                mismoCodigo = await ObtenerPorCodigoValidacion(codigoValidacion, transaction);
+            }
+			return codigoValidacion;
+        }
+
+		public async Task<DestinatarioNotificacion?> ObtenerPorCodigoValidacion(string codigoValidacion, NpgsqlTransaction? transaction = null) {
+			return await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion), transaction);
+		}
+
+		public async Task<(DestinatarioNotificacion nuevoDestinatario, string codigoValidacion)> Insertar(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null) {
+			string codigoValidacion = await GenerarCodigoValidacion(transaction);
 			DateTime nowUtc = dateTimeProvider.UtcNow;
 
             DestinatarioNotificacion nuevoDestinatario = new() {
-				Id = 0,
-				Sub = sub,
-				IdNegocio = idNegocio,
-				IdEmpleado = idEmpleado,
-				IdTipoReceptor = idTipoReceptor,
-				Alias = alias,
-				Destino = destino,
-				CodigoValidacion = cryptoHelper.HashSHA256(codigoValidacion),
-				FechaCaducidadCodigoValidacion = nowUtc.AddHours(HORAS_CADUCIDAD_CODIGO_VALIDACION),
-				Validado = yaValidado,
-				FechaValidacion = yaValidado ? nowUtc : null,
-				FechaCreacion = nowUtc,
-				Vigencia = true
-			};
-			nuevoDestinatario.Id = await destinatarioNotificacionDao.Insertar(nuevoDestinatario, transaction);
+                Id = 0,
+                Sub = sub,
+                IdNegocio = idNegocio,
+                IdEmpleado = idEmpleado,
+                IdTipoReceptor = idTipoReceptor,
+                Alias = alias,
+                Destino = destino,
+                CodigoValidacion = cryptoHelper.HashSHA256(codigoValidacion),
+                FechaCaducidadCodigoValidacion = nowUtc.AddHours(HORAS_CADUCIDAD_CODIGO_VALIDACION),
+                Validado = yaValidado,
+                FechaValidacion = yaValidado ? nowUtc : null,
+                FechaCreacion = nowUtc,
+                Vigencia = true
+            };
+            nuevoDestinatario.Id = await destinatarioNotificacionDao.Insertar(nuevoDestinatario, transaction);
+			return (nuevoDestinatario, codigoValidacion);
+        }
 
-			if (yaValidado) return nuevoDestinatario;
+		public async Task RegistrarHermesIdMensaje(DestinatarioNotificacion destinatarioNotificacion, string hermesIdMensaje, NpgsqlTransaction? transaction = null) {
+            destinatarioNotificacion.HermesIdMensaje = hermesIdMensaje;
+            await destinatarioNotificacionDao.Actualizar(destinatarioNotificacion, transaction);
+        }
 
-			// Se envía mensaje con el código de validación...
-			if (nuevoDestinatario.IdTipoReceptor == 1 /* Correo electrónico */) {
-				Negocio negocio = (await negocioDao.ObtenerPorSub(sub, true, transaction)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new InvalidOperationException("ID de negocio no válido");
-				Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(sub, transaction);
+		public async Task<string> EnviarCorreoValidacionDestinatario(string correoDestino, string nombreUsuario, string nombreNegocio, string codigoValidacion) {
+            string strTemplateCorreo;
+            if (environment.IsProduction()) {
+                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "ValidacionDestinatario.html"));
+            } else {
+                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "ValidacionDestinatario.html"));
+            }
 
-				string strTemplateCorreo;
-				if (environment.IsProduction()) {
-					strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "ValidacionDestinatario.html"));
-				} else {
-					strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "ValidacionDestinatario.html"));
-				}
+            SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+                De = new DireccionCorreo() {
+                    Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
+                    Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
+                },
+                Para = [
+                    new DireccionCorreo() {
+                                Correo = correoDestino
+                            }
+                ],
+                Asunto = "¡[NOMBRE_USUARIO] te añadió como destinatario de notificaciones de [NOMBRE_NEGOCIO]!"
+                            .Replace("[NOMBRE_USUARIO]", nombreUsuario ?? "")
+                            .Replace("[NOMBRE_NEGOCIO]", nombreNegocio),
+                Cuerpo = strTemplateCorreo
+                            .Replace("[NOMBRE_USUARIO]", WebUtility.HtmlEncode(nombreUsuario ?? ""))
+                            .Replace("[NOMBRE_NEGOCIO]", WebUtility.HtmlEncode(nombreNegocio))
+                            .Replace("[CODIGO_VALIDACION]", Uri.EscapeDataString(codigoValidacion)),
+            });
 
-				SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
-					De = new DireccionCorreo() {
-						Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
-						Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
-					},
-					Para = [
-						new DireccionCorreo() {
-								Correo = nuevoDestinatario.Destino
-							}
+			return retorno.IdMensaje;
+        }
+
+		public async Task<string> EnviarWhatsappValidacionDestinatario(string whatsappDestino, string nombreUsuario, string nombreNegocio, string codigoValidacion) {
+			SalHermesEnviar retorno = await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {
+				De = variableEntorno.Obtener("HERMES_DE_WHATSAPP"),
+				Para = whatsappDestino,
+				NombreTemplate = "validacion_destinatario",
+				ParametrosCuerpo = [
+						nombreUsuario ?? "",
+						nombreNegocio
 					],
-					Asunto = "¡[NOMBRE_USUARIO] te añadió como destinatario de notificaciones de [NOMBRE_NEGOCIO]!"
-								.Replace("[NOMBRE_USUARIO]", usuario.Nombre ?? "")
-								.Replace("[NOMBRE_NEGOCIO]", negocio.Nombre),
-					Cuerpo = strTemplateCorreo
-								.Replace("[NOMBRE_USUARIO]", WebUtility.HtmlEncode(usuario.Nombre ?? ""))
-								.Replace("[NOMBRE_NEGOCIO]", WebUtility.HtmlEncode(negocio.Nombre))
-								.Replace("[CODIGO_VALIDACION]", Uri.EscapeDataString(codigoValidacion)),
-				});
-
-				nuevoDestinatario.HermesIdMensaje = retorno.IdMensaje;
-				await destinatarioNotificacionDao.Actualizar(nuevoDestinatario, transaction);
-
-			} else if (nuevoDestinatario.IdTipoReceptor == 2 /* Whatsapp */) {
-				Negocio negocio = (await negocioDao.ObtenerPorSub(sub, true, transaction)).FirstOrDefault(n => n.Id == idNegocio) ?? throw new InvalidOperationException("ID de negocio no válido");
-				Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(sub, transaction);
-
-				SalHermesEnviar retorno = await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {
-					De = variableEntorno.Obtener("HERMES_DE_WHATSAPP"),
-					Para = nuevoDestinatario.Destino,
-					NombreTemplate = "validacion_destinatario",
-					ParametrosCuerpo = [
-						usuario.Nombre ?? "",
-						negocio.Nombre
-					],
-					ParametrosBoton = [
+				ParametrosBoton = [
 						Uri.EscapeDataString(codigoValidacion)
 					]
-				});
+			});
 
-				nuevoDestinatario.HermesIdMensaje = retorno.IdMensaje;
-				await destinatarioNotificacionDao.Actualizar(nuevoDestinatario, transaction);
-			}
-
-			return nuevoDestinatario;
-		}
-		
+			return retorno.IdMensaje;
+        }
+        				
 		public async Task Validar(DestinatarioNotificacion destinatarioNotificacion, NpgsqlTransaction? transaction = null) {
 			if (!destinatarioNotificacion.Validado) {
 				destinatarioNotificacion.Validado = true;

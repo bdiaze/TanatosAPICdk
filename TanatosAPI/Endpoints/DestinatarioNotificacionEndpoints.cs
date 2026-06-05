@@ -10,9 +10,11 @@ using System.Text.RegularExpressions;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
+using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
 	public static class DestinatarioNotificacionEndpoints {
@@ -24,50 +26,24 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapValidarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Validar/", async (EntDestinatarioNotificacionValidar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, DestinatarioNotificacionBcp destinatarioNotificacionBcp, DestinatarioNotificacionDao destinatarioNotificacionDao, CryptoHelper cryptoHelper) => {
+			routes.MapPost("/Validar/", async (EntDestinatarioNotificacionValidar entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					DestinatarioNotificacion? destinatarioNotificacion = await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(entrada.CodigoValidacion));
-
-					// Se valida que el código exista...
-					if (destinatarioNotificacion == null || !destinatarioNotificacion.Vigencia) {
-						LambdaLogger.Log(
-							$"[POST] - [DestinatarioNotificacion] - [Validar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status404NotFound}] - " +
-							$"Código ingresado no es válido");
-
-						return Results.NotFound("Código ingresado no es válido");
-					}
-
-					// Si el código aun no ha sido validado, se verifica la fecha de caducidad y se valida...
-					if (!destinatarioNotificacion.Validado) {
-						if (destinatarioNotificacion.FechaCaducidadCodigoValidacion < dateTimeProvider.UtcNow) {
-							LambdaLogger.Log(
-								$"[POST] - [DestinatarioNotificacion] - [Validar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-								$"El código ingresado ya caducó");
-
-							return Results.BadRequest("El código ingresado ya caducó");
-						} else {
-							await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-							await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
-
-							try {
-								await destinatarioNotificacionBcp.Validar(destinatarioNotificacion, transaction);
-
-								await transaction.CommitAsync();
-							} catch {
-								await transaction.RollbackAsync();
-								throw;
-							}
-						}
-					}
+					await destinatarioNotificacionUseCase.ValidarDestinatario(entrada.CodigoValidacion);
 
 					LambdaLogger.Log(
 						$"[POST] - [DestinatarioNotificacion] - [Validar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Se valida exitosamente el destinatario de notificación.");
 
 					return Results.Ok();
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[POST] - [DestinatarioNotificacion] - [Validar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [DestinatarioNotificacion] - [Validar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al validar el destinatario de notificación. " +

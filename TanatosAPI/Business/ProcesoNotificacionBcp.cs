@@ -215,7 +215,7 @@ namespace TanatosAPI.Business {
 			// Se valida que exista un destinatario correspondiente a la cuenta del usuario...
 			Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(normaSuscrita.Sub, transaction);
 			if (usuario.CorreoElectronico != null && !destinatariosValidados.Any(d => d.IdEmpleado == null && d.IdTipoReceptor == 1 /* Correo electrónico */ && d.Destino == usuario.CorreoElectronico)) {
-				DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionBcp.Crear(
+				(DestinatarioNotificacion nuevoDestinatario, _) = await destinatarioNotificacionBcp.Insertar(
 					normaSuscrita.Sub,
 					normaSuscrita.IdNegocio,
 					null,

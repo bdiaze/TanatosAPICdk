@@ -9,6 +9,7 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
+using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
 	public static class EmpleadoEndpoints {
@@ -88,7 +89,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntEmpleadoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, SuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, CargoDao cargoDao, NegocioDao negocioDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
+			routes.MapPost("/", async (EntEmpleadoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, SuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, CargoDao cargoDao, NegocioDao negocioDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -192,7 +193,7 @@ namespace TanatosAPI.Endpoints {
 						foreach (EntEmpleadoCrearDestinatario destinatario in entrada.Destinatarios) {
 							TipoReceptorNotificacion tipoReceptor = tiposReceptores.TryGetValue(destinatario.IdTipoReceptor, out TipoReceptorNotificacion? tr) ? tr : throw new InvalidOperationException("No se encontró el tipo de receptor asociado al destinatario a crear.");
 
-							DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionBcp.Crear(
+							DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionUseCase.RegistrarDestinatario(
 								sub,
 								negocio.Id,
 								nuevo.Id,
@@ -245,7 +246,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (EntEmpleadoActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, SuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, CargoDao cargoDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
+			routes.MapPut("/", async (EntEmpleadoActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, SuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, CargoDao cargoDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -351,7 +352,7 @@ namespace TanatosAPI.Endpoints {
 						foreach (EntEmpleadoActualizarDestinatario destinatario in entrada.Destinatarios.Where(d => !destinatariosExistentes.Any(de => de.IdTipoReceptor == d.IdTipoReceptor && de.Destino == d.Destino))) {
 							TipoReceptorNotificacion tipoReceptor = tiposReceptores.TryGetValue(destinatario.IdTipoReceptor, out TipoReceptorNotificacion? tr) ? tr : throw new InvalidOperationException("No se encontró el tipo de receptor asociado al destinatario a crear.");
 
-							DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionBcp.Crear(
+							DestinatarioNotificacion nuevoDestinatario = await destinatarioNotificacionUseCase.RegistrarDestinatario(
 								sub,
 								existente.IdNegocio,
 								existente.Id,

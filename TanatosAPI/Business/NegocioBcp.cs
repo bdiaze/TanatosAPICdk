@@ -5,6 +5,10 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
 	public class NegocioBcp(IDateTimeProvider dateTimeProvider, NormaSuscritaBcp normaSuscritaBcp, NegocioDao negocioDao, NormaSuscritaDao normaSuscritaDao) {
+		public async Task<Negocio?> ObtenerVigentePorSubYNegocio(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {
+			return (await negocioDao.ObtenerPorSub(sub, true, transaction)).FirstOrDefault(n => n.Id == idNegocio);
+        }
+		
 		public async Task EliminarNegocio(Negocio negocio, NpgsqlTransaction? transaction = null) {
 			if (negocio.Vigencia) {
 				negocio.FechaEliminacion = dateTimeProvider.UtcNow;
