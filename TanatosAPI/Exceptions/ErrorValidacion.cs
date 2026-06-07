@@ -6,7 +6,8 @@
         TipoNoValido,
         EstadoNoValido,
         NoPertenece,
-        RestringidoPorPlan
+        RestringidoPorPlan,
+        ValorNoValido,
     }
 
     public class ErrorValidacion(TipoErrorValidacion tipoErrorValidacion, string mensaje, string? mensajeGenerico = null) : Exception(mensaje) {

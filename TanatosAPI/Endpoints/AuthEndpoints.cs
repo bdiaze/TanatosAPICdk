@@ -4,8 +4,10 @@ using System;
 using System.Diagnostics;
 using System.Text.Json;
 using TanatosAPI.Entities.Others;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces;
+using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
 	public static class AuthEndpoints {
@@ -23,53 +25,22 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapObtenerAccessToken(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/ObtenerAccessToken", async (EntAuthObtenerAccessToken entrada, HttpContext httpContext, HttpResponse httpResponse, IHostEnvironment environment, IVariableEntornoHelper variableEntorno) => {
+			routes.MapPost("/ObtenerAccessToken", async (EntAuthObtenerAccessToken entrada, HttpContext httpContext, HttpResponse httpResponse, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, AuthUseCase authUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string baseUrl = variableEntorno.Obtener("COGNITO_BASE_URL");
+					DateTime now = dateTimeProvider.UtcNow;
 
-					// Se valida que el redirect uri se encuentre entre los permitidos...
-					if (!variableEntorno.Obtener("COGNITO_CALLBACK_URLS").Split(',').Contains(entrada.RedirectUri)) {
-						LambdaLogger.Log(
-							$"[POST] - [Auth] - [ObtenerAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"No es válido el RedirectUri recibido.");
-
-						Results.BadRequest();
-					}
+					(string accessToken, string refreshToken, int expiresIn, int refreshExpiresIn) = await authUseCase.ObtenerAccessToken(
+						entrada.Code, 
+						entrada.CodeVerifier, 
+						entrada.RedirectUri
+					);
 
 					string apiMapping = $"/{variableEntorno.Obtener("API_GATEWAY_MAPPING_KEY")}";
 					if (environment.IsDevelopment()) {
 						apiMapping = "";
 					}
-
-					Dictionary<string, string> parametros = new() {
-						{ "grant_type", "authorization_code" },
-						{ "client_id", variableEntorno.Obtener("COGNITO_USER_POOL_CLIENT_ID") },
-						{ "redirect_uri", entrada.RedirectUri },
-						{ "code", entrada.Code },
-						{ "code_verifier", entrada.CodeVerifier }
-					};
-
-					using HttpClient client = new();
-					HttpRequestMessage request = new(HttpMethod.Post, baseUrl + "/oauth2/token") { 
-						Content = new FormUrlEncodedContent(parametros)
-					};
-
-					// Se obtienen los tokens...
-					HttpResponseMessage response = await client.SendAsync(request);
-					if (!response.IsSuccessStatusCode) {
-						throw new HttpRequestException(
-							$"Ocurrio un error al obtener token. Status Code: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
-							inner: null,
-							statusCode: response.StatusCode
-						);
-					}
-
-					// Se arma salida de access token con su expires in...
-					Dictionary<string, JsonElement> tokens = JsonSerializer.Deserialize(await response.Content.ReadAsStringAsync(), AppJsonSerializerContext.Default.DictionaryStringJsonElement)!;
-					
-					DateTimeOffset refreshExpiration = DateTimeOffset.UtcNow.AddMinutes(double.Parse(variableEntorno.Obtener("COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES")));
 
 					// Se revisa si request llega desde localhost para setear cookies como SameSiteMode.None...
 					bool sameSiteStrict = true;
@@ -77,18 +48,18 @@ namespace TanatosAPI.Endpoints {
 						sameSiteStrict = false;
 					}
 
-					httpResponse.Cookies.Append(Constant.CONST_REFRESH_TOKEN, tokens[Constant.CONST_REFRESH_TOKEN].ToString(), new CookieOptions {
+					httpResponse.Cookies.Append(Constant.CONST_REFRESH_TOKEN, refreshToken, new CookieOptions {
 						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
 						IsEssential = true,
-						Expires = refreshExpiration,
+						Expires = new(now.AddMinutes(refreshExpiresIn), TimeSpan.Zero),
 						HttpOnly = true,
 						Secure = true,
 						SameSite = sameSiteStrict ? SameSiteMode.Strict : SameSiteMode.None
 					});
 
 					SalAuthObtenerAccessToken retorno = new() {
-						AccessToken = tokens["access_token"].ToString(),
-						ExpiresIn = tokens["expires_in"].GetInt32()
+						AccessToken = accessToken,
+						ExpiresIn = expiresIn
 					};
 
 					LambdaLogger.Log(
@@ -96,6 +67,12 @@ namespace TanatosAPI.Endpoints {
 						$"Obtencion exitosa del access token.");
 
 					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[POST] - [Auth] - [ObtenerAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [Auth] - [ObtenerAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
@@ -107,67 +84,17 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapRefreshAccessToken(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/RefreshAccessToken", async(HttpContext httpContext, HttpRequest httpRequest, HttpResponse httpResponse, IHostEnvironment environment, IVariableEntornoHelper variableEntorno) => {
+			routes.MapPost("/RefreshAccessToken", async(HttpContext httpContext, HttpRequest httpRequest, HttpResponse httpResponse, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, AuthUseCase authUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					// Se valida que venga el refresh token...
-					if (!httpRequest.Cookies.TryGetValue(Constant.CONST_REFRESH_TOKEN, out string? refreshToken) || string.IsNullOrWhiteSpace(refreshToken)) {
-						LambdaLogger.Log(
-							$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"No se incluyo cookie {Constant.CONST_REFRESH_TOKEN}.");
+					if (!httpRequest.Cookies.TryGetValue(Constant.CONST_REFRESH_TOKEN, out string? refreshToken)) refreshToken = null;
 
-						return Results.BadRequest();
-					}
+					(string accesToken, int expiresIn) = await authUseCase.RefreshAccessToken(refreshToken);
 
-					string baseUrl = variableEntorno.Obtener("COGNITO_BASE_URL");
-
-					Dictionary<string, string> parametros = new() {
-							{ "grant_type", Constant.CONST_REFRESH_TOKEN },
-							{ "client_id", variableEntorno.Obtener("COGNITO_USER_POOL_CLIENT_ID") },
-							{ Constant.CONST_REFRESH_TOKEN, refreshToken }
-						};
-
-					using HttpClient client = new();
-					HttpRequestMessage request = new(HttpMethod.Post, baseUrl + "/oauth2/token") {
-						Content = new FormUrlEncodedContent(parametros)
-					};
-
-					// Se obtienen los tokens...
-					HttpResponseMessage response = await client.SendAsync(request);
-					if (!response.IsSuccessStatusCode) {
-
-						// Si no se logra efectuar el refresh, se manda request con limpieza de cookies...
-						string apiMapping = $"/{variableEntorno.Obtener("API_GATEWAY_MAPPING_KEY")}";
-						if (environment.IsDevelopment()) {
-							apiMapping = "";
-						}
-
-						bool sameSiteStrict = true;
-						if (httpContext.Request.Headers.TryGetValue("Origin", out StringValues originHeader) && Uri.TryCreate(originHeader.ToString(), UriKind.Absolute, out Uri? uri) && uri.IsLoopback) {
-							sameSiteStrict = false;
-						}
-
-						httpResponse.Cookies.Delete(Constant.CONST_REFRESH_TOKEN, new CookieOptions {
-							Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
-							IsEssential = true,
-							HttpOnly = true,
-							Secure = true,
-							SameSite = sameSiteStrict ? SameSiteMode.Strict : SameSiteMode.None
-						});
-
-						throw new HttpRequestException(
-							$"Ocurrio un error al refrescar token. Status Code: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
-							inner: null,
-							statusCode: response.StatusCode
-						);
-					}
-
-					// Se arma salida de access token con su expires in...
-					Dictionary<string, JsonElement> tokens = JsonSerializer.Deserialize(await response.Content.ReadAsStringAsync(), AppJsonSerializerContext.Default.DictionaryStringJsonElement)!;
 					SalAuthRefreshAccessToken retorno = new() {
-						AccessToken = tokens["access_token"].ToString(),
-						ExpiresIn = tokens["expires_in"].GetInt32()
+						AccessToken = accesToken,
+						ExpiresIn = expiresIn
 					};
 
 					LambdaLogger.Log(
@@ -175,12 +102,36 @@ namespace TanatosAPI.Endpoints {
 							$"Refrescado exitoso del access token.");
 
 					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					// Si no se logra efectuar el refresh, se manda request con limpieza de cookies...
+					string apiMapping = $"/{variableEntorno.Obtener("API_GATEWAY_MAPPING_KEY")}";
+					if (environment.IsDevelopment()) {
+						apiMapping = "";
+					}
+
+					bool sameSiteStrict = true;
+					if (httpContext.Request.Headers.TryGetValue("Origin", out StringValues originHeader) && Uri.TryCreate(originHeader.ToString(), UriKind.Absolute, out Uri? uri) && uri.IsLoopback) {
+						sameSiteStrict = false;
+					}
+
+					httpResponse.Cookies.Delete(Constant.CONST_REFRESH_TOKEN, new CookieOptions {
+						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
+						IsEssential = true,
+						HttpOnly = true,
+						Secure = true,
+						SameSite = sameSiteStrict ? SameSiteMode.Strict : SameSiteMode.None
+					});
+
+					LambdaLogger.Log(
+						$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [Auth] - [RefreshAccessToken] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrio un error al refrescar el access token. " +
 						$"{ex}");
-
 					return Results.Problem($"Ocurrio un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 
@@ -216,6 +167,12 @@ namespace TanatosAPI.Endpoints {
 							$"Se limpian exitosamente las cookies auth.");
 
 					return Results.Ok();
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[POST] - [Auth] - [LimpiarAuthCookies] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [Auth] - [LimpiarAuthCookies] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +

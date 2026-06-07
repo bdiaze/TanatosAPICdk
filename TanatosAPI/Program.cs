@@ -89,7 +89,7 @@ builder.Services.AddSingleton<IAmazonS3>(sp => {
 builder.Services.AddSingleton<IVariableEntornoHelper, VariableEntornoHelper>();
 builder.Services.AddSingleton<SecretManagerHelper>();
 builder.Services.AddSingleton<ApiKeyHelper>();
-builder.Services.AddSingleton<CognitoHelper>();
+builder.Services.AddHttpClient<CognitoHelper>();
 builder.Services.AddSingleton<HermesHelper>();
 builder.Services.AddSingleton<KairosHelper>();
 builder.Services.AddSingleton<ConnectionStringHelper>();
@@ -160,6 +160,8 @@ builder.Services.AddSingleton<HistorialNotificacionBcp>();
 
 #region Singleton UseCases
 builder.Services.AddSingleton<DocumentoAdjuntoUseCase>();
+builder.Services.AddSingleton<DestinatarioNotificacionUseCase>();
+builder.Services.AddSingleton<AuthUseCase>();
 #endregion
 
 string cognitoRegion;
