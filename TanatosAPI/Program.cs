@@ -89,7 +89,8 @@ builder.Services.AddSingleton<IAmazonS3>(sp => {
 builder.Services.AddSingleton<IVariableEntornoHelper, VariableEntornoHelper>();
 builder.Services.AddSingleton<SecretManagerHelper>();
 builder.Services.AddSingleton<ApiKeyHelper>();
-builder.Services.AddHttpClient<CognitoHelper>();
+builder.Services.AddHttpClient<ICognitoHelper, CognitoHelper>();
+builder.Services.AddHttpClient<IHttpClientWrapper, HttpClientWrapper>();
 builder.Services.AddSingleton<HermesHelper>();
 builder.Services.AddSingleton<KairosHelper>();
 builder.Services.AddSingleton<ConnectionStringHelper>();
@@ -104,14 +105,14 @@ builder.Services.AddSingleton<NpgsqlDataSource>(serviceProvider => {
 builder.Services.AddSingleton<DatabaseConnectionHelper>();
 builder.Services.AddSingleton<CryptoHelper>();
 builder.Services.AddSingleton<IS3Helper, S3Helper>();
-builder.Services.AddSingleton<DocumentoAdjuntoHelper>();
+builder.Services.AddSingleton<IDocumentoAdjuntoHelper, DocumentoAdjuntoHelper>();
 builder.Services.AddHttpClient<GoogleRecaptchaHelper>();
 builder.Services.AddHttpClient<FlowHelper>();
 builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 #endregion
 
 #region Singleton DAO
-builder.Services.AddSingleton<CategoriaNormaDao>();
+builder.Services.AddSingleton<ICategoriaNormaDao, CategoriaNormaDao>();
 builder.Services.AddSingleton<DestinatarioNotificacionDao>();
 builder.Services.AddSingleton<InscripcionTemplateDao>();
 builder.Services.AddSingleton<TemplateDao>();
@@ -158,7 +159,7 @@ builder.Services.AddSingleton<UsuarioBcp>();
 builder.Services.AddSingleton<HistorialNotificacionBcp>();
 builder.Services.AddSingleton<CargoBcp>();
 builder.Services.AddSingleton<EmpleadoBcp>();
-builder.Services.AddSingleton<CategoriaNormaBcp>();
+builder.Services.AddSingleton<ICategoriaNormaBcp, CategoriaNormaBcp>();
 #endregion
 
 #region Singleton UseCases

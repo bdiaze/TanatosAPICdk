@@ -1,10 +1,11 @@
 ﻿using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-	public class CategoriaNormaUseCase(CategoriaNormaBcp categoriaNormaBcp) {
+	public class CategoriaNormaUseCase(ICategoriaNormaBcp categoriaNormaBcp) {
 		public async Task<List<CategoriaNorma>> ObtenerVigentes() {
 			return await categoriaNormaBcp.ObtenerVigentes();
 		}

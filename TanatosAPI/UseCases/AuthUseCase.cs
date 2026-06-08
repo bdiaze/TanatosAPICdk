@@ -5,7 +5,7 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.UseCases {
-	public class AuthUseCase(IVariableEntornoHelper variableEntorno, CognitoHelper cognitoHelper) {
+	public class AuthUseCase(IVariableEntornoHelper variableEntorno, ICognitoHelper cognitoHelper) {
 		public async Task<(string accessToken, string refreshToken, int expiresIn, int refreshExpiresIn)> ObtenerAccessToken(string code, string codeVerifier, string redirectUri) {
 			// Se valida que el redirect uri se encuentre entre los permitidos...
 			if (!variableEntorno.Obtener("COGNITO_CALLBACK_URLS").Split(',').Contains(redirectUri)) {

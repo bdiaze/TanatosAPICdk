@@ -1,10 +1,11 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class UsuarioBcp(CognitoHelper cognitoHelper, UsuarioDao usuarioDao) {
+	public class UsuarioBcp(ICognitoHelper cognitoHelper, UsuarioDao usuarioDao) {
 		public async Task<Usuario> ObtenerInformacionUsuario(string sub, NpgsqlTransaction? transaction = null) {
 			Usuario? usuario = await usuarioDao.Obtener(sub, transaction);
 			if (usuario == null) {

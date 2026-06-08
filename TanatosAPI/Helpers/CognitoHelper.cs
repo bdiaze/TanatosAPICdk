@@ -7,8 +7,7 @@ using TanatosAPI.Exceptions;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    [ExcludeFromCodeCoverage]
-    public class CognitoHelper(IAmazonCognitoIdentityProvider client, IVariableEntornoHelper variableEntorno, HttpClient httpClient) {
+    public class CognitoHelper(IAmazonCognitoIdentityProvider client, IVariableEntornoHelper variableEntorno, IHttpClientWrapper httpClient) : ICognitoHelper {
 		private readonly string cognitoBaseUrl = variableEntorno.Obtener("COGNITO_BASE_URL");
 		private readonly string cognitoUserPoolClientId = variableEntorno.Obtener("COGNITO_USER_POOL_CLIENT_ID");
 

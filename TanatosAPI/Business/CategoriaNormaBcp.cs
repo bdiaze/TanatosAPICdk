@@ -1,9 +1,8 @@
 ﻿using TanatosAPI.Entities.Models;
-using TanatosAPI.Exceptions;
-using TanatosAPI.Repositories;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Business {
-	public class CategoriaNormaBcp(CategoriaNormaDao categoriaNormaDao) {
+	public class CategoriaNormaBcp(ICategoriaNormaDao categoriaNormaDao) : ICategoriaNormaBcp {
 		public async Task<CategoriaNorma?> ObtenerPorId(long id) {
 			return await categoriaNormaDao.ObtenerPorId(id);
 		}
