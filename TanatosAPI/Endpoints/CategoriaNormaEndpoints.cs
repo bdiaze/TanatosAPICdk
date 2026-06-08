@@ -1,8 +1,10 @@
 ﻿using Amazon.Lambda.Core;
 using System.Diagnostics;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;
+using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
 	public static class CategoriaNormaEndpoints {
@@ -18,17 +20,23 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, CategoriaNormaDao categoriaNormaDao) => {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, CategoriaNormaUseCase categoriaNormaUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					List<CategoriaNorma> retorno = await categoriaNormaDao.ObtenerPorVigencia(true);
+					List<CategoriaNorma> retorno = await categoriaNormaUseCase.ObtenerVigentes();
 
 					LambdaLogger.Log(
 						$"[GET] - [CategoriaNorma] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de las categorías de normas vigentes - Cant. Registros: {retorno.Count}.");
 
 					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [CategoriaNorma] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [CategoriaNorma] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
@@ -40,7 +48,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, CategoriaNormaDao categoriaNormaDao) => {
+			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, CategoriaNormaUseCase categoriaNormaUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -50,13 +58,19 @@ namespace TanatosAPI.Endpoints {
 						_ => null
 					};
 
-					List<CategoriaNorma> retorno = await categoriaNormaDao.ObtenerPorVigencia(vig);
+					List<CategoriaNorma> retorno = await categoriaNormaUseCase.ObtenerPorVigencia(vig);
 
 					LambdaLogger.Log(
 						$"[GET] - [CategoriaNorma] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de las categorías de normas por vigencia - Vigencia: {vigencia} - Cant. Registros: {retorno.Count}.");
 
 					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [CategoriaNorma] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [CategoriaNorma] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
@@ -68,28 +82,29 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (CategoriaNorma entrada, IHostEnvironment environment, CategoriaNormaDao categoriaNormaDao) => {
+			routes.MapPost("/", async (CategoriaNorma entrada, IHostEnvironment environment, CategoriaNormaUseCase categoriaNormaUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					CategoriaNorma? existente = await categoriaNormaDao.ObtenerPorId(entrada.Id);
-
-					if (existente != null) {
-						LambdaLogger.Log(
-							$"[POST] - [CategoriaNorma] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"Ya existe una categoría de norma con ID {entrada.Id}.");
-
-						return Results.BadRequest($"Ya existe una categoría de norma con ID {entrada.Id}.");
-					}
-
-					await categoriaNormaDao.Insertar(entrada);
-					existente = entrada;
+					CategoriaNorma nuevo = await categoriaNormaUseCase.RegistrarCategoria(
+						entrada.Id,
+						entrada.Nombre,
+						entrada.NombreCorto,
+						entrada.Descripcion,
+						entrada.Vigencia
+					);
 
 					LambdaLogger.Log(
 						$"[POST] - [CategoriaNorma] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Creación exitosa de la categoría de norma - ID: {entrada.Id}.");
 
-					return Results.Ok(existente);
+					return Results.Ok(nuevo);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[POST] - [CategoriaNorma] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [CategoriaNorma] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
@@ -101,28 +116,29 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (CategoriaNorma entrada, IHostEnvironment environment, CategoriaNormaDao categoriaNormaDao) => {
+			routes.MapPut("/", async (CategoriaNorma entrada, IHostEnvironment environment, CategoriaNormaUseCase categoriaNormaUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					CategoriaNorma? existente = await categoriaNormaDao.ObtenerPorId(entrada.Id);
-
-					if (existente == null) {
-						LambdaLogger.Log(
-							$"[PUT] - [CategoriaNorma] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"No existe la categoría de norma con ID {entrada.Id}.");
-
-						return Results.BadRequest($"No existe la categoría de norma con ID {entrada.Id}.");
-					}
-
-					await categoriaNormaDao.Actualizar(entrada);
-					existente = entrada;
+					CategoriaNorma existente = await categoriaNormaUseCase.ActualizarCategoria(
+						entrada.Id,
+						entrada.Nombre,
+						entrada.NombreCorto,
+						entrada.Descripcion,
+						entrada.Vigencia
+					);
 
 					LambdaLogger.Log(
 						$"[PUT] - [CategoriaNorma] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Actualización exitosa de la categoría de norma - ID: {entrada.Id}.");
 
 					return Results.Ok(existente);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [CategoriaNorma] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[PUT] - [CategoriaNorma] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
@@ -134,27 +150,23 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, CategoriaNormaDao categoriaNormaDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, CategoriaNormaUseCase categoriaNormaUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					CategoriaNorma? existente = await categoriaNormaDao.ObtenerPorId(id);
-
-					if (existente == null) {
-						LambdaLogger.Log(
-							$"[DELETE] - [CategoriaNorma] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"No existe la categoría de norma con ID {id}.");
-
-						return Results.BadRequest($"No existe la categoría de norma con ID {id}.");
-					}
-
-					await categoriaNormaDao.Eliminar(id);
+					await categoriaNormaUseCase.EliminarCategoria(id);
 
 					LambdaLogger.Log(
 						$"[DELETE] - [CategoriaNorma] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Eliminación exitosa de la categoría de norma - ID: {id}.");
 
 					return Results.Ok();
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[DELETE] - [CategoriaNorma] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[DELETE] - [CategoriaNorma] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
