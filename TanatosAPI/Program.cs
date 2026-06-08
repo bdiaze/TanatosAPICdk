@@ -90,7 +90,7 @@ builder.Services.AddHttpClient<IHttpClientWrapper, HttpClientWrapper>();
 builder.Services.AddSingleton<IVariableEntornoHelper, VariableEntornoHelper>();
 builder.Services.AddSingleton<SecretManagerHelper>();
 builder.Services.AddSingleton<ApiKeyHelper>();
-builder.Services.AddHttpClient<ICognitoHelper, CognitoHelper>();
+builder.Services.AddSingleton<ICognitoHelper, CognitoHelper>();
 builder.Services.AddSingleton<HermesHelper>();
 builder.Services.AddSingleton<KairosHelper>();
 builder.Services.AddSingleton<ConnectionStringHelper>();
