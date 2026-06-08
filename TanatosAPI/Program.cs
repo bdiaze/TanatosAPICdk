@@ -86,11 +86,11 @@ builder.Services.AddSingleton<IAmazonS3>(sp => {
 #endregion
 
 #region Singleton Helpers
+builder.Services.AddHttpClient<IHttpClientWrapper, HttpClientWrapper>();
 builder.Services.AddSingleton<IVariableEntornoHelper, VariableEntornoHelper>();
 builder.Services.AddSingleton<SecretManagerHelper>();
 builder.Services.AddSingleton<ApiKeyHelper>();
 builder.Services.AddHttpClient<ICognitoHelper, CognitoHelper>();
-builder.Services.AddHttpClient<IHttpClientWrapper, HttpClientWrapper>();
 builder.Services.AddSingleton<HermesHelper>();
 builder.Services.AddSingleton<KairosHelper>();
 builder.Services.AddSingleton<ConnectionStringHelper>();
@@ -139,7 +139,7 @@ builder.Services.AddSingleton<SuscripcionDao>();
 builder.Services.AddSingleton<EventoPagoDao>();
 builder.Services.AddSingleton<PagoDao>();
 builder.Services.AddSingleton<UsuarioDao>();
-builder.Services.AddSingleton<CargoDao>();
+builder.Services.AddSingleton<ICargoDao, CargoDao>();
 builder.Services.AddSingleton<EmpleadoDao>();
 #endregion
 

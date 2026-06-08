@@ -5,7 +5,7 @@ using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class CargoBcp(IDateTimeProvider dateTimeProvider, CargoDao cargoDao) {
+	public class CargoBcp(IDateTimeProvider dateTimeProvider, ICargoDao cargoDao) {
 		public bool EstaVigente(Cargo? cargo) {
 			return cargo != null && cargo.Vigencia;
 		}

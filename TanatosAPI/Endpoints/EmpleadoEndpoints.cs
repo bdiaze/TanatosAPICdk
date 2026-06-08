@@ -24,7 +24,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, EmpleadoDao empleadoDao, CargoDao cargoDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
+			routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, EmpleadoDao empleadoDao, ICargoDao cargoDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -89,7 +89,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntEmpleadoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, SuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, CargoDao cargoDao, NegocioDao negocioDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
+			routes.MapPost("/", async (EntEmpleadoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, SuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, ICargoDao cargoDao, NegocioDao negocioDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -246,7 +246,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (EntEmpleadoActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, SuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, CargoDao cargoDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
+			routes.MapPut("/", async (EntEmpleadoActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, SuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, ICargoDao cargoDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
