@@ -5,9 +5,11 @@ using System.Security.Claims;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
+using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
     public static class CargoEndpoints {
@@ -22,13 +24,13 @@ namespace TanatosAPI.Endpoints {
         }
 
         private static void MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-            routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, CargoDao cargoDao) => {
+            routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, CargoUseCase cargoUseCase) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
                     string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-                    List<Cargo> cargos = await cargoDao.ObtenerPorSub(sub,idNegocio, true);
+                    List<Cargo> cargos = await cargoUseCase.ObtenerVigentes(sub, idNegocio);
 
                     List<SalCargo> retorno = [.. cargos
                         .Select(d => new SalCargo() {
@@ -42,7 +44,13 @@ namespace TanatosAPI.Endpoints {
                         $"Obtención exitosa de los cargos vigentes - Cant. Registros: {retorno.Count}.");
 
                     return Results.Ok(retorno);
-                } catch (Exception ex) {
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Cargo] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
                     LambdaLogger.Log(
                         $"[GET] - [Cargo] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
                         $"Ocurrió un error al obtener los cargos vigentes. " +
@@ -53,7 +61,7 @@ namespace TanatosAPI.Endpoints {
         }
 
         private static void MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-            routes.MapPost("/", async (EntCargoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, CargoDao cargoDao, NegocioDao negocioDao) => {
+            routes.MapPost("/", async (EntCargoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, CargoUseCase cargoUseCase) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
@@ -61,26 +69,7 @@ namespace TanatosAPI.Endpoints {
 
                     string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-                    // Se valida que el negocio sea válido...
-                    Negocio? negocio = (await negocioDao.ObtenerPorSub(sub)).FirstOrDefault(n => n.Id == entrada.IdNegocio);
-                    if (negocio == null || !negocio.Vigencia) {
-                        LambdaLogger.Log(
-                            $"[POST] - [Cargo] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-                            $"El negocio es inválido.");
-
-                        return Results.BadRequest($"El negocio es inválido.");
-                    }
-
-                    Cargo nuevo = new() { 
-                        Id = 0,
-                        Sub = sub,
-                        Nombre = entrada.Nombre,
-                        IdNegocio = entrada.IdNegocio,
-                        FechaCreacion = dateTimeProvider.UtcNow,
-                        FechaEliminacion = null,
-                        Vigencia = true
-                    };
-                    nuevo.Id = await cargoDao.Insertar(nuevo);
+                    Cargo nuevo = await cargoUseCase.RegistrarCargo(sub, entrada.Nombre, entrada.IdNegocio);
 
                     SalCargo retorno = new() { 
                         Id = nuevo.Id,
@@ -92,7 +81,13 @@ namespace TanatosAPI.Endpoints {
                         $"Creación exitosa del cargo - ID: {retorno.Id}.");
 
                     return Results.Ok(retorno);
-                } catch (Exception ex) {
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[POST] - [Cargo] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
                     LambdaLogger.Log(
                         $"[POST] - [Cargo] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
                         $"Ocurrió un error en la creación del cargo. " +
@@ -103,29 +98,17 @@ namespace TanatosAPI.Endpoints {
         }
 
         private static void MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-            routes.MapPut("/", async (EntCargoActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, CargoDao cargoDao) => {
+            routes.MapPut("/", async (EntCargoActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, CargoUseCase cargoUseCase) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
-                    entrada.Nombre = entrada.Nombre.Trim();
-
                     string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-                    Cargo? existente = (await cargoDao.ObtenerPorSub(sub, null, true)).FirstOrDefault(d => d.Id == entrada.Id);
-                    if (existente == null) {
-                        LambdaLogger.Log(
-                            $"[PUT] - [Cargo] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-                            $"El usuario no posee un cargo con ID {entrada.Id}.");
-
-                        return Results.BadRequest($"El usuario no posee un cargo con ID {entrada.Id}.");
-                    }
-
-                    existente.Nombre = entrada.Nombre;
-                    await cargoDao.Actualizar(existente);
+                    Cargo cargo = await cargoUseCase.ActualizarCargo(sub, entrada.Id, entrada.Nombre);
 
                     SalCargo retorno = new() {
-                        Id = existente.Id,
-                        Nombre = existente.Nombre,
+                        Id = cargo.Id,
+                        Nombre = cargo.Nombre,
                     };
 
                     LambdaLogger.Log(
@@ -133,7 +116,13 @@ namespace TanatosAPI.Endpoints {
                         $"Actualización exitosa del cargo - ID: {entrada.Id}.");
 
                     return Results.Ok(retorno);
-                } catch (Exception ex) {
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [Cargo] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
                     LambdaLogger.Log(
                         $"[PUT] - [Cargo] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
                         $"Ocurrió un error en la actualización del cargo - ID: {entrada.Id}. " +
@@ -144,50 +133,26 @@ namespace TanatosAPI.Endpoints {
         }
 
         private static void MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-            routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, CargoDao cargoDao, EmpleadoDao empleadoDao) => {
+            routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, CargoUseCase cargoUseCase) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
                     string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-					// Se valida que el cargo exista y pertenezca al usuario...
-					Cargo? existente = (await cargoDao.ObtenerPorSub(sub, null, true)).FirstOrDefault(d => d.Id == id);
-                    if (existente == null || !existente.Vigencia) {
-                        LambdaLogger.Log(
-                            $"[DELETE] - [Cargo] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-                            $"El usuario no posee un cargo con ID {id}.");
-
-                        return Results.BadRequest($"El usuario no posee un cargo con ID {id}.");
-                    }
-
-					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
-
-					try {
-                        // Se quitan los cargos a los empleados que tenga el cargo a eliminar...
-                        List<Empleado> empleados = await empleadoDao.ObtenerPorSub(sub, existente.IdNegocio, true, transaction);
-                        foreach (Empleado empleado in empleados.Where(e => e.IdCargo == existente.Id)) {
-                            empleado.IdCargo = null;
-                            await empleadoDao.Actualizar(empleado, transaction);
-						}
-
-                        // Se elimina el cargo...
-						existente.FechaEliminacion = dateTimeProvider.UtcNow;
-						existente.Vigencia = false;
-						await cargoDao.Actualizar(existente, transaction);
-
-						await transaction.CommitAsync();
-					} catch {
-						await transaction.RollbackAsync();
-						throw;
-					}
+                    await cargoUseCase.EliminarCargo(sub, id);
 
                     LambdaLogger.Log(
                         $"[DELETE] - [Cargo] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
                         $"Eliminación exitosa del cargo - ID: {id}.");
 
                     return Results.Ok();
-                } catch (Exception ex) {
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[DELETE] - [Cargo] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
                     LambdaLogger.Log(
                         $"[DELETE] - [Cargo] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
                         $"Ocurrió un error en la eliminación del cargo - ID: {id}. " +

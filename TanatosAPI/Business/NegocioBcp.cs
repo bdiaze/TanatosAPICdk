@@ -5,6 +5,18 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
 	public class NegocioBcp(IDateTimeProvider dateTimeProvider, NormaSuscritaBcp normaSuscritaBcp, NegocioDao negocioDao, NormaSuscritaDao normaSuscritaDao) {
+		public bool EstaVigente(Negocio? negocio) {
+			return negocio != null && negocio.Vigencia;
+		}
+
+		public bool PerteneceAlUsuario(Negocio negocio, string sub) {
+			return negocio.Sub == sub;
+		}
+
+		public async Task<Negocio?> ObtenerPorId(long idNegocio, NpgsqlTransaction? transaction = null) {
+			return await negocioDao.Obtener(idNegocio, transaction);
+		}
+
 		public async Task<Negocio?> ObtenerVigentePorSubYNegocio(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {
 			return (await negocioDao.ObtenerPorSub(sub, true, transaction)).FirstOrDefault(n => n.Id == idNegocio);
         }

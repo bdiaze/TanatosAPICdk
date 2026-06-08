@@ -156,12 +156,15 @@ builder.Services.AddSingleton<TemplateNormaBcp>();
 builder.Services.AddSingleton<NegocioBcp>();
 builder.Services.AddSingleton<UsuarioBcp>();
 builder.Services.AddSingleton<HistorialNotificacionBcp>();
+builder.Services.AddSingleton<CargoBcp>();
+builder.Services.AddSingleton<EmpleadoBcp>();
 #endregion
 
 #region Singleton UseCases
 builder.Services.AddSingleton<DocumentoAdjuntoUseCase>();
 builder.Services.AddSingleton<DestinatarioNotificacionUseCase>();
 builder.Services.AddSingleton<AuthUseCase>();
+builder.Services.AddSingleton<CargoUseCase>();
 #endregion
 
 string cognitoRegion;

@@ -7,6 +7,42 @@ using TanatosAPI.Helpers;
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
     public class NegocioDao(DatabaseConnectionHelper connectionHelper) {
+
+		public async Task<Negocio?> Obtener(long id, NpgsqlTransaction? transaction = null) {
+			string query =
+				"SELECT ID, SUB, NOMBRE, DIRECCION, ID_TIPO_ACTIVIDAD, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NEGOCIO " +
+				"WHERE ID = @ID";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+				command.Parameters.AddWithValue("ID", id);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				Negocio? retorno = null;
+				if (await reader.ReadAsync()) {
+					retorno = new Negocio {
+						Id = reader.GetInt64(0),
+						Sub = reader.GetString(1),
+						Nombre = reader.GetString(2),
+						Direccion = await reader.IsDBNullAsync(3) ? null : reader.GetString(3),
+						IdTipoActividad = await reader.IsDBNullAsync(4) ? null : reader.GetInt64(4),
+						FechaCreacion = reader.GetDateTime(5),
+						FechaEliminacion = await reader.IsDBNullAsync(6) ? null : reader.GetDateTime(6),
+						Vigencia = reader.GetBoolean(7)
+					};
+				}
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
+		}
+
 		public async Task<List<Negocio>> ObtenerPorSub(string sub, bool vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, SUB, NOMBRE, DIRECCION, ID_TIPO_ACTIVIDAD, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NEGOCIO " +
