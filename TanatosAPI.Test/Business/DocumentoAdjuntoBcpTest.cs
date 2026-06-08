@@ -10,14 +10,20 @@ using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Test.Business {
     public class DocumentoAdjuntoBcpTest {
-        private readonly IVariableEntornoHelper variableEntorno = Substitute.For<IVariableEntornoHelper>();
-        private readonly IS3Helper s3Helper = Substitute.For<IS3Helper>();
-        private readonly IDocumentoAdjuntoDao documentoAdjuntoDao = Substitute.For<IDocumentoAdjuntoDao>();
         private readonly IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
-        private readonly DocumentoAdjuntoHelper documentoAdjuntoHelper;
+		private readonly IDocumentoAdjuntoDao documentoAdjuntoDao = Substitute.For<IDocumentoAdjuntoDao>();
+		private readonly IDocumentoAdjuntoHelper documentoAdjuntoHelper = Substitute.For<IDocumentoAdjuntoHelper>();
         private readonly DocumentoAdjuntoBcp documentoAdjuntoBcp;
 
-        public static DocumentoAdjunto DocumentoAdjuntoTest(
+		private static readonly DateTime FAKE_FECHA = new(2026, 1, 15, 14, 0, 0, DateTimeKind.Utc);
+
+		public DocumentoAdjuntoBcpTest() {
+			dateTimeProvider.UtcNow.Returns(FAKE_FECHA);
+
+			documentoAdjuntoBcp = new(dateTimeProvider, documentoAdjuntoDao, documentoAdjuntoHelper);
+		}
+
+		public static DocumentoAdjunto DocumentoAdjuntoDummy(
             long id = 1,
             long idHistorialNormaSuscrita = 1,
             string bucketName = "BucketNameTest",
@@ -50,17 +56,7 @@ namespace TanatosAPI.Test.Business {
             FechaEliminacion = fechaEliminacion,
             Vigencia = vigencia
         };
-
-        private const string FAKE_BUCKET_NAME = "bucket-name-test";
-        private static readonly DateTime FAKE_FECHA = new(2026, 1, 15, 14, 0, 0, DateTimeKind.Utc);
-
-        public DocumentoAdjuntoBcpTest() {
-            variableEntorno.Obtener("BUCKET_NAME_DOCUMENTOS_ADJUNTOS").Returns(FAKE_BUCKET_NAME);
-            dateTimeProvider.UtcNow.Returns(FAKE_FECHA);
-            documentoAdjuntoHelper = new(s3Helper, variableEntorno);
-            documentoAdjuntoBcp = new(dateTimeProvider, documentoAdjuntoDao, documentoAdjuntoHelper);
-        }
-
+        
         [Theory]
         [InlineData(DocumentoAdjuntoBcp.MAX_FILE_SIZE + 1, false)]
         [InlineData(DocumentoAdjuntoBcp.MAX_FILE_SIZE, true)]
@@ -82,8 +78,8 @@ namespace TanatosAPI.Test.Business {
         }
 
         public static TheoryData<DocumentoAdjunto?, bool> EstaVigenteCases => new() {
-            { DocumentoAdjuntoTest(vigencia: true), true },
-            { DocumentoAdjuntoTest(vigencia: false), false },
+            { DocumentoAdjuntoDummy(vigencia: true), true },
+            { DocumentoAdjuntoDummy(vigencia: false), false },
             { null, false },
         };
         [Theory]
@@ -93,8 +89,8 @@ namespace TanatosAPI.Test.Business {
         }
 
         public static TheoryData<(DocumentoAdjunto documentoAdjunto, long idHistorialNormaSuscrita), bool> PerteneceAVencimientoCases => new() {
-            { (DocumentoAdjuntoTest(idHistorialNormaSuscrita: 1), 1), true },
-            { (DocumentoAdjuntoTest(idHistorialNormaSuscrita: 1), 2), false },
+            { (DocumentoAdjuntoDummy(idHistorialNormaSuscrita: 1), 1), true },
+            { (DocumentoAdjuntoDummy(idHistorialNormaSuscrita: 1), 2), false },
         };
         [Theory]
         [MemberData(nameof(PerteneceAVencimientoCases))]
@@ -107,8 +103,8 @@ namespace TanatosAPI.Test.Business {
         [InlineData(2L, 2L)]
         [InlineData(3L, null)]
         public async Task ObtenerPorIdTest(long idDocumentoAdjunto, long? expectedIdResult) {
-            documentoAdjuntoDao.ObtenerPorId(1).Returns(DocumentoAdjuntoTest(id: 1));
-            documentoAdjuntoDao.ObtenerPorId(2).Returns(DocumentoAdjuntoTest(id: 2));
+            documentoAdjuntoDao.ObtenerPorId(1).Returns(DocumentoAdjuntoDummy(id: 1));
+            documentoAdjuntoDao.ObtenerPorId(2).Returns(DocumentoAdjuntoDummy(id: 2));
             documentoAdjuntoDao.ObtenerPorId(3).Returns((DocumentoAdjunto?)null);
 
             DocumentoAdjunto? documento = await documentoAdjuntoBcp.ObtenerPorId(idDocumentoAdjunto);
@@ -121,11 +117,11 @@ namespace TanatosAPI.Test.Business {
         [InlineData(3L, 0)]
         public async Task ObtenerVigentesPorHistorialNormaSuscritaTest(long idHistorialNormaSuscrita, int expectedCount) {
             documentoAdjuntoDao.ObtenerPorHistorial(1).Returns([
-                DocumentoAdjuntoTest(id: 1, idHistorialNormaSuscrita: 1),
-                DocumentoAdjuntoTest(id: 2, idHistorialNormaSuscrita: 1)
+                DocumentoAdjuntoDummy(id: 1, idHistorialNormaSuscrita: 1),
+                DocumentoAdjuntoDummy(id: 2, idHistorialNormaSuscrita: 1)
             ]);
             documentoAdjuntoDao.ObtenerPorHistorial(2).Returns([
-                DocumentoAdjuntoTest(id: 3, idHistorialNormaSuscrita: 2)
+                DocumentoAdjuntoDummy(id: 3, idHistorialNormaSuscrita: 2)
             ]);
             documentoAdjuntoDao.ObtenerPorHistorial(3).Returns([]);
 
@@ -136,13 +132,8 @@ namespace TanatosAPI.Test.Business {
 
         [Fact]
         public async Task GenerarUrlSubidaTest() {
-            const string FAKE_URL_RETURN = "https://url.test";
-            Dictionary<string, string> FAKE_FIELDS_RETURN = new() {
-                { "fake-field", "fake-field-value" }    
-            };
-
-            s3Helper.ObtenerPostPreSignedUrl(FAKE_BUCKET_NAME, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>())
-                .Returns((FAKE_URL_RETURN, FAKE_FIELDS_RETURN));
+            documentoAdjuntoHelper.ObtenerPostPreSignedUrl(Arg.Any<string>(), Arg.Any<long>(), Arg.Any<long>(), Arg.Any<long>(), Arg.Any<string>(), Arg.Any<long>())
+                .Returns(("bucket-name-test", "bucket-key-test", "https://pre-signed-url.test", new Dictionary<string, string>() { { "field-name-test", "field-value-test" } }));
             documentoAdjuntoDao.Insertar(Arg.Any<DocumentoAdjunto>()).Returns(99L);
 
 
@@ -156,14 +147,10 @@ namespace TanatosAPI.Test.Business {
                 1024
             );
 
-            Assert.Equal(FAKE_URL_RETURN, preSignedUrl);
-            Assert.Equal(FAKE_FIELDS_RETURN.Count, fields.Count);
-            Assert.All(FAKE_FIELDS_RETURN, ffr => {
-                Assert.True(fields.ContainsKey(ffr.Key));
-                Assert.Equal(ffr.Value, fields[ffr.Key]);
-            });
+            Assert.Equal("https://pre-signed-url.test", preSignedUrl);
+            Assert.Equal("field-value-test", fields["field-name-test"]);
             Assert.Equal(99L, documentoAdjunto.Id);
-            Assert.Equal(FAKE_BUCKET_NAME, documentoAdjunto.BucketName);
+            Assert.Equal("bucket-name-test", documentoAdjunto.BucketName);
             Assert.Equal(0 /* Generada URL prefirmada para PUT */, documentoAdjunto.EstadoSubida);
             Assert.Equal(FAKE_FECHA, documentoAdjunto.FechaCreacion);
             Assert.Null(documentoAdjunto.FechaConfirmacionSubida);
@@ -172,79 +159,75 @@ namespace TanatosAPI.Test.Business {
         }
 
         [Fact]
-        public async Task ConfirmarSubidaTest_NoConfirmado() {
-            const long FAKE_CONTENT_LENGTH = 2048;
-            const string FAKE_CONTENT_TYPE = "mime-real/test";
-            
-            DocumentoAdjunto documento = DocumentoAdjuntoTest(estadoSubida: 0);
+        public async Task ConfirmarSubidaTest_NoConfirmado() {            
+            DocumentoAdjunto documento = DocumentoAdjuntoDummy(estadoSubida: 0);
 
-            s3Helper.ObtenerObjectMetadata(FAKE_BUCKET_NAME, documento.BucketKey)
-                .Returns((FAKE_CONTENT_LENGTH, FAKE_CONTENT_TYPE));
+			documentoAdjuntoHelper.ObtenerMetadata(documento.BucketKey)
+                .Returns((2048, "mime-real/test"));
 
             await documentoAdjuntoBcp.ConfirmarSubida(documento);
 
             Assert.Equal(1, documento.EstadoSubida);
-            Assert.Equal(FAKE_CONTENT_TYPE, documento.MimeReal);
-            Assert.Equal(FAKE_CONTENT_LENGTH, documento.TamannoReal);
+            Assert.Equal("mime-real/test", documento.MimeReal);
+            Assert.Equal(2048, documento.TamannoReal);
             Assert.Equal(FAKE_FECHA, documento.FechaConfirmacionSubida);
             await documentoAdjuntoDao.Received(1).Actualizar(documento, null);
         }
 
         [Fact]
         public async Task ConfirmarSubidaTest_YaConfirmado() {
-            DocumentoAdjunto documento = DocumentoAdjuntoTest(estadoSubida: 1);
+            DocumentoAdjunto documento = DocumentoAdjuntoDummy(estadoSubida: 1);
             
             await documentoAdjuntoBcp.ConfirmarSubida(documento);
 
             await documentoAdjuntoDao.DidNotReceive().Actualizar(Arg.Any<DocumentoAdjunto>());
-            await s3Helper.DidNotReceive().ObtenerObjectMetadata(Arg.Any<string>(), Arg.Any<string>());
+            await documentoAdjuntoHelper.DidNotReceive().ObtenerMetadata(Arg.Any<string>());
         }
 
         [Fact]
         public async Task GenerarUrlBajadaTest() {
-            const string FAKE_URL_DOWNLOAD = "https://url.download";
-            DocumentoAdjunto documento = DocumentoAdjuntoTest();
-            s3Helper.ObtenerGetPreSignedUrl(FAKE_BUCKET_NAME, documento.BucketKey, documento.NombreArchivo)
-                .Returns(FAKE_URL_DOWNLOAD);
+            DocumentoAdjunto documento = DocumentoAdjuntoDummy();
+			documentoAdjuntoHelper.ObtenerGetPreSignedUrl(documento.BucketKey, documento.NombreArchivo)
+                .Returns("https://url.download");
 
             string url = await documentoAdjuntoBcp.GenerarUrlBajada(documento);
-            Assert.Equal(FAKE_URL_DOWNLOAD, url);
+            Assert.Equal("https://url.download", url);
         }
 
         [Fact]
         public async Task EliminarTest_CuandoVigente() {
-            DocumentoAdjunto documento = DocumentoAdjuntoTest(vigencia: true);
+            DocumentoAdjunto documento = DocumentoAdjuntoDummy(vigencia: true);
 
             await documentoAdjuntoBcp.Eliminar(documento);
             
             Assert.False(documento.Vigencia);
             Assert.Equal(FAKE_FECHA, documento.FechaEliminacion);
             await documentoAdjuntoDao.Received(1).Actualizar(documento, null);
-            await s3Helper.Received(1).AgregarTag(FAKE_BUCKET_NAME, documento.BucketKey, "Estado", "Eliminado");
+            await documentoAdjuntoHelper.Received(1).AgregarTagEstadoEliminado(documento.BucketKey);
         }
 
         [Fact]
         public async Task EliminarTest_NoVigente() {
-            DocumentoAdjunto documento = DocumentoAdjuntoTest(vigencia: false);
+            DocumentoAdjunto documento = DocumentoAdjuntoDummy(vigencia: false);
 
             await documentoAdjuntoBcp.Eliminar(documento);
 
             await documentoAdjuntoDao.DidNotReceive().Actualizar(Arg.Any<DocumentoAdjunto>());
-            await s3Helper.DidNotReceive().AgregarTag(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
+            await documentoAdjuntoHelper.DidNotReceive().AgregarTagEstadoEliminado(Arg.Any<string>());
         }
 
         [Fact]
         public async Task EliminarPorHistorialTest_ConDocumentos() {
             List<DocumentoAdjunto> documentos = new() { 
-                DocumentoAdjuntoTest(id: 1, vigencia: true),
-                DocumentoAdjuntoTest(id: 2, vigencia: true)
+                DocumentoAdjuntoDummy(id: 1, vigencia: true),
+                DocumentoAdjuntoDummy(id: 2, vigencia: true)
             };
             documentoAdjuntoDao.ObtenerPorHistorial(10, true, null).Returns(documentos);
 
             await documentoAdjuntoBcp.EliminarPorHistorialNormaSuscrita(10);
 
             await documentoAdjuntoDao.Received(documentos.Count).Actualizar(Arg.Any<DocumentoAdjunto>(), null);
-            await s3Helper.Received(documentos.Count).AgregarTag(FAKE_BUCKET_NAME, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
+            await documentoAdjuntoHelper.Received(documentos.Count).AgregarTagEstadoEliminado(Arg.Any<string>());
         }
 
         [Fact]
@@ -254,7 +237,7 @@ namespace TanatosAPI.Test.Business {
             await documentoAdjuntoBcp.EliminarPorHistorialNormaSuscrita(999);
 
             await documentoAdjuntoDao.DidNotReceive().Actualizar(Arg.Any<DocumentoAdjunto>(), null);
-            await s3Helper.DidNotReceive().AgregarTag(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
+            await documentoAdjuntoHelper.DidNotReceive().AgregarTagEstadoEliminado(Arg.Any<string>());
 
         }
     }

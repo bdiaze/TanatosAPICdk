@@ -8,9 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="UseCases\**" />
-    <EmbeddedResource Remove="UseCases\**" />
-    <None Remove="UseCases\**" />
+    <Compile Remove="coverage\**" />
+    <EmbeddedResource Remove="coverage\**" />
+    <None Remove="coverage\**" />
   </ItemGroup>
 
   <ItemGroup>
