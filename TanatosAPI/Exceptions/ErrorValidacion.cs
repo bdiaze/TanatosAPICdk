@@ -1,4 +1,6 @@
-﻿namespace TanatosAPI.Exceptions {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Exceptions {
     public enum TipoErrorValidacion {
         AccesoCaducado,
         NoVigente,
@@ -10,7 +12,8 @@
         ValorNoValido,
     }
 
-    public class ErrorValidacion(TipoErrorValidacion tipoErrorValidacion, string mensaje, string? mensajeGenerico = null) : Exception(mensaje) {
+	[ExcludeFromCodeCoverage]
+	public class ErrorValidacion(TipoErrorValidacion tipoErrorValidacion, string mensaje, string? mensajeGenerico = null) : Exception(mensaje) {
         public TipoErrorValidacion TipoErrorValidacion => tipoErrorValidacion;
 
         public string MensajeGenerico => mensajeGenerico ?? base.Message;
