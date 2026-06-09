@@ -3,65 +3,36 @@ using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.UseCases {
-	public class CargoUseCase(DatabaseConnectionHelper connectionHelper, CargoBcp cargoBcp, NegocioBcp negocioBcp, EmpleadoBcp empleadoBcp) {
+	public class CargoUseCase(IDatabaseConnectionHelper connectionHelper, ICargoBcp cargoBcp, INegocioBcp negocioBcp, IEmpleadoBcp empleadoBcp) {
 		public async Task<List<Cargo>> ObtenerVigentes(string sub, long idNegocio) {
-			Negocio? negocio = await negocioBcp.ObtenerPorId(idNegocio);
-			if (!negocioBcp.EstaVigente(negocio)) {
-				throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El negocio no existe o no está vigente", "El negocio es inválido.");
-			}
-
-			if (!negocioBcp.PerteneceAlUsuario(negocio!, sub)) {
-				throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El negocio no pertenece al usuario", "El negocio es inválido.");
-			}
-
-			return await cargoBcp.ObtenerVigentes(sub, idNegocio);
+			Negocio negocio = await negocioBcp.ObtenerPorIdValidandoVigenciaYPertenencia(idNegocio, sub);
+			return await cargoBcp.ObtenerVigentes(sub, negocio.Id);
 		}
 
 		public async Task<Cargo> RegistrarCargo(string sub, string nombre, long idNegocio) {
 			nombre = nombre.Trim();
 
-			Negocio? negocio = await negocioBcp.ObtenerPorId(idNegocio);
-			if (!negocioBcp.EstaVigente(negocio)) {
-				throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El negocio no existe o no está vigente", "El negocio es inválido.");
-			}
+			Negocio negocio = await negocioBcp.ObtenerPorIdValidandoVigenciaYPertenencia(idNegocio, sub);
 
-			if (!negocioBcp.PerteneceAlUsuario(negocio!, sub)) {
-				throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El negocio no pertenece al usuario", "El negocio es inválido.");
-			}
-
-			List<Cargo> existentes = await cargoBcp.ObtenerVigentes(sub, idNegocio);
+			List<Cargo> existentes = await cargoBcp.ObtenerVigentes(sub, negocio.Id);
 			Cargo? cargoExistente = existentes.FirstOrDefault(c => c.Nombre.Equals(nombre, StringComparison.OrdinalIgnoreCase));
 			if (cargoExistente != null) {
 				return cargoExistente;
 			}
 
-			return await cargoBcp.Insertar(sub, nombre, idNegocio);
+			return await cargoBcp.Insertar(sub, nombre, negocio.Id);
 		}
 
 		public async Task<Cargo> ActualizarCargo(string sub, long idCargo, string nombre) {
 			nombre = nombre.Trim();
 
-			Cargo? existente = await cargoBcp.ObtenerPorId(idCargo);
-			if (!cargoBcp.EstaVigente(existente)) {
-				throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El cargo no existe o no está vigente", "El cargo es inválido.");
-			}
+			Cargo existente = await cargoBcp.ObtenerPorIdValidandoVigenciaYPertenencia(idCargo, sub);
+			Negocio? negocio = await negocioBcp.ObtenerPorIdValidandoVigenciaYPertenencia(existente!.IdNegocio, sub);
 
-			if (!cargoBcp.PerteneceAlUsuario(existente!, sub)) {
-				throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El cargo no pertenece al usuario", "El cargo es inválido.");
-			}
-
-			Negocio? negocio = await negocioBcp.ObtenerPorId(existente!.IdNegocio);
-			if (!negocioBcp.EstaVigente(negocio)) {
-				throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El negocio no existe o no está vigente", "El cargo es inválido.");
-			}
-
-			if (!negocioBcp.PerteneceAlUsuario(negocio!, sub)) {
-				throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El negocio no pertenece al usuario", "El cargo es inválido.");
-			}
-
-			List<Cargo> existentes = await cargoBcp.ObtenerVigentes(sub, existente!.IdNegocio);
+			List<Cargo> existentes = await cargoBcp.ObtenerVigentes(sub, negocio.Id);
 			Cargo? otroMismoNombre = existentes.FirstOrDefault(c => c.Id != idCargo && c.Nombre.Equals(nombre, StringComparison.OrdinalIgnoreCase));
 			if (otroMismoNombre != null) {
 				throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "Ya existe un cargo con el mismo nombre");
@@ -75,16 +46,16 @@ namespace TanatosAPI.UseCases {
 			return existente;
 		}
 
-		public async Task EliminarCargo(string sub, long idCargo, NpgsqlTransaction? transaction = null) {
+		public async Task EliminarCargo(string sub, long idCargo, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
-			NpgsqlConnection? connection = null;
+			IDatabaseConnection? connection = null;
 			try {
 				if (ownsTransaction) {
-					connection = await connectionHelper.ObtenerConexion();
+					connection = await connectionHelper.ObtenerConexionWrapper();
 					transaction = await connection.BeginTransactionAsync();
 				}
 
-				Cargo? existente = await cargoBcp.ObtenerPorId(idCargo, transaction);
+				Cargo? existente = await cargoBcp.ObtenerPorId(idCargo, transaction!.NpgsqlTransaction());
 				if (existente != null && !cargoBcp.PerteneceAlUsuario(existente, sub)) {
 					throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El cargo no pertenece al usuario", "El cargo es inválido.");
 				}
@@ -93,9 +64,9 @@ namespace TanatosAPI.UseCases {
 					return;
 				}
 
-				await empleadoBcp.DesasociarCargo(sub, existente!.IdNegocio, existente!.Id, transaction);
+				await empleadoBcp.DesasociarCargo(sub, existente!.IdNegocio, existente!.Id, transaction!.NpgsqlTransaction());
 
-				await cargoBcp.Eliminar(existente!, transaction);
+				await cargoBcp.Eliminar(existente!, transaction!.NpgsqlTransaction());
 
 				if (ownsTransaction) {
 					await transaction!.CommitAsync();

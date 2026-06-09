@@ -7,7 +7,11 @@ namespace TanatosAPI.Helpers {
     public class DatabaseConnectionHelper(NpgsqlDataSource dataSource) : IDatabaseConnectionHelper {
 
         public async Task<NpgsqlConnection> ObtenerConexion() {
-            return await dataSource.OpenConnectionAsync(); ;
+            return await dataSource.OpenConnectionAsync();
         }
-    }
+
+		public async Task<IDatabaseConnection> ObtenerConexionWrapper() {
+            return new DatabaseConnectionWrapper(await dataSource.OpenConnectionAsync());
+		}
+	}
 }
