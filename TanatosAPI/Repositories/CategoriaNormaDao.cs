@@ -7,7 +7,7 @@ using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class CategoriaNormaDao(DatabaseConnectionHelper connectionHelper) : ICategoriaNormaDao {
+    public class CategoriaNormaDao(IDatabaseConnectionHelper connectionHelper) : ICategoriaNormaDao {
 		public async Task<CategoriaNorma?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
             string query =
                 "SELECT ID, NOMBRE, NOMBRE_CORTO, DESCRIPCION, VIGENCIA FROM TANATOS.CATEGORIA_NORMA WHERE ID = @ID";

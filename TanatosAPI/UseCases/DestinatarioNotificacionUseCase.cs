@@ -7,7 +7,7 @@ using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-    public class DestinatarioNotificacionUseCase(DatabaseConnectionHelper connectionHelper, DestinatarioNotificacionBcp destinatarioNotificacionBcp, NegocioBcp negocioBcp, UsuarioBcp usuarioBcp) {
+    public class DestinatarioNotificacionUseCase(IDatabaseConnectionHelper connectionHelper, DestinatarioNotificacionBcp destinatarioNotificacionBcp, INegocioBcp negocioBcp, UsuarioBcp usuarioBcp) {
         public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
         public async Task<DestinatarioNotificacion> RegistrarDestinatario(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null) {

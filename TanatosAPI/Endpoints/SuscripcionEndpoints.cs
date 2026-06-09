@@ -75,7 +75,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntSuscripcionCrear entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, UsuarioBcp usuarioBcp, PlanDao planDao, SuscripcionDao suscripcionDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
+			routes.MapPost("/", async (EntSuscripcionCrear entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, UsuarioBcp usuarioBcp, PlanDao planDao, SuscripcionDao suscripcionDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -215,7 +215,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActivarSuscripcionGratuitaEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/ActivarSuscripcionGratuita", async (EntSuscripcionActivarSuscripcionGratuita entrada, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, PlanDao planDao, SuscripcionDao suscripcionDao) => {
+			routes.MapPost("/ActivarSuscripcionGratuita", async (EntSuscripcionActivarSuscripcionGratuita entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, PlanDao planDao, SuscripcionDao suscripcionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -308,7 +308,7 @@ namespace TanatosAPI.Endpoints {
 
 
 		private static IEndpointRouteBuilder MapCancelarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{idSuscripcion}", async (long idSuscripcion, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, SuscripcionDao suscripcionDao, FlowHelper flowHelper) => {
+			routes.MapDelete("/{idSuscripcion}", async (long idSuscripcion, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, SuscripcionDao suscripcionDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -360,7 +360,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapWebhookEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/flow-webhook/{tipo}", async (string tipo, [FromForm] string token, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, EventoPagoDao eventoPagoDao, SuscripcionDao suscripcionDao, PlanDao planDao, PagoDao pagoDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
+			routes.MapPost("/flow-webhook/{tipo}", async (string tipo, [FromForm] string token, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, EventoPagoDao eventoPagoDao, SuscripcionDao suscripcionDao, PlanDao planDao, PagoDao pagoDao, UsuarioDao usuarioDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

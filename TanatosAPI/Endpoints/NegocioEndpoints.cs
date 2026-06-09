@@ -259,7 +259,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, DatabaseConnectionHelper connectionHelper, NegocioBcp negocioBcp, NegocioDao negocioDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, INegocioBcp negocioBcp, NegocioDao negocioDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

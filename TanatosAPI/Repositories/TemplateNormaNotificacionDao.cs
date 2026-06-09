@@ -3,10 +3,11 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class TemplateNormaNotificacionDao(DatabaseConnectionHelper connectionHelper) {
+    public class TemplateNormaNotificacionDao(IDatabaseConnectionHelper connectionHelper) {
 		public async Task<List<TemplateNormaNotificacion>> ObtenerPorTemplateNorma(long idTemplate, long? idNorma = null, NpgsqlTransaction? transaction = null) {
 			string query = 
 				"SELECT ID_TEMPLATE, ID_NORMA, ID_TIPO_UNIDAD_TIEMPO_ANTELACION, CANT_ANTELACION FROM TANATOS.TEMPLATE_NORMA_NOTIFICACION " +

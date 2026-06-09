@@ -3,10 +3,11 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class TemplateNormaFiscalizadorDao(DatabaseConnectionHelper connectionHelper) {
+    public class TemplateNormaFiscalizadorDao(IDatabaseConnectionHelper connectionHelper) {
         public async Task<List<TemplateNormaFiscalizador>> ObtenerPorTemplateNorma(long idTemplate, long? idNorma = null, NpgsqlTransaction? transaction = null) {
             string query =
                 "SELECT ID_TEMPLATE, ID_NORMA, ID_TIPO_FISCALIZADOR FROM TANATOS.TEMPLATE_NORMA_FISCALIZADOR " +

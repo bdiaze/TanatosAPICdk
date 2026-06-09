@@ -1,10 +1,11 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class NegocioBcp(IDateTimeProvider dateTimeProvider, NormaSuscritaBcp normaSuscritaBcp, NegocioDao negocioDao, NormaSuscritaDao normaSuscritaDao) {
+	public class NegocioBcp(IDateTimeProvider dateTimeProvider, NormaSuscritaBcp normaSuscritaBcp, NegocioDao negocioDao, NormaSuscritaDao normaSuscritaDao) : INegocioBcp {
 		public bool EstaVigente(Negocio? negocio) {
 			return negocio != null && negocio.Vigencia;
 		}
@@ -15,6 +16,18 @@ namespace TanatosAPI.Business {
 
 		public async Task<Negocio?> ObtenerPorId(long idNegocio, NpgsqlTransaction? transaction = null) {
 			return await negocioDao.Obtener(idNegocio, transaction);
+		}
+
+		public async Task<Negocio> ObtenerPorIdValidandoVigenciaYPertenencia(long idNegocio, string sub, NpgsqlTransaction? transaction = null) {
+			Negocio? negocio = await ObtenerPorId(idNegocio, transaction);
+			if (!EstaVigente(negocio)) {
+				throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El negocio no existe o no está vigente", "El negocio es inválido.");
+			}
+
+			if (!PerteneceAlUsuario(negocio!, sub)) {
+				throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El negocio no pertenece al usuario", "El negocio es inválido.");
+			}
+			return negocio!;
 		}
 
 		public async Task<Negocio?> ObtenerVigentePorSubYNegocio(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {

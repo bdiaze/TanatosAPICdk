@@ -83,7 +83,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, DatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
+			routes.MapPost("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IDatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -149,7 +149,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, DatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
+			routes.MapPut("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IDatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -228,7 +228,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, DatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

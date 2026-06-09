@@ -102,7 +102,7 @@ builder.Services.AddSingleton<NpgsqlDataSource>(serviceProvider => {
     };
 	return new NpgsqlDataSourceBuilder(stringBuilder.ToString()).Build();
 });
-builder.Services.AddSingleton<DatabaseConnectionHelper>();
+builder.Services.AddSingleton<IDatabaseConnectionHelper, DatabaseConnectionHelper>();
 builder.Services.AddSingleton<CryptoHelper>();
 builder.Services.AddSingleton<IS3Helper, S3Helper>();
 builder.Services.AddSingleton<IDocumentoAdjuntoHelper, DocumentoAdjuntoHelper>();
@@ -154,11 +154,11 @@ builder.Services.AddSingleton<DocumentoAdjuntoBcp>();
 builder.Services.AddSingleton<MensajeBcp>();
 builder.Services.AddSingleton<SuscripcionBcp>();
 builder.Services.AddSingleton<TemplateNormaBcp>();
-builder.Services.AddSingleton<NegocioBcp>();
+builder.Services.AddSingleton<INegocioBcp, NegocioBcp>();
 builder.Services.AddSingleton<UsuarioBcp>();
 builder.Services.AddSingleton<HistorialNotificacionBcp>();
-builder.Services.AddSingleton<CargoBcp>();
-builder.Services.AddSingleton<EmpleadoBcp>();
+builder.Services.AddSingleton<ICargoBcp, CargoBcp>();
+builder.Services.AddSingleton<IEmpleadoBcp, EmpleadoBcp>();
 builder.Services.AddSingleton<ICategoriaNormaBcp, CategoriaNormaBcp>();
 #endregion
 

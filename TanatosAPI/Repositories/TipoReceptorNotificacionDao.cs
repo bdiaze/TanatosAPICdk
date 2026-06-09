@@ -3,10 +3,11 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class TipoReceptorNotificacionDao(DatabaseConnectionHelper connectionHelper) {
+    public class TipoReceptorNotificacionDao(IDatabaseConnectionHelper connectionHelper) {
 
         public async Task<TipoReceptorNotificacion?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
             string query =

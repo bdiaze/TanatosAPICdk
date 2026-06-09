@@ -7,7 +7,7 @@ using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class CargoDao(DatabaseConnectionHelper connectionHelper) : ICargoDao {
+    public class CargoDao(IDatabaseConnectionHelper connectionHelper) : ICargoDao {
 
 		public async Task<Cargo?> Obtener(long id, NpgsqlTransaction? transaction = null) {
 			string query =

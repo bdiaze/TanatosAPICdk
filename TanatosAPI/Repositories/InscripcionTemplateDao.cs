@@ -3,10 +3,11 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class InscripcionTemplateDao(DatabaseConnectionHelper connectionHelper) {
+    public class InscripcionTemplateDao(IDatabaseConnectionHelper connectionHelper) {
 		public async Task<List<InscripcionTemplate>> ObtenerPorSub(string sub, long idNegocio, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
             string query =
                 "SELECT SUB, ID_NEGOCIO, ID_TEMPLATE, FECHA_ACTIVACION, FECHA_DESACTIVACION, VIGENCIA " +

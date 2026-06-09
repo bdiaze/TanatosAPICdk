@@ -3,10 +3,11 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class TemplateDao(DatabaseConnectionHelper connectionHelper) {
+    public class TemplateDao(IDatabaseConnectionHelper connectionHelper) {
 		public async Task<Template?> ObtenerPorId(long idTemplate, NpgsqlTransaction? transaction = null) {
             string query =
                 "SELECT ID, ID_TEMPLATE_PADRE, NOMBRE, DESCRIPCION, REQUIERE_PLAN_EMPRESA, VIGENCIA " +
