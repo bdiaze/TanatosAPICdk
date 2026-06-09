@@ -15,10 +15,10 @@ namespace TanatosAPI.Test.Business {
 		private readonly IDocumentoAdjuntoHelper documentoAdjuntoHelper = Substitute.For<IDocumentoAdjuntoHelper>();
         private readonly DocumentoAdjuntoBcp documentoAdjuntoBcp;
 
-		private static readonly DateTime FAKE_FECHA = new(2026, 1, 15, 14, 0, 0, DateTimeKind.Utc);
+		private static readonly DateTime FECHA_DUMMY = new(2026, 1, 15, 14, 0, 0, DateTimeKind.Utc);
 
 		public DocumentoAdjuntoBcpTest() {
-			dateTimeProvider.UtcNow.Returns(FAKE_FECHA);
+			dateTimeProvider.UtcNow.Returns(FECHA_DUMMY);
 
 			documentoAdjuntoBcp = new(dateTimeProvider, documentoAdjuntoDao, documentoAdjuntoHelper);
 		}
@@ -152,7 +152,7 @@ namespace TanatosAPI.Test.Business {
             Assert.Equal(99L, documentoAdjunto.Id);
             Assert.Equal("bucket-name-test", documentoAdjunto.BucketName);
             Assert.Equal(0 /* Generada URL prefirmada para PUT */, documentoAdjunto.EstadoSubida);
-            Assert.Equal(FAKE_FECHA, documentoAdjunto.FechaCreacion);
+            Assert.Equal(FECHA_DUMMY, documentoAdjunto.FechaCreacion);
             Assert.Null(documentoAdjunto.FechaConfirmacionSubida);
             Assert.True(documentoAdjunto.Vigencia);
             await documentoAdjuntoDao.Received(1).Insertar(Arg.Any<DocumentoAdjunto>());
@@ -170,7 +170,7 @@ namespace TanatosAPI.Test.Business {
             Assert.Equal(1, documento.EstadoSubida);
             Assert.Equal("mime-real/test", documento.MimeReal);
             Assert.Equal(2048, documento.TamannoReal);
-            Assert.Equal(FAKE_FECHA, documento.FechaConfirmacionSubida);
+            Assert.Equal(FECHA_DUMMY, documento.FechaConfirmacionSubida);
             await documentoAdjuntoDao.Received(1).Actualizar(documento, null);
         }
 
@@ -201,7 +201,7 @@ namespace TanatosAPI.Test.Business {
             await documentoAdjuntoBcp.Eliminar(documento);
             
             Assert.False(documento.Vigencia);
-            Assert.Equal(FAKE_FECHA, documento.FechaEliminacion);
+            Assert.Equal(FECHA_DUMMY, documento.FechaEliminacion);
             await documentoAdjuntoDao.Received(1).Actualizar(documento, null);
             await documentoAdjuntoHelper.Received(1).AgregarTagEstadoEliminado(documento.BucketKey);
         }
