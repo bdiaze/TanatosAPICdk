@@ -96,16 +96,12 @@ jobs:
               
             - name: Test con coverage
               working-directory: ${{ vars.TEST_DIRECTORY }}
-              env:
-                EXCLUDE_FILES: "**/Program.cs,**/*.g.cs"
-                EXCLUDE_CLASSES: "[*]Microsoft.AspNetCore.OpenApi.Generated;[*]System.Runtime.CompilerServices"
               run: |
                 dotnet test --configuration Release \
-                  /p:CollectCoverage=true \
-                  /p:CoverletOutputFormat=cobertura \
-                  /p:CoverletOutput=./coverage/ \
-                  /p:ExcludeByFile="$EXCLUDE_FILES" \
-                  /p:Exclude="$EXCLUDE_CLASSES"
+                  --collect:"XPlat Code Coverage" \
+                  --results-directory ./coverage \
+                  -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Program.cs,**/*.g.cs" \
+                  -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*]Microsoft.AspNetCore.OpenApi.Generated;[*]System.Runtime.CompilerServices"
                 xml=$(find ./coverage -name "coverage.cobertura.xml" | head -1)
                 line_rate=$(grep -oP 'line-rate="\K[^"]+' "$xml" | head -1)
                 branch_rate=$(grep -oP 'branch-rate="\K[^"]+' "$xml" | head -1)
