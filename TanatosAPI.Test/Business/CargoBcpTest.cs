@@ -52,7 +52,7 @@ namespace TanatosAPI.Test.Business {
 			Assert.Equal(expectedResult, cargoBcp.EstaVigente(cargo));
 		}
 
-		public static TheoryData<Cargo?, bool> PerteneceAlUsuarioCases => new() {
+		public static TheoryData<Cargo, bool> PerteneceAlUsuarioCases => new() {
 			{ CargoDummy(sub: "sub-test-123"), true },
 			{ CargoDummy(sub: "otro-sub-test-123"), false }
 		};
