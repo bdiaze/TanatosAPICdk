@@ -848,6 +848,7 @@ namespace Cdk
 					{ "FLOW_API_URL", flowApiUrl },
 					{ "FLOW_URL_CALLBACK", flowUrlCallback },
 					{ "FLOW_URL_RETORNO", flowUrlRetorno },
+					{ "DYNAMODB_TABLE_NAME_RATE_LIMITS", tablaRateLimits.TableName }
 				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {
@@ -876,7 +877,7 @@ namespace Cdk
 						CorsHttpMethod.PUT,
 						CorsHttpMethod.DELETE
 					],
-					AllowHeaders = ["Content-Type", "Authorization", "X-Retry"],
+					AllowHeaders = ["Content-Type", "Authorization", "X-Retry", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Retry-After"],
 					AllowCredentials = true,
 					MaxAge = Duration.Days(10),
 				},
