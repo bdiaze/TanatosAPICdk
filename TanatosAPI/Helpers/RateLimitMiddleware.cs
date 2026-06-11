@@ -8,10 +8,9 @@ namespace TanatosAPI.Helpers {
             string? sub = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             bool isAuthenticated = !string.IsNullOrWhiteSpace(sub);
-            bool isPublic = context.Request.Path.StartsWithSegments("/public/");
-            (int maxRequests, TimeSpan window) = (isPublic && !isAuthenticated)
-                ? (20, TimeSpan.FromMinutes(1))
-                : (100, TimeSpan.FromMinutes(1));
+            (int maxRequests, TimeSpan window) = isAuthenticated
+                ? (100, TimeSpan.FromMinutes(1))
+                : (20, TimeSpan.FromMinutes(1));
 
             string key = isAuthenticated
                 ? $"USER:{sub}"
@@ -27,6 +26,8 @@ namespace TanatosAPI.Helpers {
                 context.Response.Headers.RetryAfter = retryAfterSeconds.ToString();
                 context.Response.Headers["X-RateLimit-Reset"] = result.RetryAfter.ToUnixTimeSeconds().ToString();
                 context.Response.StatusCode = 429;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync("\"Has realizado demasiadas peticiones. Inténtalo de nuevo más tarde.\"");
                 return;
             }
 
