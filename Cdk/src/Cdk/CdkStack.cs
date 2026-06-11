@@ -4,6 +4,7 @@ using Amazon.CDK.AWS.Apigatewayv2;
 using Amazon.CDK.AWS.Batch;
 using Amazon.CDK.AWS.CertificateManager;
 using Amazon.CDK.AWS.Cognito;
+using Amazon.CDK.AWS.DynamoDB;
 using Amazon.CDK.AWS.EC2;
 using Amazon.CDK.AWS.IAM;
 using Amazon.CDK.AWS.Lambda;
@@ -21,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Attribute = Amazon.CDK.AWS.DynamoDB.Attribute;
 using CfnStage = Amazon.CDK.AWS.Apigatewayv2.CfnStage;
 using CfnStageProps = Amazon.CDK.AWS.Apigatewayv2.CfnStageProps;
 using DomainNameAttributes = Amazon.CDK.AWS.Apigatewayv2.DomainNameAttributes;
@@ -690,11 +692,29 @@ namespace Cdk
 				RemovalPolicy = RemovalPolicy.DESTROY,
 				AutoDeleteObjects = false,
 			});
-			#endregion
+            #endregion
 
-			#region API
-			// Se crea security group para la lambda y se enlaza con security group de RDS...
-			SecurityGroup securityGroup = new(this, $"{appName}LambdaSecurityGroup", new SecurityGroupProps {
+            #region DynamoDB para rate limits
+            Table tablaRateLimits = new(this, $"{appName}DynamoDBTableRateLimits", new TableProps {
+                TableName = $"{appName}RateLimits",
+                PartitionKey = new Attribute {
+                    Name = "PK",
+                    Type = AttributeType.STRING
+                },
+                SortKey = new Attribute {
+                    Name = "SK",
+                    Type = AttributeType.STRING
+                },
+				TimeToLiveAttribute = "TTL",
+                DeletionProtection = true,
+                BillingMode = BillingMode.PAY_PER_REQUEST,
+                RemovalPolicy = RemovalPolicy.DESTROY
+            });
+            #endregion
+
+            #region API
+            // Se crea security group para la lambda y se enlaza con security group de RDS...
+            SecurityGroup securityGroup = new(this, $"{appName}LambdaSecurityGroup", new SecurityGroupProps {
                 Vpc = vpc,
                 SecurityGroupName = $"{appName}APILambda",
                 Description = $"Security Group de {appName} API Lambda",
@@ -774,7 +794,18 @@ namespace Cdk
 										$"{bucket.BucketArn}/*",
 									],
 								}),
-							]
+                                new PolicyStatement(new PolicyStatementProps{
+                                    Sid = $"{appName}AccessToDynamoDB",
+                                    Actions = [
+                                        "dynamodb:PutItem",
+                                        "dynamodb:Query"
+                                    ],
+                                    Resources = [
+                                        tablaRateLimits.TableArn,
+                                        $"{tablaRateLimits.TableArn}/*",
+                                    ],
+                                }),
+                            ]
                         })
                     }
                 }
