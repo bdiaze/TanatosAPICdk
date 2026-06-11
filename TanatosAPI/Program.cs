@@ -1,5 +1,6 @@
 using Amazon.APIGateway;
 using Amazon.CognitoIdentityProvider;
+using Amazon.DynamoDBv2;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.S3;
 using Amazon.SecretsManager;
@@ -83,6 +84,13 @@ builder.Services.AddSingleton<IAmazonS3>(sp => {
 	};
 	return new AmazonS3Client(config);
 });
+builder.Services.AddSingleton<IAmazonDynamoDB>(sp => {
+    AmazonDynamoDBConfig config = new() {
+        ConnectTimeout = TimeSpan.FromSeconds(5),
+        Timeout = TimeSpan.FromSeconds(25)
+    };
+    return new AmazonDynamoDBClient(config);
+});
 #endregion
 
 #region Singleton Helpers
@@ -109,6 +117,7 @@ builder.Services.AddSingleton<IDocumentoAdjuntoHelper, DocumentoAdjuntoHelper>()
 builder.Services.AddHttpClient<GoogleRecaptchaHelper>();
 builder.Services.AddHttpClient<FlowHelper>();
 builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+builder.Services.AddSingleton<IRateLimiter, DynamoRateLimiter>();
 #endregion
 
 #region Singleton DAO
@@ -260,6 +269,7 @@ if (app.Environment.IsDevelopment()) {
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<RateLimitMiddleware>();
 
 app.MapCategoriaNormaEndpoints();
 app.MapTipoFiscalizadorEndpoints();
