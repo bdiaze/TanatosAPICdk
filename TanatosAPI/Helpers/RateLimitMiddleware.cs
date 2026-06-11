@@ -1,15 +1,21 @@
-﻿using TanatosAPI.Entities.Others;
+﻿using System.Security.Claims;
+using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
     public class RateLimitMiddleware(RequestDelegate next, IRateLimiter rateLimiter) {
         public async Task InvokeAsync(HttpContext context) {
-            string key = GetRateLimitKey(context);
+            string? sub = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+            bool isAuthenticated = !string.IsNullOrWhiteSpace(sub);
             bool isPublic = context.Request.Path.StartsWithSegments("/public/");
-            (int maxRequests, TimeSpan window) = isPublic
+            (int maxRequests, TimeSpan window) = (isPublic && !isAuthenticated)
                 ? (20, TimeSpan.FromMinutes(1))
                 : (100, TimeSpan.FromMinutes(1));
+
+            string key = isAuthenticated
+                ? $"USER:{sub}"
+                : context.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim() ?? "UNKNOWN";
 
             RateLimitResult result = await rateLimiter.CheckAsync(key, maxRequests, window);
 
@@ -25,18 +31,6 @@ namespace TanatosAPI.Helpers {
             }
 
             await next(context);
-        }
-
-        private static string GetRateLimitKey(HttpContext context) {
-            string? sub = context.User.FindFirst("sub")?.Value;
-            if (sub is not null) {
-                return $"USER:{sub}";
-            }
-
-            string ip = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim() ??
-                context.Connection.RemoteIpAddress?.ToString() ??
-                "UNKNOWN";
-            return $"IP:{ip}";
         }
     }
 }
