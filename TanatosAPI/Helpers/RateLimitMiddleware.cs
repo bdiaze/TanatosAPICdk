@@ -33,7 +33,7 @@ namespace TanatosAPI.Helpers {
 
             bool isAuthenticated = !string.IsNullOrWhiteSpace(sub);
             (int maxRequests, TimeSpan window) = path switch { 
-                string p when p.StartsWith("/public/Auth/", StringComparison.OrdinalIgnoreCase) => (15, TimeSpan.FromMinutes(1)),
+                string p when p.StartsWith("/public/Auth/", StringComparison.OrdinalIgnoreCase) => (10, TimeSpan.FromMinutes(1)),
                 string _ when isAuthenticated => (100, TimeSpan.FromMinutes(1)),
                 _ => (20, TimeSpan.FromMinutes(1))
             };
