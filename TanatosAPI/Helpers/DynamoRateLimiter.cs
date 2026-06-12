@@ -42,7 +42,7 @@ namespace TanatosAPI.Helpers {
             await dynamo.PutItemAsync(new PutItemRequest {
                 TableName = TABLE_NAME,
                 Item = new Dictionary<string, AttributeValue> {
-                    ["PK"] = new($"RL#{key}"),
+                    ["PK"] = new(key),
                     ["SK"] = new(sk),
                     ["TTL"] = new() { N = (now + window).ToUnixTimeSeconds().ToString() },
                     ["Path"] = new(rateLimitContext.Path),
