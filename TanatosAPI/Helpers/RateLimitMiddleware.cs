@@ -5,7 +5,7 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    public class RateLimitMiddleware(RequestDelegate next, IRateLimiter rateLimiter, VariableEntornoHelper variableEntorno) {
+    public class RateLimitMiddleware(RequestDelegate next, IRateLimiter rateLimiter, IVariableEntornoHelper variableEntorno) {
         private readonly HashSet<string> RATE_LIMITS_SUBS_TO_SKIP = [.. variableEntorno.Obtener("RATE_LIMITS_SUBS_TO_SKIP").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
 
         public async Task InvokeAsync(HttpContext context) {
