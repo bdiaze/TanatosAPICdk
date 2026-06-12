@@ -111,6 +111,7 @@ builder.Services.AddSingleton<NpgsqlDataSource>(serviceProvider => {
 	return new NpgsqlDataSourceBuilder(stringBuilder.ToString()).Build();
 });
 builder.Services.AddSingleton<IDatabaseConnectionHelper, DatabaseConnectionHelper>();
+builder.Services.AddSingleton<HtmlRenderer>();
 builder.Services.AddSingleton<CryptoHelper>();
 builder.Services.AddSingleton<IS3Helper, S3Helper>();
 builder.Services.AddSingleton<IDocumentoAdjuntoHelper, DocumentoAdjuntoHelper>();

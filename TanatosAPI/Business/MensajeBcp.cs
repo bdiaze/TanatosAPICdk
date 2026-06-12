@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using Scriban.Runtime;
+using System.Net;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
@@ -6,7 +7,7 @@ using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class MensajeBcp(IDateTimeProvider dateTimeProvider, MensajeDao mensajeDao, IHostEnvironment environment, HermesHelper hermesHelper, IVariableEntornoHelper variableEntorno) {
+	public class MensajeBcp(IDateTimeProvider dateTimeProvider, MensajeDao mensajeDao, HermesHelper hermesHelper, IVariableEntornoHelper variableEntorno, HtmlRenderer renderer) {
 		public async Task<Mensaje> Ingresar(string nombre, string correo, string contenido, string? sub = null) {
 
 			Mensaje nuevo = new() { 
@@ -20,17 +21,11 @@ namespace TanatosAPI.Business {
 
 			nuevo.Id = await mensajeDao.Insertar(nuevo);
 
-			string strTemplateCorreo;
-			if (environment.IsProduction()) {
-				strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "MensajeRecibido.html"));
-			} else {
-				strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "MensajeRecibido.html"));
-			}
-
-			string cuerpoCorreo = strTemplateCorreo
-				.Replace("[NOMBRE_USUARIO]", WebUtility.HtmlEncode(nuevo.Nombre))
-				.Replace("[CORREO_USUARIO]", WebUtility.HtmlEncode(nuevo.Correo))
-				.Replace("[CONTENIDO]", WebUtility.HtmlEncode(nuevo.Contenido));
+			string cuerpoCorreo = await renderer.GenerarHtml("MensajeRecibido.html", new ScriptObject() {
+                { "NOMBRE_USUARIO", nuevo.Nombre },
+                { "CORREO_USUARIO", nuevo.Correo },
+                { "CONTENIDO", nuevo.Contenido }
+            });
 
 			List<string> idsMensajes = [];
 			foreach (string destinatario in variableEntorno.Obtener("DESTINATARIOS_NUEVO_MENSAJE").Split(',')) {

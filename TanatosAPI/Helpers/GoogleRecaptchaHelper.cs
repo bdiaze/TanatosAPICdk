@@ -10,11 +10,15 @@ using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
     [ExcludeFromCodeCoverage]
-    public class GoogleRecaptchaHelper(IVariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper, HttpClient httpClient) {
+    public class GoogleRecaptchaHelper(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper, HttpClient httpClient) {
         private const string GOOGLE_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
         private const string GOOGLE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
         public async Task<(bool valid, string invalidReason, string action, float score)> ObtenerAssesment(string recaptchaToken, string expectedAction) {
+            if (environment.IsDevelopment()) {
+                return (true, string.Empty, expectedAction, 1);
+            }
+            
             GoogleAssessmentParams parametros = new() {
                 Event = new GoogleAssesmentEvent {
                     SiteKey = variableEntorno.Obtener("GOOGLE_RECAPTCHA_SITE_KEY"),
