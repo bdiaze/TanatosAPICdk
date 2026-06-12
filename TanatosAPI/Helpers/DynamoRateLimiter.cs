@@ -49,7 +49,8 @@ namespace TanatosAPI.Helpers {
                     ["Method"] = new(rateLimitContext.Method),
                     ["IP"] = new(rateLimitContext.IP),
                     ["MaxRequests"] = new(maxRequests.ToString()),
-                    ["Remaining"] = new(remaing.ToString())
+                    ["Remaining"] = new(remaing.ToString()),
+                    ["RequestDate"] = new($"{now:O}")                
                 }
             });
 
