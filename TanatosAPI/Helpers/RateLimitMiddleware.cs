@@ -5,7 +5,9 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    public class RateLimitMiddleware(RequestDelegate next, IRateLimiter rateLimiter) {
+    public class RateLimitMiddleware(RequestDelegate next, IRateLimiter rateLimiter, VariableEntornoHelper variableEntorno) {
+        private readonly HashSet<string> RATE_LIMITS_SUBS_TO_SKIP = [.. variableEntorno.Obtener("RATE_LIMITS_SUBS_TO_SKIP").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+
         public async Task InvokeAsync(HttpContext context) {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -17,7 +19,17 @@ namespace TanatosAPI.Helpers {
                 return;
             }
 
+
             string? sub = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (sub != null && RATE_LIMITS_SUBS_TO_SKIP.Contains(sub)) {
+                LambdaLogger.Log(
+                    $"[RateLimitMiddleware] - [{stopwatch.ElapsedMilliseconds} ms] - [Skipped] - " +
+                    $"Se salta rate limit para sub: {sub}.");
+                await next(context);
+                return;
+            }
+
+
             bool isAuthenticated = !string.IsNullOrWhiteSpace(sub);
             (int maxRequests, TimeSpan window) = context.Request.Path switch { 
                 PathString path when path.StartsWithSegments("/public/Auth/") => (5, TimeSpan.FromMinutes(1)),

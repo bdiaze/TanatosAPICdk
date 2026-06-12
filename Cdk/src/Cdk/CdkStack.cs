@@ -811,6 +811,11 @@ namespace Cdk
                 }
             });
 
+			string[] subsToSkip = [
+                notificacionesUserPoolClient.UserPoolClientId,
+				cognitoTriggerUserPoolClient.UserPoolClientId
+			];
+
 			// Creación de la función lambda...
 			Function function = new(this, $"{appName}APILambdaFunction", new FunctionProps {
                 Runtime = Runtime.DOTNET_10,
@@ -848,8 +853,9 @@ namespace Cdk
 					{ "FLOW_API_URL", flowApiUrl },
 					{ "FLOW_URL_CALLBACK", flowUrlCallback },
 					{ "FLOW_URL_RETORNO", flowUrlRetorno },
-					{ "DYNAMODB_TABLE_NAME_RATE_LIMITS", tablaRateLimits.TableName }
-				},
+					{ "DYNAMODB_TABLE_NAME_RATE_LIMITS", tablaRateLimits.TableName },
+					{ "RATE_LIMITS_SUBS_TO_SKIP", string.Join(',', subsToSkip) }
+                },
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {
                     Subnets = [subnet1, subnet2]
