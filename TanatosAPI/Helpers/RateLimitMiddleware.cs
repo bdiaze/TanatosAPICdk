@@ -11,7 +11,8 @@ namespace TanatosAPI.Helpers {
         public async Task InvokeAsync(HttpContext context) {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            if (context.Request.Path.StartsWithSegments("/public/Suscripcion/flow-webhook/")) {
+            string path = context.Request.Path.ToString();
+            if (path.StartsWith("/public/Suscripcion/flow-webhook/", StringComparison.OrdinalIgnoreCase)) {
                 LambdaLogger.Log(
                     $"[RateLimitMiddleware] - [{stopwatch.ElapsedMilliseconds} ms] - [Skipped] - " +
                     $"Se salta rate limit para webhook de Flow.");
@@ -31,9 +32,9 @@ namespace TanatosAPI.Helpers {
 
 
             bool isAuthenticated = !string.IsNullOrWhiteSpace(sub);
-            (int maxRequests, TimeSpan window) = context.Request.Path switch { 
-                PathString path when path.StartsWithSegments("/public/Auth/") => (5, TimeSpan.FromMinutes(1)),
-                PathString _ when isAuthenticated => (100, TimeSpan.FromMinutes(1)),
+            (int maxRequests, TimeSpan window) = path switch { 
+                string p when p.StartsWith("/public/Auth/", StringComparison.OrdinalIgnoreCase) => (15, TimeSpan.FromMinutes(1)),
+                string _ when isAuthenticated => (100, TimeSpan.FromMinutes(1)),
                 _ => (20, TimeSpan.FromMinutes(1))
             };
 
@@ -43,7 +44,7 @@ namespace TanatosAPI.Helpers {
                 : $"IP:{ip}";
 
             RateLimitContext rateLimitContext = new() { 
-                Path = context.Request.Path.ToString(),
+                Path = path,
                 Method = context.Request.Method,
                 IP = ip,
                 Sub = sub
