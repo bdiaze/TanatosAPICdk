@@ -1,7 +1,5 @@
 using Amazon.CDK;
-using Amazon.CDK.AWS.APIGateway;
 using Amazon.CDK.AWS.Apigatewayv2;
-using Amazon.CDK.AWS.Batch;
 using Amazon.CDK.AWS.CertificateManager;
 using Amazon.CDK.AWS.Cognito;
 using Amazon.CDK.AWS.DynamoDB;
@@ -21,15 +19,11 @@ using Constructs;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Attribute = Amazon.CDK.AWS.DynamoDB.Attribute;
 using CfnStage = Amazon.CDK.AWS.Apigatewayv2.CfnStage;
 using CfnStageProps = Amazon.CDK.AWS.Apigatewayv2.CfnStageProps;
-using DomainNameAttributes = Amazon.CDK.AWS.Apigatewayv2.DomainNameAttributes;
 using HttpMethod = Amazon.CDK.AWS.Apigatewayv2.HttpMethod;
-using IDomainName = Amazon.CDK.AWS.Apigatewayv2.IDomainName;
 using Secret = Amazon.CDK.AWS.SecretsManager.Secret;
-using StageOptions = Amazon.CDK.AWS.APIGateway.StageOptions;
 
 namespace Cdk
 {
@@ -131,10 +125,13 @@ namespace Cdk
 
 			// Se busca Lambda Function para procesar PostConfirmation...
 			IStringParameter cognitoTriggerLambdaArnStringParameter =  StringParameter.FromStringParameterArn(this, $"{appName}CognitoTriggerLambdaArnStringParameter", arnParameterCognitoTriggerLambdaArn);
-			IFunction postConfirmationFunction = Function.FromFunctionArn(this, $"{appName}CognitoTriggerLambda", cognitoTriggerLambdaArnStringParameter.StringValue);
-			
-			#region Cognito
-			UserPool userPool = new(this, $"{appName}UserPool", new UserPoolProps {
+			IFunction postConfirmationFunction = Function.FromFunctionAttributes(this, $"{appName}CognitoTriggerLambda", new FunctionAttributes { 
+				FunctionArn = cognitoTriggerLambdaArnStringParameter.StringValue,
+				SameEnvironment = true,
+			});
+
+            #region Cognito
+            UserPool userPool = new(this, $"{appName}UserPool", new UserPoolProps {
 				UserPoolName = $"{appName}UserPool",
 				SelfSignUpEnabled = true,
 				SignInCaseSensitive = false,
@@ -185,13 +182,12 @@ namespace Cdk
 				}
 			});
 
-			_ = new CfnPermission(this, $"{appName}PostConfirmationFunctionInvokePermission", new CfnPermissionProps {
-				FunctionName = postConfirmationFunction.FunctionArn,
+			postConfirmationFunction.AddPermission($"{appName}PostConfirmationFunctionInvokePermission", new Permission {
 				Action = "lambda:InvokeFunction",
-				Principal = "cognito-idp.amazonaws.com",
-				SourceArn = userPool.UserPoolArn
+				Principal = new ServicePrincipal("cognito-idp.amazonaws.com"),
+                SourceArn = userPool.UserPoolArn,
 			});
-
+			
 			_ = new UserPoolGroup(this, $"{appName}AdminUserGroup", new UserPoolGroupProps {
 				GroupName = "Admin",
 				UserPool = userPool,
