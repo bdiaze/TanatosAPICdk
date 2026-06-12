@@ -7,7 +7,7 @@ namespace TanatosAPI.Helpers {
     public class DynamoRateLimiter(IVariableEntornoHelper variableEntorno, IAmazonDynamoDB dynamo, IDateTimeProvider dateTimeProvider) : IRateLimiter {
         private readonly string TABLE_NAME = variableEntorno.Obtener("DYNAMODB_TABLE_NAME_RATE_LIMITS");
         
-        public async Task<RateLimitResult> CheckAsync(string key, int maxRequests, TimeSpan window) {
+        public async Task<RateLimitResult> CheckAsync(string key, int maxRequests, TimeSpan window, RateLimitContext rateLimitContext) {
             DateTimeOffset now = dateTimeProvider.UtcNow;
             DateTimeOffset windowStart = now - window;
 
@@ -36,19 +36,26 @@ namespace TanatosAPI.Helpers {
                 };
             }
 
+            int remaing = Math.Max(0, maxRequests - count - 1);
+
             string sk = $"{now.ToUnixTimeMilliseconds():D15}#{Guid.NewGuid():N}";
             await dynamo.PutItemAsync(new PutItemRequest {
                 TableName = TABLE_NAME,
                 Item = new Dictionary<string, AttributeValue> {
                     ["PK"] = new($"RL#{key}"),
                     ["SK"] = new(sk),
-                    ["TTL"] = new() { N = (now + window).ToUnixTimeSeconds().ToString() }
+                    ["TTL"] = new() { N = (now + window).ToUnixTimeSeconds().ToString() },
+                    ["Path"] = new(rateLimitContext.Path),
+                    ["Method"] = new(rateLimitContext.Method),
+                    ["IP"] = new(rateLimitContext.IP),
+                    ["MaxRequests"] = new(maxRequests.ToString()),
+                    ["Remaining"] = new(remaing.ToString())
                 }
             });
 
             return new RateLimitResult() { 
                 Allowed = true,
-                Remaining = Math.Max(0, maxRequests - count - 1),
+                Remaining = remaing,
                 RetryAfter = now
             };
         }

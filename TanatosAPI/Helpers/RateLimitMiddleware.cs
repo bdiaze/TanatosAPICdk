@@ -1,22 +1,42 @@
-﻿using System.Security.Claims;
+﻿using Amazon.Lambda.Core;
+using System.Diagnostics;
+using System.Security.Claims;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
     public class RateLimitMiddleware(RequestDelegate next, IRateLimiter rateLimiter) {
         public async Task InvokeAsync(HttpContext context) {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            if (context.Request.Path.StartsWithSegments("/public/Suscripcion/flow-webhook/")) {
+                LambdaLogger.Log(
+                    $"[RateLimitMiddleware] - [{stopwatch.ElapsedMilliseconds} ms] - [Skipped] - " +
+                    $"Se salta rate limit para webhook de Flow.");
+                await next(context);
+                return;
+            }
+
             string? sub = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
             bool isAuthenticated = !string.IsNullOrWhiteSpace(sub);
-            (int maxRequests, TimeSpan window) = isAuthenticated
-                ? (100, TimeSpan.FromMinutes(1))
-                : (20, TimeSpan.FromMinutes(1));
+            (int maxRequests, TimeSpan window) = context.Request.Path switch { 
+                PathString path when path.StartsWithSegments("/public/Auth/") => (5, TimeSpan.FromMinutes(1)),
+                PathString _ when isAuthenticated => (100, TimeSpan.FromMinutes(1)),
+                _ => (20, TimeSpan.FromMinutes(1))
+            };
 
+            string ip = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim() ?? "UNKNOWN";
             string key = isAuthenticated
                 ? $"USER:{sub}"
-                : context.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim() ?? "UNKNOWN";
+                : $"IP:{ip}";
 
-            RateLimitResult result = await rateLimiter.CheckAsync(key, maxRequests, window);
+            RateLimitContext rateLimitContext = new() { 
+                Path = context.Request.Path.ToString(),
+                Method = context.Request.Method,
+                IP = ip,
+                Sub = sub
+            };
+            RateLimitResult result = await rateLimiter.CheckAsync(key, maxRequests, window, rateLimitContext);
 
             context.Response.Headers["X-RateLimit-Limit"] = maxRequests.ToString();
             context.Response.Headers["X-RateLimit-Remaining"] = result.Remaining.ToString();
@@ -28,9 +48,16 @@ namespace TanatosAPI.Helpers {
                 context.Response.StatusCode = 429;
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsync("\"Has realizado demasiadas peticiones. Inténtalo de nuevo más tarde.\"");
+
+                LambdaLogger.Log(
+                    $"[RateLimitMiddleware] - [{stopwatch.ElapsedMilliseconds} ms] - [Not Allowed] - " +
+                    $"Key: {key} - Max Requests: {maxRequests} - Remaining: {result.Remaining} - Retry After: {result.RetryAfter:O}.");
                 return;
             }
 
+            LambdaLogger.Log(
+                $"[RateLimitMiddleware] - [{stopwatch.ElapsedMilliseconds} ms] - [Allowed] - " +
+                $"Key: {key} - Max Requests: {maxRequests} - Remaining: {result.Remaining}.");
             await next(context);
         }
     }

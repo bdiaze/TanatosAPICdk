@@ -269,7 +269,9 @@ if (app.Environment.IsDevelopment()) {
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<RateLimitMiddleware>();
+if (!app.Environment.IsDevelopment()) {
+	app.UseMiddleware<RateLimitMiddleware>();
+}
 
 app.MapCategoriaNormaEndpoints();
 app.MapTipoFiscalizadorEndpoints();
