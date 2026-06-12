@@ -15,7 +15,7 @@ namespace TanatosAPI.Helpers {
                 TableName = TABLE_NAME,
                 KeyConditionExpression = "PK = :PK AND SK >= :WINDOW_START",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
-                    [":PK"] = new($"RL#{key}"),
+                    [":PK"] = new(key),
                     [":WINDOW_START"] = new($"{windowStart.ToUnixTimeMilliseconds():D15}")
                 },
                 ScanIndexForward = true,

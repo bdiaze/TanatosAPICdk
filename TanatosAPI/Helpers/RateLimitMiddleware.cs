@@ -32,16 +32,16 @@ namespace TanatosAPI.Helpers {
 
 
             bool isAuthenticated = !string.IsNullOrWhiteSpace(sub);
-            (int maxRequests, TimeSpan window) = path switch { 
-                string p when p.StartsWith("/public/Auth/", StringComparison.OrdinalIgnoreCase) => (10, TimeSpan.FromMinutes(1)),
-                string _ when isAuthenticated => (100, TimeSpan.FromMinutes(1)),
-                _ => (20, TimeSpan.FromMinutes(1))
+            (RateLimitGroup group, int maxRequests, TimeSpan window) = path switch { 
+                string p when p.StartsWith("/public/Auth/", StringComparison.OrdinalIgnoreCase) => (RateLimitGroup.Auth, 10, TimeSpan.FromMinutes(1)),
+                string _ when isAuthenticated => (RateLimitGroup.Authenticated, 100, TimeSpan.FromMinutes(1)),
+                _ => (RateLimitGroup.Public, 20, TimeSpan.FromMinutes(1))
             };
 
             string ip = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim() ?? "UNKNOWN";
             string key = isAuthenticated
-                ? $"USER:{sub}"
-                : $"IP:{ip}";
+                ? $"USER:{sub}#{group}"
+                : $"IP:{ip}#{group}";
 
             RateLimitContext rateLimitContext = new() { 
                 Path = path,
