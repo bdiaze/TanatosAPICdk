@@ -1,5 +1,6 @@
 ﻿using Cronos;
 using Npgsql;
+using Scriban.Runtime;
 using System.Net;
 using System.Text.Json;
 using TanatosAPI.Entities.Models;
@@ -9,7 +10,7 @@ using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class ProcesoNotificacionBcp(IDateTimeProvider dateTimeProvider, IHostEnvironment environment, IVariableEntornoHelper variableEntornoHelper, HermesHelper hermesHelper, KairosHelper kairosHelper, CryptoHelper cryptoHelper, UsuarioBcp usuarioBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao, ICargoDao cargoDao, EmpleadoDao empleadoDao) {
+	public class ProcesoNotificacionBcp(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, HtmlRenderer renderer, HermesHelper hermesHelper, KairosHelper kairosHelper, CryptoHelper cryptoHelper, UsuarioBcp usuarioBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, SuscripcionBcp suscripcionBcp, NormaSuscritaDao normaSuscritaDao, TipoPeriodicidadDao tipoPeriodicidadDao, TipoUnidadTiempoDao tipoUnidadTiempoDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, HistorialNotificacionDao historialNotificacionDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao, ICargoDao cargoDao, EmpleadoDao empleadoDao) {
 		private const int DIAS_CADUCIDAD_CODIGO_ACCESO = 30;
 
 		public async Task ActualizarProgramacionProcesosNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
@@ -365,23 +366,24 @@ namespace TanatosAPI.Business {
 
                     // Si el destinatario es email, se manda correo electrónico...
                     if (destinatario.IdTipoReceptor == 1) {
-                        string strTemplateCorreo;
                         string asunto;
+						string cuerpoCorreo;
                         if (!esVencimiento.Value) {
-                            if (environment.IsProduction()) {
-                                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, CONST_DIR_TEMPLATES, "NotificacionPrevia.html"));
-                            } else {
-                                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), CONST_DIR_TEMPLATES, "NotificacionPrevia.html"));
-                            }
-                            asunto = "¡Tu obligación vence en [TIEMPO_FALTANTE]!";
+                            asunto = $"¡Tu obligación vence en {tiempoFaltante ?? ""}!";
+							cuerpoCorreo = await renderer.GenerarHtml("NotificacionPrevia.html", new ScriptObject() {
+                                ["NOMBRE_NORMA"] = normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado",
+                                ["MULTA_NORMA"] = normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada",
+                                ["CODIGO_ACCESO"] = Uri.EscapeDataString(codigoAcceso),
+								["TIEMPO_FALTANTE"] = tiempoFaltante ?? "",
+								["DE_LOS_PROXIMOS"] = deLosProximos ?? "",
+                            });
                         } else {
-                            if (environment.IsProduction()) {
-                                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, CONST_DIR_TEMPLATES, "NormaVencida.html"));
-                            } else {
-                                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), CONST_DIR_TEMPLATES, "NormaVencida.html"));
-                            }
                             asunto = "¡Tu obligación venció!";
-
+                            cuerpoCorreo = await renderer.GenerarHtml("NormaVencida.html", new ScriptObject() {
+								["NOMBRE_NORMA"] = normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado",
+								["MULTA_NORMA"] = normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada",
+								["CODIGO_ACCESO"] = Uri.EscapeDataString(codigoAcceso),
+                            });
                         }
 
                         SalHermesEnviar response = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
@@ -394,13 +396,8 @@ namespace TanatosAPI.Business {
                                     Correo = destinatario.Destino
                                 }
                             ],
-                            Asunto = asunto.Replace("[TIEMPO_FALTANTE]", tiempoFaltante ?? ""),
-                            Cuerpo = strTemplateCorreo
-                                        .Replace("[NOMBRE_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado"))
-                                        .Replace("[MULTA_NORMA]", WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"))
-                                        .Replace("[TIEMPO_FALTANTE]", WebUtility.HtmlEncode(tiempoFaltante ?? ""))
-                                        .Replace("[DE_LOS_PROXIMOS]", WebUtility.HtmlEncode(deLosProximos ?? ""))
-                                        .Replace("[CODIGO_ACCESO]", Uri.EscapeDataString(codigoAcceso))
+                            Asunto = asunto,
+                            Cuerpo = cuerpoCorreo
                         });
 
                         historialNotificacion.FechaEjecucion = dateTimeProvider.UtcNow;

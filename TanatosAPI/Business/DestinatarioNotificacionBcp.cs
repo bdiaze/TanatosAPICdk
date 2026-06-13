@@ -75,11 +75,9 @@ namespace TanatosAPI.Business {
                                 Correo = correoDestino
                             }
                 ],
-                Asunto = "¡[NOMBRE_USUARIO] te añadió como destinatario de notificaciones de [NOMBRE_NEGOCIO]!"
-                            .Replace("[NOMBRE_USUARIO]", nombreUsuario ?? "")
-                            .Replace("[NOMBRE_NEGOCIO]", nombreNegocio),
+                Asunto = $"¡{nombreUsuario} te añadió como destinatario de notificaciones de {nombreNegocio}!",
                 Cuerpo = await renderer.GenerarHtml("ValidacionDestinatario.html", new ScriptObject() {
-                    ["NOMBRE_USUARIO"] = nombreUsuario ?? "",
+                    ["NOMBRE_USUARIO"] = nombreUsuario,
                     ["NOMBRE_NEGOCIO"] = nombreNegocio,
                     ["CODIGO_VALIDACION"] = Uri.EscapeDataString(codigoValidacion)
                 }),
