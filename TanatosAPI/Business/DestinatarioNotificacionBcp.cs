@@ -1,7 +1,5 @@
 ﻿using Npgsql;
-using System.Data.Common;
-using System.Net;
-using System.Transactions;
+using Scriban.Runtime;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
@@ -9,7 +7,7 @@ using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class DestinatarioNotificacionBcp(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, CryptoHelper cryptoHelper, HermesHelper hermesHelper, DestinatarioNotificacionDao destinatarioNotificacionDao) {
+	public class DestinatarioNotificacionBcp(IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, CryptoHelper cryptoHelper, HermesHelper hermesHelper, HtmlRenderer renderer, DestinatarioNotificacionDao destinatarioNotificacionDao) {
 		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
         public bool EstaVigente(DestinatarioNotificacion? destinatarioNotificacion) {
@@ -67,13 +65,6 @@ namespace TanatosAPI.Business {
         }
 
 		public async Task<string> EnviarCorreoValidacionDestinatario(string correoDestino, string nombreUsuario, string nombreNegocio, string codigoValidacion) {
-            string strTemplateCorreo;
-            if (environment.IsProduction()) {
-                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TemplatesCorreos", "ValidacionDestinatario.html"));
-            } else {
-                strTemplateCorreo = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", "ValidacionDestinatario.html"));
-            }
-
             SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
                 De = new DireccionCorreo() {
                     Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
@@ -87,10 +78,11 @@ namespace TanatosAPI.Business {
                 Asunto = "¡[NOMBRE_USUARIO] te añadió como destinatario de notificaciones de [NOMBRE_NEGOCIO]!"
                             .Replace("[NOMBRE_USUARIO]", nombreUsuario ?? "")
                             .Replace("[NOMBRE_NEGOCIO]", nombreNegocio),
-                Cuerpo = strTemplateCorreo
-                            .Replace("[NOMBRE_USUARIO]", WebUtility.HtmlEncode(nombreUsuario ?? ""))
-                            .Replace("[NOMBRE_NEGOCIO]", WebUtility.HtmlEncode(nombreNegocio))
-                            .Replace("[CODIGO_VALIDACION]", Uri.EscapeDataString(codigoValidacion)),
+                Cuerpo = await renderer.GenerarHtml("ValidacionDestinatario.html", new ScriptObject() {
+                    ["NOMBRE_USUARIO"] = nombreUsuario ?? "",
+                    ["NOMBRE_NEGOCIO"] = nombreNegocio,
+                    ["CODIGO_VALIDACION"] = Uri.EscapeDataString(codigoValidacion)
+                }),
             });
 
 			return retorno.IdMensaje;
