@@ -1,62 +1,83 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="es-cl">
-<head>
+  <head>
     <meta charset="utf-8" />
-</head>
-<body style="padding: 1rem;">
-    <div style='font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";'>
-        <table align="center" cellpadding="0" cellspacing="0" style="width:auto;">
+    <style>
+      @media (prefers-color-scheme: dark) {
+        body, td, span {
+          color: #f5f5f5 !important; 
+        }
+        .border-cell { 
+          border-color: #c6c6ca !important; 
+        }
+        .img-light { 
+          display: none !important; 
+        }
+        .img-dark { 
+          display: block !important; 
+        }
+      }
+    </style>
+  </head>
+  <body style="font-family: Roboto, 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; color: #484b51; margin: 0; padding: 0;">
+    <table cellpadding="0" cellspacing="0" width="100%">
+      <tr>
+        <td>
+          <table cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;" >
             <tr>
-                <td align="center" valign="middle">
-                    <a href="https://todoenorden.ankatu.cl/" style="text-decoration: none; padding: 0; margin: 0; display: inline-block;">
-                        <img src="https://todoenorden.ankatu.cl/logo.png" alt="Logo Todo en Orden" width="140" style="display: block;" />
-                    </a>
-                </td>
+              <td style="vertical-align: middle; padding: 0 16px; border-bottom: 1px solid #f5f5f5;" class="border-cell">
+                <a href="https://todoenorden.ankatu.cl/" target="_blank" style="text-decoration: none; display: block;">
+                  <img src="https://todoenorden.ankatu.cl/images/logo.svg" alt="Logo Todo en Orden" width="110" height="auto" style="display: block" class="img-light" />
+                  <img src="https://todoenorden.ankatu.cl/images/logo-blanco.svg" alt="Logo Todo en Orden" width="110" height="auto" style="display: none;" class="img-dark" />
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 16px;">
+          <table cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td align="center" style="padding-bottom: 16px;">
+                <span style="mso-color-alt: #f5f5f5; font-weight: 600; font-size: 24px; line-height: 34px; font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;">
+                  ¡Hemos recibido un mensaje!
+                </span>
+              </td>
             </tr>
             <tr>
-                <td align="center" style="padding: 0.7rem; padding-top: 0;">
-                    <span style="text-align: center; font-weight: 700; font-size: 1.5rem;">¡Hemos recibido un mensaje!</span>
-                </td>
+              <td>
+                <table align="center" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                  <tr>
+                    <td class="border-cell" style="mso-color-alt: #f5f5f5; padding: 12px; padding-top: 0; border-bottom: 1px solid #e5e5e5; width: 80px; font-weight: 600; font-size: 14px; line-height: 20px; vertical-align: top;">
+                      Nombre:
+                    </td>
+                    <td class="border-cell" style="mso-color-alt: #f5f5f5; padding: 12px; padding-top: 0; border-bottom: 1px solid #e5e5e5; width: 300px; font-weight: 400; font-size: 14px; line-height: 20px; vertical-align: top;">
+                      {{ NOMBRE_USUARIO }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="border-cell" style="mso-color-alt: #f5f5f5; padding: 12px; border-bottom: 1px solid #e5e5e5; font-weight: 600; font-size: 14px; line-height: 20px; vertical-align: top;">
+                      Correo:
+                    </td>
+                    <td class="border-cell" style="mso-color-alt: #f5f5f5; padding: 12px; border-bottom: 1px solid #e5e5e5; font-weight: 400; font-size: 14px; line-height: 20px; vertical-align: top;">
+                      {{ CORREO_USUARIO }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="mso-color-alt: #f5f5f5; padding: 12px; font-weight: 600; font-size: 14px; line-height: 20px; vertical-align: top;">
+                      Mensaje:
+                    </td>
+                    <td style="mso-color-alt: #f5f5f5; padding: 12px; font-weight: 400; font-size: 14px; line-height: 20px; vertical-align: top;">
+                      {{ CONTENIDO }}
+                    </td>
+                  </tr>
+                  </table>
+              </td>
             </tr>
-        </table>
-        <table align="center" cellpadding="0" cellspacing="0" style="width: auto; border: 1px solid; border-collapse: collapse; table-layout: fixed;">
-            <tr>
-                <td align="left" style="padding: 0.7rem; border: 1px solid; width: 80px;">
-                    <span style="text-align: center; font-weight: 500; font-size: 0.8rem;">
-                        Nombre:
-                    </span>
-                </td>
-                <td align="left" style="padding: 0.7rem; border: 1px solid; width: 300px;">
-                    <span style="text-align: center; font-weight: 500; font-size: 0.8rem;">
-                        {{ NOMBRE_USUARIO }}
-                    </span>
-                </td>
-            </tr>
-            <tr>
-                <td align="left" style="padding: 0.7rem; border: 1px solid;">
-                    <span style="text-align: center; font-weight: 500; font-size: 0.8rem;">
-                        Correo:
-                    </span>
-                </td>
-                <td align="left" style="padding: 0.7rem; border: 1px solid;">
-                    <span style="text-align: center; font-weight: 500; font-size: 0.8rem;">
-                        {{ CORREO_USUARIO }}
-                    </span>
-                </td>
-            </tr>
-            <tr>
-                <td align="left" style="padding: 0.7rem; border: 1px solid;">
-                    <span style="text-align: center; font-weight: 500; font-size: 0.8rem;">
-                        Mensaje:
-                    </span>
-                </td>
-                <td align="left" style="padding: 0.7rem; border: 1px solid;">
-                    <span style="text-align: center; font-weight: 500; font-size: 0.8rem;">
-                        {{ CONTENIDO }}
-                    </span>
-                </td>
-            </tr>
-        </table>
-    </div>
-</body>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>
