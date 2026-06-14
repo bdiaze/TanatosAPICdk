@@ -1,38 +1,80 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="es-cl">
-<head>
+  <head>
     <meta charset="utf-8" />
-</head>
-<body style="padding: 1rem;">
-    <div style='font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";'>
-        <table align="center" cellpadding="0" cellspacing="0" style="width:auto;">
+    <style>
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #292929 !important;
+        }
+        body, td, span, a {
+          color: #f5f5f5 !important; 
+        }
+        .border-cell { 
+          border-color: #c6c6ca !important; 
+        }
+      }
+    </style>
+  </head>
+  <body style="font-family: Roboto, 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; color: #484b51; margin: 0; padding: 0;">
+    <table cellpadding="0" cellspacing="0" width="100%">
+      <tr>
+        <td>
+          <table cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;" >
             <tr>
-                <td align="center" valign="middle">
-                    <a href="https://todoenorden.ankatu.cl/" style="text-decoration: none; padding: 0; margin: 0; display: inline-block;">
-                        <img src="https://todoenorden.ankatu.cl/logo.png" alt="Logo Todo en Orden" width="140" style="display: block;" />
-                    </a>
-                </td>
+              <td style="vertical-align: middle; padding: 0 16px; border-bottom: 1px solid #f5f5f5;" class="border-cell">
+                <a href="https://todoenorden.ankatu.cl/" target="_blank" style="text-decoration: none; display: block;">
+                  <img src="https://todoenorden.ankatu.cl/images/logo.svg" alt="Logo Todo en Orden" width="110" height="auto" style="display: block" />
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 16px;">
+          <table cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td align="center" style="padding-bottom: 16px;">
+                <span style="mso-color-alt: #f5f5f5; font-weight: 600; font-size: 24px; line-height: 34px; font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;">
+                  ¡Tu obligación vence en {{ TIEMPO_FALTANTE }}!
+                </span>
+              </td>
             </tr>
             <tr>
-                <td align="center" style="padding: 0.7rem; padding-top: 0;">
-                    <span style="text-align: center; font-weight: 700; font-size: 1.5rem;">¡Tu obligación vence en {{ TIEMPO_FALTANTE }}!</span>
-                </td>
+              <td>
+                <table align="center" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                  <tr>
+                    <td align="center" class="border-cell" style="mso-color-alt: #f5f5f5; padding: 12px; padding-top: 0; font-size: 14px; line-height: 20px; vertical-align: top; text-align: center; text-wrap: balance;">
+                      Es momento de hacer un tiempo para completar una de tus obligaciones.<br />
+                      "{{ NOMBRE_NORMA }}" debe ser completada antes {{ DE_LOS_PROXIMOS }}.<br />
+                      Recuerda que de no cumplir a tiempo con esta obligación puedes recibir la siguiente multa: {{ MULTA_NORMA }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" style="vertical-align: top;">
+                      <a href="https://todoenorden.ankatu.cl/obligacion/{{ CODIGO_ACCESO }}" style="font-weight: 600; font-size: 14px; line-height: 20px; mso-color-alt: #f5f5f5;">Click aquí para completar mi obligación</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
             </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table cellpadding="0" cellspacing="0" width="100%" style="background-color: #292929 !important; border-collapse: collapse; margin-top: 8px;" >
             <tr>
-                <td align="center" style="padding: 0.7rem;">
-                    <span style="text-align: center; font-weight: 500; font-size: 0.8rem;">
-                        Es momento de hacer un tiempo para completar una de tus obligaciones.<br />
-                        "{{ NOMBRE_NORMA }}" debe ser completada antes {{ DE_LOS_PROXIMOS }}.<br />
-                        Recuerda que de no cumplir a tiempo con esta obligación puedes recibir la siguiente multa: {{ MULTA_NORMA }}
-                    </span>
-                </td>
+              <td style="vertical-align: middle; padding: 0 16px; border-top: 1px solid #f5f5f5;" class="border-cell">
+                <a href="https://todoenorden.ankatu.cl/" target="_blank" style="text-decoration: none; display: block;">
+                  <img src="https://todoenorden.ankatu.cl/images/logo-blanco.svg" alt="Logo Todo en Orden" width="110" height="auto" style="display: block;" />
+                </a>
+              </td>
             </tr>
-            <tr>
-                <td align="center" style="padding: 0.7rem;">
-                    <a href="https://todoenorden.ankatu.cl/obligacion/{{ CODIGO_ACCESO }}" style="color: rgba(0,0,0,.9); margin:0.7rem;">Click aquí para completar mi obligación</a>
-                </td>
-            </tr>
-        </table>
-    </div>
-</body>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>
