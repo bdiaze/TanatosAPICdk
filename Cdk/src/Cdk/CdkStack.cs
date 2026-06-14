@@ -873,7 +873,7 @@ namespace Cdk
 						CorsHttpMethod.PUT,
 						CorsHttpMethod.DELETE
 					],
-					AllowHeaders = ["Content-Type", "Authorization", "X-Retry", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Retry-After"],
+					AllowHeaders = ["Content-Type", "Authorization", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Retry-After"],
 					AllowCredentials = true,
 					MaxAge = Duration.Days(10),
 				},
