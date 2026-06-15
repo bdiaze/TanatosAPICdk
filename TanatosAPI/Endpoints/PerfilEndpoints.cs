@@ -35,9 +35,9 @@ namespace TanatosAPI.Endpoints {
 							),
 						TipoCodigoVerificacion.ResendCode =>
 							(
-								entrada.Nombre != null ? $"¡{entrada.Nombre}, aquí te reenviamos el código!" : "¡Código reenviado!",
-								"Código de Verificación",
-								"A continuación, te dejamos tu código de verificación para completar el proceso de creación de cuenta:"
+								entrada.Nombre != null ? $"¡{entrada.Nombre}, aquí te reenviamos un nuevo código!" : "¡Nuevo código de verificación!",
+								"Nuevo Código de Verificación",
+								"A continuación, te dejamos tu nuevo código de verificación para completar el proceso de creación de cuenta:"
 							),
 						TipoCodigoVerificacion.UpdateUserAttribute or
 						TipoCodigoVerificacion.VerifyUserAttribute =>
