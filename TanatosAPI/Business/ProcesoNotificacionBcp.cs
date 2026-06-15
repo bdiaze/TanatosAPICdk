@@ -198,8 +198,6 @@ namespace TanatosAPI.Business {
 		}
 
 		public async Task ProcesarNotificacion(long idNormaSuscrita, string cron, long? idTipoUnidadTiempoAntelacion, int? cantAntelacion, bool? esVencimiento, bool programarSiguienteEjecucion, NpgsqlTransaction? transaction = null) {
-			const string CONST_DIR_TEMPLATES = "TemplatesCorreos";
-
 			esVencimiento ??= programarSiguienteEjecucion;
 
             // Se obtiene norma suscrita y/o template...
