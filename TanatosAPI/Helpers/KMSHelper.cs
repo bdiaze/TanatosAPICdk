@@ -10,7 +10,7 @@ namespace TanatosAPI.Helpers {
 
 		public async Task<string> Desencriptar(string encryptedBase64) {
 			ESDK encryptionSDK = new(new AwsEncryptionSdkConfig() {
-				CommitmentPolicy = ESDKCommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+				CommitmentPolicy = ESDKCommitmentPolicy.REQUIRE_ENCRYPT_ALLOW_DECRYPT
 			});
 			MaterialProviders materialProviders = new(new MaterialProvidersConfig());
 			CreateAwsKmsKeyringInput kmsKeyringInput = new() {
