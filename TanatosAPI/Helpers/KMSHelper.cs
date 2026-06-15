@@ -9,7 +9,9 @@ namespace TanatosAPI.Helpers {
 		private readonly string KMS_KEY_ARN = variableEntorno.Obtener("KMS_KEY_ARN");
 
 		public async Task<string> Desencriptar(string encryptedBase64) {
-			ESDK encryptionSDK = new(new AwsEncryptionSdkConfig());
+			ESDK encryptionSDK = new(new AwsEncryptionSdkConfig() {
+				CommitmentPolicy = ESDKCommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+			});
 			MaterialProviders materialProviders = new(new MaterialProvidersConfig());
 			CreateAwsKmsKeyringInput kmsKeyringInput = new() {
 				KmsClient = kmsClient,
