@@ -37,6 +37,9 @@
     <None Update="TemplatesCorreos\MensajeRecibido.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TemplatesCorreos\TemplateBase.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TemplatesCorreos\ValidacionDestinatario.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
