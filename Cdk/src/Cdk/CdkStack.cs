@@ -197,7 +197,7 @@ namespace Cdk
 				ManagedLoginVersion = ManagedLoginVersion.NEWER_MANAGED_LOGIN,
 			});
 
-            // Se crean scopes y resource server...
+			// Se crean scopes y resource server...
 			// Formato: <entidad>.<accion>.<alcance>
 			// Alcances:
 			//     - self: Datos del usuario
@@ -207,8 +207,17 @@ namespace Cdk
 			//     - read: Lectura
 			//     - write: Crear, editar y borrar
 
-            #region Self Scopes
-            ResourceServerScope scopeObligacionesReadSelf = new(new ResourceServerScopeProps {
+			#region Self Scopes
+			ResourceServerScope scopePerfilReadSelf = new(new ResourceServerScopeProps {
+				ScopeName = "perfil.read.self",
+				ScopeDescription = "Acceso de lectura al perfil del usuario"
+			});
+			ResourceServerScope scopePerfilWriteSelf = new(new ResourceServerScopeProps {
+				ScopeName = "perfil.write.self",
+				ScopeDescription = "Acceso de escritura al perfil del usuario"
+			});
+
+			ResourceServerScope scopeObligacionesReadSelf = new(new ResourceServerScopeProps {
 				ScopeName = "obligaciones.read.self",
 				ScopeDescription = "Acceso de lectura a las obligaciones del usuario"
 			});
@@ -258,6 +267,15 @@ namespace Cdk
 			#endregion
 
 			#region All Scopes
+			ResourceServerScope scopePerfilReadAll = new(new ResourceServerScopeProps {
+				ScopeName = "perfil.read.all",
+				ScopeDescription = "Acceso de lectura a todas los perfiles"
+			});
+			ResourceServerScope scopePerfilWriteAll = new(new ResourceServerScopeProps {
+				ScopeName = "perfil.write.all",
+				ScopeDescription = "Acceso de escritura a todas los perfiles"
+			});
+
 			ResourceServerScope scopeObligacionesReadAll = new(new ResourceServerScopeProps {
                 ScopeName = "obligaciones.read.all",
                 ScopeDescription = "Acceso de lectura a todas las obligaciones"
@@ -317,6 +335,8 @@ namespace Cdk
 			UserPoolResourceServer resourceServer =  userPool.AddResourceServer($"{appName}ResourceServer", new UserPoolResourceServerOptions { 
 				Identifier = "api",
 				Scopes = [
+					scopePerfilReadSelf,
+					scopePerfilWriteSelf,
 					scopeObligacionesReadSelf,
 					scopeObligacionesWriteSelf,
 					scopeNegociosReadSelf,
@@ -327,7 +347,9 @@ namespace Cdk
 					scopeSuscripcionesWriteSelf,
                     scopeTemplatesReadPublic,
                     scopeSistemaReadPublic,
-                    scopeObligacionesReadAll,
+					scopePerfilReadAll,
+					scopePerfilWriteAll,
+					scopeObligacionesReadAll,
                     scopeObligacionesWriteAll,
                     scopeNegociosReadAll,
                     scopeNegociosWriteAll,
@@ -359,6 +381,8 @@ namespace Cdk
 					Flows = new OAuthFlows { AuthorizationCodeGrant = true },
 					Scopes = [
 						OAuthScope.OPENID, OAuthScope.EMAIL, OAuthScope.PROFILE,
+						OAuthScope.ResourceServer(resourceServer, scopePerfilReadSelf),
+						OAuthScope.ResourceServer(resourceServer, scopePerfilWriteSelf),
 						OAuthScope.ResourceServer(resourceServer, scopeObligacionesReadSelf),
 						OAuthScope.ResourceServer(resourceServer, scopeObligacionesWriteSelf),
 						OAuthScope.ResourceServer(resourceServer, scopeNegociosReadSelf),
@@ -420,6 +444,8 @@ namespace Cdk
 				OAuth = new OAuthSettings {
 					Flows = new OAuthFlows { ClientCredentials = true },
 					Scopes = [
+						OAuthScope.ResourceServer(resourceServer, scopePerfilReadAll),
+						OAuthScope.ResourceServer(resourceServer, scopePerfilWriteAll),
 						OAuthScope.ResourceServer(resourceServer, scopeSuscripcionesReadAll),
 						OAuthScope.ResourceServer(resourceServer, scopeSuscripcionesWriteAll),
 						OAuthScope.ResourceServer(resourceServer, scopeSistemaReadPublic),
