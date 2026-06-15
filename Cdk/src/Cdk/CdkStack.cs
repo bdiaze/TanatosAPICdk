@@ -53,9 +53,6 @@ namespace Cdk
 			string regionAws = System.Environment.GetEnvironmentVariable("REGION_AWS") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno REGION_AWS");
 
 			// Para cognito...
-			string emailSubject = System.Environment.GetEnvironmentVariable("VERIFICATION_SUBJECT") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno VERIFICATION_SUBJECT");
-			string emailBody = System.Environment.GetEnvironmentVariable("VERIFICATION_BODY") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno VERIFICATION_BODY");
-
 			string cognitoDomainName = System.Environment.GetEnvironmentVariable("COGNITO_DOMAIN_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno COGNITO_DOMAIN_NAME");
 			string cognitoCustomDomain = System.Environment.GetEnvironmentVariable("COGNITO_CUSTOM_DOMAIN") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno COGNITO_CUSTOM_DOMAIN");
 			string arnCognitoCertificate = System.Environment.GetEnvironmentVariable("ARN_COGNITO_CERTIFICATE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_COGNITO_CERTIFICATE");
@@ -142,8 +139,6 @@ namespace Cdk
 				SelfSignUpEnabled = true,
 				SignInCaseSensitive = false,
 				UserVerification = new UserVerificationConfig {
-					EmailSubject = emailSubject,
-					EmailBody = emailBody,
 					EmailStyle = VerificationEmailStyle.CODE,
 				},
 				CustomSenderKmsKey = kmsKey,

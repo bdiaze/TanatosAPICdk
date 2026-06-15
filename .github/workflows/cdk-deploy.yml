@@ -17,8 +17,6 @@ jobs:
             ACCOUNT_AWS: ${{ vars.ACCOUNT_AWS }}
             REGION_AWS: ${{ vars.REGION_AWS }}
             
-            VERIFICATION_SUBJECT: ${{ vars.VERIFICATION_SUBJECT }}
-            VERIFICATION_BODY: ${{ vars.VERIFICATION_BODY }}
             COGNITO_DOMAIN_NAME: ${{ vars.COGNITO_DOMAIN_NAME }}
             COGNITO_CUSTOM_DOMAIN: ${{ vars.COGNITO_CUSTOM_DOMAIN }}
             ARN_COGNITO_CERTIFICATE: ${{ vars.ARN_COGNITO_CERTIFICATE }}
