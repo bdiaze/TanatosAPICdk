@@ -1,5 +1,6 @@
 ﻿using Npgsql;
 using Scriban.Runtime;
+using System.Net;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
@@ -77,8 +78,8 @@ namespace TanatosAPI.Business {
                 ],
                 Asunto = $"¡{nombreUsuario} te añadió como destinatario de notificaciones de {nombreNegocio}!",
                 Cuerpo = await renderer.GenerarHtml("ValidacionDestinatario.html", new ScriptObject() {
-                    ["NOMBRE_USUARIO"] = nombreUsuario,
-                    ["NOMBRE_NEGOCIO"] = nombreNegocio,
+                    ["NOMBRE_USUARIO"] = WebUtility.HtmlEncode(nombreUsuario),
+                    ["NOMBRE_NEGOCIO"] = WebUtility.HtmlEncode(nombreNegocio),
                     ["CODIGO_VALIDACION"] = Uri.EscapeDataString(codigoValidacion)
                 }),
             });

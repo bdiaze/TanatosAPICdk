@@ -22,9 +22,9 @@ namespace TanatosAPI.Business {
 			nuevo.Id = await mensajeDao.Insertar(nuevo);
 
 			string cuerpoCorreo = await renderer.GenerarHtml("MensajeRecibido.html", new ScriptObject() {
-                ["NOMBRE_USUARIO"] = nuevo.Nombre,
-                ["CORREO_USUARIO"] = nuevo.Correo,
-                ["CONTENIDO"] = nuevo.Contenido
+                ["NOMBRE_USUARIO"] = WebUtility.HtmlEncode(nuevo.Nombre),
+                ["CORREO_USUARIO"] = WebUtility.HtmlEncode(nuevo.Correo),
+                ["CONTENIDO"] = WebUtility.HtmlEncode(nuevo.Contenido)
             });
 
 			List<string> idsMensajes = [];

@@ -371,17 +371,17 @@ namespace TanatosAPI.Business {
                         if (!esVencimiento.Value) {
                             asunto = $"¡Tu obligación vence en {tiempoFaltante ?? ""}!";
 							cuerpoCorreo = await renderer.GenerarHtml("NotificacionPrevia.html", new ScriptObject() {
-                                ["NOMBRE_NORMA"] = normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado",
-                                ["MULTA_NORMA"] = normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada",
+                                ["NOMBRE_NORMA"] = WebUtility.HtmlEncode(normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado"),
+                                ["MULTA_NORMA"] = WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"),
                                 ["CODIGO_ACCESO"] = Uri.EscapeDataString(codigoAcceso),
-								["TIEMPO_FALTANTE"] = tiempoFaltante ?? "",
-								["DE_LOS_PROXIMOS"] = deLosProximos ?? "",
+								["TIEMPO_FALTANTE"] = WebUtility.HtmlEncode(tiempoFaltante ?? ""),
+								["DE_LOS_PROXIMOS"] = WebUtility.HtmlEncode(deLosProximos ?? ""),
                             });
                         } else {
                             asunto = "¡Tu obligación venció!";
                             cuerpoCorreo = await renderer.GenerarHtml("NormaVencida.html", new ScriptObject() {
-								["NOMBRE_NORMA"] = normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado",
-								["MULTA_NORMA"] = normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada",
+								["NOMBRE_NORMA"] = WebUtility.HtmlEncode(normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado"),
+								["MULTA_NORMA"] = WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"),
 								["CODIGO_ACCESO"] = Uri.EscapeDataString(codigoAcceso),
                             });
                         }
