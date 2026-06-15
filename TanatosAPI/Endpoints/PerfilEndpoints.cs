@@ -1,5 +1,4 @@
 ﻿using Amazon.Lambda.Core;
-using Microsoft.AspNetCore.Components.RenderTree;
 using Scriban.Runtime;
 using System.Diagnostics;
 using System.Net;
@@ -21,6 +20,47 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
+					(string asunto, string tituloCuerpo, string subtituloCuerpo) = entrada.TipoCodigo switch {
+						TipoCodigoVerificacion.SignUp =>
+							(
+								entrada.Nombre != null ? $"¡Hola {entrada.Nombre}, aquí tu código de verificación!" : "¡Ha llegado tu código de verificación!",
+								entrada.Nombre != null ? $"¡Bienvenido {entrada.Nombre} a Todo en Orden!" : "¡Bienvenido a Todo en Orden!",
+								"A continuación, te dejamos tu código de verificación para completar el proceso de creación de cuenta:"
+							),
+						TipoCodigoVerificacion.ForgotPassword =>
+							(
+								entrada.Nombre != null ? $"¡{entrada.Nombre}, aquí tu código para recuperar tu contraseña!" : "¡Ha llegado tu código para recuperar tu contraseña!",
+								"Recuperación de Contraseña",
+								"A continuación, te dejamos tu código para que puedas recuperar tu contraseña:"
+							),
+						TipoCodigoVerificacion.ResendCode =>
+							(
+								entrada.Nombre != null ? $"¡{entrada.Nombre}, aquí te reenviamos el código!" : "¡Código reenviado!",
+								"Código de Verificación",
+								"A continuación, te dejamos tu código de verificación para completar el proceso de creación de cuenta:"
+							),
+						TipoCodigoVerificacion.UpdateUserAttribute or
+						TipoCodigoVerificacion.VerifyUserAttribute =>
+							(
+								entrada.Nombre != null ? $"¡{entrada.Nombre}, aquí tu código para verificar tu nuevo correo electrónico!" : "¡Código para verificar tu nuevo correo electrónico!",
+								"Código de Verificación",
+								"A continuación, te dejamos tu código para verificar tu nuevo correo electrónico:"
+							),
+						TipoCodigoVerificacion.Authentication =>
+							(
+								entrada.Nombre != null ? $"¡{entrada.Nombre}, aquí tu código para iniciar sesión!" : "¡Tu código para iniciar sesión!",
+								"Código de Inicio de Sesión",
+								"A continuación, te dejamos tu código para que puedas iniciar sesión de forma segura:"
+							),
+						TipoCodigoVerificacion.AdminCreateUser =>
+							(
+								entrada.Nombre != null ? $"¡{entrada.Nombre}, aquí tu contraseña temporal!" : "¡Ha llegado tu contraseña temporal!",
+								"Contraseña Temporal",
+								"A continuación, te dejamos tu contraseña temporal para que puedas iniciar sesión:"
+							),
+						TipoCodigoVerificacion.AccountTakeOverNotification or _ => throw new InvalidOperationException("Tipo de Código inválido")
+					};
+
 					SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
 						De = new DireccionCorreo() {
 							Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
@@ -31,9 +71,10 @@ namespace TanatosAPI.Endpoints {
 								Correo = entrada.CorreoElectronico
 							}
 						],
-						Asunto = entrada.Nombre != null ? $"¡Hola {entrada.Nombre}, aquí tu código de verificación!" : "¡Ha llegado tu código de verificación!",
+						Asunto = asunto,
 						Cuerpo = await htmlRenderer.GenerarHtml("CodigoVerificacion.html", new ScriptObject() {
-							["NOMBRE"] = WebUtility.HtmlEncode(entrada.Nombre),
+							["TITULO"] = WebUtility.HtmlEncode(tituloCuerpo),
+							["SUBTITULO"] = WebUtility.HtmlEncode(subtituloCuerpo),
 							["CODIGO"] = await kmsHelper.Desencriptar(entrada.CodigoEncriptado),
 						})
 					});
