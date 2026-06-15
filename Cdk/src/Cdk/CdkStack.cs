@@ -186,7 +186,7 @@ namespace Cdk
 				DeletionProtection = true,
 				LambdaTriggers = new UserPoolTriggers {
 					PostConfirmation = postConfirmationFunction,
-					// CustomEmailSender = postConfirmationFunction,
+					CustomEmailSender = postConfirmationFunction,
 				}
 			});
 			
