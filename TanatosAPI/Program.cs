@@ -1,6 +1,7 @@
 using Amazon.APIGateway;
 using Amazon.CognitoIdentityProvider;
 using Amazon.DynamoDBv2;
+using Amazon.KeyManagementService;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.S3;
 using Amazon.SecretsManager;
@@ -91,6 +92,13 @@ builder.Services.AddSingleton<IAmazonDynamoDB>(sp => {
     };
     return new AmazonDynamoDBClient(config);
 });
+builder.Services.AddSingleton<IAmazonKeyManagementService>(sp => {
+	AmazonKeyManagementServiceConfig config = new() {
+		ConnectTimeout = TimeSpan.FromSeconds(5),
+		Timeout = TimeSpan.FromSeconds(25)
+	};
+	return new AmazonKeyManagementServiceClient(config);
+});
 #endregion
 
 #region Singleton Helpers
@@ -119,6 +127,7 @@ builder.Services.AddHttpClient<GoogleRecaptchaHelper>();
 builder.Services.AddHttpClient<FlowHelper>();
 builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 builder.Services.AddSingleton<IRateLimiter, DynamoRateLimiter>();
+builder.Services.AddSingleton<IKMSHelper, KMSHelper>();
 #endregion
 
 #region Singleton DAO
@@ -236,6 +245,8 @@ builder.Services
 
 builder.Services.AddAuthorizationBuilder()
 	.AddPolicy("Admin", policy => policy.RequireRole("Admin"))
+	.AddPolicy("Profile.Read.Self", policy => policy.RequireClaim("scope", "api/profile.read.self"))
+	.AddPolicy("Profile.Write.Self", policy => policy.RequireClaim("scope", "api/profile.write.self"))
 	.AddPolicy("Obligaciones.Read.Self", policy => policy.RequireClaim("scope", "api/obligaciones.read.self"))
 	.AddPolicy("Obligaciones.Write.Self", policy => policy.RequireClaim("scope", "api/obligaciones.write.self"))
 	.AddPolicy("Negocios.Read.Self", policy => policy.RequireClaim("scope", "api/negocios.read.self"))
@@ -246,6 +257,8 @@ builder.Services.AddAuthorizationBuilder()
 	.AddPolicy("Suscripciones.Write.Self", policy => policy.RequireClaim("scope", "api/suscripciones.write.self"))
 	.AddPolicy("Templates.Read.Public", policy => policy.RequireClaim("scope", "api/templates.read.public"))
 	.AddPolicy("Sistema.Read.Public", policy => policy.RequireClaim("scope", "api/sistema.read.public"))
+	.AddPolicy("Profile.Read.All", policy => policy.RequireClaim("scope", "api/profile.read.all"))
+	.AddPolicy("Profile.Write.All", policy => policy.RequireClaim("scope", "api/profile.write.all"))
 	.AddPolicy("Obligaciones.Read.All", policy => policy.RequireClaim("scope", "api/obligaciones.read.all"))
 	.AddPolicy("Obligaciones.Write.All", policy => policy.RequireClaim("scope", "api/obligaciones.write.all"))
 	.AddPolicy("Negocios.Read.All", policy => policy.RequireClaim("scope", "api/negocios.read.all"))
@@ -294,6 +307,7 @@ app.MapPlanEndpoints();
 app.MapSuscripcionEndpoints();
 app.MapCargoEndpoints();
 app.MapEmpleadoEndpoints();
+app.MapProfileEndpoints();
 
 await app.RunAsync();
 

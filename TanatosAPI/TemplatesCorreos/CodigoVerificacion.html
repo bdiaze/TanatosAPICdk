@@ -1,0 +1,29 @@
+<table cellpadding="0" cellspacing="0" width="100%">
+  <tr>
+    <td align="center" style="padding-bottom: 16px;">
+        <span style="mso-color-alt: #f5f5f5; font-weight: 600; font-size: 24px; line-height: 34px; font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;">
+            {{ if NOMBRE != null }}
+            ¡Bienvenido {{ NOMBRE }} a Todo en Orden!
+            {{ else }}
+            ¡Bienvenido a Todo en Orden!
+            {{ end }}
+        </span>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <table align="center" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+        <tr>
+          <td align="center" class="border-cell" style="mso-color-alt: #f5f5f5; padding: 12px; padding-top: 0; font-size: 14px; line-height: 20px; vertical-align: top; text-align: center; text-wrap: balance;">
+            A continuación, te dejamos tu código de verificación para completar el proceso de creación de cuenta: 
+          </td>
+        </tr>
+        <tr>
+          <td align="center" class="border-cell" style="mso-color-alt: #f5f5f5; padding: 12px; font-size: 34px; line-height: 40px; font-weight: 600; vertical-align: top; text-align: center; text-wrap: balance;">
+            {{ CODIGO }}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

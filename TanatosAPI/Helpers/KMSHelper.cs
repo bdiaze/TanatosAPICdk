@@ -1,0 +1,30 @@
+﻿using Amazon.KeyManagementService;
+using AWS.Cryptography.EncryptionSDK;
+using AWS.Cryptography.MaterialProviders;
+using AwsKmsMrkKeyring_Compile;
+using TanatosAPI.Interfaces;
+
+namespace TanatosAPI.Helpers {
+	public class KMSHelper(IAmazonKeyManagementService kmsClient, IVariableEntornoHelper variableEntorno) : IKMSHelper {
+		private readonly string KMS_KEY_ARN = variableEntorno.Obtener("KMS_KEY_ARN");
+
+		public async Task<string> Desencriptar(string encryptedBase64) {
+			ESDK encryptionSDK = new(new AwsEncryptionSdkConfig());
+			MaterialProviders materialProviders = new(new MaterialProvidersConfig());
+			CreateAwsKmsKeyringInput kmsKeyringInput = new() {
+				KmsClient = kmsClient,
+				KmsKeyId = KMS_KEY_ARN
+			};
+
+			IKeyring keyring = materialProviders.CreateAwsKmsKeyring(kmsKeyringInput);
+
+			DecryptOutput output = encryptionSDK.Decrypt(new DecryptInput {
+				Ciphertext = new MemoryStream(Convert.FromBase64String(encryptedBase64)),
+				Keyring = keyring
+			});
+
+			using StreamReader reader = new(output.Plaintext);
+			return await reader.ReadToEndAsync();
+		}
+	}
+}

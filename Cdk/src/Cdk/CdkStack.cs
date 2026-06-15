@@ -5,6 +5,7 @@ using Amazon.CDK.AWS.Cognito;
 using Amazon.CDK.AWS.DynamoDB;
 using Amazon.CDK.AWS.EC2;
 using Amazon.CDK.AWS.IAM;
+using Amazon.CDK.AWS.KMS;
 using Amazon.CDK.AWS.Lambda;
 using Amazon.CDK.AWS.Logs;
 using Amazon.CDK.AWS.Route53;
@@ -130,7 +131,12 @@ namespace Cdk
 				SameEnvironment = true,
 			});
 
-            #region Cognito
+			#region Cognito
+			Key kmsKey = new(this, $"{appName}KMSKey", new KeyProps {
+				Description = $"KMS Key para aplicación {appName}",
+				RemovalPolicy = RemovalPolicy.DESTROY,
+			});
+
             UserPool userPool = new(this, $"{appName}UserPool", new UserPoolProps {
 				UserPoolName = $"{appName}UserPool",
 				SelfSignUpEnabled = true,
@@ -140,6 +146,7 @@ namespace Cdk
 					EmailBody = emailBody,
 					EmailStyle = VerificationEmailStyle.CODE,
 				},
+				CustomSenderKmsKey = kmsKey,
 				SignInAliases = new SignInAliases {
 					Username = false,
 					Email = true,
@@ -179,6 +186,7 @@ namespace Cdk
 				DeletionProtection = true,
 				LambdaTriggers = new UserPoolTriggers {
 					PostConfirmation = postConfirmationFunction,
+					// CustomEmailSender = postConfirmationFunction,
 				}
 			});
 			
@@ -821,7 +829,16 @@ namespace Cdk
                                         $"{tablaRateLimits.TableArn}/*",
                                     ],
                                 }),
-                            ]
+								new PolicyStatement(new PolicyStatementProps{
+									Sid = $"{appName}AccessToKMSKey",
+									Actions = [
+										"kms:Decrypt",
+									],
+									Resources = [
+										kmsKey.KeyArn,
+									],
+								}),
+							]
                         })
                     }
                 }
@@ -870,7 +887,8 @@ namespace Cdk
 					{ "FLOW_URL_CALLBACK", flowUrlCallback },
 					{ "FLOW_URL_RETORNO", flowUrlRetorno },
 					{ "DYNAMODB_TABLE_NAME_RATE_LIMITS", tablaRateLimits.TableName },
-					{ "RATE_LIMITS_SUBS_TO_SKIP", string.Join(',', subsToSkip) }
+					{ "RATE_LIMITS_SUBS_TO_SKIP", string.Join(',', subsToSkip) },
+					{ "KMS_KEY_ARN", kmsKey.KeyArn }
                 },
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {
