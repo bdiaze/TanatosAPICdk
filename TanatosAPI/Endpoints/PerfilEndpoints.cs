@@ -10,9 +10,9 @@ using TanatosAPI.Interfaces;
 using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
-	public static class ProfileEndpoints {
-		public static void MapProfileEndpoints(this IEndpointRouteBuilder routes) {
-			RouteGroupBuilder group = routes.MapGroup("/Profile");
+	public static class PerfilEndpoints {
+		public static void MapPerfilEndpoints(this IEndpointRouteBuilder routes) {
+			RouteGroupBuilder group = routes.MapGroup("/Perfil");
 			group.MapEnviarCodigoVerificacion();
 		}
 
@@ -39,26 +39,26 @@ namespace TanatosAPI.Endpoints {
 					});
 
 					LambdaLogger.Log(
-						$"[POST] - [Profile] - [EnviarCodigoVerificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"[POST] - [Perfil] - [EnviarCodigoVerificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Envío exitoso del código de verificación - Hermes ID Mensaje: {retorno.IdMensaje}.");
 
 					return Results.Ok();
 				} catch (ErrorValidacion ex) {
 					LambdaLogger.Log(
-						$"[POST] - [Profile] - [EnviarCodigoVerificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"[POST] - [Perfil] - [EnviarCodigoVerificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 						$"Ocurrió un error de validación. " +
 						$"{ex}");
 					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
-						$"[POST] - [Profile] - [EnviarCodigoVerificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"[POST] - [Perfil] - [EnviarCodigoVerificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrio un error al enviar el código de verificación. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrio un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 			}).RequireAuthorization(
-				"Profile.Read.All",
-				"Profile.Write.All"
+				"Perfil.Read.All",
+				"Perfil.Write.All"
 			);
 		}
 	}

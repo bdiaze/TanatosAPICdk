@@ -245,8 +245,8 @@ builder.Services
 
 builder.Services.AddAuthorizationBuilder()
 	.AddPolicy("Admin", policy => policy.RequireRole("Admin"))
-	.AddPolicy("Profile.Read.Self", policy => policy.RequireClaim("scope", "api/profile.read.self"))
-	.AddPolicy("Profile.Write.Self", policy => policy.RequireClaim("scope", "api/profile.write.self"))
+	.AddPolicy("Perfil.Read.Self", policy => policy.RequireClaim("scope", "api/perfil.read.self"))
+	.AddPolicy("Perfil.Write.Self", policy => policy.RequireClaim("scope", "api/perfil.write.self"))
 	.AddPolicy("Obligaciones.Read.Self", policy => policy.RequireClaim("scope", "api/obligaciones.read.self"))
 	.AddPolicy("Obligaciones.Write.Self", policy => policy.RequireClaim("scope", "api/obligaciones.write.self"))
 	.AddPolicy("Negocios.Read.Self", policy => policy.RequireClaim("scope", "api/negocios.read.self"))
@@ -257,8 +257,8 @@ builder.Services.AddAuthorizationBuilder()
 	.AddPolicy("Suscripciones.Write.Self", policy => policy.RequireClaim("scope", "api/suscripciones.write.self"))
 	.AddPolicy("Templates.Read.Public", policy => policy.RequireClaim("scope", "api/templates.read.public"))
 	.AddPolicy("Sistema.Read.Public", policy => policy.RequireClaim("scope", "api/sistema.read.public"))
-	.AddPolicy("Profile.Read.All", policy => policy.RequireClaim("scope", "api/profile.read.all"))
-	.AddPolicy("Profile.Write.All", policy => policy.RequireClaim("scope", "api/profile.write.all"))
+	.AddPolicy("Perfil.Read.All", policy => policy.RequireClaim("scope", "api/perfil.read.all"))
+	.AddPolicy("Perfil.Write.All", policy => policy.RequireClaim("scope", "api/perfil.write.all"))
 	.AddPolicy("Obligaciones.Read.All", policy => policy.RequireClaim("scope", "api/obligaciones.read.all"))
 	.AddPolicy("Obligaciones.Write.All", policy => policy.RequireClaim("scope", "api/obligaciones.write.all"))
 	.AddPolicy("Negocios.Read.All", policy => policy.RequireClaim("scope", "api/negocios.read.all"))
@@ -307,7 +307,7 @@ app.MapPlanEndpoints();
 app.MapSuscripcionEndpoints();
 app.MapCargoEndpoints();
 app.MapEmpleadoEndpoints();
-app.MapProfileEndpoints();
+app.MapPerfilEndpoints();
 
 await app.RunAsync();
 
