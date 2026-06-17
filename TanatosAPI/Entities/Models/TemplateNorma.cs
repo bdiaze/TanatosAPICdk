@@ -57,7 +57,8 @@ namespace TanatosAPI.Entities.Models {
 		public List<NormaSuscrita>? NormasSuscritas { get; set; }
 
 		public override int GetHashCode() {
-			return HashCode.Combine(IdTemplate, IdNorma, Nombre, Descripcion, IdTipoPeriodicidad, Multa, IdCategoriaNorma, CronActivacionAutomatica);
+			int hash = HashCode.Combine(IdTemplate, IdNorma, Nombre, Descripcion, IdTipoPeriodicidad, Multa, IdCategoriaNorma, CronActivacionAutomatica);
+			return HashCode.Combine(hash, DiasActivacionAutomatica);
 		}
 
 		public override bool Equals(object? obj) {
@@ -71,7 +72,8 @@ namespace TanatosAPI.Entities.Models {
 					IdTipoPeriodicidad == other.IdTipoPeriodicidad &&
 					Multa == other.Multa &&
 					IdCategoriaNorma == other.IdCategoriaNorma &&
-					CronActivacionAutomatica == other.CronActivacionAutomatica;
+					CronActivacionAutomatica == other.CronActivacionAutomatica &&
+					DiasActivacionAutomatica == other.DiasActivacionAutomatica;
 		}
 	}
 }

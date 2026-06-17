@@ -229,7 +229,16 @@ namespace TanatosAPI.Endpoints {
 							return Results.BadRequest($"No todas las notificaciones pertenecen a la norma con ID Norma {templateNorma.IdNorma}.");
 						}
 
-						// Además, se valida Cron de Activación Automática...
+						// Se valida que solo cron o días de activación automática vengan definidos, no ambos...
+						if (templateNorma.CronActivacionAutomatica != null && templateNorma.DiasActivacionAutomatica != null) {
+							LambdaLogger.Log(
+								$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"No se puede definir cron y días de activación automática a la vez en la norma con ID Norma {templateNorma.IdNorma}.");
+
+							return Results.BadRequest($"No se puede definir cron y días de activación automática a la vez en la norma con ID Norma {templateNorma.IdNorma}.");
+						}
+
+						// Se valida Cron de Activación Automática...
 						if (templateNorma.CronActivacionAutomatica != null) {
 							bool cronValido = true;
 							try {
@@ -240,11 +249,20 @@ namespace TanatosAPI.Endpoints {
 
 							if (!cronValido) {
 								LambdaLogger.Log(
-								$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-								$"Formato inválido del cron de activación automática de la norma con ID Norma {templateNorma.IdNorma}.");
+									$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+									$"Formato inválido del cron de activación automática de la norma con ID Norma {templateNorma.IdNorma}.");
 
 								return Results.BadRequest($"Formato inválido del cron de activación automática de la norma con ID Norma {templateNorma.IdNorma}.");
 							}
+						}
+
+						// Se valida que días de activación automática sea mayor que 0...
+						if (templateNorma.DiasActivacionAutomatica != null && templateNorma.DiasActivacionAutomatica <= 0) {
+							LambdaLogger.Log(
+								$"[POST] - [Template] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"Cantidad inválida de días de activación automática de la norma con ID Norma {templateNorma.IdNorma}.");
+
+							return Results.BadRequest($"Cantidad inválida de días de activación automática de la norma con ID Norma {templateNorma.IdNorma}.");
 						}
 					}
 
@@ -359,7 +377,16 @@ namespace TanatosAPI.Endpoints {
 							return Results.BadRequest($"No todas las notificaciones pertenecen a la norma con ID Norma {templateNormaEntrada.IdNorma}.");
 						}
 
-						// Además, se valida Cron de Activación Automática...
+						// Se valida que solo cron o días de activación automática vengan definidos, no ambos...
+						if (templateNormaEntrada.CronActivacionAutomatica != null && templateNormaEntrada.DiasActivacionAutomatica != null) {
+							LambdaLogger.Log(
+								$"[PUT] - [Template] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"No se puede definir cron y días de activación automática a la vez en la norma con ID Norma {templateNormaEntrada.IdNorma}.");
+
+							return Results.BadRequest($"No se puede definir cron y días de activación automática a la vez en la norma con ID Norma {templateNormaEntrada.IdNorma}.");
+						}
+
+						// Se valida Cron de Activación Automática...
 						if (templateNormaEntrada.CronActivacionAutomatica != null) {
 							bool cronValido = true;
 							try {
@@ -375,6 +402,15 @@ namespace TanatosAPI.Endpoints {
 
 								return Results.BadRequest($"Formato inválido del cron de activación automática de la norma con ID Norma {templateNormaEntrada.IdNorma}.");
 							}
+						}
+
+						// Se valida que días de activación automática sea mayor que 0...
+						if (templateNormaEntrada.DiasActivacionAutomatica != null && templateNormaEntrada.DiasActivacionAutomatica <= 0) {
+							LambdaLogger.Log(
+								$"[PUT] - [Template] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+								$"Cantidad inválida de días de activación automática de la norma con ID Norma {templateNormaEntrada.IdNorma}.");
+
+							return Results.BadRequest($"Cantidad inválida de días de activación automática de la norma con ID Norma {templateNormaEntrada.IdNorma}.");
 						}
 					}
 
