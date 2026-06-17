@@ -34,6 +34,9 @@ namespace TanatosAPI.Entities.Models {
 		[Column("cron_activacion_automatica")]
 		public string? CronActivacionAutomatica { get; set; }
 
+		[Column("dias_activacion_automatica")]
+		public int? DiasActivacionAutomatica { get; set; }
+
 		[JsonIgnore]
 		[ForeignKey(nameof(IdTemplate))]
 		public Template? Template { get; set; }
