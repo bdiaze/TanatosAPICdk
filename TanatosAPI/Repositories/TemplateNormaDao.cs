@@ -10,7 +10,8 @@ namespace TanatosAPI.Repositories {
     public class TemplateNormaDao(IDatabaseConnectionHelper connectionHelper) {
 		public async Task<List<TemplateNorma>> ObtenerPorTemplate(long idTemplate, NpgsqlTransaction? transaction = null) {
 			string query = 
-				"SELECT ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, CRON_ACTIVACION_AUTOMATICA FROM TANATOS.TEMPLATE_NORMA " +
+				"SELECT ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, CRON_ACTIVACION_AUTOMATICA, " +
+				"DIAS_ACTIVACION_AUTOMATICA FROM TANATOS.TEMPLATE_NORMA " +
 				"WHERE ID_TEMPLATE = @IDTEMPLATE";
 
 			bool disposeConnection = transaction?.Connection == null;
@@ -33,7 +34,8 @@ namespace TanatosAPI.Repositories {
 						IdTipoPeriodicidad = await reader.IsDBNullAsync(4) ? null : reader.GetInt64(4),
 						Multa = await reader.IsDBNullAsync(5) ? null : reader.GetString(5),
 						IdCategoriaNorma = reader.GetInt64(6),
-						CronActivacionAutomatica = await reader.IsDBNullAsync(7) ? null : reader.GetString(7)
+						CronActivacionAutomatica = await reader.IsDBNullAsync(7) ? null : reader.GetString(7),
+                        DiasActivacionAutomatica = await reader.IsDBNullAsync(8) ? null : reader.GetInt32(8)
 					});
 				}
 
@@ -47,8 +49,8 @@ namespace TanatosAPI.Repositories {
 
 		public async Task Insertar(TemplateNorma item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"INSERT INTO TANATOS.TEMPLATE_NORMA(ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, CRON_ACTIVACION_AUTOMATICA) " +
-				"VALUES (@IDTEMPLATE, @IDNORMA, @NOMBRE, @DESCRIPCION, @IDTIPOPERIODICIDAD, @MULTA, @IDCATEGORIANORMA, @CRONACTIVACIONAUTOMATICA)";
+				"INSERT INTO TANATOS.TEMPLATE_NORMA(ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, CRON_ACTIVACION_AUTOMATICA, DIAS_ACTIVACION_AUTOMATICA) " +
+				"VALUES (@IDTEMPLATE, @IDNORMA, @NOMBRE, @DESCRIPCION, @IDTIPOPERIODICIDAD, @MULTA, @IDCATEGORIANORMA, @CRONACTIVACIONAUTOMATICA, @DIASACTIVACIONAUTOMATICA)";
 
             bool disposeConnection = transaction?.Connection == null;
             NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
@@ -63,7 +65,8 @@ namespace TanatosAPI.Repositories {
                 command.Parameters.AddWithValue("MULTA", (object?)item.Multa ?? DBNull.Value);
                 command.Parameters.AddWithValue("IDCATEGORIANORMA", item.IdCategoriaNorma);
                 command.Parameters.AddWithValue("CRONACTIVACIONAUTOMATICA", (object?)item.CronActivacionAutomatica ?? DBNull.Value);
-                await command.ExecuteNonQueryAsync();
+				command.Parameters.AddWithValue("DIASACTIVACIONAUTOMATICA", (object?)item.DiasActivacionAutomatica ?? DBNull.Value);
+				await command.ExecuteNonQueryAsync();
             } finally {
                 if (disposeConnection && connection != null) {
                     await connection.DisposeAsync();
@@ -74,7 +77,8 @@ namespace TanatosAPI.Repositories {
 		public async Task Actualizar(TemplateNorma item, NpgsqlTransaction? transaction = null) {
 			string query = 
 				"UPDATE TANATOS.TEMPLATE_NORMA SET NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, ID_TIPO_PERIODICIDAD = @IDTIPOPERIODICIDAD, " +
-				"MULTA = @MULTA, ID_CATEGORIA_NORMA = @IDCATEGORIANORMA, CRON_ACTIVACION_AUTOMATICA = @CRONACTIVACIONAUTOMATICA " +
+				"MULTA = @MULTA, ID_CATEGORIA_NORMA = @IDCATEGORIANORMA, CRON_ACTIVACION_AUTOMATICA = @CRONACTIVACIONAUTOMATICA, " +
+				"DIAS_ACTIVACION_AUTOMATICA = @DIASACTIVACIONAUTOMATICA " +
 				"WHERE ID_TEMPLATE = @IDTEMPLATE AND ID_NORMA = @IDNORMA";
 
             bool disposeConnection = transaction?.Connection == null;
@@ -88,7 +92,8 @@ namespace TanatosAPI.Repositories {
                 command.Parameters.AddWithValue("MULTA", (object?)item.Multa ?? DBNull.Value);
                 command.Parameters.AddWithValue("IDCATEGORIANORMA", item.IdCategoriaNorma);
                 command.Parameters.AddWithValue("CRONACTIVACIONAUTOMATICA", (object?)item.CronActivacionAutomatica ?? DBNull.Value);
-                command.Parameters.AddWithValue("IDTEMPLATE", item.IdTemplate);
+				command.Parameters.AddWithValue("DIASACTIVACIONAUTOMATICA", (object?)item.DiasActivacionAutomatica ?? DBNull.Value);
+				command.Parameters.AddWithValue("IDTEMPLATE", item.IdTemplate);
                 command.Parameters.AddWithValue("IDNORMA", item.IdNorma);
                 await command.ExecuteNonQueryAsync();
             } finally {
