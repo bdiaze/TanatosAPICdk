@@ -49,6 +49,8 @@ namespace TanatosAPI.Helpers {
 				throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "El código de verificación es inválido.");
 			} catch (ExpiredCodeException) {
 				throw new ErrorValidacion(TipoErrorValidacion.AccesoCaducado, "El código ha caducado, favor solicitar nuevo código.");
+			} catch (NotAuthorizedException) {
+				throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La cuenta ya se encuentra verificada.");
 			}
 		}
 
