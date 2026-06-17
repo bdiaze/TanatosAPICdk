@@ -2,6 +2,8 @@
 using Scriban.Runtime;
 using System.Diagnostics;
 using System.Net;
+using System.Text;
+using System.Text.Json;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
@@ -65,7 +67,23 @@ namespace TanatosAPI.Endpoints {
 						TipoCodigoVerificacion.AccountTakeOverNotification or _ => throw new InvalidOperationException("Tipo de Código inválido")
 					};
 
-					SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+					string codigo = await kmsHelper.Desencriptar(entrada.CodigoEncriptado);
+
+                    string? textoLink = null;
+					string? urlLink = null;
+					if (entrada.TipoCodigo == TipoCodigoVerificacion.SignUp || entrada.TipoCodigo == TipoCodigoVerificacion.ResendCode) {
+						textoLink = "¡O puedes hacer click aquí!";
+						PerfilEnviarCodigoVerificacionUrlPayload payload = new() {
+							Correo = entrada.CorreoElectronico,
+							Codigo = codigo
+                        };
+						string strPayload = JsonSerializer.Serialize(payload, AppJsonSerializerContext.Default.PerfilEnviarCodigoVerificacionUrlPayload);
+						string urlCodigoVerificacion = variableEntorno.Obtener("URL_CODIGO_VERIFICACION");
+						string base64Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(strPayload));
+                        urlLink = $"{urlCodigoVerificacion}{Uri.EscapeDataString(base64Payload)}";
+                    }
+
+                    SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
 						De = new DireccionCorreo() {
 							Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
 							Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
@@ -79,8 +97,10 @@ namespace TanatosAPI.Endpoints {
 						Cuerpo = await htmlRenderer.GenerarHtml("CodigoVerificacion.html", new ScriptObject() {
 							["TITULO"] = WebUtility.HtmlEncode(tituloCuerpo),
 							["SUBTITULO"] = WebUtility.HtmlEncode(subtituloCuerpo),
-							["CODIGO"] = await kmsHelper.Desencriptar(entrada.CodigoEncriptado),
-						})
+							["CODIGO"] = codigo,
+							["TEXTO_LINK"] = WebUtility.HtmlEncode(textoLink),
+							["URL_LINK"] = urlLink
+                        })
 					});
 
 					LambdaLogger.Log(

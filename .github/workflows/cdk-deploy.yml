@@ -63,6 +63,7 @@ jobs:
             FLOW_API_URL: ${{ vars.FLOW_API_URL }}
             FLOW_URL_CALLBACK: ${{ vars.FLOW_URL_CALLBACK }}
             FLOW_URL_RETORNO: ${{ vars.FLOW_URL_RETORNO }}
+            URL_CODIGO_VERIFICACION: ${{ vars.URL_CODIGO_VERIFICACION }}
             
             APP_SCHEMA_NAME: ${{ vars.APP_SCHEMA_NAME }}
             INITIAL_CREATION_HANDLER: ${{ vars.INITIAL_CREATION_HANDLER }}

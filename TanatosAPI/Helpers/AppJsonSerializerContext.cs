@@ -120,6 +120,7 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(EntPerfilEnviarCodigoVerificacion))]
     [JsonSerializable(typeof(EntPerfilConfirmarRegistro))]
     [JsonSerializable(typeof(EntPerfilReenviarCodigoVerificacion))]
+	[JsonSerializable(typeof(PerfilEnviarCodigoVerificacionUrlPayload))]
     internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }
