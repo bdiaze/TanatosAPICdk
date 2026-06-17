@@ -72,7 +72,7 @@ namespace TanatosAPI.Endpoints {
                     string? textoLink = null;
 					string? urlLink = null;
 					if (entrada.TipoCodigo == TipoCodigoVerificacion.SignUp || entrada.TipoCodigo == TipoCodigoVerificacion.ResendCode) {
-						textoLink = "¡O puedes hacer click aquí!";
+						textoLink = "¡También puedes hacer click aquí!";
 						PerfilEnviarCodigoVerificacionUrlPayload payload = new() {
 							Correo = entrada.CorreoElectronico,
 							Codigo = codigo
