@@ -1,7 +1,9 @@
 ﻿using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
+using Microsoft.AspNetCore.ResponseCompression;
 using System.Buffers.Text;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Text.Json;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Interfaces;
@@ -30,6 +32,39 @@ namespace TanatosAPI.Helpers {
 			}
 
 			return atributos;
+		}
+
+		public async Task ConfirmarRegistro(string username, string confirmationCode) {
+			try {
+				ConfirmSignUpResponse response = await client.ConfirmSignUpAsync(new ConfirmSignUpRequest {
+					ClientId = variableEntorno.Obtener("COGNITO_USER_POOL_CLIENT_ID"),
+					Username = username,
+					ConfirmationCode = confirmationCode
+				});
+
+				if (response.HttpStatusCode != HttpStatusCode.OK) {
+					throw new InvalidOperationException("Ocurrió un error al verificar cuenta con código");
+				}
+			} catch (CodeMismatchException) {
+				throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "El código de verificación es inválido.");
+			} catch (ExpiredCodeException) {
+				throw new ErrorValidacion(TipoErrorValidacion.AccesoCaducado, "El código ha caducado, favor solicitar nuevo código.");
+			}
+		}
+
+		public async Task ReenviarCodigoVerificacion(string username) {
+			try {
+				ResendConfirmationCodeResponse response = await client.ResendConfirmationCodeAsync(new ResendConfirmationCodeRequest {
+					ClientId = variableEntorno.Obtener("COGNITO_USER_POOL_CLIENT_ID"),
+					Username = username,
+				});
+
+                if (response.HttpStatusCode != HttpStatusCode.OK) {
+                    throw new InvalidOperationException("Ocurrió un error al reenviar código de verificación");
+                }
+            } catch (LimitExceededException) {
+				throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "Has alcanzado el límite de nuevos códigos de verificación que te podemos enviar, favor intenta más tarde.");
+			}
 		}
 
 		public async Task<(string accessToken, string refreshToken, int expiresIn, int refreshExpiresIn)> ObtenerConAuthorizationCode(string code, string codeVerifier, string redirectUri) {

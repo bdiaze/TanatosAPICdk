@@ -795,8 +795,10 @@ namespace Cdk
 								new PolicyStatement(new PolicyStatementProps{
 									Sid = $"{appName}AccessToCognito",
 									Actions = [
-										"cognito-idp:AdminGetUser"
-									],
+										"cognito-idp:AdminGetUser",
+                                        "cognito-idp:ConfirmSignUp",
+										"cognito-idp:ResendConfirmationCode"
+                                    ],
 									Resources = [
 										$"arn:aws:cognito-idp:{this.Region}:{this.Account}:userpool/{userPool.UserPoolId}",
 									],
