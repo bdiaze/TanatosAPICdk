@@ -2417,3 +2417,21 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260617230916_CommentDiasActivacionAutomaticaTemplateNorma') THEN
+    COMMENT ON COLUMN tanatos.template_norma.dias_activacion_automatica IS 'Días que define el próximo vencimiento de la obligación al momento de la inscripción.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260617230916_CommentDiasActivacionAutomaticaTemplateNorma') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260617230916_CommentDiasActivacionAutomaticaTemplateNorma', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+

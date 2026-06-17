@@ -58,8 +58,9 @@ namespace TanatosAPI.Design.Contexts {
                 entity.Property(o => o.Multa).HasComment("Multa de no cumplir con la norma");
                 entity.Property(o => o.IdCategoriaNorma).HasComment("Identificador de la categoría a la que pertenece la norma.");
                 entity.Property(o => o.CronActivacionAutomatica).HasComment("Cron que define el próximo vencimiento de la obligación al momento de la inscripción.");
+				entity.Property(o => o.DiasActivacionAutomatica).HasComment("Días que define el próximo vencimiento de la obligación al momento de la inscripción.");
 
-                entity
+				entity
                     .HasOne(o => o.Template)
                     .WithMany(c => c.TemplateNormas)
                     .HasForeignKey(o => o.IdTemplate)
