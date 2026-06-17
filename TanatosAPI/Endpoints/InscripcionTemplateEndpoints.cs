@@ -167,6 +167,23 @@ namespace TanatosAPI.Endpoints {
 									normaSuscrita.FechaActivacion = dateTimeProvider.UtcNow;
 									normaSuscrita.Activado = true;
 									await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
+								} else if (templateNorma.DiasActivacionAutomatica != null) {
+									DateTime localNow = CronHelper.TransformarFechaUTCATimezone(dateTimeProvider.UtcNow);
+									DateTime vencimientoLocal = localNow.AddDays(templateNorma.DiasActivacionAutomatica.Value);
+									DateTime proximoVencimiento = CronHelper.TransformarFechaTimezoneAUTC(vencimientoLocal);
+
+									HistorialNormaSuscrita historialNormaSuscrita = new() {
+										Id = 0,
+										IdNormaSuscrita = normaSuscrita.Id,
+										FechaVencimiento = proximoVencimiento,
+										FechaCreacion = dateTimeProvider.UtcNow,
+										Vigencia = true
+									};
+									await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
+
+									normaSuscrita.FechaActivacion = dateTimeProvider.UtcNow;
+									normaSuscrita.Activado = true;
+									await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 								}
 
 								await procesoNotificacionBcp.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
