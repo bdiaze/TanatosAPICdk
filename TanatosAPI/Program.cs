@@ -180,6 +180,7 @@ builder.Services.AddSingleton<HistorialNotificacionBcp>();
 builder.Services.AddSingleton<ICargoBcp, CargoBcp>();
 builder.Services.AddSingleton<IEmpleadoBcp, EmpleadoBcp>();
 builder.Services.AddSingleton<ICategoriaNormaBcp, CategoriaNormaBcp>();
+builder.Services.AddSingleton<IPreguntaFrecuenteBcp, PreguntaFrecuenteBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -188,6 +189,7 @@ builder.Services.AddSingleton<DestinatarioNotificacionUseCase>();
 builder.Services.AddSingleton<AuthUseCase>();
 builder.Services.AddSingleton<CargoUseCase>();
 builder.Services.AddSingleton<CategoriaNormaUseCase>();
+builder.Services.AddSingleton<PreguntaFrecuenteUseCase>();
 #endregion
 
 string cognitoRegion;
@@ -309,6 +311,7 @@ app.MapSuscripcionEndpoints();
 app.MapCargoEndpoints();
 app.MapEmpleadoEndpoints();
 app.MapPerfilEndpoints();
+app.MapPreguntaFrecuenteEndpoints();
 
 await app.RunAsync();
 
