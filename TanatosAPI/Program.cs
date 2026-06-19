@@ -160,6 +160,7 @@ builder.Services.AddSingleton<PagoDao>();
 builder.Services.AddSingleton<UsuarioDao>();
 builder.Services.AddSingleton<ICargoDao, CargoDao>();
 builder.Services.AddSingleton<EmpleadoDao>();
+builder.Services.AddSingleton<IPreguntaFrecuenteDao, PreguntaFrecuenteDao>();
 #endregion
 
 #region Singleton BCP
