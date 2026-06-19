@@ -579,7 +579,19 @@ namespace TanatosAPI.Design.Contexts {
                 entity.Property(o => o.Apellido).HasComment("Apellido del usuario.");
                 entity.Property(o => o.CorreoElectronico).HasComment("Correo electrónico del usuario.");
             });
-        }
+
+			modelBuilder.Entity<PreguntaFrecuente>(entity => {
+				entity.ToTable(o => o.HasComment("Tabla que contiene las preguntas frecuentes con sus respectivas respuestas."));
+				entity.Property(o => o.Id).HasComment("Identificador de la pregunta frecuente.");
+				entity.Property(o => o.Pregunta).HasComment("Título de la pregunta frecuente.");
+				entity.Property(o => o.Respuesta).HasComment("Respuesta a la pregunta frecuente.");
+				entity.Property(o => o.Habilitado).HasComment("Indicador de si la pregunta frecuente está habilitada.");
+				entity.Property(o => o.Orden).HasComment("Orden en que se presenta la pregunta frecuente.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó la pregunta frecuente.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó la pregunta frecuente.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia de la pregunta frecuente.");
+			});
+		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
 
@@ -638,5 +650,7 @@ namespace TanatosAPI.Design.Contexts {
         public DbSet<Cargo> Cargos { get; set; }
 
 		public DbSet<Empleado> Empleados { get; set; }
+
+        public DbSet<PreguntaFrecuente> PreguntasFrecuentes { get; set; }
 	}
 }
