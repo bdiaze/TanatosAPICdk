@@ -102,15 +102,21 @@ builder.Services.AddSingleton<IAmazonKeyManagementService>(sp => {
 #endregion
 
 #region Singleton Helpers
-builder.Services.AddHttpClient<IHttpClientWrapper, HttpClientWrapper>();
 builder.Services.AddSingleton<IVariableEntornoHelper, VariableEntornoHelper>();
 builder.Services.AddSingleton<SecretManagerHelper>();
 builder.Services.AddSingleton<IApiKeyHelper, ApiKeyHelper>();
-builder.Services.AddSingleton<ICognitoHelper, CognitoHelper>();
-builder.Services.AddSingleton<HermesHelper>();
-builder.Services.AddSingleton<KairosHelper>();
+builder.Services.AddHttpClient<ICognitoHttpClient, HttpClientWrapper>();
+builder.Services.AddHttpClient<IHermesHttpClient, HttpClientWrapper>();
+builder.Services.AddHttpClient<IKairosHttpClient, HttpClientWrapper>();
+builder.Services.AddHttpClient<IFlowHttpClient, HttpClientWrapper>();
+builder.Services.AddHttpClient<IGoogleRecaptchaHttpClient, HttpClientWrapper>();
+builder.Services.AddScoped<ICognitoHelper, CognitoHelper>();
+builder.Services.AddScoped<HermesHelper>();
+builder.Services.AddScoped<KairosHelper>();
+builder.Services.AddScoped<GoogleRecaptchaHelper>();
+builder.Services.AddScoped<FlowHelper>();
 builder.Services.AddSingleton<ConnectionStringHelper>();
-builder.Services.AddSingleton<NpgsqlDataSource>(serviceProvider => {
+builder.Services.AddSingleton(serviceProvider => {
 	ConnectionStringHelper connectionString = serviceProvider.GetRequiredService<ConnectionStringHelper>();
     string connString = connectionString.Obtener().GetAwaiter().GetResult();
     NpgsqlConnectionStringBuilder stringBuilder = new(connString) {
@@ -123,73 +129,71 @@ builder.Services.AddSingleton<HtmlRenderer>();
 builder.Services.AddSingleton<CryptoHelper>();
 builder.Services.AddSingleton<IS3Helper, S3Helper>();
 builder.Services.AddSingleton<IDocumentoAdjuntoHelper, DocumentoAdjuntoHelper>();
-builder.Services.AddHttpClient<GoogleRecaptchaHelper>();
-builder.Services.AddHttpClient<FlowHelper>();
 builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 builder.Services.AddSingleton<IRateLimiter, DynamoRateLimiter>();
 builder.Services.AddSingleton<IKMSHelper, KMSHelper>();
 #endregion
 
 #region Singleton DAO
-builder.Services.AddSingleton<ICategoriaNormaDao, CategoriaNormaDao>();
-builder.Services.AddSingleton<DestinatarioNotificacionDao>();
-builder.Services.AddSingleton<InscripcionTemplateDao>();
-builder.Services.AddSingleton<TemplateDao>();
-builder.Services.AddSingleton<TemplateNormaDao>();
-builder.Services.AddSingleton<TemplateNormaFiscalizadorDao>();
-builder.Services.AddSingleton<TemplateNormaNotificacionDao>();
-builder.Services.AddSingleton<TemplateActividadDao>();
-builder.Services.AddSingleton<TipoFiscalizadorDao>();
-builder.Services.AddSingleton<TipoPeriodicidadDao>();
-builder.Services.AddSingleton<TipoReceptorNotificacionDao>();
-builder.Services.AddSingleton<TipoUnidadTiempoDao>();
-builder.Services.AddSingleton<TipoRubroDao>();
-builder.Services.AddSingleton<TipoActividadDao>();
-builder.Services.AddSingleton<NegocioDao>();
-builder.Services.AddSingleton<NormaSuscritaDao>();
-builder.Services.AddSingleton<FiscalizadorNormaSuscritaDao>();
-builder.Services.AddSingleton<NotificacionNormaSuscritaDao>();
-builder.Services.AddSingleton<HistorialNormaSuscritaDao>();
-builder.Services.AddSingleton<HistorialNotificacionDao>();
-builder.Services.AddSingleton<IDocumentoAdjuntoDao, DocumentoAdjuntoDao>();
-builder.Services.AddSingleton<MensajeDao>();
-builder.Services.AddSingleton<PlanDao>();
-builder.Services.AddSingleton<SuscripcionDao>();
-builder.Services.AddSingleton<EventoPagoDao>();
-builder.Services.AddSingleton<PagoDao>();
-builder.Services.AddSingleton<UsuarioDao>();
-builder.Services.AddSingleton<ICargoDao, CargoDao>();
-builder.Services.AddSingleton<EmpleadoDao>();
-builder.Services.AddSingleton<IPreguntaFrecuenteDao, PreguntaFrecuenteDao>();
+builder.Services.AddScoped<ICategoriaNormaDao, CategoriaNormaDao>();
+builder.Services.AddScoped<DestinatarioNotificacionDao>();
+builder.Services.AddScoped<InscripcionTemplateDao>();
+builder.Services.AddScoped<TemplateDao>();
+builder.Services.AddScoped<TemplateNormaDao>();
+builder.Services.AddScoped<TemplateNormaFiscalizadorDao>();
+builder.Services.AddScoped<TemplateNormaNotificacionDao>();
+builder.Services.AddScoped<TemplateActividadDao>();
+builder.Services.AddScoped<TipoFiscalizadorDao>();
+builder.Services.AddScoped<TipoPeriodicidadDao>();
+builder.Services.AddScoped<TipoReceptorNotificacionDao>();
+builder.Services.AddScoped<TipoUnidadTiempoDao>();
+builder.Services.AddScoped<TipoRubroDao>();
+builder.Services.AddScoped<TipoActividadDao>();
+builder.Services.AddScoped<NegocioDao>();
+builder.Services.AddScoped<NormaSuscritaDao>();
+builder.Services.AddScoped<FiscalizadorNormaSuscritaDao>();
+builder.Services.AddScoped<NotificacionNormaSuscritaDao>();
+builder.Services.AddScoped<HistorialNormaSuscritaDao>();
+builder.Services.AddScoped<HistorialNotificacionDao>();
+builder.Services.AddScoped<IDocumentoAdjuntoDao, DocumentoAdjuntoDao>();
+builder.Services.AddScoped<MensajeDao>();
+builder.Services.AddScoped<PlanDao>();
+builder.Services.AddScoped<SuscripcionDao>();
+builder.Services.AddScoped<EventoPagoDao>();
+builder.Services.AddScoped<PagoDao>();
+builder.Services.AddScoped<UsuarioDao>();
+builder.Services.AddScoped<ICargoDao, CargoDao>();
+builder.Services.AddScoped<EmpleadoDao>();
+builder.Services.AddScoped<IPreguntaFrecuenteDao, PreguntaFrecuenteDao>();
 #endregion
 
 #region Singleton BCP
-builder.Services.AddSingleton<NormaSuscritaBcp>();
-builder.Services.AddSingleton<HistorialNormaSuscritaBcp>();
-builder.Services.AddSingleton<FiscalizadorNormaSuscritaBcp>();
-builder.Services.AddSingleton<NotificacionNormaSuscritaBcp>();
-builder.Services.AddSingleton<ProcesoNotificacionBcp>();
-builder.Services.AddSingleton<DestinatarioNotificacionBcp>();
-builder.Services.AddSingleton<DocumentoAdjuntoBcp>();
-builder.Services.AddSingleton<MensajeBcp>();
-builder.Services.AddSingleton<SuscripcionBcp>();
-builder.Services.AddSingleton<TemplateNormaBcp>();
-builder.Services.AddSingleton<INegocioBcp, NegocioBcp>();
-builder.Services.AddSingleton<UsuarioBcp>();
-builder.Services.AddSingleton<HistorialNotificacionBcp>();
-builder.Services.AddSingleton<ICargoBcp, CargoBcp>();
-builder.Services.AddSingleton<IEmpleadoBcp, EmpleadoBcp>();
-builder.Services.AddSingleton<ICategoriaNormaBcp, CategoriaNormaBcp>();
-builder.Services.AddSingleton<IPreguntaFrecuenteBcp, PreguntaFrecuenteBcp>();
+builder.Services.AddScoped<NormaSuscritaBcp>();
+builder.Services.AddScoped<HistorialNormaSuscritaBcp>();
+builder.Services.AddScoped<FiscalizadorNormaSuscritaBcp>();
+builder.Services.AddScoped<NotificacionNormaSuscritaBcp>();
+builder.Services.AddScoped<ProcesoNotificacionBcp>();
+builder.Services.AddScoped<DestinatarioNotificacionBcp>();
+builder.Services.AddScoped<DocumentoAdjuntoBcp>();
+builder.Services.AddScoped<MensajeBcp>();
+builder.Services.AddScoped<SuscripcionBcp>();
+builder.Services.AddScoped<TemplateNormaBcp>();
+builder.Services.AddScoped<INegocioBcp, NegocioBcp>();
+builder.Services.AddScoped<UsuarioBcp>();
+builder.Services.AddScoped<HistorialNotificacionBcp>();
+builder.Services.AddScoped<ICargoBcp, CargoBcp>();
+builder.Services.AddScoped<IEmpleadoBcp, EmpleadoBcp>();
+builder.Services.AddScoped<ICategoriaNormaBcp, CategoriaNormaBcp>();
+builder.Services.AddScoped<IPreguntaFrecuenteBcp, PreguntaFrecuenteBcp>();
 #endregion
 
 #region Singleton UseCases
-builder.Services.AddSingleton<DocumentoAdjuntoUseCase>();
-builder.Services.AddSingleton<DestinatarioNotificacionUseCase>();
-builder.Services.AddSingleton<AuthUseCase>();
-builder.Services.AddSingleton<CargoUseCase>();
-builder.Services.AddSingleton<CategoriaNormaUseCase>();
-builder.Services.AddSingleton<PreguntaFrecuenteUseCase>();
+builder.Services.AddScoped<DocumentoAdjuntoUseCase>();
+builder.Services.AddScoped<DestinatarioNotificacionUseCase>();
+builder.Services.AddScoped<AuthUseCase>();
+builder.Services.AddScoped<CargoUseCase>();
+builder.Services.AddScoped<CategoriaNormaUseCase>();
+builder.Services.AddScoped<PreguntaFrecuenteUseCase>();
 #endregion
 
 string cognitoRegion;

@@ -9,7 +9,7 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    public class GoogleRecaptchaHelper(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper, HttpClient httpClient) {
+    public class GoogleRecaptchaHelper(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper, IGoogleRecaptchaHttpClient httpClient) {
         private const string GOOGLE_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
         private const string GOOGLE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 

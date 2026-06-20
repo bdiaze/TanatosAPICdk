@@ -18,7 +18,7 @@ namespace TanatosAPI.Test.Helpers {
 	public class CognitoHelperTest {
 		private readonly IAmazonCognitoIdentityProvider client = Substitute.For<IAmazonCognitoIdentityProvider>();
 		private readonly IVariableEntornoHelper variableEntorno = Substitute.For<IVariableEntornoHelper>();
-		private readonly IHttpClientWrapper httpClient = Substitute.For<IHttpClientWrapper>();
+		private readonly ICognitoHttpClient httpClient = Substitute.For<ICognitoHttpClient>();
 		private readonly CognitoHelper cognitoHelper;
 
 		public CognitoHelperTest() {
