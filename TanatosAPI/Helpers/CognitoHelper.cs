@@ -10,7 +10,6 @@ using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
     public class CognitoHelper(IAmazonCognitoIdentityProvider client, IVariableEntornoHelper variableEntorno, ICognitoHttpClient httpClient) : ICognitoHelper {
-		private readonly string cognitoBaseUrl = variableEntorno.Obtener("COGNITO_BASE_URL");
 		private readonly string cognitoUserPoolClientId = variableEntorno.Obtener("COGNITO_USER_POOL_CLIENT_ID");
 
 		private readonly Dictionary<string, Dictionary<string, string>> atributosUsuarios = [];
@@ -78,7 +77,7 @@ namespace TanatosAPI.Helpers {
 				{ "code_verifier", codeVerifier }
 			};
 
-			HttpRequestMessage request = new(HttpMethod.Post, cognitoBaseUrl + "/oauth2/token") {
+			HttpRequestMessage request = new(HttpMethod.Post, "oauth2/token") {
 				Content = new FormUrlEncodedContent(parametros)
 			};
 			HttpResponseMessage response = await httpClient.SendAsync(request);
@@ -100,7 +99,7 @@ namespace TanatosAPI.Helpers {
 				{ Constant.CONST_REFRESH_TOKEN, refreshToken }
 			};
 
-			HttpRequestMessage request = new(HttpMethod.Post, cognitoBaseUrl + "/oauth2/token") {
+			HttpRequestMessage request = new(HttpMethod.Post, "oauth2/token") {
 				Content = new FormUrlEncodedContent(parametros)
 			};
 			HttpResponseMessage response = await httpClient.SendAsync(request);

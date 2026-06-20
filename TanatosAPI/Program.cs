@@ -105,16 +105,38 @@ builder.Services.AddSingleton<IAmazonKeyManagementService>(sp => {
 builder.Services.AddSingleton<IVariableEntornoHelper, VariableEntornoHelper>();
 builder.Services.AddSingleton<SecretManagerHelper>();
 builder.Services.AddSingleton<IApiKeyHelper, ApiKeyHelper>();
-builder.Services.AddHttpClient<ICognitoHttpClient, HttpClientWrapper>();
-builder.Services.AddHttpClient<IHermesHttpClient, HttpClientWrapper>();
-builder.Services.AddHttpClient<IKairosHttpClient, HttpClientWrapper>();
-builder.Services.AddHttpClient<IFlowHttpClient, HttpClientWrapper>();
+builder.Services.AddHttpClient<ICognitoHttpClient, HttpClientWrapper>(async (serviceProvider, httpClient) => {
+	IVariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<IVariableEntornoHelper>();
+	string cognitoBaseUrl = variableEntorno.Obtener("COGNITO_BASE_URL").TrimEnd('/') + '/';
+	httpClient.BaseAddress = new Uri(cognitoBaseUrl);
+});
+builder.Services.AddHttpClient<IHermesHttpClient, HttpClientWrapper>(async (serviceProvider, httpClient) => {
+	IVariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<IVariableEntornoHelper>();
+	IApiKeyHelper apiKeyHelper = serviceProvider.GetRequiredService<IApiKeyHelper>();
+	string hermesBaseUrl = variableEntorno.Obtener("HERMES_API_URL");
+	string hermesApiKey = await apiKeyHelper.ObtenerApiKey(variableEntorno.Obtener("HERMES_API_KEY_ID"));
+	httpClient.DefaultRequestHeaders.Add("x-api-key", hermesApiKey);
+	httpClient.BaseAddress = new Uri(hermesBaseUrl);
+});
+builder.Services.AddHttpClient<IKairosHttpClient, HttpClientWrapper>(async (serviceProvider, httpClient) => {
+	IVariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<IVariableEntornoHelper>();
+	IApiKeyHelper apiKeyHelper = serviceProvider.GetRequiredService<IApiKeyHelper>();
+	string kairosBaseUrl = variableEntorno.Obtener("KAIROS_API_URL");
+	string kairosApiKey = await apiKeyHelper.ObtenerApiKey(variableEntorno.Obtener("KAIROS_API_KEY_ID"));
+	httpClient.DefaultRequestHeaders.Add("x-api-key", kairosApiKey);
+	httpClient.BaseAddress = new Uri(kairosBaseUrl);
+});
+builder.Services.AddHttpClient<IFlowHttpClient, HttpClientWrapper>(async(serviceProvider, httpClient) => {
+	IVariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<IVariableEntornoHelper>();
+	string flowBaseUrl = variableEntorno.Obtener("FLOW_API_URL");
+	httpClient.BaseAddress = new Uri(flowBaseUrl);
+});
 builder.Services.AddHttpClient<IGoogleRecaptchaHttpClient, HttpClientWrapper>();
 builder.Services.AddScoped<ICognitoHelper, CognitoHelper>();
 builder.Services.AddScoped<HermesHelper>();
 builder.Services.AddScoped<KairosHelper>();
-builder.Services.AddScoped<GoogleRecaptchaHelper>();
 builder.Services.AddScoped<FlowHelper>();
+builder.Services.AddScoped<GoogleRecaptchaHelper>();
 builder.Services.AddSingleton<ConnectionStringHelper>();
 builder.Services.AddSingleton(serviceProvider => {
 	ConnectionStringHelper connectionString = serviceProvider.GetRequiredService<ConnectionStringHelper>();

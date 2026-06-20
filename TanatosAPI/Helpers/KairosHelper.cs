@@ -6,14 +6,9 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    public class KairosHelper(IVariableEntornoHelper variableEntorno, IApiKeyHelper apiKey, IKairosHttpClient httpClient) {
-		private readonly string _kairosBaseUrl = variableEntorno.Obtener("KAIROS_API_URL");
-		private readonly string _kairosApiKey = apiKey.ObtenerApiKey(variableEntorno.Obtener("KAIROS_API_KEY_ID")).Result;
-
+    public class KairosHelper(IKairosHttpClient httpClient) {
 		public async Task<SalKairosIngresarProceso> IngresarProceso(EntKairosIngresarProceso proceso) {
-			httpClient.DefaultRequestHeaders.Add("x-api-key", _kairosApiKey);
-
-			HttpResponseMessage response = await httpClient.PostAsync(_kairosBaseUrl + "Procesos/", new StringContent(JsonSerializer.Serialize(proceso, AppJsonSerializerContext.Default.EntKairosIngresarProceso), Encoding.UTF8, "application/json"));
+			HttpResponseMessage response = await httpClient.PostAsync("Procesos", new StringContent(JsonSerializer.Serialize(proceso, AppJsonSerializerContext.Default.EntKairosIngresarProceso), Encoding.UTF8, "application/json"));
 			if (response.StatusCode != HttpStatusCode.OK) {
 				throw new HttpRequestException(
 					$"Ocurrió un error al ingresar el proceso. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",
@@ -26,9 +21,7 @@ namespace TanatosAPI.Helpers {
 		}
 
 		public async Task EliminarProceso(string idProceso) {
-			httpClient.DefaultRequestHeaders.Add("x-api-key", _kairosApiKey);
-
-			HttpResponseMessage response = await httpClient.DeleteAsync(_kairosBaseUrl + $"Procesos/{Uri.EscapeDataString(idProceso)}");
+			HttpResponseMessage response = await httpClient.DeleteAsync($"Procesos/{Uri.EscapeDataString(idProceso)}");
 			if (response.StatusCode != HttpStatusCode.OK) {
 				throw new HttpRequestException(
 					$"Ocurrió un error al eliminar el proceso. StatusCode: {response.StatusCode} - Content: {await response.Content.ReadAsStringAsync()}",

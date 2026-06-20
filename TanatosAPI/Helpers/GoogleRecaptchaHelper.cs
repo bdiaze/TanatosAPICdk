@@ -26,17 +26,16 @@ namespace TanatosAPI.Helpers {
                 }
             };
 
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await ObtenerAccessToken());
-            HttpResponseMessage response = await httpClient.PostAsync(
-                $"https://recaptchaenterprise.googleapis.com/v1/projects/{variableEntorno.Obtener("GOOGLE_RECAPTCHA_PROJECT_ID")}/assessments",
-                new StringContent(
-                    JsonSerializer.Serialize(parametros, AppJsonSerializerContext.Default.GoogleAssessmentParams), 
-                    Encoding.UTF8, 
-                    "application/json"
-                )
-            );
-
-            response.EnsureSuccessStatusCode();
+			HttpRequestMessage request = new(HttpMethod.Post, $"https://recaptchaenterprise.googleapis.com/v1/projects/{variableEntorno.Obtener("GOOGLE_RECAPTCHA_PROJECT_ID")}/assessments") {
+				Content = new StringContent(
+		            JsonSerializer.Serialize(parametros, AppJsonSerializerContext.Default.GoogleAssessmentParams),
+		            Encoding.UTF8,
+		            "application/json"
+	            )
+			};
+			request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await ObtenerAccessToken());
+			HttpResponseMessage response = await httpClient.SendAsync(request);
+			response.EnsureSuccessStatusCode();
 
             GoogleAssessmentResponse assessmentResponse = JsonSerializer.Deserialize(
                 await response.Content.ReadAsStringAsync(),
