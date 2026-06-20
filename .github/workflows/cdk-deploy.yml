@@ -109,15 +109,15 @@ jobs:
                     branch_rate=$(echo "$line" | grep -oP ' branch-rate="\K[^"]*')
                     line_pct=$(echo "scale=2; $line_rate * 100" | bc)
                     branch_pct=$(echo "scale=2; $branch_rate * 100" | bc)
-                    echo "${line_pct}% ${branch_pct}% ${name}"
+                    echo "Line: ${line_pct}% - Branch: ${branch_pct}% - ${name}"
                 done                
                 line_rate=$(grep -oP ' line-rate="\K[^"]+' "$xml" | head -1)
                 branch_rate=$(grep -oP ' branch-rate="\K[^"]+' "$xml" | head -1)
                 line_pct=$(echo "scale=2; $line_rate * 100" | bc)
                 branch_pct=$(echo "scale=2; $branch_rate * 100" | bc)
                 echo "--- Resumen Final ---"
-                echo "Line coverage:   $line_pct%"
-                echo "Branch coverage: $branch_pct%"
+                echo "Line Coverage:   $line_pct%"
+                echo "Branch Coverage: $branch_pct%"
                 # if [ "$line_pct" -lt 70 ]; then
                 #   echo "Coverage insuficiente: $line_pct% (mínimo 70%)"
                 #   exit 1
