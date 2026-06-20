@@ -7,7 +7,6 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    [ExcludeFromCodeCoverage]
     public class FlowHelper(IVariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper, HttpClient httpClient) {
 		private readonly string _flowBaseUrl = variableEntorno.Obtener("FLOW_API_URL");
 		private readonly string _flowApiKey = JsonSerializer.Deserialize(secretManagerHelper.ObtenerSecreto(variableEntorno.Obtener("SECRET_ARN_APP")).Result, AppJsonSerializerContext.Default.DictionaryStringString)!["FlowApiKey"];

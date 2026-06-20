@@ -4,7 +4,6 @@ using System.Text.Json;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    [ExcludeFromCodeCoverage]
     public class ConnectionStringHelper(IHostEnvironment env, IConfiguration config, IVariableEntornoHelper variableEntorno, SecretManagerHelper secretManager) {
 
         private string? connectionString = null;

@@ -2,7 +2,6 @@
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    [ExcludeFromCodeCoverage]
     public class VariableEntornoHelper(IHostEnvironment env, IConfiguration config): IVariableEntornoHelper {
         public string Obtener(string nombre) {
             if (!env.IsProduction()) {

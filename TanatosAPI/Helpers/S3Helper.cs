@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    [ExcludeFromCodeCoverage]
     public class S3Helper(IAmazonS3 amazonS3, IDateTimeProvider dateTimeProvider): IS3Helper {
 		private readonly int PRE_SIGNED_URL_EXPIRATION_MINUTES = 5;
 
