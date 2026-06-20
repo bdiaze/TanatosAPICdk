@@ -102,11 +102,10 @@ jobs:
                   -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Program.cs,**/*.g.cs" \
                   -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*]Microsoft.AspNetCore.OpenApi.Generated.*;[*]System.Runtime.CompilerServices.*"
                 xml=$(find ./coverage -name "coverage.cobertura.xml" | head -1)
-                tr '\n' ' ' < "$xml" | grep -oP '<class [^>]+>' | head -3                
                 echo "--- Coverage por Clase ---"
-                tr '\n' ' ' < "$xml" | grep -oP '<class [^>]+>' | while read -r line; do
-                    name=$(echo "$line" | grep -oP 'name="\K[^"]+')
-                    rate=$(echo "$line" | grep -oP 'line-rate="\K[^"]+')
+                tr '\n' ' ' < "$xml" | grep -oP '<class [^>]*>' | while read -r line; do
+                    name=$(echo "$line" | grep -oP ' name="\K[^"]*')
+                    rate=$(echo "$line" | grep -oP ' line-rate="\K[^"]*')
                     pct=$(echo "$rate * 100 / 1" | bc)
                     echo "  ${pct}%  ${name}"
                 done                
