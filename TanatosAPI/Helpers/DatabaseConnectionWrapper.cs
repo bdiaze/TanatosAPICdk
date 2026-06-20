@@ -1,8 +1,10 @@
 ﻿using Npgsql;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
+	[ExcludeFromCodeCoverage]
 	public class DatabaseConnectionWrapper(NpgsqlConnection connection) : IDatabaseConnection {
 
 		public NpgsqlConnection NpgsqlConnection() => connection;

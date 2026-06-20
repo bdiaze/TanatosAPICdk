@@ -6,8 +6,7 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    [ExcludeFromCodeCoverage]
-    public class KairosHelper(IVariableEntornoHelper variableEntorno, ApiKeyHelper apiKey) {
+    public class KairosHelper(IVariableEntornoHelper variableEntorno, IApiKeyHelper apiKey) {
 		private readonly string _kairosBaseUrl = variableEntorno.Obtener("KAIROS_API_URL");
 		private readonly string _kairosApiKey = apiKey.ObtenerApiKey(variableEntorno.Obtener("KAIROS_API_KEY_ID")).Result;
 

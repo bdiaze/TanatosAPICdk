@@ -1,7 +1,9 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace TanatosAPI.Helpers {
+	[ExcludeFromCodeCoverage]
 	public class CryptoHelper {
 		public string GenerarToken(int bytes = 32) {
 			return Convert.ToBase64String(RandomNumberGenerator.GetBytes(bytes));

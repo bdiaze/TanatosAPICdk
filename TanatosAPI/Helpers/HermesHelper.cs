@@ -7,8 +7,7 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    [ExcludeFromCodeCoverage]
-    public class HermesHelper(IVariableEntornoHelper variableEntorno, ApiKeyHelper apiKey) {
+    public class HermesHelper(IVariableEntornoHelper variableEntorno, IApiKeyHelper apiKey) {
 		private readonly string _hermesBaseUrl = variableEntorno.Obtener("HERMES_API_URL");
 		private readonly string _hermesApiKey = apiKey.ObtenerApiKey(variableEntorno.Obtener("HERMES_API_KEY_ID")).Result;
 
