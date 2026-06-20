@@ -102,10 +102,18 @@ jobs:
                   -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Program.cs,**/*.g.cs" \
                   -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*]Microsoft.AspNetCore.OpenApi.Generated;[*]System.Runtime.CompilerServices"
                 xml=$(find ./coverage -name "coverage.cobertura.xml" | head -1)
+                echo "--- Coverage por Clase ---"
+                grep '<class ' "$xml" | while read -r line; do
+                    name=$(echo "$line" | grep -oP 'name="\K[^"]+')
+                    rate=$(echo "$line" | grep -oP 'line-rate="\K[^"]+')
+                    pct=$(echo "$rate * 100 / 1" | bc)
+                    echo "  ${pct}%  ${name}"
+                done                
                 line_rate=$(grep -oP 'line-rate="\K[^"]+' "$xml" | head -1)
                 branch_rate=$(grep -oP 'branch-rate="\K[^"]+' "$xml" | head -1)
                 line_pct=$(echo "$line_rate * 100 / 1" | bc)
                 branch_pct=$(echo "$branch_rate * 100 / 1" | bc)
+                echo "--- Resumen Final ---"
                 echo "Line coverage:   $line_pct%"
                 echo "Branch coverage: $branch_pct%"
                 # if [ "$line_pct" -lt 70 ]; then
