@@ -2,6 +2,7 @@
 using Amazon.CognitoIdentityProvider.Model;
 using Amazon.Runtime.Internal.Transform;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -75,6 +76,84 @@ namespace TanatosAPI.Test.Helpers {
 			client.AdminGetUserAsync(Arg.Any<AdminGetUserRequest>()).Returns((AdminGetUserResponse?)null);
 
 			await Assert.ThrowsAsync<InvalidOperationException>(() => cognitoHelper.ObtenerUsuario("sub-test-123"));
+		}
+
+		[Fact]
+		public async Task ConfirmarRegistroTest_Valido() {
+			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>()).Returns(new ConfirmSignUpResponse {
+				HttpStatusCode = HttpStatusCode.OK,
+			});
+
+			await cognitoHelper.ConfirmarRegistro("correo@test.cl", "codigo-test");
+
+			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>());
+		}
+
+		[Fact]
+		public async Task ConfirmarRegistroTest_StatusCodeError() {
+			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>()).Returns(new ConfirmSignUpResponse {
+				HttpStatusCode = HttpStatusCode.BadRequest,
+			});
+
+			await Assert.ThrowsAsync<InvalidOperationException>(() => cognitoHelper.ConfirmarRegistro("correo@test.cl", "codigo-test"));
+			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>());
+		}
+
+		[Fact]
+		public async Task ConfirmarRegistroTest_CodigoInvalido() {
+			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>()).ThrowsAsync(new CodeMismatchException());
+
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cognitoHelper.ConfirmarRegistro("correo@test.cl", "codigo-test"));
+			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
+			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>());
+		}
+
+		[Fact]
+		public async Task ReenviarCodigoVerificacionTest_Valido() {
+			client.ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>()).Returns(new ResendConfirmationCodeResponse {
+				HttpStatusCode = HttpStatusCode.OK,
+			});
+
+			await cognitoHelper.ReenviarCodigoVerificacion("correo@test.cl");
+
+			await client.Received(1).ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>());
+		}
+
+		[Fact]
+		public async Task ReenviarCodigoVerificacionTest_StatusCodeError() {
+			client.ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>()).Returns(new ResendConfirmationCodeResponse {
+				HttpStatusCode = HttpStatusCode.BadRequest,
+			});
+
+			await Assert.ThrowsAsync<InvalidOperationException>(() => cognitoHelper.ReenviarCodigoVerificacion("correo@test.cl"));
+			await client.Received(1).ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>());
+		}
+
+		[Fact]
+		public async Task ReenviarCodigoVerificacionTest_CodigoInvalido() {
+			client.ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>()).ThrowsAsync(new LimitExceededException());
+
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cognitoHelper.ReenviarCodigoVerificacion("correo@test.cl"));
+			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
+			await client.Received(1).ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>());
+		}
+
+		[Fact]
+		public async Task ConfirmarRegistroTest_CodigoCaducado() {
+			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>()).ThrowsAsync(new ExpiredCodeException());
+
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cognitoHelper.ConfirmarRegistro("correo@test.cl", "codigo-test"));
+			Assert.Equal(TipoErrorValidacion.AccesoCaducado, ex.TipoErrorValidacion);
+			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>());
+		}
+
+		[Fact]
+		public async Task ConfirmarRegistroTest_YaVerificado() {
+			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>()).ThrowsAsync(new NotAuthorizedException());
+
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cognitoHelper.ConfirmarRegistro("correo@test.cl", "codigo-test"));
+			Assert.Equal(TipoErrorValidacion.EstadoNoValido, ex.TipoErrorValidacion);
+			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>());
 		}
 
 		[Fact]
