@@ -1,10 +1,10 @@
 ﻿using Amazon.APIGateway;
 using Amazon.APIGateway.Model;
 using System.Diagnostics.CodeAnalysis;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    [ExcludeFromCodeCoverage]
-    public class ApiKeyHelper(IAmazonAPIGateway apiClient) {
+    public class ApiKeyHelper(IAmazonAPIGateway apiClient) : IApiKeyHelper {
 		private readonly Dictionary<string, string> apiKeys = [];
 
 		public async Task<string> ObtenerApiKey(string apiKeyId) {
