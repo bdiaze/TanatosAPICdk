@@ -5,7 +5,7 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    public class RateLimitMiddleware(RequestDelegate next, IRateLimiter rateLimiter, IVariableEntornoHelper variableEntorno) {
+    public class RateLimitMiddleware(RequestDelegate next, IRateLimiter rateLimiter, IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider) {
         private readonly HashSet<string> RATE_LIMITS_SUBS_TO_SKIP = [.. variableEntorno.Obtener("RATE_LIMITS_SUBS_TO_SKIP").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
 
         public async Task InvokeAsync(HttpContext context) {
@@ -55,7 +55,7 @@ namespace TanatosAPI.Helpers {
             context.Response.Headers["X-RateLimit-Remaining"] = result.Remaining.ToString();
 
             if (!result.Allowed) {
-                int retryAfterSeconds = (int)Math.Ceiling(Math.Max(0, (result.RetryAfter - DateTimeOffset.UtcNow).TotalSeconds));
+                int retryAfterSeconds = (int)Math.Ceiling(Math.Max(0, (result.RetryAfter - dateTimeProvider.UtcNow).TotalSeconds));
                 context.Response.Headers.RetryAfter = retryAfterSeconds.ToString();
                 context.Response.Headers["X-RateLimit-Reset"] = result.RetryAfter.ToUnixTimeSeconds().ToString();
                 context.Response.StatusCode = 429;
