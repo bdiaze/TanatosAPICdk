@@ -1,4 +1,7 @@
-﻿namespace TanatosAPI.Entities.Others {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+	[ExcludeFromCodeCoverage]
 	public class EntPerfilEnviarCodigoVerificacion {
 		public string? Nombre { get; set; }
 		public required string CorreoElectronico { get; set; }

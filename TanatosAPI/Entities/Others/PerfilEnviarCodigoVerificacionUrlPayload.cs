@@ -1,7 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others {
-    public class PerfilEnviarCodigoVerificacionUrlPayload {
+	[ExcludeFromCodeCoverage]
+	public class PerfilEnviarCodigoVerificacionUrlPayload {
         [JsonPropertyName("correo")]
         public required string Correo { get; set; }
 

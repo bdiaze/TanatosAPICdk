@@ -1,4 +1,7 @@
-﻿namespace TanatosAPI.Entities.Others {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TanatosAPI.Entities.Others {
+	[ExcludeFromCodeCoverage]
 	public class EntPreguntaFrecuenteCrear {
 		public required string Pregunta { get; set; }
 		public required string Respuesta { get; set; }
