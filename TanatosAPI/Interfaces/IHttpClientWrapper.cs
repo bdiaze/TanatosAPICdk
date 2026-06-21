@@ -6,6 +6,7 @@ namespace TanatosAPI.Interfaces {
 	public interface IKairosHttpClient : IHttpClientWrapper { }
 	public interface IFlowHttpClient : IHttpClientWrapper { }
 	public interface IGoogleRecaptchaHttpClient : IHttpClientWrapper { }
+	public interface IGoogleCredentialHttpClient: IHttpClientWrapper { }
 
 	public interface IHttpClientWrapper {
 		public HttpRequestHeaders DefaultRequestHeaders { get; }

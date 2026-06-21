@@ -4,7 +4,7 @@ using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
 	[ExcludeFromCodeCoverage]
-	public class HttpClientWrapper(HttpClient httpClient) : ICognitoHttpClient, IHermesHttpClient, IKairosHttpClient, IFlowHttpClient, IGoogleRecaptchaHttpClient {
+	public class HttpClientWrapper(HttpClient httpClient) : ICognitoHttpClient, IHermesHttpClient, IKairosHttpClient, IFlowHttpClient, IGoogleRecaptchaHttpClient, IGoogleCredentialHttpClient {
 		public HttpRequestHeaders DefaultRequestHeaders => httpClient.DefaultRequestHeaders;
 
 		public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request) {

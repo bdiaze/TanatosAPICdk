@@ -9,7 +9,7 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    public class GoogleRecaptchaHelper(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper, IGoogleRecaptchaHttpClient httpClient) {
+    public class GoogleRecaptchaHelper(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper, IGoogleCredentialHttpClient credentialHttpClient, IGoogleRecaptchaHttpClient recaptchaHttpClient) {
         private const string GOOGLE_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
         private const string GOOGLE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
@@ -26,7 +26,7 @@ namespace TanatosAPI.Helpers {
                 }
             };
 
-			HttpRequestMessage request = new(HttpMethod.Post, $"https://recaptchaenterprise.googleapis.com/v1/projects/{variableEntorno.Obtener("GOOGLE_RECAPTCHA_PROJECT_ID")}/assessments") {
+			HttpRequestMessage request = new(HttpMethod.Post, "assessments") {
 				Content = new StringContent(
 		            JsonSerializer.Serialize(parametros, AppJsonSerializerContext.Default.GoogleAssessmentParams),
 		            Encoding.UTF8,
@@ -34,7 +34,7 @@ namespace TanatosAPI.Helpers {
 	            )
 			};
 			request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await ObtenerAccessToken());
-			HttpResponseMessage response = await httpClient.SendAsync(request);
+			HttpResponseMessage response = await recaptchaHttpClient.SendAsync(request);
 			response.EnsureSuccessStatusCode();
 
             GoogleAssessmentResponse assessmentResponse = JsonSerializer.Deserialize(
@@ -95,7 +95,7 @@ namespace TanatosAPI.Helpers {
 
             string assertion = new JwtSecurityTokenHandler().CreateEncodedJwt(tokenDescriptor);
 
-            HttpResponseMessage response = await httpClient.PostAsync(googleRecaptchaCredential.TokenUri,
+            HttpResponseMessage response = await credentialHttpClient.PostAsync(string.Empty,
                 new FormUrlEncodedContent([
                     new("grant_type", GOOGLE_GRANT_TYPE),
                     new("assertion", assertion)

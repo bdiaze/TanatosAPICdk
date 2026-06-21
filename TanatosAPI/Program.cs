@@ -11,8 +11,10 @@ using Microsoft.OpenApi;
 using Npgsql;
 using Scalar.AspNetCore;
 using System.Security.Claims;
+using System.Text.Json;
 using TanatosAPI.Business;
 using TanatosAPI.Endpoints;
+using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces;
 using TanatosAPI.Repositories;
@@ -113,7 +115,7 @@ builder.Services.AddHttpClient<ICognitoHttpClient, HttpClientWrapper>((servicePr
 builder.Services.AddHttpClient<IHermesHttpClient, HttpClientWrapper>((serviceProvider, httpClient) => {
 	IVariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<IVariableEntornoHelper>();
 	IApiKeyHelper apiKeyHelper = serviceProvider.GetRequiredService<IApiKeyHelper>();
-	string hermesBaseUrl = variableEntorno.Obtener("HERMES_API_URL");
+	string hermesBaseUrl = variableEntorno.Obtener("HERMES_API_URL").TrimEnd('/') + '/';
 	string hermesApiKey = apiKeyHelper.ObtenerApiKey(variableEntorno.Obtener("HERMES_API_KEY_ID")).GetAwaiter().GetResult();
 	httpClient.DefaultRequestHeaders.Add("x-api-key", hermesApiKey);
 	httpClient.BaseAddress = new Uri(hermesBaseUrl);
@@ -121,17 +123,38 @@ builder.Services.AddHttpClient<IHermesHttpClient, HttpClientWrapper>((servicePro
 builder.Services.AddHttpClient<IKairosHttpClient, HttpClientWrapper>((serviceProvider, httpClient) => {
 	IVariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<IVariableEntornoHelper>();
 	IApiKeyHelper apiKeyHelper = serviceProvider.GetRequiredService<IApiKeyHelper>();
-	string kairosBaseUrl = variableEntorno.Obtener("KAIROS_API_URL");
+	string kairosBaseUrl = variableEntorno.Obtener("KAIROS_API_URL").TrimEnd('/') + '/';
 	string kairosApiKey = apiKeyHelper.ObtenerApiKey(variableEntorno.Obtener("KAIROS_API_KEY_ID")).GetAwaiter().GetResult();
 	httpClient.DefaultRequestHeaders.Add("x-api-key", kairosApiKey);
 	httpClient.BaseAddress = new Uri(kairosBaseUrl);
 });
 builder.Services.AddHttpClient<IFlowHttpClient, HttpClientWrapper>((serviceProvider, httpClient) => {
 	IVariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<IVariableEntornoHelper>();
-	string flowBaseUrl = variableEntorno.Obtener("FLOW_API_URL");
+	string flowBaseUrl = variableEntorno.Obtener("FLOW_API_URL").TrimEnd('/') + '/';
 	httpClient.BaseAddress = new Uri(flowBaseUrl);
 });
-builder.Services.AddHttpClient<IGoogleRecaptchaHttpClient, HttpClientWrapper>();
+builder.Services.AddHttpClient<IGoogleCredentialHttpClient, HttpClientWrapper>((serviceProvider, httpClient) => {
+	IVariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<IVariableEntornoHelper>();
+	SecretManagerHelper secretManagerHelper = serviceProvider.GetRequiredService<SecretManagerHelper>();
+
+	Dictionary<string, string> secretApp = JsonSerializer.Deserialize(
+		secretManagerHelper.ObtenerSecreto(variableEntorno.Obtener("SECRET_ARN_APP")).GetAwaiter().GetResult(),
+		AppJsonSerializerContext.Default.DictionaryStringString
+	) ?? throw new InvalidOperationException("No se encontraron los secretos de la aplicación");
+
+	GoogleRecaptchaCredential googleRecaptchaCredential = JsonSerializer.Deserialize(
+		secretApp["GoogleRecaptchaCredential"],
+		AppJsonSerializerContext.Default.GoogleRecaptchaCredential
+	) ?? throw new InvalidOperationException("No se encontraron las credenciales de Google Recaptcha");
+
+	string credentialBaseUrl = googleRecaptchaCredential.TokenUri.TrimEnd('/') + '/';
+	httpClient.BaseAddress = new Uri(credentialBaseUrl);
+});
+builder.Services.AddHttpClient<IGoogleRecaptchaHttpClient, HttpClientWrapper>((serviceProvider, httpClient) => {
+	IVariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<IVariableEntornoHelper>();
+	string recaptchaBaseUrl = $"https://recaptchaenterprise.googleapis.com/v1/projects/{variableEntorno.Obtener("GOOGLE_RECAPTCHA_PROJECT_ID")}".TrimEnd('/') + '/';
+	httpClient.BaseAddress = new Uri(recaptchaBaseUrl);
+});
 builder.Services.AddScoped<ICognitoHelper, CognitoHelper>();
 builder.Services.AddScoped<HermesHelper>();
 builder.Services.AddScoped<KairosHelper>();
