@@ -10,8 +10,8 @@ using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
     public class GoogleRecaptchaHelper(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper, IGoogleCredentialHttpClient credentialHttpClient, IGoogleRecaptchaHttpClient recaptchaHttpClient) {
-        private const string GOOGLE_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
-        private const string GOOGLE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+        private readonly string GOOGLE_SCOPE = variableEntorno.Obtener("GOOGLE_OAUTH2_SCOPE");
+        private readonly string GOOGLE_GRANT_TYPE = variableEntorno.Obtener("GOOGLE_OAUTH2_GRANT_TYPE");
 
         public async Task<(bool valid, string invalidReason, string action, float score)> ObtenerAssesment(string recaptchaToken, string expectedAction) {
             if (environment.IsDevelopment()) {
@@ -26,7 +26,7 @@ namespace TanatosAPI.Helpers {
                 }
             };
 
-			HttpRequestMessage request = new(HttpMethod.Post, "assessments") {
+			HttpRequestMessage request = new(HttpMethod.Post, $"v1/projects/{variableEntorno.Obtener("GOOGLE_RECAPTCHA_PROJECT_ID")}/assessments") {
 				Content = new StringContent(
 		            JsonSerializer.Serialize(parametros, AppJsonSerializerContext.Default.GoogleAssessmentParams),
 		            Encoding.UTF8,
@@ -95,7 +95,7 @@ namespace TanatosAPI.Helpers {
 
             string assertion = new JwtSecurityTokenHandler().CreateEncodedJwt(tokenDescriptor);
 
-            HttpResponseMessage response = await credentialHttpClient.PostAsync(string.Empty,
+            HttpResponseMessage response = await credentialHttpClient.PostAsync("token",
                 new FormUrlEncodedContent([
                     new("grant_type", GOOGLE_GRANT_TYPE),
                     new("assertion", assertion)

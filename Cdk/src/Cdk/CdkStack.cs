@@ -94,6 +94,11 @@ namespace Cdk
 			string arnParameterKairosApiKeyId = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_KAIROS_API_KEY_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_PARAMETER_KAIROS_API_KEY_ID");
 			string arnParameterNotificacionesLambdaArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_NOTIFICACIONES_LAMBDA_ARN") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_PARAMETER_NOTIFICACIONES_LAMBDA_ARN");
 			string arnParameterNotificacionesEjecucionRoleArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_NOTIFICACIONES_EJECUCION_ROLE_ARN") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_PARAMETER_NOTIFICACIONES_EJECUCION_ROLE_ARN");
+
+			string googleOAuth2ApiUrl = System.Environment.GetEnvironmentVariable("GOOGLE_OAUTH2_API_URL") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_OAUTH2_API_URL");
+			string googleOAuth2Scope = System.Environment.GetEnvironmentVariable("GOOGLE_OAUTH2_SCOPE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_OAUTH2_SCOPE");
+			string googleOAuth2GrantType = System.Environment.GetEnvironmentVariable("GOOGLE_OAUTH2_GRANT_TYPE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_OAUTH2_GRANT_TYPE");
+			string googleRecaptchaApiUrl = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_API_URL") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_RECAPTCHA_API_URL");
 			string googleRecaptchaCredential = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_CREDENTIAL") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_RECAPTCHA_CREDENTIAL");
 			string googleRecaptchaProjectId = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_PROJECT_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_RECAPTCHA_PROJECT_ID");
 			string googleRecaptchaSiteKey = System.Environment.GetEnvironmentVariable("GOOGLE_RECAPTCHA_SITE_KEY") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_RECAPTCHA_SITE_KEY");
@@ -877,7 +882,11 @@ namespace Cdk
 					{ "NOTIFICACIONES_LAMBDA_ARN", parameterNotificacionesLambdaArn.StringValue },
 					{ "NOTIFICACIONES_EJECUCION_ROLE_ARN", parameterNotificacionesEjecucionRoleArn.StringValue },
 					{ "BUCKET_NAME_DOCUMENTOS_ADJUNTOS", bucket.BucketName },
-					{ "SECRET_ARN_APP", secret.SecretArn }, 
+					{ "SECRET_ARN_APP", secret.SecretArn },
+					{ "GOOGLE_OAUTH2_API_URL", googleOAuth2ApiUrl },
+					{ "GOOGLE_OAUTH2_SCOPE", googleOAuth2Scope },
+					{ "GOOGLE_OAUTH2_GRANT_TYPE", googleOAuth2GrantType },
+					{ "GOOGLE_RECAPTCHA_API_URL", googleRecaptchaApiUrl },
 					{ "GOOGLE_RECAPTCHA_PROJECT_ID", googleRecaptchaProjectId },
 					{ "GOOGLE_RECAPTCHA_SITE_KEY", googleRecaptchaSiteKey },
 					{ "DESTINATARIOS_NUEVO_MENSAJE", destinatariosNuevoMensaje },

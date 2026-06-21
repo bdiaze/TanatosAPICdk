@@ -135,24 +135,12 @@ builder.Services.AddHttpClient<IFlowHttpClient, HttpClientWrapper>((serviceProvi
 });
 builder.Services.AddHttpClient<IGoogleCredentialHttpClient, HttpClientWrapper>((serviceProvider, httpClient) => {
 	IVariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<IVariableEntornoHelper>();
-	SecretManagerHelper secretManagerHelper = serviceProvider.GetRequiredService<SecretManagerHelper>();
-
-	Dictionary<string, string> secretApp = JsonSerializer.Deserialize(
-		secretManagerHelper.ObtenerSecreto(variableEntorno.Obtener("SECRET_ARN_APP")).GetAwaiter().GetResult(),
-		AppJsonSerializerContext.Default.DictionaryStringString
-	) ?? throw new InvalidOperationException("No se encontraron los secretos de la aplicación");
-
-	GoogleRecaptchaCredential googleRecaptchaCredential = JsonSerializer.Deserialize(
-		secretApp["GoogleRecaptchaCredential"],
-		AppJsonSerializerContext.Default.GoogleRecaptchaCredential
-	) ?? throw new InvalidOperationException("No se encontraron las credenciales de Google Recaptcha");
-
-	string credentialBaseUrl = googleRecaptchaCredential.TokenUri.TrimEnd('/') + '/';
+	string credentialBaseUrl = variableEntorno.Obtener("GOOGLE_OAUTH2_API_URL").TrimEnd('/') + '/';
 	httpClient.BaseAddress = new Uri(credentialBaseUrl);
 });
 builder.Services.AddHttpClient<IGoogleRecaptchaHttpClient, HttpClientWrapper>((serviceProvider, httpClient) => {
 	IVariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<IVariableEntornoHelper>();
-	string recaptchaBaseUrl = $"https://recaptchaenterprise.googleapis.com/v1/projects/{variableEntorno.Obtener("GOOGLE_RECAPTCHA_PROJECT_ID")}".TrimEnd('/') + '/';
+	string recaptchaBaseUrl = variableEntorno.Obtener("GOOGLE_RECAPTCHA_API_URL").TrimEnd('/') + '/';
 	httpClient.BaseAddress = new Uri(recaptchaBaseUrl);
 });
 builder.Services.AddScoped<ICognitoHelper, CognitoHelper>();
