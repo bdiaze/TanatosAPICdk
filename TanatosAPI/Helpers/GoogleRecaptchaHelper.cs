@@ -9,7 +9,7 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    public class GoogleRecaptchaHelper(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, ISecretManagerHelper secretManagerHelper, IGoogleCredentialHttpClient credentialHttpClient, IGoogleRecaptchaHttpClient recaptchaHttpClient) {
+    public class GoogleRecaptchaHelper(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, ISecretManagerHelper secretManagerHelper, IGoogleCredentialHttpClient credentialHttpClient, IGoogleRecaptchaHttpClient recaptchaHttpClient, IDateTimeProvider dateTimeProvider) {
         private readonly string GOOGLE_SCOPE = variableEntorno.Obtener("GOOGLE_OAUTH2_SCOPE");
         private readonly string GOOGLE_GRANT_TYPE = variableEntorno.Obtener("GOOGLE_OAUTH2_GRANT_TYPE");
 
@@ -61,7 +61,7 @@ namespace TanatosAPI.Helpers {
                 AppJsonSerializerContext.Default.GoogleRecaptchaCredential
             ) ?? throw new InvalidOperationException("No se encontraron las credenciales de Google Recaptcha");
 
-            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            long now = new DateTimeOffset(dateTimeProvider.UtcNow).ToUnixTimeSeconds();
 
             // Se limpia private key...
             string pem = googleRecaptchaCredential.PrivateKey
