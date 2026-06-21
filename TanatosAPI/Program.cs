@@ -105,7 +105,7 @@ builder.Services.AddSingleton<IAmazonKeyManagementService>(sp => {
 
 #region Singleton Helpers
 builder.Services.AddSingleton<IVariableEntornoHelper, VariableEntornoHelper>();
-builder.Services.AddSingleton<SecretManagerHelper>();
+builder.Services.AddSingleton<ISecretManagerHelper, SecretManagerHelper>();
 builder.Services.AddSingleton<IApiKeyHelper, ApiKeyHelper>();
 builder.Services.AddHttpClient<ICognitoHttpClient, HttpClientWrapper>((serviceProvider, httpClient) => {
 	IVariableEntornoHelper variableEntorno = serviceProvider.GetRequiredService<IVariableEntornoHelper>();

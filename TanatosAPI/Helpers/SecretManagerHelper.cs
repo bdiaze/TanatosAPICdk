@@ -1,9 +1,9 @@
 ﻿using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
-using System.Diagnostics.CodeAnalysis;
+using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    public class SecretManagerHelper(IAmazonSecretsManager client) {
+    public class SecretManagerHelper(IAmazonSecretsManager client) : ISecretManagerHelper {
 
         private readonly Dictionary<string, string> secretsValues = [];
 

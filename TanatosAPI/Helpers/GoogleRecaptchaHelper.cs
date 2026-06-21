@@ -9,7 +9,7 @@ using TanatosAPI.Entities.Others;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
-    public class GoogleRecaptchaHelper(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, SecretManagerHelper secretManagerHelper, IGoogleCredentialHttpClient credentialHttpClient, IGoogleRecaptchaHttpClient recaptchaHttpClient) {
+    public class GoogleRecaptchaHelper(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, ISecretManagerHelper secretManagerHelper, IGoogleCredentialHttpClient credentialHttpClient, IGoogleRecaptchaHttpClient recaptchaHttpClient) {
         private readonly string GOOGLE_SCOPE = variableEntorno.Obtener("GOOGLE_OAUTH2_SCOPE");
         private readonly string GOOGLE_GRANT_TYPE = variableEntorno.Obtener("GOOGLE_OAUTH2_GRANT_TYPE");
 
