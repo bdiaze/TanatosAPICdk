@@ -955,6 +955,15 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El próximo vencimiento debe ser una fecha futura.");
 					}
 
+					// Se modifica próximo vencimiento si es una fecha pasada y según periodicidad es posible calcular un próximo vencimiento...
+					if (entrada.Activado && entrada.ProximoVencimiento <= dateTimeProvider.UtcNow && tipoPeriodicidad != null && 
+					   (tipoPeriodicidad.DeltaDias != null || tipoPeriodicidad.DeltaMeses != null || tipoPeriodicidad.DeltaAnnos != null)) {
+						entrada.ProximoVencimiento = historialNormaSuscritaBcp.CalcularVencimientoFuturo(
+							DateTime.SpecifyKind(entrada.ProximoVencimiento!.Value, DateTimeKind.Utc),
+							tipoPeriodicidad
+						);
+					}
+
 					existente.Nombre = entrada.Nombre;
 					existente.Descripcion = entrada.Descripcion;
 					existente.IdTipoPeriodicidad = entrada.IdTipoPeriodicidad;
