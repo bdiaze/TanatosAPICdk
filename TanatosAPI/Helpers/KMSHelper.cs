@@ -1,10 +1,11 @@
 ﻿using Amazon.KeyManagementService;
 using AWS.Cryptography.EncryptionSDK;
 using AWS.Cryptography.MaterialProviders;
-using AwsKmsMrkKeyring_Compile;
+using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Interfaces;
 
 namespace TanatosAPI.Helpers {
+	[ExcludeFromCodeCoverage]
 	public class KMSHelper(IAmazonKeyManagementService kmsClient, IVariableEntornoHelper variableEntorno) : IKMSHelper {
 		private readonly string KMS_KEY_ARN = variableEntorno.Obtener("KMS_KEY_ARN");
 
