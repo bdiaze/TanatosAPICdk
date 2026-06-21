@@ -101,6 +101,33 @@ namespace TanatosAPI.Test.Helpers {
 		}
 
 		[Fact]
+		public async Task ObtenerAssesment_ProductionValidoSinCampos() {
+			env.EnvironmentName = Environments.Production;
+			variableEntorno.Obtener("GOOGLE_RECAPTCHA_SITE_KEY").Returns("google-recaptcha-site-key-test");
+			variableEntorno.Obtener("GOOGLE_RECAPTCHA_PROJECT_ID").Returns("google-recaptcha-project-id-test");
+
+			recaptchaHttpClient.SendAsync(Arg.Any<HttpRequestMessage>()).Returns(new HttpResponseMessage {
+				StatusCode = HttpStatusCode.OK,
+				Content = new StringContent(
+					JsonSerializer.Serialize(new GoogleAssessmentResponse {
+						TokenProperties = null,
+						RiskAnalysis = null
+					}),
+					Encoding.UTF8,
+					"application/json"
+				)
+			});
+
+			(bool valid, string invalidReason, string action, float score) = await googleRecaptchaHelper.ObtenerAssesment("recaptcha-token-test", "action-test");
+			Assert.False(valid);
+			Assert.Empty(invalidReason);
+			Assert.Empty(action);
+			Assert.Equal(0, score);
+			await credentialHttpClient.Received(1).PostAsync("token", Arg.Any<FormUrlEncodedContent>());
+			await recaptchaHttpClient.Received(1).SendAsync(Arg.Any<HttpRequestMessage>());
+		}
+
+		[Fact]
 		public async Task ObtenerAssesment_ProductionStatusCodeError() {
 			env.EnvironmentName = Environments.Production;
 			variableEntorno.Obtener("GOOGLE_RECAPTCHA_SITE_KEY").Returns("google-recaptcha-site-key-test");
@@ -127,6 +154,55 @@ namespace TanatosAPI.Test.Helpers {
 
 			await Assert.ThrowsAsync<HttpRequestException>(() => googleRecaptchaHelper.ObtenerAssesment("recaptcha-token-test", "action-test"));
 			await credentialHttpClient.Received(1).PostAsync("token", Arg.Any<FormUrlEncodedContent>());
+			await recaptchaHttpClient.DidNotReceive().SendAsync(Arg.Any<HttpRequestMessage>());
+		}
+
+		[Fact]
+		public async Task ObtenerAssesment_ProductionAuthenticationNoAccessToken() {
+			env.EnvironmentName = Environments.Production;
+			variableEntorno.Obtener("GOOGLE_RECAPTCHA_SITE_KEY").Returns("google-recaptcha-site-key-test");
+			variableEntorno.Obtener("GOOGLE_RECAPTCHA_PROJECT_ID").Returns("google-recaptcha-project-id-test");
+
+			credentialHttpClient.PostAsync("token", Arg.Any<FormUrlEncodedContent>()).Returns(new HttpResponseMessage {
+				StatusCode = HttpStatusCode.OK,
+				Content = new StringContent(
+					JsonSerializer.Serialize((GoogleTokenResponse?)null),
+					Encoding.UTF8,
+					"application/json"
+				)
+			});
+
+			await Assert.ThrowsAsync<InvalidOperationException>(() => googleRecaptchaHelper.ObtenerAssesment("recaptcha-token-test", "action-test"));
+			await credentialHttpClient.Received(1).PostAsync("token", Arg.Any<FormUrlEncodedContent>());
+			await recaptchaHttpClient.DidNotReceive().SendAsync(Arg.Any<HttpRequestMessage>());
+		}
+
+		[Fact]
+		public async Task ObtenerAssesment_ProductionAuthenticationNoGoogleRecaptchaCredential() {
+			env.EnvironmentName = Environments.Production;
+			variableEntorno.Obtener("GOOGLE_RECAPTCHA_SITE_KEY").Returns("google-recaptcha-site-key-test");
+			variableEntorno.Obtener("GOOGLE_RECAPTCHA_PROJECT_ID").Returns("google-recaptcha-project-id-test");
+
+			Dictionary<string, string> secretDummy = new() {
+				["GoogleRecaptchaCredential"] = "null"
+			};
+			secretManagerHelper.ObtenerSecreto("SecretArnAppTest").Returns(JsonSerializer.Serialize(secretDummy));
+
+			await Assert.ThrowsAsync<InvalidOperationException>(() => googleRecaptchaHelper.ObtenerAssesment("recaptcha-token-test", "action-test"));
+			await credentialHttpClient.DidNotReceive().PostAsync("token", Arg.Any<FormUrlEncodedContent>());
+			await recaptchaHttpClient.DidNotReceive().SendAsync(Arg.Any<HttpRequestMessage>());
+		}
+
+		[Fact]
+		public async Task ObtenerAssesment_ProductionAuthenticationNoSecret() {
+			env.EnvironmentName = Environments.Production;
+			variableEntorno.Obtener("GOOGLE_RECAPTCHA_SITE_KEY").Returns("google-recaptcha-site-key-test");
+			variableEntorno.Obtener("GOOGLE_RECAPTCHA_PROJECT_ID").Returns("google-recaptcha-project-id-test");
+
+			secretManagerHelper.ObtenerSecreto("SecretArnAppTest").Returns(JsonSerializer.Serialize((Dictionary<string, string>?)null));
+
+			await Assert.ThrowsAsync<InvalidOperationException>(() => googleRecaptchaHelper.ObtenerAssesment("recaptcha-token-test", "action-test"));
+			await credentialHttpClient.DidNotReceive().PostAsync("token", Arg.Any<FormUrlEncodedContent>());
 			await recaptchaHttpClient.DidNotReceive().SendAsync(Arg.Any<HttpRequestMessage>());
 		}
 
