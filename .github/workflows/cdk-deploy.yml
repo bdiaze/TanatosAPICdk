@@ -16,10 +16,15 @@ jobs:
             APP_NAME: ${{ vars.APP_NAME }}
             ACCOUNT_AWS: ${{ vars.ACCOUNT_AWS }}
             REGION_AWS: ${{ vars.REGION_AWS }}
+            GLOBAL_SERVICES_REGION_AWS: ${{ vars.GLOBAL_SERVICES_REGION_AWS }}
             
-            COGNITO_DOMAIN_NAME: ${{ vars.COGNITO_DOMAIN_NAME }}
+            CERT_DOMAIN_NAME: ${{ vars.CERT_DOMAIN_NAME }}
+            CERT_ALTERNATIVE_NAMES: ${{ vars.CERT_ALTERNATIVE_NAMES }}
+            MAIL_FROM_DOMAIN: ${{ vars.MAIL_FROM_DOMAIN }}
+            
+            # COGNITO_DOMAIN_NAME: ${{ vars.COGNITO_DOMAIN_NAME }}
             COGNITO_CUSTOM_DOMAIN: ${{ vars.COGNITO_CUSTOM_DOMAIN }}
-            ARN_COGNITO_CERTIFICATE: ${{ vars.ARN_COGNITO_CERTIFICATE }}
+            # ARN_COGNITO_CERTIFICATE: ${{ vars.ARN_COGNITO_CERTIFICATE }}
             
             CALLBACK_URLS: ${{ vars.CALLBACK_URLS }}
             LOGOUT_URLS: ${{ vars.LOGOUT_URLS }}
