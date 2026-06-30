@@ -37,11 +37,6 @@ namespace TanatosAPI.Endpoints {
 						entrada.RedirectUri
 					);
 
-					string apiMapping = $"/{variableEntorno.Obtener("API_GATEWAY_MAPPING_KEY")}";
-					if (environment.IsDevelopment()) {
-						apiMapping = "";
-					}
-
 					// Se revisa si request llega desde localhost para setear cookies como SameSiteMode.None...
 					bool sameSiteStrict = true;
 					if (httpContext.Request.Headers.TryGetValue("Origin", out StringValues originHeader) && Uri.TryCreate(originHeader.ToString(), UriKind.Absolute, out Uri? uri) && uri.IsLoopback) {
@@ -49,7 +44,7 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					httpResponse.Cookies.Append(Constant.CONST_REFRESH_TOKEN, refreshToken, new CookieOptions {
-						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
+						Path = $"/public/Auth/RefreshAccessToken",
 						IsEssential = true,
 						Expires = new(now.AddMinutes(refreshExpiresIn), TimeSpan.Zero),
 						HttpOnly = true,
@@ -103,19 +98,13 @@ namespace TanatosAPI.Endpoints {
 
 					return Results.Ok(retorno);
 				} catch (ErrorValidacion ex) {
-					// Si no se logra efectuar el refresh, se manda request con limpieza de cookies...
-					string apiMapping = $"/{variableEntorno.Obtener("API_GATEWAY_MAPPING_KEY")}";
-					if (environment.IsDevelopment()) {
-						apiMapping = "";
-					}
-
 					bool sameSiteStrict = true;
 					if (httpContext.Request.Headers.TryGetValue("Origin", out StringValues originHeader) && Uri.TryCreate(originHeader.ToString(), UriKind.Absolute, out Uri? uri) && uri.IsLoopback) {
 						sameSiteStrict = false;
 					}
 
 					httpResponse.Cookies.Delete(Constant.CONST_REFRESH_TOKEN, new CookieOptions {
-						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
+						Path = $"/public/Auth/RefreshAccessToken",
 						IsEssential = true,
 						HttpOnly = true,
 						Secure = true,
@@ -143,11 +132,6 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string apiMapping = $"/{variableEntorno.Obtener("API_GATEWAY_MAPPING_KEY")}";
-					if (environment.IsDevelopment()) {
-						apiMapping = "";
-					}
-
 					// Se revisa si request llega desde localhost para setear cookies como SameSiteMode.None...
 					bool sameSiteStrict = true;
 					if (httpContext.Request.Headers.TryGetValue("Origin", out StringValues originHeader) && Uri.TryCreate(originHeader.ToString(), UriKind.Absolute, out Uri? uri) && uri.IsLoopback) {
@@ -155,7 +139,7 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					httpResponse.Cookies.Delete(Constant.CONST_REFRESH_TOKEN, new CookieOptions {
-						Path = $"{apiMapping}/public/Auth/RefreshAccessToken",
+						Path = $"/public/Auth/RefreshAccessToken",
 						IsEssential = true,
 						HttpOnly = true,
 						Secure = true,

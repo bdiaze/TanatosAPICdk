@@ -12,6 +12,7 @@ using Amazon.CDK.AWS.Route53;
 using Amazon.CDK.AWS.Route53.Targets;
 using Amazon.CDK.AWS.S3;
 using Amazon.CDK.AWS.SecretsManager;
+using Amazon.CDK.AWS.SES;
 using Amazon.CDK.AWS.SSM;
 using Amazon.CDK.AwsApigatewayv2Authorizers;
 using Amazon.CDK.AwsApigatewayv2Integrations;
@@ -30,7 +31,7 @@ namespace Cdk
 {
     public class CdkStack : Stack
     {
-        internal CdkStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
+        internal CdkStack(Construct scope, string id, CdkStackProps props = null) : base(scope, id, props)
         {
 			const string CONST_APP_NAME = "APP_NAME";
 			const string CONST_SECRET_ARN = "SECRET_ARN_CONNECTION_STRING";
@@ -52,11 +53,14 @@ namespace Cdk
 			string appName = System.Environment.GetEnvironmentVariable(CONST_APP_NAME) ?? throw new InvalidOperationException($"No se ha configurado la variable de entorno {CONST_APP_NAME}");
 			string regionAws = System.Environment.GetEnvironmentVariable("REGION_AWS") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno REGION_AWS");
 
-			// Para cognito...
-			string cognitoDomainName = System.Environment.GetEnvironmentVariable("COGNITO_DOMAIN_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno COGNITO_DOMAIN_NAME");
-			string cognitoCustomDomain = System.Environment.GetEnvironmentVariable("COGNITO_CUSTOM_DOMAIN") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno COGNITO_CUSTOM_DOMAIN");
-			string arnCognitoCertificate = System.Environment.GetEnvironmentVariable("ARN_COGNITO_CERTIFICATE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_COGNITO_CERTIFICATE");
+			// Para certificado y SES...
+			string certDomainName = System.Environment.GetEnvironmentVariable("CERT_DOMAIN_NAME") ?? throw new ArgumentNullException("CERT_DOMAIN_NAME");
+			string certAlternativeNames = System.Environment.GetEnvironmentVariable("CERT_ALTERNATIVE_NAMES") ?? throw new ArgumentNullException("CERT_ALTERNATIVE_NAMES");
+			string mailFromDomain = System.Environment.GetEnvironmentVariable("MAIL_FROM_DOMAIN") ?? throw new ArgumentNullException("MAIL_FROM_DOMAIN");
 
+			// Para cognito...
+			string cognitoCustomDomain = System.Environment.GetEnvironmentVariable("COGNITO_CUSTOM_DOMAIN") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno COGNITO_CUSTOM_DOMAIN");
+			
 			string[] callbackUrls = System.Environment.GetEnvironmentVariable("CALLBACK_URLS").Split(",") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno CALLBACK_URLS");
 			string[] logoutUrls = System.Environment.GetEnvironmentVariable("LOGOUT_URLS").Split(",") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno LOGOUT_URLS");
 			string accessTokenValidityMinutes = System.Environment.GetEnvironmentVariable("ACCESS_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ACCESS_TOKEN_VALIDITY_MINUTES");
@@ -76,7 +80,6 @@ namespace Cdk
             string timeout = System.Environment.GetEnvironmentVariable("TIMEOUT") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno TIMEOUT");
             string memorySize = System.Environment.GetEnvironmentVariable("MEMORY_SIZE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno MEMORY_SIZE");
             string domainName = System.Environment.GetEnvironmentVariable("DOMAIN_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno DOMAIN_NAME");
-            string apiMappingKey = System.Environment.GetEnvironmentVariable("API_MAPPING_KEY") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno API_MAPPING_KEY");
             string vpcId = System.Environment.GetEnvironmentVariable("VPC_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno VPC_ID");
             string privateWithInternetId1 = System.Environment.GetEnvironmentVariable("PRIVATE_WITH_INTERNET_ID_1") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno PRIVATE_WITH_INTERNET_ID_1");
             string privateWithInternetId2 = System.Environment.GetEnvironmentVariable("PRIVATE_WITH_INTERNET_ID_2") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno PRIVATE_WITH_INTERNET_ID_2");
@@ -116,16 +119,49 @@ namespace Cdk
             string initialCreationPublishZip = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_PUBLISH_ZIP") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno INITIAL_CREATION_PUBLISH_ZIP");
             string migrationScript = System.Environment.GetEnvironmentVariable("MIGRATION_SCRIPT") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno MIGRATION_SCRIPT");
 
-            // Se obtiene la VPC y subnets...
-            IVpc vpc = Vpc.FromLookup(this, $"{appName}Vpc", new VpcLookupOptions {
+			#region Certificado, Dominio API Gateway y SES
+			// Se crea certificado...		
+			Certificate certificate = new(this, $"{appName}Certificate", new CertificateProps {
+				CertificateName = $"{appName}Certificate",
+				DomainName = certDomainName,
+				SubjectAlternativeNames = certAlternativeNames.Split(","),
+				Validation = CertificateValidation.FromDns(props.HostedZone),
+			});
+
+			// Se crea el dominio al API Gateway
+			DomainName apiGatewayDomain = new(this, $"{appName}DomainName", new DomainNameProps {
+				DomainName = domainName,
+				Certificate = certificate,
+				EndpointType = EndpointType.REGIONAL,
+			});
+
+			// Se crea el ARecord para el subdominio del API Gateway
+			_ = new ARecord(this, $"{appName}ApiGatewayARecord", new ARecordProps {
+				Zone = props.HostedZone,
+				RecordName = domainName,
+				Target = RecordTarget.FromAlias(new ApiGatewayv2DomainProperties(apiGatewayDomain.RegionalDomainName, apiGatewayDomain.RegionalHostedZoneId))
+			});
+
+			IPublicHostedZone publicHostedZone = PublicHostedZone.FromPublicHostedZoneAttributes(this, $"{appName}PublicHostedZone", new PublicHostedZoneAttributes {
+				ZoneName = props.HostedZone.ZoneName,
+				HostedZoneId = props.HostedZone.HostedZoneId,
+			});
+
+			// Se crea email identity para envío de correos...
+			EmailIdentity emailIdentity = new(this, $"{appName}EmailIdentity", new EmailIdentityProps {
+				Identity = Identity.PublicHostedZone(publicHostedZone),
+				MailFromDomain = mailFromDomain,
+				MailFromBehaviorOnMxFailure = MailFromBehaviorOnMxFailure.USE_DEFAULT_VALUE,
+			});
+			#endregion
+
+			// Se obtiene la VPC y subnets...
+			IVpc vpc = Vpc.FromLookup(this, $"{appName}Vpc", new VpcLookupOptions {
                 VpcId = vpcId
             });
 
             ISubnet subnet1 = Subnet.FromSubnetId(this, $"{appName}Subnet1", privateWithInternetId1);
             ISubnet subnet2 = Subnet.FromSubnetId(this, $"{appName}Subnet2", privateWithInternetId2);
-
-			// Se busca certificado de cognito creado anteriormente...
-			ICertificate certificate = Certificate.FromCertificateArn(this, $"{appName}CognitoCertificate", arnCognitoCertificate);
 
 			// Se busca Lambda Function para procesar PostConfirmation...
 			IStringParameter cognitoTriggerLambdaArnStringParameter =  StringParameter.FromStringParameterArn(this, $"{appName}CognitoTriggerLambdaArnStringParameter", arnParameterCognitoTriggerLambdaArn);
@@ -197,11 +233,11 @@ namespace Cdk
 				Description = $"Administrador de la aplicacion {appName}",
 			});
 
-			UserPoolDomain domain = new(this, $"{appName}CognitoDomain2", new UserPoolDomainProps {
+			UserPoolDomain userPoolDomain = new(this, $"{appName}CognitoDomain", new UserPoolDomainProps {
 				UserPool = userPool,
 				CustomDomain = new CustomDomainOptions {
 					DomainName = cognitoCustomDomain,
-					Certificate = certificate,
+					Certificate = props.Certificate,
 				},
 				ManagedLoginVersion = ManagedLoginVersion.NEWER_MANAGED_LOGIN,
 			});
@@ -651,24 +687,19 @@ namespace Cdk
 				}).ToArray()
 			});
 
-			IHostedZone hostedZone = HostedZone.FromLookup(this, $"{appName}HostedZone", new HostedZoneProviderProps {
-				DomainName = cognitoDomainName
-			});
-
 			// Se crea record en hosted zone...
 			_ = new ARecord(this, $"{appName}LoginARecord", new ARecordProps {
-				Zone = hostedZone,
+				Zone = props.HostedZone,
 				RecordName = cognitoCustomDomain,
-				Target = RecordTarget.FromAlias(new UserPoolDomainTarget(domain)),
+				Target = RecordTarget.FromAlias(new UserPoolDomainTarget(userPoolDomain)),
 			});
-
 
             // Se configuran parámetros para ser rescatados por consumidores...
             Secret secret = new(this, $"{appName}Secret", new SecretProps {
                 SecretName = $"/{appName}",
                 Description = $"Secretos de la aplicacion de {appName}",
                 SecretObjectValue = new Dictionary<string, SecretValue> {
-                    { "CognitoBaseUrl", SecretValue.UnsafePlainText(domain.BaseUrl()) },
+                    { "CognitoBaseUrl", SecretValue.UnsafePlainText(userPoolDomain.BaseUrl()) },
                     { "NotificacionesUserPoolClientId", SecretValue.UnsafePlainText(notificacionesUserPoolClient.UserPoolClientId) },
                     { "NotificacionesUserPoolClientSecret", notificacionesUserPoolClient.UserPoolClientSecret },
 					{ "CognitoTriggerUserPoolClientId", SecretValue.UnsafePlainText(cognitoTriggerUserPoolClient.UserPoolClientId) },
@@ -678,7 +709,6 @@ namespace Cdk
 					{ "FlowSecretKey", SecretValue.UnsafePlainText(flowSecretKey) },
 				},
             });
-
 			#endregion
 
 			#region S3
@@ -866,12 +896,11 @@ namespace Cdk
                     { CONST_APP_NAME, appName },
                     { CONST_SECRET_ARN, secretArnConnectionString },
 					{ "COGNITO_REGION", regionAws },
-					{ "COGNITO_BASE_URL", domain.BaseUrl() },
+					{ "COGNITO_BASE_URL", userPoolDomain.BaseUrl() },
 					{ "COGNITO_USER_POOL_ID", userPool.UserPoolId },
 					{ "COGNITO_USER_POOL_CLIENT_ID", userPoolClient.UserPoolClientId },
 					{ "COGNITO_CALLBACK_URLS", string.Join(',', callbackUrls) },
 					{ "COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES", refreshTokenValidityMinutes },
-					{ "API_GATEWAY_MAPPING_KEY", apiMappingKey },
 					{ "HERMES_API_URL", parameterHermesApiUrl.StringValue },
 					{ "HERMES_API_KEY_ID", parameterHermesApiKeyId.StringValue },
 					{ "HERMES_DE_NOMBRE", hermesDeNombre },
@@ -981,7 +1010,6 @@ namespace Cdk
             // Creación de la CfnApiMapping para el API Gateway...
 			CfnApiMapping apiMapping = new(this, $"{appName}APIApiMapping", new CfnApiMappingProps {
                 DomainName = domainName,
-                ApiMappingKey = apiMappingKey,
                 ApiId = lambdaHttpApi.ApiId,
 				Stage = stage.StageName,
             });
@@ -1000,7 +1028,7 @@ namespace Cdk
             _ = new StringParameter(this, $"{appName}StringParameterApiUrl", new StringParameterProps {
                 ParameterName = $"/{appName}/Api/Url",
                 Description = $"API URL de la aplicacion {appName}",
-                StringValue = $"https://{apiMapping.DomainName}/{apiMapping.ApiMappingKey}/",
+                StringValue = $"https://{apiMapping.DomainName}/{(!string.IsNullOrWhiteSpace(apiMapping.ApiMappingKey) ? $"{apiMapping.ApiMappingKey}/" : "")}",
                 Tier = ParameterTier.STANDARD,
             });
             #endregion
