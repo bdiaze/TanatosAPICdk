@@ -233,7 +233,7 @@ namespace Cdk
 				Description = $"Administrador de la aplicacion {appName}",
 			});
 
-			UserPoolDomain userPoolDomain = new(this, $"{appName}CognitoDomain", new UserPoolDomainProps {
+			UserPoolDomain userPoolDomain = new(this, $"{appName}CognitoDomain2", new UserPoolDomainProps {
 				UserPool = userPool,
 				CustomDomain = new CustomDomainOptions {
 					DomainName = cognitoCustomDomain,
