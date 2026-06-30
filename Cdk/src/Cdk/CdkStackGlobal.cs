@@ -31,7 +31,6 @@ namespace Cdk {
 			});
 
 			// Se crea registro MX para integración con Google Workspace...
-			/*
 			_ = new MxRecord(this, $"{appName}MXRecord", new MxRecordProps {
 				Zone = HostedZone,
 				RecordName = HostedZone.ZoneName,
@@ -40,7 +39,6 @@ namespace Cdk {
 					Priority = 1
 				}]
 			});
-			*/
 
 			// Se crea registro DKIM para Google Workspace...
 			/*
