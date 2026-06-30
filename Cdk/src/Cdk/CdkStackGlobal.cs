@@ -17,6 +17,7 @@ namespace Cdk {
 			string certAlternativeNames = System.Environment.GetEnvironmentVariable("CERT_ALTERNATIVE_NAMES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno CERT_ALTERNATIVE_NAMES");
 			string googleSiteVerification = System.Environment.GetEnvironmentVariable("GOOGLE_SITE_VERIFICATION") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_SITE_VERIFICATION");
 			string googleDkimValue = System.Environment.GetEnvironmentVariable("GOOGLE_DKIM_VALUE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_DKIM_VALUE");
+			string dmarcValue = System.Environment.GetEnvironmentVariable("DMARC_VALUE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno DMARC_VALUE");
 
 			// Se crea hosted zone...
 			HostedZone = new(this, $"{appName}HostedZone", new HostedZoneProps {
@@ -49,13 +50,11 @@ namespace Cdk {
 			});
 
 			// Se configura DMARC para el dominio...
-			/*
 			_ = new TxtRecord(this, $"{appName}DMARCTXTRecord", new TxtRecordProps {
 				Zone = HostedZone,
 				RecordName = $"_dmarc.{HostedZone.ZoneName}",
 				Values = [dmarcValue]
 			});
-			*/
 
 			// Se crea certificado para custom domain...
 			Certificate = new(this, $"{appName}Certificate", new CertificateProps {
