@@ -1014,6 +1014,7 @@ namespace Cdk
 				Stage = stage.StageName,
             });
 			apiMapping.Node.AddDependency(stage);
+			apiMapping.Node.AddDependency(apiGatewayDomain);
 
 			// Se configura permisos para la ejecucíon de la Lambda desde el API Gateway...
 			ArnPrincipal arnPrincipal = new("apigateway.amazonaws.com");
