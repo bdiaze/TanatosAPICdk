@@ -12,9 +12,9 @@ namespace Cdk {
 		public Certificate Certificate { get; set; }
 
 		internal CdkStackGlobal(Construct scope, string id, IStackProps props = null) : base(scope, id, props) {
-			string appName = System.Environment.GetEnvironmentVariable("APP_NAME") ?? throw new ArgumentNullException("APP_NAME");
-			string certDomainName = System.Environment.GetEnvironmentVariable("CERT_DOMAIN_NAME") ?? throw new ArgumentNullException("CERT_DOMAIN_NAME");
-			string certAlternativeNames = System.Environment.GetEnvironmentVariable("CERT_ALTERNATIVE_NAMES") ?? throw new ArgumentNullException("CERT_ALTERNATIVE_NAMES");
+			string appName = System.Environment.GetEnvironmentVariable("APP_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno APP_NAME");
+			string certDomainName = System.Environment.GetEnvironmentVariable("CERT_DOMAIN_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno CERT_DOMAIN_NAME");
+			string certAlternativeNames = System.Environment.GetEnvironmentVariable("CERT_ALTERNATIVE_NAMES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno CERT_ALTERNATIVE_NAMES");
 
 			// Se crea hosted zone...
 			HostedZone = new(this, $"{appName}HostedZone", new HostedZoneProps {

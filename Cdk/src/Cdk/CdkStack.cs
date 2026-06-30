@@ -80,7 +80,6 @@ namespace Cdk
             string timeout = System.Environment.GetEnvironmentVariable("TIMEOUT") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno TIMEOUT");
             string memorySize = System.Environment.GetEnvironmentVariable("MEMORY_SIZE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno MEMORY_SIZE");
             string domainName = System.Environment.GetEnvironmentVariable("DOMAIN_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno DOMAIN_NAME");
-            string apiMappingKey = System.Environment.GetEnvironmentVariable("API_MAPPING_KEY") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno API_MAPPING_KEY");
             string vpcId = System.Environment.GetEnvironmentVariable("VPC_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno VPC_ID");
             string privateWithInternetId1 = System.Environment.GetEnvironmentVariable("PRIVATE_WITH_INTERNET_ID_1") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno PRIVATE_WITH_INTERNET_ID_1");
             string privateWithInternetId2 = System.Environment.GetEnvironmentVariable("PRIVATE_WITH_INTERNET_ID_2") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno PRIVATE_WITH_INTERNET_ID_2");
@@ -902,7 +901,6 @@ namespace Cdk
 					{ "COGNITO_USER_POOL_CLIENT_ID", userPoolClient.UserPoolClientId },
 					{ "COGNITO_CALLBACK_URLS", string.Join(',', callbackUrls) },
 					{ "COGNITO_REFRESH_TOKEN_VALIDITY_MINUTES", refreshTokenValidityMinutes },
-					{ "API_GATEWAY_MAPPING_KEY", apiMappingKey },
 					{ "HERMES_API_URL", parameterHermesApiUrl.StringValue },
 					{ "HERMES_API_KEY_ID", parameterHermesApiKeyId.StringValue },
 					{ "HERMES_DE_NOMBRE", hermesDeNombre },
@@ -1012,7 +1010,6 @@ namespace Cdk
             // Creación de la CfnApiMapping para el API Gateway...
 			CfnApiMapping apiMapping = new(this, $"{appName}APIApiMapping", new CfnApiMappingProps {
                 DomainName = domainName,
-                ApiMappingKey = apiMappingKey,
                 ApiId = lambdaHttpApi.ApiId,
 				Stage = stage.StageName,
             });

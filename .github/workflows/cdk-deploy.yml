@@ -22,10 +22,7 @@ jobs:
             CERT_ALTERNATIVE_NAMES: ${{ vars.CERT_ALTERNATIVE_NAMES }}
             MAIL_FROM_DOMAIN: ${{ vars.MAIL_FROM_DOMAIN }}
             
-            # COGNITO_DOMAIN_NAME: ${{ vars.COGNITO_DOMAIN_NAME }}
-            COGNITO_CUSTOM_DOMAIN: ${{ vars.COGNITO_CUSTOM_DOMAIN }}
-            # ARN_COGNITO_CERTIFICATE: ${{ vars.ARN_COGNITO_CERTIFICATE }}
-            
+            COGNITO_CUSTOM_DOMAIN: ${{ vars.COGNITO_CUSTOM_DOMAIN }}            
             CALLBACK_URLS: ${{ vars.CALLBACK_URLS }}
             LOGOUT_URLS: ${{ vars.LOGOUT_URLS }}
             ACCESS_TOKEN_VALIDITY_MINUTES: ${{ vars.ACCESS_TOKEN_VALIDITY_MINUTES }}
@@ -42,7 +39,6 @@ jobs:
             TIMEOUT: ${{ vars.TIMEOUT }}
             MEMORY_SIZE: ${{ vars.MEMORY_SIZE }}
             DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
-            API_MAPPING_KEY: ${{ vars.API_MAPPING_KEY }}
             VPC_ID: ${{ vars.VPC_ID }}
             PRIVATE_WITH_INTERNET_ID_1: ${{ vars.PRIVATE_WITH_INTERNET_ID_1 }}
             PRIVATE_WITH_INTERNET_ID_2: ${{ vars.PRIVATE_WITH_INTERNET_ID_2 }}
