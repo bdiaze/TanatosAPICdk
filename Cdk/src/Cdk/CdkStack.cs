@@ -233,6 +233,7 @@ namespace Cdk
 				Description = $"Administrador de la aplicacion {appName}",
 			});
 
+			/*
 			UserPoolDomain userPoolDomain = new(this, $"{appName}CognitoDomain2", new UserPoolDomainProps {
 				UserPool = userPool,
 				CustomDomain = new CustomDomainOptions {
@@ -241,6 +242,7 @@ namespace Cdk
 				},
 				ManagedLoginVersion = ManagedLoginVersion.NEWER_MANAGED_LOGIN,
 			});
+			*/
 
 			// Se crean scopes y resource server...
 			// Formato: <entidad>.<accion>.<alcance>
@@ -688,18 +690,20 @@ namespace Cdk
 			});
 
 			// Se crea record en hosted zone...
+			/*
 			_ = new ARecord(this, $"{appName}LoginARecord", new ARecordProps {
 				Zone = props.HostedZone,
 				RecordName = cognitoCustomDomain,
 				Target = RecordTarget.FromAlias(new UserPoolDomainTarget(userPoolDomain)),
 			});
+			*/
 
             // Se configuran parámetros para ser rescatados por consumidores...
             Secret secret = new(this, $"{appName}Secret", new SecretProps {
                 SecretName = $"/{appName}",
                 Description = $"Secretos de la aplicacion de {appName}",
                 SecretObjectValue = new Dictionary<string, SecretValue> {
-                    { "CognitoBaseUrl", SecretValue.UnsafePlainText(userPoolDomain.BaseUrl()) },
+                    // { "CognitoBaseUrl", SecretValue.UnsafePlainText(userPoolDomain.BaseUrl()) },
                     { "NotificacionesUserPoolClientId", SecretValue.UnsafePlainText(notificacionesUserPoolClient.UserPoolClientId) },
                     { "NotificacionesUserPoolClientSecret", notificacionesUserPoolClient.UserPoolClientSecret },
 					{ "CognitoTriggerUserPoolClientId", SecretValue.UnsafePlainText(cognitoTriggerUserPoolClient.UserPoolClientId) },
@@ -896,7 +900,7 @@ namespace Cdk
                     { CONST_APP_NAME, appName },
                     { CONST_SECRET_ARN, secretArnConnectionString },
 					{ "COGNITO_REGION", regionAws },
-					{ "COGNITO_BASE_URL", userPoolDomain.BaseUrl() },
+					// { "COGNITO_BASE_URL", userPoolDomain.BaseUrl() },
 					{ "COGNITO_USER_POOL_ID", userPool.UserPoolId },
 					{ "COGNITO_USER_POOL_CLIENT_ID", userPoolClient.UserPoolClientId },
 					{ "COGNITO_CALLBACK_URLS", string.Join(',', callbackUrls) },

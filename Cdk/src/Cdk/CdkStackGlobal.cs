@@ -15,6 +15,7 @@ namespace Cdk {
 			string appName = System.Environment.GetEnvironmentVariable("APP_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno APP_NAME");
 			string certDomainName = System.Environment.GetEnvironmentVariable("CERT_DOMAIN_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno CERT_DOMAIN_NAME");
 			string certAlternativeNames = System.Environment.GetEnvironmentVariable("CERT_ALTERNATIVE_NAMES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno CERT_ALTERNATIVE_NAMES");
+			string googleSiteVerification = System.Environment.GetEnvironmentVariable("GOOGLE_SITE_VERIFICATION") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_SITE_VERIFICATION");
 
 			// Se crea hosted zone...
 			HostedZone = new(this, $"{appName}HostedZone", new HostedZoneProps {
@@ -23,13 +24,11 @@ namespace Cdk {
 			});
 
 			// Se crea registro TXT para verificación de dominio en Google y SPF1 de MAIL...
-			/*
 			_ = new TxtRecord(this, $"{appName}TXTRecord", new TxtRecordProps {
 				Zone = HostedZone,
 				RecordName = HostedZone.ZoneName,
 				Values = [googleSiteVerification, "v=spf1 include:_spf.google.com include:amazonses.com ~all"],
 			});
-			*/
 
 			// Se crea registro MX para integración con Google Workspace...
 			/*

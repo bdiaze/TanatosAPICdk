@@ -21,6 +21,7 @@ jobs:
             CERT_DOMAIN_NAME: ${{ vars.CERT_DOMAIN_NAME }}
             CERT_ALTERNATIVE_NAMES: ${{ vars.CERT_ALTERNATIVE_NAMES }}
             MAIL_FROM_DOMAIN: ${{ vars.MAIL_FROM_DOMAIN }}
+            GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
             
             COGNITO_CUSTOM_DOMAIN: ${{ vars.COGNITO_CUSTOM_DOMAIN }}            
             CALLBACK_URLS: ${{ vars.CALLBACK_URLS }}
