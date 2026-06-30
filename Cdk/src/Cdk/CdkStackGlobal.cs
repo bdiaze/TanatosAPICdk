@@ -16,6 +16,7 @@ namespace Cdk {
 			string certDomainName = System.Environment.GetEnvironmentVariable("CERT_DOMAIN_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno CERT_DOMAIN_NAME");
 			string certAlternativeNames = System.Environment.GetEnvironmentVariable("CERT_ALTERNATIVE_NAMES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno CERT_ALTERNATIVE_NAMES");
 			string googleSiteVerification = System.Environment.GetEnvironmentVariable("GOOGLE_SITE_VERIFICATION") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_SITE_VERIFICATION");
+			string googleDkimValue = System.Environment.GetEnvironmentVariable("GOOGLE_DKIM_VALUE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_DKIM_VALUE");
 
 			// Se crea hosted zone...
 			HostedZone = new(this, $"{appName}HostedZone", new HostedZoneProps {
@@ -41,13 +42,11 @@ namespace Cdk {
 			});
 
 			// Se crea registro DKIM para Google Workspace...
-			/*
 			_ = new TxtRecord(this, $"{appName}DKIMRecord", new TxtRecordProps {
 				Zone = HostedZone,
 				RecordName = $"google._domainkey.{HostedZone.ZoneName}",
 				Values = [googleDkimValue],
 			});
-			*/
 
 			// Se configura DMARC para el dominio...
 			/*

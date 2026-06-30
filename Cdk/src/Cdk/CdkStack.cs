@@ -233,11 +233,13 @@ namespace Cdk
 				Description = $"Administrador de la aplicacion {appName}",
 			});
 
+			ICertificate cognitoCertificate = Certificate.FromCertificateArn(this, $"{appName}CognitoCertificate", props.Certificate.CertificateArn);
+
 			UserPoolDomain userPoolDomain = new(this, $"{appName}CognitoDomain", new UserPoolDomainProps {
 				UserPool = userPool,
 				CustomDomain = new CustomDomainOptions {
 					DomainName = cognitoCustomDomain,
-					Certificate = props.Certificate,
+					Certificate = cognitoCertificate,
 				},
 				ManagedLoginVersion = ManagedLoginVersion.NEWER_MANAGED_LOGIN,
 			});
