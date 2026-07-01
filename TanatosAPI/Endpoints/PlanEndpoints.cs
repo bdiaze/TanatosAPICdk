@@ -168,6 +168,11 @@ namespace TanatosAPI.Endpoints {
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 					try {
+						bool parametrosFlowEditados = false;
+						if (existente.Nombre != entrada.Nombre || existente.Precio != entrada.Precio || existente.DuracionMeses != entrada.DuracionMeses) {
+							parametrosFlowEditados = true; 
+						}
+
 						existente.Nombre = entrada.Nombre;
 						existente.Precio = entrada.Precio;
 						existente.DuracionMeses = entrada.DuracionMeses;
@@ -177,13 +182,15 @@ namespace TanatosAPI.Endpoints {
 
 						if (existente.FlowPlanId != null) {
 							if (existente.Precio > 0) {
-								// Se modifica plan de flow...
-								SalFlowPlanEdit salFlowPlanEdit = await flowHelper.PlanEdit(
-									existente.FlowPlanId,
-									existente.Nombre,
-									existente.Precio,
-									existente.DuracionMeses
-								);
+								// Se modifica plan de flow solo si alguno de los parámetros ha cambiado...
+								if (parametrosFlowEditados) {
+									SalFlowPlanEdit salFlowPlanEdit = await flowHelper.PlanEdit(
+										existente.FlowPlanId,
+										existente.Nombre,
+										existente.Precio,
+										existente.DuracionMeses
+									);
+								}
 							} else {
 								// Se elimina plan de flow, y se quita de tabla de Plan...
 								SalFlowPlanDelete salFlowPlanDelete = await flowHelper.PlanDelete(existente.FlowPlanId);
