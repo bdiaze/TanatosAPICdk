@@ -126,6 +126,11 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(SalPreguntaFrecuente))]
 	[JsonSerializable(typeof(List<SalPreguntaFrecuente>))]
 	[JsonSerializable(typeof(List<SalPreguntaFrecuenteHabilitado>))]
+	[JsonSerializable(typeof(EntVideoTutorialCrear))]
+	[JsonSerializable(typeof(EntVideoTutorialActualizar))]
+	[JsonSerializable(typeof(SalVideoTutorial))]
+	[JsonSerializable(typeof(List<SalVideoTutorial>))]
+	[JsonSerializable(typeof(List<SalVideoTutorialHabilitado>))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }

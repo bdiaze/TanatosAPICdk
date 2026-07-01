@@ -198,6 +198,7 @@ builder.Services.AddScoped<UsuarioDao>();
 builder.Services.AddScoped<ICargoDao, CargoDao>();
 builder.Services.AddScoped<EmpleadoDao>();
 builder.Services.AddScoped<IPreguntaFrecuenteDao, PreguntaFrecuenteDao>();
+builder.Services.AddScoped<IVideoTutorialDao, VideoTutorialDao>();
 #endregion
 
 #region Singleton BCP
@@ -218,6 +219,7 @@ builder.Services.AddScoped<ICargoBcp, CargoBcp>();
 builder.Services.AddScoped<IEmpleadoBcp, EmpleadoBcp>();
 builder.Services.AddScoped<ICategoriaNormaBcp, CategoriaNormaBcp>();
 builder.Services.AddScoped<IPreguntaFrecuenteBcp, PreguntaFrecuenteBcp>();
+builder.Services.AddScoped<IVideoTutorialBcp, VideoTutorialBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -227,6 +229,7 @@ builder.Services.AddScoped<AuthUseCase>();
 builder.Services.AddScoped<CargoUseCase>();
 builder.Services.AddScoped<CategoriaNormaUseCase>();
 builder.Services.AddScoped<PreguntaFrecuenteUseCase>();
+builder.Services.AddScoped<VideoTutorialUseCase>();
 #endregion
 
 string cognitoRegion;
@@ -349,6 +352,8 @@ app.MapCargoEndpoints();
 app.MapEmpleadoEndpoints();
 app.MapPerfilEndpoints();
 app.MapPreguntaFrecuenteEndpoints();
+app.MapVideoTutorialEndpoints();
+
 
 await app.RunAsync();
 
