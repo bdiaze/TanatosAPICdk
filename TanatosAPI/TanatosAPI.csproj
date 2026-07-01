@@ -12,17 +12,17 @@
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="2.1.0" />
     <PackageReference Include="AWS.Cryptography.EncryptionSDK" Version="5.0.0" />
-    <PackageReference Include="AWSSDK.APIGateway" Version="4.0.7.7" />
-    <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.9.5" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.21.3" />
-    <PackageReference Include="AWSSDK.S3" Version="4.0.24.4" />
-    <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.5.4" />
+    <PackageReference Include="AWSSDK.APIGateway" Version="4.0.100.1" />
+    <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.100.1" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.100.1" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.100.1" />
+    <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.100.1" />
     <PackageReference Include="Cronos" Version="0.13.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
     <PackageReference Include="Npgsql" Version="10.0.3" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.16.3" />
-    <PackageReference Include="Scriban" Version="7.2.4" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.16.7" />
+    <PackageReference Include="Scriban" Version="7.2.5" />
   </ItemGroup>
 
   <ItemGroup>
