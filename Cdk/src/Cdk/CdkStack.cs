@@ -25,6 +25,7 @@ using Attribute = Amazon.CDK.AWS.DynamoDB.Attribute;
 using CfnStage = Amazon.CDK.AWS.Apigatewayv2.CfnStage;
 using CfnStageProps = Amazon.CDK.AWS.Apigatewayv2.CfnStageProps;
 using HttpMethod = Amazon.CDK.AWS.Apigatewayv2.HttpMethod;
+using IpAddressType = Amazon.CDK.AWS.Apigatewayv2.IpAddressType;
 using Secret = Amazon.CDK.AWS.SecretsManager.Secret;
 
 namespace Cdk
@@ -133,10 +134,17 @@ namespace Cdk
 				DomainName = domainName,
 				Certificate = certificate,
 				EndpointType = EndpointType.REGIONAL,
+				IpAddressType = IpAddressType.DUAL_STACK
 			});
 
 			// Se crea el ARecord para el subdominio del API Gateway
 			_ = new ARecord(this, $"{appName}ApiGatewayARecord", new ARecordProps {
+				Zone = props.HostedZone,
+				RecordName = domainName,
+				Target = RecordTarget.FromAlias(new ApiGatewayv2DomainProperties(apiGatewayDomain.RegionalDomainName, apiGatewayDomain.RegionalHostedZoneId))
+			});
+
+			_ = new AaaaRecord(this, $"{appName}ApiGatewayAAAARecord", new AaaaRecordProps {
 				Zone = props.HostedZone,
 				RecordName = domainName,
 				Target = RecordTarget.FromAlias(new ApiGatewayv2DomainProperties(apiGatewayDomain.RegionalDomainName, apiGatewayDomain.RegionalHostedZoneId))
@@ -694,8 +702,14 @@ namespace Cdk
 				Target = RecordTarget.FromAlias(new UserPoolDomainTarget(userPoolDomain)),
 			});
 
-            // Se configuran parámetros para ser rescatados por consumidores...
-            Secret secret = new(this, $"{appName}Secret", new SecretProps {
+			_ = new AaaaRecord(this, $"{appName}LoginAAAARecord", new AaaaRecordProps {
+				Zone = props.HostedZone,
+				RecordName = cognitoCustomDomain,
+				Target = RecordTarget.FromAlias(new UserPoolDomainTarget(userPoolDomain)),
+			});
+
+			// Se configuran parámetros para ser rescatados por consumidores...
+			Secret secret = new(this, $"{appName}Secret", new SecretProps {
                 SecretName = $"/{appName}",
                 Description = $"Secretos de la aplicacion de {appName}",
                 SecretObjectValue = new Dictionary<string, SecretValue> {
@@ -960,6 +974,7 @@ namespace Cdk
 				},
 				DisableExecuteApiEndpoint = true,
 				CreateDefaultStage = false,
+				IpAddressType = IpAddressType.DUAL_STACK
 			});
 
 			lambdaHttpApi.AddRoutes(new AddRoutesOptions {
