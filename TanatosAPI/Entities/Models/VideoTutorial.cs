@@ -16,7 +16,6 @@ namespace TanatosAPI.Entities.Models {
 		[Column("titulo")]
 		public required string Titulo { get; set; }
 
-		[Required]
 		[Column("descripcion")]
 		public string? Descripcion { get; set; }
 
