@@ -591,6 +591,19 @@ namespace TanatosAPI.Design.Contexts {
 				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó la pregunta frecuente.");
 				entity.Property(o => o.Vigencia).HasComment("Vigencia de la pregunta frecuente.");
 			});
+
+			modelBuilder.Entity<VideoTutorial>(entity => {
+				entity.ToTable(o => o.HasComment("Tabla que contiene los videos tutoriales."));
+				entity.Property(o => o.Id).HasComment("Identificador del video tutorial.");
+				entity.Property(o => o.Titulo).HasComment("Título del video tutorial.");
+				entity.Property(o => o.Descripcion).HasComment("Descripción del video tutorial.");
+				entity.Property(o => o.Url).HasComment("URL del video tutorial.");
+				entity.Property(o => o.Habilitado).HasComment("Indicador de si el video tutorial está habilitado.");
+				entity.Property(o => o.Orden).HasComment("Orden en que se presenta el video tutorial.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el video tutorial.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el video tutorial.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del video tutorial.");
+			});
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -652,5 +665,7 @@ namespace TanatosAPI.Design.Contexts {
 		public DbSet<Empleado> Empleados { get; set; }
 
         public DbSet<PreguntaFrecuente> PreguntasFrecuentes { get; set; }
+
+        public DbSet<VideoTutorial> VideosTutoriales { get; set; }
 	}
 }
