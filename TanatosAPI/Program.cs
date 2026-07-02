@@ -353,6 +353,7 @@ app.MapEmpleadoEndpoints();
 app.MapPerfilEndpoints();
 app.MapPreguntaFrecuenteEndpoints();
 app.MapVideoTutorialEndpoints();
+app.MapFlowEndpoints();
 
 
 await app.RunAsync();
