@@ -154,12 +154,23 @@ namespace TanatosAPI.Helpers {
 			return JsonSerializer.Deserialize(content, AppJsonSerializerContext.Default.SalFlowCustomerGetRegisterStatus)!;
 		}
 
-		public async Task<SalFlowSubscriptionCreate> SubscriptionCreate(string planId, string customerId) {
+		public async Task<SalFlowSubscriptionCreate> SubscriptionCreate(string planId, string customerId, DateTime? fechaInicioUtc = null) {
+			if (fechaInicioUtc != null && fechaInicioUtc.Value.Kind != DateTimeKind.Utc) {
+				throw new InvalidOperationException("La fecha de inicio debe estar en formato UTC.");
+			}
+
 			Dictionary<string, string> parametros = new() {
 				["apiKey"] = _flowApiKey,
 				["planId"] = planId,
 				["customerId"] = customerId,
 			};
+
+			if (fechaInicioUtc != null) {
+				TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
+				DateTime fechaInicioLocal = TimeZoneInfo.ConvertTimeFromUtc(fechaInicioUtc.Value, timeZoneInfo);
+				parametros["subscription_start"] = fechaInicioLocal.ToString("yyyy-MM-dd");
+			}
+
 			parametros["s"] = Firmar(parametros);
 			FormUrlEncodedContent formContent = new(parametros);
 
