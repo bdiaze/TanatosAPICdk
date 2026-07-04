@@ -3,11 +3,12 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class TipoFiscalizadorDao(IDatabaseConnectionHelper connectionHelper) {
+    public class TipoFiscalizadorDao(IDatabaseConnectionHelper connectionHelper) : ITipoFiscalizadorDao {
 		public async Task<TipoFiscalizador?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
 			string query =
                 "SELECT ID, NOMBRE, NOMBRE_CORTO, VIGENCIA FROM TANATOS.TIPO_FISCALIZADOR WHERE ID = @ID";

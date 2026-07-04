@@ -2,12 +2,12 @@
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class EmpleadoDao(IDatabaseConnectionHelper connectionHelper) {
+    public class EmpleadoDao(IDatabaseConnectionHelper connectionHelper) : IEmpleadoDao {
 		public async Task<List<Empleado>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, SUB, ID_NEGOCIO, NOMBRE, ID_CARGO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA " +

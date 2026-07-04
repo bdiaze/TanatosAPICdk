@@ -3,11 +3,12 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class TipoActividadDao(IDatabaseConnectionHelper connectionHelper) {
+    public class TipoActividadDao(IDatabaseConnectionHelper connectionHelper) : ITipoActividadDao {
 		public async Task<TipoActividad?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
             string query =
                 "SELECT ID, ID_TIPO_RUBRO, NOMBRE, DESCRIPCION, VIGENCIA FROM TANATOS.TIPO_ACTIVIDAD WHERE ID = @ID";

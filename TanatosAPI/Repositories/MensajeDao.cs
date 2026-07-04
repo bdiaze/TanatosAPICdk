@@ -3,11 +3,12 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class MensajeDao(IDatabaseConnectionHelper connectionHelper) {
+    public class MensajeDao(IDatabaseConnectionHelper connectionHelper) : IMensajeDao {
 		public async Task<List<Mensaje>> ObtenerPorRangoFechas(DateTime? fechaInicial, DateTime? fechaFinal, NpgsqlTransaction? transaction = null) {
 			string query =
                 "SELECT ID, SUB, NOMBRE, CORREO, CONTENIDO, HERMES_ID_MENSAJE, FECHA_CREACION FROM TANATOS.MENSAJE " +

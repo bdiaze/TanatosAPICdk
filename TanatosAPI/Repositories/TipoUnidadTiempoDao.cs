@@ -3,11 +3,12 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class TipoUnidadTiempoDao(IDatabaseConnectionHelper connectionHelper) {
+    public class TipoUnidadTiempoDao(IDatabaseConnectionHelper connectionHelper) : ITipoUnidadTiempoDao {
 		public async Task<TipoUnidadTiempo?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, NOMBRE, NOMBRE_PLURAL, CANT_SEGUNDOS, CANT_MINUTOS, CANT_HORAS, CANT_DIAS, VIGENCIA FROM TANATOS.TIPO_UNIDAD_TIEMPO " +

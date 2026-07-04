@@ -3,11 +3,12 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class TemplateActividadDao(IDatabaseConnectionHelper connectionHelper) {
+    public class TemplateActividadDao(IDatabaseConnectionHelper connectionHelper) : ITemplateActividadDao {
 		public async Task<List<TemplateActividad>> ObtenerPorTemplate(long idTemplate, NpgsqlTransaction? transaction = null) {
             string query =
                 "SELECT ID_TEMPLATE, ID_TIPO_ACTIVIDAD FROM TANATOS.TEMPLATE_ACTIVIDAD WHERE ID_TEMPLATE = @IDTEMPLATE";

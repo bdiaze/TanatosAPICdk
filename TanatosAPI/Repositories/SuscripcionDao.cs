@@ -3,11 +3,12 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class SuscripcionDao(IDatabaseConnectionHelper connectionHelper) {
+    public class SuscripcionDao(IDatabaseConnectionHelper connectionHelper) : ISuscripcionDao {
 
 		public async Task<Suscripcion?> Obtener(long id, NpgsqlTransaction? transaction = null) {
             string query =

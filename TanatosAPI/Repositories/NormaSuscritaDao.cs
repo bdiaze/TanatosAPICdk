@@ -4,11 +4,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
-    public class NormaSuscritaDao(IDatabaseConnectionHelper connectionHelper) {
+    public class NormaSuscritaDao(IDatabaseConnectionHelper connectionHelper) : INormaSuscritaDao {
 		public async Task<List<NormaSuscrita>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ID_CARGO, ORDEN_VISUAL, " +
