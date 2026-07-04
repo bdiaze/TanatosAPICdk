@@ -32,6 +32,11 @@ namespace TanatosAPI.Entities.Models {
 
 		[Required]
 		[Column("estado")]
+		// 1: Activa (Ya se recepcionó algún pago asociado, tiene fecha de expiración)
+		// 2: Cancelada (1: Una suscripción activa que fue cancelada - 2: Una suscripción cuyo pago estaba pendiente y fue cancelada previo al primer pago)
+		// 3: Expirada (De momento no usada, pero la idea es tener un proceso periodico que tome todas las suscripciones activas, cuya expiración haya pasado)
+		// 4: Pago Pendiente (Usuario ya ingreso medio de pago, pero aún no se efectúa el primer cobro, ya sea por delay de plataforma de pago o por ser una suscripción futura)
+		// 5: En Creación (Aún no se confirma que usuario haya ingresado medios de pagos)
 		public required short Estado { get; set; }
 
 		[Column("flow_customer_id")]
