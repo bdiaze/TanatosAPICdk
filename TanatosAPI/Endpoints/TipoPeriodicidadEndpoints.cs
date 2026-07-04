@@ -1,6 +1,7 @@
 ﻿using Amazon.Lambda.Core;
 using System.Diagnostics;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -17,7 +18,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, TipoPeriodicidadDao tipoPeriodicidadDao) => {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ITipoPeriodicidadDao tipoPeriodicidadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -41,7 +42,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, TipoPeriodicidadDao tipoPeriodicidadDao) => {
+			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, ITipoPeriodicidadDao tipoPeriodicidadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -71,7 +72,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (TipoPeriodicidad entrada, IHostEnvironment environment, TipoPeriodicidadDao tipoPeriodicidadDao) => {
+			routes.MapPost("/", async (TipoPeriodicidad entrada, IHostEnvironment environment, ITipoPeriodicidadDao tipoPeriodicidadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -106,7 +107,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (TipoPeriodicidad entrada, IHostEnvironment environment, TipoPeriodicidadDao tipoPeriodicidadDao) => {
+			routes.MapPut("/", async (TipoPeriodicidad entrada, IHostEnvironment environment, ITipoPeriodicidadDao tipoPeriodicidadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -141,7 +142,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, TipoPeriodicidadDao tipoPeriodicidadDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ITipoPeriodicidadDao tipoPeriodicidadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

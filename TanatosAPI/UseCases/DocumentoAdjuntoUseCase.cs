@@ -4,10 +4,11 @@ using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-    public class DocumentoAdjuntoUseCase(SuscripcionBcp suscripcionBcp, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaBcp normaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, HistorialNotificacionBcp historialNotificacionBcp) {
+    public class DocumentoAdjuntoUseCase(ISuscripcionBcp suscripcionBcp, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaBcp normaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, HistorialNotificacionBcp historialNotificacionBcp) {
         public async Task<List<DocumentoAdjunto>> ObtenerVigentes(string sub, long idHistorialNormaSuscrita) {
             HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.ObtenerPorId(idHistorialNormaSuscrita);
             if (!historialNormaSuscritaBcp.VigenteOCompletada(historialNormaSuscrita)) {

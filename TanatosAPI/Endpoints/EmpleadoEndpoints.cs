@@ -5,9 +5,11 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.Empleado;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Business;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 using TanatosAPI.UseCases;
 
@@ -24,7 +26,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, EmpleadoDao empleadoDao, ICargoDao cargoDao, DestinatarioNotificacionDao destinatarioNotificacionDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
+			routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, IEmpleadoDao empleadoDao, ICargoDao cargoDao, IDestinatarioNotificacionDao destinatarioNotificacionDao, ITipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -89,7 +91,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntEmpleadoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, SuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, ICargoDao cargoDao, NegocioDao negocioDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
+			routes.MapPost("/", async (EntEmpleadoCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, ISuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, IEmpleadoDao empleadoDao, ICargoDao cargoDao, INegocioDao negocioDao, ITipoReceptorNotificacionDao tipoReceptorNotificacionDao, IDestinatarioNotificacionDao destinatarioNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -246,7 +248,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (EntEmpleadoActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, SuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, ICargoDao cargoDao, TipoReceptorNotificacionDao tipoReceptorNotificacionDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
+			routes.MapPut("/", async (EntEmpleadoActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, ISuscripcionBcp suscripcionBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, IEmpleadoDao empleadoDao, ICargoDao cargoDao, ITipoReceptorNotificacionDao tipoReceptorNotificacionDao, IDestinatarioNotificacionDao destinatarioNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -421,7 +423,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, DestinatarioNotificacionBcp destinatarioNotificacionBcp, EmpleadoDao empleadoDao, DestinatarioNotificacionDao destinatarioNotificacionDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, DestinatarioNotificacionBcp destinatarioNotificacionBcp, IEmpleadoDao empleadoDao, IDestinatarioNotificacionDao destinatarioNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

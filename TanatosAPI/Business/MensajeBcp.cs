@@ -1,13 +1,12 @@
 ﻿using Scriban.Runtime;
 using System.Net;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Others;
-using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
-using TanatosAPI.Repositories;
+using TanatosAPI.Entities.Others.Hermes;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Business {
-	public class MensajeBcp(IDateTimeProvider dateTimeProvider, MensajeDao mensajeDao, HermesHelper hermesHelper, IVariableEntornoHelper variableEntorno, HtmlRenderer renderer) {
+	public class MensajeBcp(IDateTimeProvider dateTimeProvider, IMensajeDao mensajeDao, IHermesHelper hermesHelper, IVariableEntornoHelper variableEntorno, IHtmlRenderer renderer) {
 		public async Task<Mensaje> Ingresar(string nombre, string correo, string contenido, string? sub = null) {
 
 			Mensaje nuevo = new() { 

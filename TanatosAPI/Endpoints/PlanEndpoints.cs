@@ -3,9 +3,11 @@ using Microsoft.IdentityModel.Logging;
 using Npgsql;
 using System.Diagnostics;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.Flow;
+using TanatosAPI.Entities.Others.Plan;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -22,7 +24,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, PlanDao planDao) => {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, IPlanDao planDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -53,7 +55,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, PlanDao planDao) => {
+			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, IPlanDao planDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -83,7 +85,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IDatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
+			routes.MapPost("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IDatabaseConnectionHelper connectionHelper, IPlanDao planDao, IFlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -149,7 +151,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IDatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
+			routes.MapPut("/", async (EntPlanCrearEditar entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IDatabaseConnectionHelper connectionHelper, IPlanDao planDao, IFlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -235,7 +237,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, PlanDao planDao, FlowHelper flowHelper) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, IPlanDao planDao, IFlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

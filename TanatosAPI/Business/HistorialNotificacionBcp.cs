@@ -1,13 +1,14 @@
 ﻿using System.ComponentModel;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-    public class HistorialNotificacionBcp(IDateTimeProvider dateTimeProvider, CryptoHelper cryptoHelper, HistorialNotificacionDao historialNotificacionDao) {
+    public class HistorialNotificacionBcp(IDateTimeProvider dateTimeProvider, IHistorialNotificacionDao historialNotificacionDao) {
         public async Task<HistorialNotificacion?> ObtenerPorCodigoAcceso(string codigoAcceso) {
-            return await historialNotificacionDao.ObtenerPorCodigoAcceso(cryptoHelper.HashSHA256(codigoAcceso), null);
+            return await historialNotificacionDao.ObtenerPorCodigoAcceso(CryptoHelper.HashSHA256(codigoAcceso), null);
         }
 
         public bool EstaVigente(HistorialNotificacion? historialNotificacion) {

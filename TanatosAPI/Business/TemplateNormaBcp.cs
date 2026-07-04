@@ -1,9 +1,11 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
+using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Business {
-    public class TemplateNormaBcp(NormaSuscritaBcp normaSuscritaBcp, NotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, FiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, TemplateNormaDao templateNormaDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, NormaSuscritaDao normaSuscritaDao, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao) {
+    public class TemplateNormaBcp(NormaSuscritaUseCase normaSuscritaUseCase, NotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, FiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, ITemplateNormaDao templateNormaDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, INormaSuscritaDao normaSuscritaDao, INotificacionNormaSuscritaDao notificacionNormaSuscritaDao, IFiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao) {
 
         public async Task Eliminar(long idTemplate, long? idNorma, NpgsqlTransaction? transaction = null) {
             Dictionary<long, TemplateNorma> templateNormas = (await templateNormaDao.ObtenerPorTemplate(idTemplate, transaction)).ToDictionary(tn => tn.IdNorma, tn => tn);
@@ -44,7 +46,7 @@ namespace TanatosAPI.Business {
 
                 // Si la norma suscrita no está activada se elimina
                 if (!normaSuscrita.Activado) {
-                    await normaSuscritaBcp.EliminarNormaSuscrita(normaSuscrita, transaction);
+                    await normaSuscritaUseCase.EliminarNormaSuscrita(normaSuscrita, transaction);
                 
                 // Pero si está activada, solo se desenlaza del template
                 } else {

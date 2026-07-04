@@ -1,8 +1,9 @@
 ﻿using Amazon.Lambda.Core;
 using System.Diagnostics;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.Flow;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
@@ -24,7 +25,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapCustomerGetRegisterStatus(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/GetRegisterStatus/{token}", async (string token, IHostEnvironment environment, FlowHelper flowHelper) => {
+			routes.MapGet("/GetRegisterStatus/{token}", async (string token, IHostEnvironment environment, IFlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -52,7 +53,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapPaymentGetStatus(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/GetStatus/{token}", async (string token, IHostEnvironment environment, FlowHelper flowHelper) => {
+			routes.MapGet("/GetStatus/{token}", async (string token, IHostEnvironment environment, IFlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -80,7 +81,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapInvoiceGet(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Get/{invoiceId}", async (string invoiceId, IHostEnvironment environment, FlowHelper flowHelper) => {
+			routes.MapGet("/Get/{invoiceId}", async (string invoiceId, IHostEnvironment environment, IFlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -108,7 +109,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapSubscriptionGet(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Get/{subscriptionId}", async (string subscriptionId, IHostEnvironment environment, FlowHelper flowHelper) => {
+			routes.MapGet("/Get/{subscriptionId}", async (string subscriptionId, IHostEnvironment environment, IFlowHelper flowHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

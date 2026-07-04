@@ -3,11 +3,12 @@ using Npgsql;
 using System.Diagnostics;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class NotificacionNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, NotificacionNormaSuscritaDao notificacionNormaSuscritaDao) {
+	public class NotificacionNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, INotificacionNormaSuscritaDao notificacionNormaSuscritaDao) {
 		public async Task ActualizarPorNormaSuscrita(NormaSuscrita normaSuscrita, HashSet<(long IdTipoUnidadTiempoAntelacion, int CantAntelacion)> notificacionesNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			List<NotificacionNormaSuscrita> notificacionesExistentes = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
 			

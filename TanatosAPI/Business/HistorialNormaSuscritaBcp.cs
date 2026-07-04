@@ -1,10 +1,11 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class HistorialNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, DocumentoAdjuntoBcp documentoAdjuntoBcp, NormaSuscritaDao normaSuscritaDao, HistorialNormaSuscritaDao historialNormaSuscritaDao, TemplateNormaDao templateNormaDao, TipoPeriodicidadDao tipoPeriodicidadDao) {
+	public class HistorialNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, DocumentoAdjuntoBcp documentoAdjuntoBcp, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, ITemplateNormaDao templateNormaDao, ITipoPeriodicidadDao tipoPeriodicidadDao) {
 		public bool EstaVigente(HistorialNormaSuscrita? historialNormaSuscrita) {
 			return historialNormaSuscrita != null && historialNormaSuscrita.Vigencia;
 		}

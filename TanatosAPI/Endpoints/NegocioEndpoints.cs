@@ -2,12 +2,14 @@
 using Npgsql;
 using System.Diagnostics;
 using System.Security.Claims;
-using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.Negocio;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Business;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
+using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
 	public static class NegocioEndpoints {
@@ -23,7 +25,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerInformacionUsuario(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/InformacionUsuario", async (IHostEnvironment environment, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, UsuarioBcp usuarioBcp) => {
+			routes.MapGet("/InformacionUsuario", async (IHostEnvironment environment, ClaimsPrincipal user, ISuscripcionBcp suscripcionBcp, IUsuarioBcp usuarioBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -56,7 +58,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ClaimsPrincipal user, NegocioDao negocioDao, TipoActividadDao tipoActividadDao) => {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ClaimsPrincipal user, INegocioDao negocioDao, ITipoActividadDao tipoActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -102,7 +104,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntNegocioCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, SuscripcionBcp suscripcionBcp, NegocioDao negocioDao, TipoActividadDao tipoActividadDao) => {
+			routes.MapPost("/", async (EntNegocioCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, ISuscripcionBcp suscripcionBcp, INegocioDao negocioDao, ITipoActividadDao tipoActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -181,7 +183,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (EntNegocioActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, SuscripcionBcp suscripcionBcp, NegocioDao negocioDao, TipoActividadDao tipoActividadDao) => {
+			routes.MapPut("/", async (EntNegocioActualizar entrada, IHostEnvironment environment, ClaimsPrincipal user, ISuscripcionBcp suscripcionBcp, INegocioDao negocioDao, ITipoActividadDao tipoActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -259,7 +261,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, INegocioBcp negocioBcp, NegocioDao negocioDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, NegocioUseCase negocioUseCase, INegocioDao negocioDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -279,7 +281,7 @@ namespace TanatosAPI.Endpoints {
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 					try {
-						await negocioBcp.EliminarNegocio(existente, transaction);
+						await negocioUseCase.EliminarNegocio(existente, transaction);
 
 						await transaction.CommitAsync();
 					} catch {

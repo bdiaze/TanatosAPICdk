@@ -5,7 +5,8 @@ using System.Diagnostics;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -25,7 +26,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtener(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/{id}", async (long id, IHostEnvironment environment, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TemplateActividadDao templateActividadDao) => {
+			routes.MapGet("/{id}", async (long id, IHostEnvironment environment, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -66,7 +67,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, TemplateDao templateDao) => {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ITemplateDao templateDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -90,7 +91,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentesConNormas(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/VigentesConNormas", async (IHostEnvironment environment, TemplateDao templateDao, TemplateNormaDao templateNormaDao) => {
+			routes.MapGet("/VigentesConNormas", async (IHostEnvironment environment, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -118,7 +119,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentesConNormasYRecomendacion(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/VigentesConNormasYRecomendacion/{idTipoActividad}", async (long idTipoActividad, IHostEnvironment environment, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateActividadDao templateActividadDao) => {
+			routes.MapGet("/VigentesConNormasYRecomendacion/{idTipoActividad}", async (long idTipoActividad, IHostEnvironment environment, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -149,7 +150,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, TemplateDao templateDao) => {
+			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, ITemplateDao templateDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -179,7 +180,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TemplateActividadDao templateActividadDao) => {
+			routes.MapPost("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -327,7 +328,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaBcp templateNormaBcp, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TemplateActividadDao templateActividadDao) => {
+			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaBcp templateNormaBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -527,7 +528,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaBcp templateNormaBcp, TemplateDao templateDao, TemplateNormaDao templateNormaDao, TemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, TemplateNormaNotificacionDao templateNormaNotificacionDao, TemplateActividadDao templateActividadDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaBcp templateNormaBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

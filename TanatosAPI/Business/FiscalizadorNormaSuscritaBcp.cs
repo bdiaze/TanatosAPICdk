@@ -1,10 +1,11 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class FiscalizadorNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, FiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao) {
+	public class FiscalizadorNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, IFiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao) {
 		public async Task ActualizarPorNormaSuscrita(NormaSuscrita normaSuscrita, HashSet<long> idTiposFiscalizadores, NpgsqlTransaction? transaction = null) {
 			List<FiscalizadorNormaSuscrita> fiscalizadoresExistentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
 

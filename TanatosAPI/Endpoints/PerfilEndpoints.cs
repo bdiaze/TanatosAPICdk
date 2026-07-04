@@ -4,10 +4,11 @@ using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.Hermes;
+using TanatosAPI.Entities.Others.Perfil;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
@@ -22,7 +23,7 @@ namespace TanatosAPI.Endpoints {
         }
 
 		private static void MapEnviarCodigoVerificacion(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/EnviarCodigoVerificacion", async (EntPerfilEnviarCodigoVerificacion entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IKMSHelper kmsHelper, HtmlRenderer htmlRenderer, HermesHelper hermesHelper) => {
+			routes.MapPost("/EnviarCodigoVerificacion", async (EntPerfilEnviarCodigoVerificacion entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IKMSHelper kmsHelper, IHtmlRenderer htmlRenderer, IHermesHelper hermesHelper) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

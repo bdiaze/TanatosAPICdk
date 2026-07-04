@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Security.Claims;
 using System.Security.Principal;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -20,7 +21,7 @@ namespace TanatosAPI.Endpoints {
         }
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ITipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -44,7 +45,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
-            routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
+            routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, ITipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -74,7 +75,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-            routes.MapPost("/", async (TipoReceptorNotificacion entrada, IHostEnvironment environment, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
+            routes.MapPost("/", async (TipoReceptorNotificacion entrada, IHostEnvironment environment, ITipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
@@ -109,7 +110,7 @@ namespace TanatosAPI.Endpoints {
         }
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (TipoReceptorNotificacion entrada, IHostEnvironment environment, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
+			routes.MapPut("/", async (TipoReceptorNotificacion entrada, IHostEnvironment environment, ITipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -144,7 +145,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, TipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ITipoReceptorNotificacionDao tipoReceptorNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

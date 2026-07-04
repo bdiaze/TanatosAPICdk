@@ -1,6 +1,7 @@
 ﻿using Amazon.Lambda.Core;
 using System.Diagnostics;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -17,7 +18,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, TipoFiscalizadorDao tipoFiscalizadorDao) => {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ITipoFiscalizadorDao tipoFiscalizadorDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -41,7 +42,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, TipoFiscalizadorDao tipoFiscalizadorDao) => {
+			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, ITipoFiscalizadorDao tipoFiscalizadorDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -71,7 +72,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (TipoFiscalizador entrada, IHostEnvironment environment, TipoFiscalizadorDao tipoFiscalizadorDao) => {
+			routes.MapPost("/", async (TipoFiscalizador entrada, IHostEnvironment environment, ITipoFiscalizadorDao tipoFiscalizadorDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -106,7 +107,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (TipoFiscalizador entrada, IHostEnvironment environment, TipoFiscalizadorDao tipoFiscalizadorDao) => {
+			routes.MapPut("/", async (TipoFiscalizador entrada, IHostEnvironment environment, ITipoFiscalizadorDao tipoFiscalizadorDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -141,7 +142,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, TipoFiscalizadorDao tipoFiscalizadorDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ITipoFiscalizadorDao tipoFiscalizadorDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

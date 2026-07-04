@@ -4,9 +4,10 @@ using System.Diagnostics;
 using System.Security.Claims;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.Mensaje;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
@@ -24,7 +25,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtener(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/{fechaInicial}/{fechaFinal}", async (DateTime fechaInicial, DateTime fechaFinal, IHostEnvironment environment, MensajeDao mensajeDao) => {
+			routes.MapGet("/{fechaInicial}/{fechaFinal}", async (DateTime fechaInicial, DateTime fechaFinal, IHostEnvironment environment, IMensajeDao mensajeDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 			try {
@@ -48,7 +49,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapIngresarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntMensajeIngresar entrada, IHostEnvironment environment, ClaimsPrincipal user, IVariableEntornoHelper variableEntorno, GoogleRecaptchaHelper googleRecaptchaHelper, MensajeBcp mensajeBcp) => {
+			routes.MapPost("/", async (EntMensajeIngresar entrada, IHostEnvironment environment, ClaimsPrincipal user, IVariableEntornoHelper variableEntorno, IGoogleRecaptchaHelper googleRecaptchaHelper, MensajeBcp mensajeBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -116,7 +117,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapIngresarAnonimoEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntMensajeIngresar entrada, IHostEnvironment environment, GoogleRecaptchaHelper googleRecaptchaHelper, MensajeBcp mensajeBcp) => {
+			routes.MapPost("/", async (EntMensajeIngresar entrada, IHostEnvironment environment, IGoogleRecaptchaHelper googleRecaptchaHelper, MensajeBcp mensajeBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
