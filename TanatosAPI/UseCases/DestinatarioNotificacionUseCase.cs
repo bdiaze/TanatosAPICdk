@@ -3,11 +3,13 @@ using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Business;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-    public class DestinatarioNotificacionUseCase(IDatabaseConnectionHelper connectionHelper, DestinatarioNotificacionBcp destinatarioNotificacionBcp, INegocioBcp negocioBcp, UsuarioBcp usuarioBcp) {
+    public class DestinatarioNotificacionUseCase(IDatabaseConnectionHelper connectionHelper, NegocioUseCase negocioUseCase, DestinatarioNotificacionBcp destinatarioNotificacionBcp, INegocioBcp negocioBcp, IUsuarioBcp usuarioBcp, ISuscripcionBcp suscripcionBcp, ITipoReceptorNotificacionDao tipoReceptorNotificacionDao) {
         public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
         public async Task<DestinatarioNotificacion> RegistrarDestinatario(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null) {
@@ -91,5 +93,38 @@ namespace TanatosAPI.UseCases {
                 await destinatarioNotificacionBcp.Validar(destinatarioNotificacion!);
             }
         }
-    }
+
+		public async Task<bool> DestinatarioHabilitado(string sub, long idNegocio, long idDestinatario, NpgsqlTransaction? transaction = null) {
+			// Se valida si el negocio es accesible...
+			bool negocioAccesible = await negocioUseCase.NegocioAccesible(sub, idNegocio, transaction);
+			if (!negocioAccesible) return false;
+
+			// Se valida que el destinatario sea del negocio y este validado...
+			List<DestinatarioNotificacion> destinatarios = await destinatarioNotificacionBcp.ObtenerVigentesPorSubYNegocio(sub, idNegocio, transaction);
+			DestinatarioNotificacion? destinatarioSeleccionado = destinatarios.FirstOrDefault(d => d.Id == idDestinatario);
+			if (destinatarioSeleccionado == null || !destinatarioSeleccionado.Validado) return false;
+
+			// Se valida que el tipo de receptor esté vigente...
+			TipoReceptorNotificacion? tipoReceptorDestinatario = await tipoReceptorNotificacionDao.ObtenerPorId(destinatarioSeleccionado.IdTipoReceptor, transaction);
+			if (tipoReceptorDestinatario == null || !tipoReceptorDestinatario.Vigencia) {
+				return false;
+			}
+
+			// Se valida si el usuario tiene plan Empresa...
+			bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub, transaction);
+			if (!tienePlanEmpresa) {
+				// Dado que no tiene plan Empresa, se valida si el tipo de receptor requiere plan Empresa...
+				if (tipoReceptorDestinatario.RequierePlanEmpresa) {
+					return false;
+				}
+
+				// Dado que no tiene plan Empresa, se valida si el destinatario es de un empleado...
+				if (destinatarioSeleccionado.IdEmpleado != null) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+	}
 }
