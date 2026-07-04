@@ -1,7 +1,7 @@
 ﻿using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Business;
 
 namespace TanatosAPI.UseCases {
 	public class VideoTutorialUseCase(IVideoTutorialBcp videoTutorialBcp) {

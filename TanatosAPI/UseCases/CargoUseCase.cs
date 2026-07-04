@@ -3,7 +3,8 @@ using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Business;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.UseCases {
 	public class CargoUseCase(IDatabaseConnectionHelper connectionHelper, ICargoBcp cargoBcp, INegocioBcp negocioBcp, IEmpleadoBcp empleadoBcp) {

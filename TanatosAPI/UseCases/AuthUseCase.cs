@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.UseCases {
 	public class AuthUseCase(IVariableEntornoHelper variableEntorno, ICognitoHelper cognitoHelper) {
