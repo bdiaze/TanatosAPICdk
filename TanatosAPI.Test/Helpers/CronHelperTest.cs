@@ -5,6 +5,7 @@ using System.Text;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Test.Helpers {
@@ -48,5 +49,25 @@ namespace TanatosAPI.Test.Helpers {
 			Assert.Equal(expectedCronStandard, retorno);
 		}
 
+		public static TheoryData<DayOfWeek, string> DaysOfWeek => new() {
+			{ DayOfWeek.Sunday, "SUN" },
+			{ DayOfWeek.Monday, "MON" },
+			{ DayOfWeek.Tuesday, "TUE" },
+			{ DayOfWeek.Wednesday, "WED" },
+			{ DayOfWeek.Thursday, "THU" },
+			{ DayOfWeek.Friday, "FRI" },
+			{ DayOfWeek.Saturday, "SAT" },
+		};
+		[Theory]
+		[MemberData(nameof(DaysOfWeek))]
+		public async Task DayOfWeekToCronValueTest(DayOfWeek dayOfWeek, string expectedCron) {
+			string retorno = CronHelper.DayOfWeekToCronValue(dayOfWeek);
+			Assert.Equal(expectedCron, retorno);
+		}
+
+		[Fact]
+		public async Task DayOfWeekToCronValueTest_DiaInvalido() {
+			Assert.Throws<ArgumentException>(() => CronHelper.DayOfWeekToCronValue((DayOfWeek) 7));
+		}
 	}
 }

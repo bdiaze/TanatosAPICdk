@@ -2,7 +2,7 @@
 
 namespace TanatosAPI.Helpers {
 	public static class CronHelper {
-		private static string DayOfWeekToCronValue(DayOfWeek dayOfWeek) {
+		public static string DayOfWeekToCronValue(DayOfWeek dayOfWeek) {
 			return dayOfWeek switch {
 				DayOfWeek.Sunday => "SUN",
 				DayOfWeek.Monday => "MON",
