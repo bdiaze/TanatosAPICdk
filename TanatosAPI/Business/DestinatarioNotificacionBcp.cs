@@ -1,14 +1,17 @@
-﻿using Npgsql;
+﻿using Microsoft.AspNetCore.SignalR;
+using Npgsql;
 using Scriban.Runtime;
 using System.Net;
+using System.Transactions;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.Hermes;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class DestinatarioNotificacionBcp(IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, CryptoHelper cryptoHelper, HermesHelper hermesHelper, HtmlRenderer renderer, DestinatarioNotificacionDao destinatarioNotificacionDao) {
+	public class DestinatarioNotificacionBcp(IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, IHermesHelper hermesHelper, IHtmlRenderer renderer, IDestinatarioNotificacionDao destinatarioNotificacionDao) {
 		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
         public bool EstaVigente(DestinatarioNotificacion? destinatarioNotificacion) {
@@ -24,17 +27,21 @@ namespace TanatosAPI.Business {
         }
 
         public async Task<string> GenerarCodigoValidacion(NpgsqlTransaction? transaction = null) {
-            string codigoValidacion = cryptoHelper.GenerarToken();
+            string codigoValidacion = CryptoHelper.GenerarToken();
             DestinatarioNotificacion? mismoCodigo = await ObtenerPorCodigoValidacion(codigoValidacion, transaction);
             while (mismoCodigo != null) {
-                codigoValidacion = cryptoHelper.GenerarToken();
+                codigoValidacion = CryptoHelper.GenerarToken();
                 mismoCodigo = await ObtenerPorCodigoValidacion(codigoValidacion, transaction);
             }
 			return codigoValidacion;
         }
 
 		public async Task<DestinatarioNotificacion?> ObtenerPorCodigoValidacion(string codigoValidacion, NpgsqlTransaction? transaction = null) {
-			return await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(cryptoHelper.HashSHA256(codigoValidacion), transaction);
+			return await destinatarioNotificacionDao.ObtenerPorCodigoValidacion(CryptoHelper.HashSHA256(codigoValidacion), transaction);
+		}
+
+        public async Task<List<DestinatarioNotificacion>> ObtenerVigentesPorSubYNegocio(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {
+            return await destinatarioNotificacionDao.ObtenerPorSub(sub, idNegocio, true, transaction);
 		}
 
 		public async Task<(DestinatarioNotificacion nuevoDestinatario, string codigoValidacion)> Insertar(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null) {
@@ -49,7 +56,7 @@ namespace TanatosAPI.Business {
                 IdTipoReceptor = idTipoReceptor,
                 Alias = alias,
                 Destino = destino,
-                CodigoValidacion = cryptoHelper.HashSHA256(codigoValidacion),
+                CodigoValidacion = CryptoHelper.HashSHA256(codigoValidacion),
                 FechaCaducidadCodigoValidacion = nowUtc.AddHours(HORAS_CADUCIDAD_CODIGO_VALIDACION),
                 Validado = yaValidado,
                 FechaValidacion = yaValidado ? nowUtc : null,
