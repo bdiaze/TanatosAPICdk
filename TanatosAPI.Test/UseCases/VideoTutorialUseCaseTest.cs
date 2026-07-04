@@ -5,7 +5,7 @@ using System.Text;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Test.UseCases {

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 

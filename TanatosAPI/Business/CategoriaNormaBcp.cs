@@ -1,5 +1,6 @@
 ﻿using TanatosAPI.Entities.Models;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Business;
+using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Business {
 	public class CategoriaNormaBcp(ICategoriaNormaDao categoriaNormaDao) : ICategoriaNormaBcp {

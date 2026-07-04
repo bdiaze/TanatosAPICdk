@@ -10,7 +10,7 @@ using System.Text;
 using System.Text.Json;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Repositories;
 using TanatosAPI.UseCases;
 

@@ -8,7 +8,7 @@ using System.Net.Mime;
 using System.Text;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Test.Helpers {
 	public class DocumentoAdjuntoHelperTest {

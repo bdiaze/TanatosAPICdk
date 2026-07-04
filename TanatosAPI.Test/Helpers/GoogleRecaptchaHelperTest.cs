@@ -7,9 +7,9 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.Google;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Test.Helpers {
 	public class GoogleRecaptchaHelperTest {

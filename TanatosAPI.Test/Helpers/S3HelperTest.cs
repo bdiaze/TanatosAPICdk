@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Test.Helpers {
 	public class S3HelperTest {

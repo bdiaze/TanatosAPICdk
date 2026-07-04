@@ -6,6 +6,7 @@ using System.Security.Claims;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.DocumentoAdjunto;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Repositories;

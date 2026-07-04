@@ -1,7 +1,7 @@
 ﻿using Amazon.Lambda.Core;
 using System.Diagnostics;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.VideoTutorial;
 using TanatosAPI.Exceptions;
 using TanatosAPI.UseCases;
 

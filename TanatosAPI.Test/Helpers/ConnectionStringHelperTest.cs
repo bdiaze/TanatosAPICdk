@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 using Wrappers_Compile;
 
 namespace TanatosAPI.Test.Helpers {

@@ -6,9 +6,9 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using TanatosAPI.Business;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.Hermes;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Test.Helpers {
 	public class HermesHelperTest {

@@ -9,10 +9,10 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.DestinatarioNotificacion;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Repositories;
 using TanatosAPI.UseCases;
 

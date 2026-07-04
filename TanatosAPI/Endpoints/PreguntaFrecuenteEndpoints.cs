@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Security.Claims;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.PreguntaFrecuente;
 using TanatosAPI.Exceptions;
 using TanatosAPI.UseCases;
 

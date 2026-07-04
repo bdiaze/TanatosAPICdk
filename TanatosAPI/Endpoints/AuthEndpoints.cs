@@ -3,10 +3,10 @@ using Microsoft.Extensions.Primitives;
 using System;
 using System.Diagnostics;
 using System.Text.Json;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.Auth;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {

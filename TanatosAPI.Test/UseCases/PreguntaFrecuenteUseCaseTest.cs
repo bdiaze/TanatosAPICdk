@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Repositories;
 using TanatosAPI.UseCases;
 

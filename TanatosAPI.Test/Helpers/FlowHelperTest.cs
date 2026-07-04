@@ -6,10 +6,10 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.Flow;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Test.Helpers {

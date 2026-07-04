@@ -2,8 +2,9 @@
 using NSubstitute;
 using System.Security.Claims;
 using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.RateLimit;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Test.Helpers {
 	public class RateLimitMiddlewareTest {

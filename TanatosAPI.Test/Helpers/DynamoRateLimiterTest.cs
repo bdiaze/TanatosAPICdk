@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Text;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.RateLimit;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Test.Helpers {
