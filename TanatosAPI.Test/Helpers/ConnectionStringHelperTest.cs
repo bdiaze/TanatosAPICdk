@@ -13,6 +13,7 @@ namespace TanatosAPI.Test.Helpers {
 	public class ConnectionStringHelperTest {
 		private readonly IHostEnvironment env = Substitute.For<IHostEnvironment>();
 		private readonly IConfiguration config = Substitute.For<IConfiguration>();
+		private readonly IFileHelper fileHelper = Substitute.For<IFileHelper>();
 		private readonly IVariableEntornoHelper variableEntorno = Substitute.For<IVariableEntornoHelper>();
 		private readonly ISecretManagerHelper secretManager = Substitute.For<ISecretManagerHelper>();
 		private readonly ConnectionStringHelper connectionStringHelper;
@@ -20,13 +21,14 @@ namespace TanatosAPI.Test.Helpers {
 		public ConnectionStringHelperTest() {
 			variableEntorno.Obtener("APP_NAME").Returns("AppNameTest");
 
-			connectionStringHelper = new(env, config, variableEntorno, secretManager);
+			connectionStringHelper = new(env, config, fileHelper, variableEntorno, secretManager);
 		}
 
 		[Fact]
 		public async Task Obtener_ValidoProduction() {
 			env.EnvironmentName = Environments.Production;
 			variableEntorno.Obtener("SECRET_ARN_CONNECTION_STRING").Returns("SecretArnConnectionStringTest");
+			fileHelper.Exists(Arg.Any<string>()).Returns(true);
 			Random rnd = new();
 			string passwordDummy = rnd.Next(1000, 10000).ToString();
 			Dictionary<string, string> dummySecret = new() {
@@ -50,9 +52,33 @@ namespace TanatosAPI.Test.Helpers {
 		}
 
 		[Fact]
+		public async Task Obtener_SinCertsProduction() {
+			env.EnvironmentName = Environments.Production;
+			variableEntorno.Obtener("SECRET_ARN_CONNECTION_STRING").Returns("SecretArnConnectionStringTest");
+			fileHelper.Exists(Arg.Any<string>()).Returns(false);
+			Random rnd = new();
+			string passwordDummy = rnd.Next(1000, 10000).ToString();
+			Dictionary<string, string> dummySecret = new() {
+				["Host"] = "host.test",
+				["Port"] = "5432",
+				["AppNameTestDatabase"] = "database-test",
+				["AppNameTestAppUsername"] = "username-test",
+				["AppNameTestAppPassword"] = passwordDummy
+			};
+			secretManager.ObtenerSecreto(Arg.Any<string>()).Returns(JsonSerializer.Serialize(dummySecret));
+
+			await Assert.ThrowsAsync<FileNotFoundException>(() => connectionStringHelper.Obtener());
+			variableEntorno.Received(1).Obtener("APP_NAME");
+			variableEntorno.Received(1).Obtener("SECRET_ARN_CONNECTION_STRING");
+			await secretManager.Received(1).ObtenerSecreto(Arg.Any<string>());
+		}
+
+
+		[Fact]
 		public async Task Obtener_Repetido() {
 			env.EnvironmentName = Environments.Production;
 			variableEntorno.Obtener("SECRET_ARN_CONNECTION_STRING").Returns("SecretArnConnectionStringTest");
+			fileHelper.Exists(Arg.Any<string>()).Returns(true);
 			Random rnd = new();
 			string passwordDummy = rnd.Next(1000, 10000).ToString();
 			Dictionary<string, string> dummySecret = new() {
