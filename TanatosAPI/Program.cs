@@ -16,7 +16,9 @@ using TanatosAPI.Business;
 using TanatosAPI.Endpoints;
 using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Business;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 using TanatosAPI.UseCases;
 
@@ -144,13 +146,13 @@ builder.Services.AddHttpClient<IGoogleRecaptchaHttpClient, HttpClientWrapper>((s
 	httpClient.BaseAddress = new Uri(recaptchaBaseUrl);
 });
 builder.Services.AddScoped<ICognitoHelper, CognitoHelper>();
-builder.Services.AddScoped<HermesHelper>();
-builder.Services.AddScoped<KairosHelper>();
-builder.Services.AddScoped<FlowHelper>();
-builder.Services.AddScoped<GoogleRecaptchaHelper>();
-builder.Services.AddSingleton<ConnectionStringHelper>();
+builder.Services.AddScoped<IHermesHelper, HermesHelper>();
+builder.Services.AddScoped<IKairosHelper, KairosHelper>();
+builder.Services.AddScoped<IFlowHelper, FlowHelper>();
+builder.Services.AddScoped<IGoogleRecaptchaHelper, GoogleRecaptchaHelper>();
+builder.Services.AddSingleton<IConnectionStringHelper, ConnectionStringHelper>();
 builder.Services.AddSingleton(serviceProvider => {
-	ConnectionStringHelper connectionString = serviceProvider.GetRequiredService<ConnectionStringHelper>();
+	IConnectionStringHelper connectionString = serviceProvider.GetRequiredService<IConnectionStringHelper>();
     string connString = connectionString.Obtener().GetAwaiter().GetResult();
     NpgsqlConnectionStringBuilder stringBuilder = new(connString) {
         MaxPoolSize = 5
@@ -158,8 +160,7 @@ builder.Services.AddSingleton(serviceProvider => {
 	return new NpgsqlDataSourceBuilder(stringBuilder.ToString()).Build();
 });
 builder.Services.AddSingleton<IDatabaseConnectionHelper, DatabaseConnectionHelper>();
-builder.Services.AddSingleton<HtmlRenderer>();
-builder.Services.AddSingleton<CryptoHelper>();
+builder.Services.AddSingleton<IHtmlRenderer, HtmlRenderer>();
 builder.Services.AddSingleton<IS3Helper, S3Helper>();
 builder.Services.AddSingleton<IDocumentoAdjuntoHelper, DocumentoAdjuntoHelper>();
 builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
@@ -169,34 +170,34 @@ builder.Services.AddSingleton<IKMSHelper, KMSHelper>();
 
 #region Singleton DAO
 builder.Services.AddScoped<ICategoriaNormaDao, CategoriaNormaDao>();
-builder.Services.AddScoped<DestinatarioNotificacionDao>();
-builder.Services.AddScoped<InscripcionTemplateDao>();
-builder.Services.AddScoped<TemplateDao>();
-builder.Services.AddScoped<TemplateNormaDao>();
-builder.Services.AddScoped<TemplateNormaFiscalizadorDao>();
-builder.Services.AddScoped<TemplateNormaNotificacionDao>();
-builder.Services.AddScoped<TemplateActividadDao>();
-builder.Services.AddScoped<TipoFiscalizadorDao>();
-builder.Services.AddScoped<TipoPeriodicidadDao>();
-builder.Services.AddScoped<TipoReceptorNotificacionDao>();
-builder.Services.AddScoped<TipoUnidadTiempoDao>();
-builder.Services.AddScoped<TipoRubroDao>();
-builder.Services.AddScoped<TipoActividadDao>();
-builder.Services.AddScoped<NegocioDao>();
-builder.Services.AddScoped<NormaSuscritaDao>();
-builder.Services.AddScoped<FiscalizadorNormaSuscritaDao>();
-builder.Services.AddScoped<NotificacionNormaSuscritaDao>();
-builder.Services.AddScoped<HistorialNormaSuscritaDao>();
-builder.Services.AddScoped<HistorialNotificacionDao>();
+builder.Services.AddScoped<IDestinatarioNotificacionDao, DestinatarioNotificacionDao>();
+builder.Services.AddScoped<IInscripcionTemplateDao, InscripcionTemplateDao>();
+builder.Services.AddScoped<ITemplateDao, TemplateDao>();
+builder.Services.AddScoped<ITemplateNormaDao, TemplateNormaDao>();
+builder.Services.AddScoped<ITemplateNormaFiscalizadorDao, TemplateNormaFiscalizadorDao>();
+builder.Services.AddScoped<ITemplateNormaNotificacionDao, TemplateNormaNotificacionDao>();
+builder.Services.AddScoped<ITemplateActividadDao, TemplateActividadDao>();
+builder.Services.AddScoped<ITipoFiscalizadorDao, TipoFiscalizadorDao>();
+builder.Services.AddScoped<ITipoPeriodicidadDao, TipoPeriodicidadDao>();
+builder.Services.AddScoped<ITipoReceptorNotificacionDao, TipoReceptorNotificacionDao>();
+builder.Services.AddScoped<ITipoUnidadTiempoDao, TipoUnidadTiempoDao>();
+builder.Services.AddScoped<ITipoRubroDao, TipoRubroDao>();
+builder.Services.AddScoped<ITipoActividadDao, TipoActividadDao>();
+builder.Services.AddScoped<INegocioDao, NegocioDao>();
+builder.Services.AddScoped<INormaSuscritaDao, NormaSuscritaDao>();
+builder.Services.AddScoped<IFiscalizadorNormaSuscritaDao, FiscalizadorNormaSuscritaDao>();
+builder.Services.AddScoped<INotificacionNormaSuscritaDao, NotificacionNormaSuscritaDao>();
+builder.Services.AddScoped<IHistorialNormaSuscritaDao, HistorialNormaSuscritaDao>();
+builder.Services.AddScoped<IHistorialNotificacionDao, HistorialNotificacionDao>();
 builder.Services.AddScoped<IDocumentoAdjuntoDao, DocumentoAdjuntoDao>();
-builder.Services.AddScoped<MensajeDao>();
-builder.Services.AddScoped<PlanDao>();
-builder.Services.AddScoped<SuscripcionDao>();
-builder.Services.AddScoped<EventoPagoDao>();
-builder.Services.AddScoped<PagoDao>();
-builder.Services.AddScoped<UsuarioDao>();
+builder.Services.AddScoped<IMensajeDao, MensajeDao>();
+builder.Services.AddScoped<IPlanDao, PlanDao>();
+builder.Services.AddScoped<ISuscripcionDao, SuscripcionDao>();
+builder.Services.AddScoped<IEventoPagoDao, EventoPagoDao>();
+builder.Services.AddScoped<IPagoDao, PagoDao>();
+builder.Services.AddScoped<IUsuarioDao, UsuarioDao>();
 builder.Services.AddScoped<ICargoDao, CargoDao>();
-builder.Services.AddScoped<EmpleadoDao>();
+builder.Services.AddScoped<IEmpleadoDao, EmpleadoDao>();
 builder.Services.AddScoped<IPreguntaFrecuenteDao, PreguntaFrecuenteDao>();
 builder.Services.AddScoped<IVideoTutorialDao, VideoTutorialDao>();
 #endregion
@@ -206,20 +207,22 @@ builder.Services.AddScoped<NormaSuscritaBcp>();
 builder.Services.AddScoped<HistorialNormaSuscritaBcp>();
 builder.Services.AddScoped<FiscalizadorNormaSuscritaBcp>();
 builder.Services.AddScoped<NotificacionNormaSuscritaBcp>();
-builder.Services.AddScoped<ProcesoNotificacionBcp>();
 builder.Services.AddScoped<DestinatarioNotificacionBcp>();
 builder.Services.AddScoped<DocumentoAdjuntoBcp>();
 builder.Services.AddScoped<MensajeBcp>();
-builder.Services.AddScoped<SuscripcionBcp>();
+builder.Services.AddScoped<ISuscripcionBcp, SuscripcionBcp>();
 builder.Services.AddScoped<TemplateNormaBcp>();
 builder.Services.AddScoped<INegocioBcp, NegocioBcp>();
-builder.Services.AddScoped<UsuarioBcp>();
+builder.Services.AddScoped<IUsuarioBcp, UsuarioBcp>();
 builder.Services.AddScoped<HistorialNotificacionBcp>();
 builder.Services.AddScoped<ICargoBcp, CargoBcp>();
 builder.Services.AddScoped<IEmpleadoBcp, EmpleadoBcp>();
 builder.Services.AddScoped<ICategoriaNormaBcp, CategoriaNormaBcp>();
 builder.Services.AddScoped<IPreguntaFrecuenteBcp, PreguntaFrecuenteBcp>();
 builder.Services.AddScoped<IVideoTutorialBcp, VideoTutorialBcp>();
+builder.Services.AddScoped<IPlanBcp, PlanBcp>();
+builder.Services.AddScoped<IEventoPagoBcp, EventoPagoBcp>();
+builder.Services.AddScoped<IPagoBcp, PagoBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -230,6 +233,10 @@ builder.Services.AddScoped<CargoUseCase>();
 builder.Services.AddScoped<CategoriaNormaUseCase>();
 builder.Services.AddScoped<PreguntaFrecuenteUseCase>();
 builder.Services.AddScoped<VideoTutorialUseCase>();
+builder.Services.AddScoped<SuscripcionUseCase>();
+builder.Services.AddScoped<NegocioUseCase>();
+builder.Services.AddScoped<NormaSuscritaUseCase>();
+builder.Services.AddScoped<NotificacionUseCase>();
 #endregion
 
 string cognitoRegion;

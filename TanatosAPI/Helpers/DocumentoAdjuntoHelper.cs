@@ -1,4 +1,4 @@
-﻿using TanatosAPI.Interfaces;
+﻿using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
 	public class DocumentoAdjuntoHelper(IS3Helper s3Helper, IVariableEntornoHelper variableEntorno) : IDocumentoAdjuntoHelper {

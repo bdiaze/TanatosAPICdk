@@ -3,7 +3,7 @@ using Amazon.S3.Model;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Mime;
 using System.Text.RegularExpressions;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
     public class S3Helper(IAmazonS3 amazonS3, IDateTimeProvider dateTimeProvider): IS3Helper {

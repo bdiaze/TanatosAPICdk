@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
     public class VariableEntornoHelper(IHostEnvironment env, IConfiguration config): IVariableEntornoHelper {

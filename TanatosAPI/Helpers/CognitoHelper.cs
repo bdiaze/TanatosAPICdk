@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text.Json;
 using TanatosAPI.Exceptions;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
     public class CognitoHelper(IAmazonCognitoIdentityProvider client, IVariableEntornoHelper variableEntorno, ICognitoHttpClient httpClient) : ICognitoHelper {

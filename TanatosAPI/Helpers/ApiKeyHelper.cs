@@ -1,7 +1,7 @@
 ﻿using Amazon.APIGateway;
 using Amazon.APIGateway.Model;
 using System.Diagnostics.CodeAnalysis;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
     public class ApiKeyHelper(IAmazonAPIGateway apiClient) : IApiKeyHelper {

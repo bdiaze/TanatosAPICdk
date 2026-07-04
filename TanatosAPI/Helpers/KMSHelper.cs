@@ -2,7 +2,7 @@
 using AWS.Cryptography.EncryptionSDK;
 using AWS.Cryptography.MaterialProviders;
 using System.Diagnostics.CodeAnalysis;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
 	[ExcludeFromCodeCoverage]

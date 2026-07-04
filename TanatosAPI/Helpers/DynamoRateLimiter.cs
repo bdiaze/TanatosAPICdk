@@ -1,7 +1,7 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using TanatosAPI.Entities.Others;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Entities.Others.RateLimit;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
     public class DynamoRateLimiter(IVariableEntornoHelper variableEntorno, IAmazonDynamoDB dynamo, IDateTimeProvider dateTimeProvider) : IRateLimiter {

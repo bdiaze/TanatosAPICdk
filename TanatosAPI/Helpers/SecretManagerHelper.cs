@@ -1,6 +1,6 @@
 ﻿using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
     public class SecretManagerHelper(IAmazonSecretsManager client) : ISecretManagerHelper {

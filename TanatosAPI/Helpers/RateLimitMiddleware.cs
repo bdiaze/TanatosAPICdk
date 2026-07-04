@@ -1,8 +1,8 @@
 ﻿using Amazon.Lambda.Core;
 using System.Diagnostics;
 using System.Security.Claims;
-using TanatosAPI.Entities.Others;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Entities.Others.RateLimit;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
     public class RateLimitMiddleware(RequestDelegate next, IRateLimiter rateLimiter, IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider) {

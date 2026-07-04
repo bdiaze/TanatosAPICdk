@@ -4,7 +4,25 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Others;
+using TanatosAPI.Entities.Others.Auth;
+using TanatosAPI.Entities.Others.Cargo;
+using TanatosAPI.Entities.Others.DestinatarioNotificacion;
+using TanatosAPI.Entities.Others.DocumentoAdjunto;
+using TanatosAPI.Entities.Others.Empleado;
+using TanatosAPI.Entities.Others.Flow;
+using TanatosAPI.Entities.Others.Google;
+using TanatosAPI.Entities.Others.Hermes;
+using TanatosAPI.Entities.Others.InscripcionTemplate;
+using TanatosAPI.Entities.Others.Kairos;
+using TanatosAPI.Entities.Others.Mensaje;
+using TanatosAPI.Entities.Others.Negocio;
+using TanatosAPI.Entities.Others.NormaSuscrita;
+using TanatosAPI.Entities.Others.Perfil;
+using TanatosAPI.Entities.Others.Plan;
+using TanatosAPI.Entities.Others.PreguntaFrecuente;
+using TanatosAPI.Entities.Others.Suscripcion;
+using TanatosAPI.Entities.Others.VideoTutorial;
+using TanatosAPI.Entities.Others.Whatsapp;
 
 namespace TanatosAPI.Helpers {
     [ExcludeFromCodeCoverage]

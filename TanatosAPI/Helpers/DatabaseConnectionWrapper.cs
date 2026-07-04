@@ -1,7 +1,7 @@
 ﻿using Npgsql;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
 	[ExcludeFromCodeCoverage]
