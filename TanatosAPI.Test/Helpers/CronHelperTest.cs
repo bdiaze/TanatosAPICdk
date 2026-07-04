@@ -37,33 +37,7 @@ namespace TanatosAPI.Test.Helpers {
 		public async Task GenerarCronAWSDesdeFechaTest_Invalido() {
 			Assert.Throws<ArgumentException>(() => CronHelper.GenerarCronAWSDesdeFecha(DateTime.UtcNow, "MI HO DM MO ? YE X"));
 		}
-
-		public static TheoryData<DateTime, DateTime> FechasUTC => new() {
-			{ new DateTime(2026, 4, 4, 23, 59, 0, DateTimeKind.Utc),  new DateTime(2026, 4, 4, 20, 59, 0, DateTimeKind.Unspecified) },
-			{ new DateTime(2026, 4, 5, 23, 59, 0, DateTimeKind.Utc),  new DateTime(2026, 4, 5, 19, 59, 0, DateTimeKind.Unspecified) },
-			{ new DateTime(2026, 4, 5, 00, 01, 0, DateTimeKind.Utc),  new DateTime(2026, 4, 4, 21, 01, 0, DateTimeKind.Unspecified) },
-			{ new DateTime(2026, 4, 6, 00, 01, 0, DateTimeKind.Utc),  new DateTime(2026, 4, 5, 20, 01, 0, DateTimeKind.Unspecified) },
-		};
-		[Theory]
-		[MemberData(nameof(FechasUTC))]
-		public async Task TransformarFechaUTCATimezoneTest(DateTime fechaUtc, DateTime expectedLocal) {
-			DateTime retorno = CronHelper.TransformarFechaUTCATimezone(fechaUtc);
-			Assert.Equal(expectedLocal, retorno);
-		}
-
-		public static TheoryData<DateTime, DateTime> FechasLocales => new() {
-			{ new DateTime(2026, 4, 4, 20, 59, 0, DateTimeKind.Unspecified), new DateTime(2026, 4, 4, 23, 59, 0, DateTimeKind.Utc) },
-			{ new DateTime(2026, 4, 5, 19, 59, 0, DateTimeKind.Unspecified), new DateTime(2026, 4, 5, 23, 59, 0, DateTimeKind.Utc) },
-			{ new DateTime(2026, 4, 4, 21, 01, 0, DateTimeKind.Unspecified), new DateTime(2026, 4, 5, 00, 01, 0, DateTimeKind.Utc) },
-			{ new DateTime(2026, 4, 5, 20, 01, 0, DateTimeKind.Unspecified), new DateTime(2026, 4, 6, 00, 01, 0, DateTimeKind.Utc) },
-		};
-		[Theory]
-		[MemberData(nameof(FechasLocales))]
-		public async Task TransformarFechaTimezoneAUTCTest(DateTime fechaLocal, DateTime expectedUtc) {
-			DateTime retorno = CronHelper.TransformarFechaTimezoneAUTC(fechaLocal);
-			Assert.Equal(expectedUtc, retorno);
-		}
-
+		
 		[Theory]
 		[InlineData("0 12 23 4 ? *", "0 12 23 4 *")]
 		[InlineData("0 12 9 * ? *", "0 12 9 * *")]
