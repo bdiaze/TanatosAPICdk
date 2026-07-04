@@ -4,7 +4,7 @@ using Scriban.Syntax;
 using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
-    public class HtmlRenderer(IHostEnvironment environment) : IHtmlRenderer {
+    public class HtmlRenderer(IHostEnvironment environment, IFileHelper fileHelper) : IHtmlRenderer {
         private async Task<string> ObtenerTemplate(string nombreTemplate) {
 			string path;
 			if (!environment.IsDevelopment()) {
@@ -12,7 +12,7 @@ namespace TanatosAPI.Helpers {
 			} else {
 				path = Path.Combine(Directory.GetCurrentDirectory(), "TemplatesCorreos", nombreTemplate);
 			}
-            return await File.ReadAllTextAsync(path);
+            return await fileHelper.ReadAllTextAsync(path);
 		}
 
         public async Task<string> GenerarHtml(string nombreTemplate, ScriptObject? parametros = null, bool conTemplateBase = true) {

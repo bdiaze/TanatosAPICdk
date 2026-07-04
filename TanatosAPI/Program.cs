@@ -106,6 +106,7 @@ builder.Services.AddSingleton<IAmazonKeyManagementService>(sp => {
 #endregion
 
 #region Singleton Helpers
+builder.Services.AddSingleton<IFileHelper, FileHelper>();
 builder.Services.AddSingleton<IVariableEntornoHelper, VariableEntornoHelper>();
 builder.Services.AddSingleton<ISecretManagerHelper, SecretManagerHelper>();
 builder.Services.AddSingleton<IApiKeyHelper, ApiKeyHelper>();

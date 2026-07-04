@@ -4,7 +4,7 @@ using System.Text.Json;
 using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
-    public class ConnectionStringHelper(IHostEnvironment env, IConfiguration config, IVariableEntornoHelper variableEntorno, ISecretManagerHelper secretManager) : IConnectionStringHelper {
+    public class ConnectionStringHelper(IHostEnvironment env, IConfiguration config, IFileHelper fileHelper, IVariableEntornoHelper variableEntorno, ISecretManagerHelper secretManager) : IConnectionStringHelper {
 
         private string? connectionString = null;
 
@@ -38,7 +38,7 @@ namespace TanatosAPI.Helpers {
                 if (env.IsProduction()) {
                     string pathCert = Path.Combine(AppContext.BaseDirectory, "Certs", "global-bundle.pem");
 					// Se valida que existe el root certificate...
-                    if (!File.Exists(pathCert)) throw new FileNotFoundException("No se encontró el certificado raíz para la conexión SSL", pathCert);
+                    if (!fileHelper.Exists(pathCert)) throw new FileNotFoundException("No se encontró el certificado raíz para la conexión SSL", pathCert);
 
 					builder.SslMode = SslMode.VerifyFull;
                     builder.RootCertificate = pathCert;
