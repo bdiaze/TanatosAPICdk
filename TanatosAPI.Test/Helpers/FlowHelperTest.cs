@@ -227,6 +227,32 @@ namespace TanatosAPI.Test.Helpers {
 		}
 
 		[Fact]
+		public async Task SubscriptionCreate_ValidoConFechaInicio() {
+			httpClient.PostAsync("subscription/create", Arg.Any<FormUrlEncodedContent>()).Returns(new HttpResponseMessage {
+				StatusCode = HttpStatusCode.OK,
+				Content = new StringContent(
+					JsonSerializer.Serialize(new SalFlowSubscriptionCreate {
+						SubscriptionId = "SubscriptionIdTest",
+						Status = 1
+					}),
+					Encoding.UTF8,
+					"application/json"
+				)
+			});
+
+			SalFlowSubscriptionCreate retorno = await flowHelper.SubscriptionCreate("PlanIdTest", "CustomerIdTest", new DateTime(2026, 7, 4, 12, 0, 0, DateTimeKind.Utc));
+			Assert.Equal("SubscriptionIdTest", retorno.SubscriptionId);
+			Assert.Equal((short)1, retorno.Status);
+			await httpClient.Received(1).PostAsync("subscription/create", Arg.Any<FormUrlEncodedContent>());
+		}
+
+		[Fact]
+		public async Task SubscriptionCreate_FechaInicioNoUTC() {
+			await Assert.ThrowsAsync<InvalidOperationException>(() => flowHelper.SubscriptionCreate("PlanIdTest", "CustomerIdTest", new DateTime(2026, 7, 4, 12, 0, 0, DateTimeKind.Unspecified)));
+			await httpClient.DidNotReceive().PostAsync("subscription/create", Arg.Any<FormUrlEncodedContent>());
+		}
+
+		[Fact]
 		public async Task SubscriptionCreate_StatusCodeError() {
 			httpClient.PostAsync("subscription/create", Arg.Any<FormUrlEncodedContent>()).Returns(new HttpResponseMessage {
 				StatusCode = HttpStatusCode.BadRequest
