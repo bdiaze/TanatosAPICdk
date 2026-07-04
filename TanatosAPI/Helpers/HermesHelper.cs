@@ -3,11 +3,11 @@ using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using TanatosAPI.Entities.Others;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Entities.Others.Hermes;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
-    public class HermesHelper(IHermesHttpClient httpClient) {
+    public class HermesHelper(IHermesHttpClient httpClient) : IHermesHelper {
 
 		public async Task<SalHermesEnviar> EnviarCorreo(EntHermesCorreoEnviar correo) {
 			using HttpResponseMessage response = await httpClient.PostAsync("Correo/Enviar", new StringContent(JsonSerializer.Serialize(correo, AppJsonSerializerContext.Default.EntHermesCorreoEnviar), Encoding.UTF8, "application/json"));

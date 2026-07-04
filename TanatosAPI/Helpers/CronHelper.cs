@@ -65,24 +65,6 @@ namespace TanatosAPI.Helpers {
 			return string.Join(" ", cronConfigs);
 		}
 
-		public static DateTime TransformarFechaUTCATimezone(DateTime fecha, string timezone = "America/Santiago") {
-			// Nos aseguramos de que la fecha esté en UTC...
-			fecha = DateTime.SpecifyKind(fecha, DateTimeKind.Utc);
-
-			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
-
-			return TimeZoneInfo.ConvertTimeFromUtc(fecha, timeZoneInfo);
-		}
-
-		public static DateTime TransformarFechaTimezoneAUTC(DateTime fecha, string timezone = "America/Santiago") {
-			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
-
-			// Especificamos que la fecha es local (de esa timezone)
-			fecha = DateTime.SpecifyKind(fecha, DateTimeKind.Unspecified);
-
-			return TimeZoneInfo.ConvertTimeToUtc(fecha, timeZoneInfo);
-		}
-
 		public static string TransformarCronAWSAStandard(string awsCron) {
 			awsCron = awsCron.Trim();
 			awsCron = Regex.Replace(awsCron, @"\s+", " ", RegexOptions.NonBacktracking);

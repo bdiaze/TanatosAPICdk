@@ -5,11 +5,11 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using TanatosAPI.Entities.Others;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Entities.Others.Google;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
-    public class GoogleRecaptchaHelper(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, ISecretManagerHelper secretManagerHelper, IGoogleCredentialHttpClient credentialHttpClient, IGoogleRecaptchaHttpClient recaptchaHttpClient, IDateTimeProvider dateTimeProvider) {
+    public class GoogleRecaptchaHelper(IHostEnvironment environment, IVariableEntornoHelper variableEntorno, ISecretManagerHelper secretManagerHelper, IGoogleCredentialHttpClient credentialHttpClient, IGoogleRecaptchaHttpClient recaptchaHttpClient, IDateTimeProvider dateTimeProvider) : IGoogleRecaptchaHelper {
         private readonly string GOOGLE_SCOPE = variableEntorno.Obtener("GOOGLE_OAUTH2_SCOPE");
         private readonly string GOOGLE_GRANT_TYPE = variableEntorno.Obtener("GOOGLE_OAUTH2_GRANT_TYPE");
 

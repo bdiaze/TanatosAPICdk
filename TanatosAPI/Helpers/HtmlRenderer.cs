@@ -1,9 +1,10 @@
 ﻿using Scriban;
 using Scriban.Runtime;
 using Scriban.Syntax;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
-    public class HtmlRenderer(IHostEnvironment environment) {
+    public class HtmlRenderer(IHostEnvironment environment) : IHtmlRenderer {
         private async Task<string> ObtenerTemplate(string nombreTemplate) {
 			string path;
 			if (!environment.IsDevelopment()) {

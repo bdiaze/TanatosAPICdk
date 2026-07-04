@@ -1,10 +1,10 @@
 ﻿using Npgsql;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
-    public class ConnectionStringHelper(IHostEnvironment env, IConfiguration config, IVariableEntornoHelper variableEntorno, ISecretManagerHelper secretManager) {
+    public class ConnectionStringHelper(IHostEnvironment env, IConfiguration config, IVariableEntornoHelper variableEntorno, ISecretManagerHelper secretManager) : IConnectionStringHelper {
 
         private string? connectionString = null;
 

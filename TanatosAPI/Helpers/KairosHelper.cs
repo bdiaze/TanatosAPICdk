@@ -2,11 +2,11 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using TanatosAPI.Entities.Others;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Entities.Others.Kairos;
+using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.Helpers {
-    public class KairosHelper(IKairosHttpClient httpClient) {
+    public class KairosHelper(IKairosHttpClient httpClient) : IKairosHelper {
 		public async Task<SalKairosIngresarProceso> IngresarProceso(EntKairosIngresarProceso proceso) {
 			HttpResponseMessage response = await httpClient.PostAsync("Procesos", new StringContent(JsonSerializer.Serialize(proceso, AppJsonSerializerContext.Default.EntKairosIngresarProceso), Encoding.UTF8, "application/json"));
 			if (response.StatusCode != HttpStatusCode.OK) {
