@@ -2,7 +2,8 @@
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Interfaces;
+using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Repositories {
 	[ExcludeFromCodeCoverage]
