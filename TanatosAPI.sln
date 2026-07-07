@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TanatosAPI.Test", "TanatosA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cdk", "Cdk\src\Cdk\Cdk.csproj", "{1ED259B9-F919-311B-C949-5F3A3B0BBACF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InitialCreationLambda", "InitialCreationLambda\InitialCreationLambda\InitialCreationLambda.csproj", "{7DABA5A2-6B8F-5FFD-2673-245C46DC7844}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{1ED259B9-F919-311B-C949-5F3A3B0BBACF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1ED259B9-F919-311B-C949-5F3A3B0BBACF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1ED259B9-F919-311B-C949-5F3A3B0BBACF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DABA5A2-6B8F-5FFD-2673-245C46DC7844}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DABA5A2-6B8F-5FFD-2673-245C46DC7844}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DABA5A2-6B8F-5FFD-2673-245C46DC7844}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DABA5A2-6B8F-5FFD-2673-245C46DC7844}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

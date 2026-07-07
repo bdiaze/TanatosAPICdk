@@ -209,7 +209,6 @@ jobs:
             - name: Compress Publish Directory .NET Initial Creation Lambda
               working-directory: ${{ vars.INITIAL_CREATION_DIRECTORY }}/publish
               run: |
-                  find . -type f -exec touch -t 202001010000 {} +
                   zip -X -r -q -T publish.zip .
             
             - name: Log in to registry
@@ -226,7 +225,6 @@ jobs:
                   docker run --rm -v ${{ github.workspace }}:/src -v ~/.nuget/packages:/root/.nuget/packages -w /src ${{ env.DOCKER_SRC }} bash -c "
                     dotnet publish ${{ vars.PROJECT_NAME }} /p:PublishDir=../publish /p:PublishAot=true -r linux-x64 --self-contained &&
                     cd ./publish &&
-                    find . -type f -exec touch -t 202001010000 {} + &&
                     zip -X -r -q -T publish.zip ."
       
             - name: Configure AWS Credentials
