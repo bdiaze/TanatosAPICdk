@@ -1,4 +1,4 @@
-using Amazon.CDK;
+锘縰sing Amazon.CDK;
 using Amazon.CDK.AWS.Apigatewayv2;
 using Amazon.CDK.AWS.CertificateManager;
 using Amazon.CDK.AWS.Cognito;
@@ -72,7 +72,7 @@ namespace Cdk
 			string cognitoTriggerTokenValidityMinutes = System.Environment.GetEnvironmentVariable("COGNITO_TRIGGER_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno COGNITO_TRIGGER_TOKEN_VALIDITY_MINUTES");
 			string arnParameterCognitoTriggerLambdaArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_COGNITO_TRIGGER_LAMBDA_ARN") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_PARAMETER_COGNITO_TRIGGER_LAMBDA_ARN");
 
-			// Para procesos de notificaci髇...
+			// Para procesos de notificaci贸n...
 			string notificacionesTokenValidityMinutes = System.Environment.GetEnvironmentVariable("NOTIFICACIONES_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno NOTIFICACIONES_TOKEN_VALIDITY_MINUTES");
 
 			// Para infraestructura...
@@ -114,7 +114,7 @@ namespace Cdk
 			string flowUrlRetorno = System.Environment.GetEnvironmentVariable("FLOW_URL_RETORNO") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno FLOW_URL_RETORNO");
             string urlCodigoVerificacion = System.Environment.GetEnvironmentVariable("URL_CODIGO_VERIFICACION") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno URL_CODIGO_VERIFICACION");
             
-            // Variables de entorno para la lambda de ejecuci髇 inicial...
+            // Variables de entorno para la lambda de ejecuci贸n inicial...
             string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno APP_SCHEMA_NAME");
             string initialCreationHandler = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_HANDLER") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno INITIAL_CREATION_HANDLER");
             string initialCreationPublishZip = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_PUBLISH_ZIP") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno INITIAL_CREATION_PUBLISH_ZIP");
@@ -155,7 +155,7 @@ namespace Cdk
 				HostedZoneId = props.HostedZone.HostedZoneId,
 			});
 
-			// Se crea email identity para env韔 de correos...
+			// Se crea email identity para env铆o de correos...
 			EmailIdentity emailIdentity = new(this, $"{appName}EmailIdentity", new EmailIdentityProps {
 				Identity = Identity.PublicHostedZone(publicHostedZone),
 				MailFromDomain = mailFromDomain,
@@ -180,7 +180,7 @@ namespace Cdk
 
 			#region Cognito
 			Key kmsKey = new(this, $"{appName}KMSKey", new KeyProps {
-				Description = $"KMS Key para aplicaci髇 {appName}",
+				Description = $"KMS Key para aplicaci贸n {appName}",
 				RemovalPolicy = RemovalPolicy.DESTROY,
 			});
 
@@ -255,8 +255,8 @@ namespace Cdk
 			// Alcances:
 			//     - self: Datos del usuario
 			//     - all: Todos los datos del sistema
-			//     - public: Datos p鷅licos / vigentes
-			// Acci髇:
+			//     - public: Datos p煤blicos / vigentes
+			// Acci贸n:
 			//     - read: Lectura
 			//     - write: Crear, editar y borrar
 
@@ -310,12 +310,12 @@ namespace Cdk
 			#region Public Scopes
 			ResourceServerScope scopeTemplatesReadPublic = new(new ResourceServerScopeProps {
 				ScopeName = "templates.read.public",
-				ScopeDescription = "Acceso de lectura a los templates p鷅licos"
+				ScopeDescription = "Acceso de lectura a los templates p煤blicos"
 			});
 
 			ResourceServerScope scopeSistemaReadPublic = new(new ResourceServerScopeProps {
 				ScopeName = "sistema.read.public",
-				ScopeDescription = "Acceso de lectura a los parametros p鷅licos del sistema"
+				ScopeDescription = "Acceso de lectura a los parametros p煤blicos del sistema"
             });
 			#endregion
 
@@ -481,7 +481,7 @@ namespace Cdk
 				AccessTokenValidity = Duration.Minutes(double.Parse(notificacionesTokenValidityMinutes))
 			});
 
-			// Se crea userpoolclient a ser usado por aplicaci髇 de cognito...
+			// Se crea userpoolclient a ser usado por aplicaci贸n de cognito...
 			UserPoolClient cognitoTriggerUserPoolClient = new(this, $"{appName}CognitoTriggerUserPoolClient", new UserPoolClientProps {
 				UserPoolClientName = $"{appName}CognitoTriggerUserPoolClient",
 				UserPool = userPool,
@@ -708,7 +708,7 @@ namespace Cdk
 				Target = RecordTarget.FromAlias(new UserPoolDomainTarget(userPoolDomain)),
 			});
 
-			// Se configuran par醡etros para ser rescatados por consumidores...
+			// Se configuran par谩metros para ser rescatados por consumidores...
 			Secret secret = new(this, $"{appName}Secret", new SecretProps {
                 SecretName = $"/{appName}",
                 Description = $"Secretos de la aplicacion de {appName}",
@@ -793,14 +793,14 @@ namespace Cdk
             ISecurityGroup rdsSecurityGroup = SecurityGroup.FromSecurityGroupId(this, $"{appName}RDSSecurityGroup", rdsSecurityGroupId);
             rdsSecurityGroup.AddIngressRule(securityGroup, Port.POSTGRES, $"Allow connection from {appName} API Lambda to RDS");
 
-            // Creaci髇 de log group lambda...
+            // Creaci贸n de log group lambda...
             LogGroup logGroup = new(this, $"{appName}APILogGroup", new LogGroupProps {
                 LogGroupName = $"/aws/lambda/{appName}API/logs",
                 Retention = RetentionDays.ONE_MONTH,
                 RemovalPolicy = RemovalPolicy.DESTROY
             });
 
-			// Se obtienen par醡etros usados por la lambda...
+			// Se obtienen par谩metros usados por la lambda...
 			IStringParameter parameterHermesApiUrl = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterHermesApiUrl", arnParameterHermesApiUrl);
 			IStringParameter parameterHermesApiKeyId = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterHermesApiKeyId", arnParameterHermesApiKeyId);
 			IStringParameter parameterKairosApiUrl = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterKairosApiUrl", arnParameterKairosApiUrl);
@@ -808,7 +808,7 @@ namespace Cdk
 			IStringParameter parameterNotificacionesLambdaArn = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterNotificacionesLambdaArn", arnParameterNotificacionesLambdaArn);
 			IStringParameter parameterNotificacionesEjecucionRoleArn = StringParameter.FromStringParameterArn(this, $"{appName}StringParameterNotificacionesEjecucionRoleArn", arnParameterNotificacionesEjecucionRoleArn);
 
-			// Creaci髇 de role para la funci髇 lambda...
+			// Creaci贸n de role para la funci贸n lambda...
 			IRole roleLambda = new Role(this, $"{appName}APILambdaRole", new RoleProps {
                 RoleName = $"{appName}APILambdaRole",
                 Description = $"Role para API Lambda de {appName}",
@@ -896,7 +896,7 @@ namespace Cdk
 				cognitoTriggerUserPoolClient.UserPoolClientId
 			];
 
-			// Creaci髇 de la funci髇 lambda...
+			// Creaci贸n de la funci贸n lambda...
 			Function function = new(this, $"{appName}APILambdaFunction", new FunctionProps {
                 Runtime = Runtime.DOTNET_10,
                 Handler = handler,
@@ -949,14 +949,14 @@ namespace Cdk
                 Role = roleLambda,
             });
 
-            // Creaci髇 de access logs...
+            // Creaci贸n de access logs...
             LogGroup logGroupAccessLogs = new(this, $"{appName}APILogGroupAccessLogs", new LogGroupProps {
                 LogGroupName = $"/aws/lambda/{appName}API/access_logs",
                 Retention = RetentionDays.ONE_MONTH,
                 RemovalPolicy = RemovalPolicy.DESTROY
             });
 
-			// Creaci髇 del API Gateway HTTP API con integraci髇 a la lambda...
+			// Creaci贸n del API Gateway HTTP API con integraci贸n a la lambda...
 			HttpApi lambdaHttpApi = new(this, $"{appName}APILambdaHttpApi", new HttpApiProps {
 				ApiName = $"{appName}API",
 				Description = $"HTTP API de {appName}",
@@ -1022,7 +1022,7 @@ namespace Cdk
 				},
 			});
 
-            // Creaci髇 de la CfnApiMapping para el API Gateway...
+            // Creaci贸n de la CfnApiMapping para el API Gateway...
 			CfnApiMapping apiMapping = new(this, $"{appName}APIApiMapping", new CfnApiMappingProps {
                 DomainName = domainName,
                 ApiId = lambdaHttpApi.ApiId,
@@ -1031,7 +1031,7 @@ namespace Cdk
 			apiMapping.Node.AddDependency(stage);
 			apiMapping.Node.AddDependency(apiGatewayDomain);
 
-			// Se configura permisos para la ejecuc韔n de la Lambda desde el API Gateway...
+			// Se configura permisos para la ejecuc铆on de la Lambda desde el API Gateway...
 			ArnPrincipal arnPrincipal = new("apigateway.amazonaws.com");
             Permission permission = new() {
                 Scope = this,
@@ -1050,15 +1050,15 @@ namespace Cdk
             #endregion
 
             #region Initial Creation Lambda
-            // Se crea funci髇 lambda que ejecute scripts para la creaci髇 del esquema, usuario de aplicaci髇 y migraci髇 de EFCore...
-            // Primero creaci髇 de log group lambda de creaci髇 inicial...
+            // Se crea funci贸n lambda que ejecute scripts para la creaci贸n del esquema, usuario de aplicaci贸n y migraci贸n de EFCore...
+            // Primero creaci贸n de log group lambda de creaci贸n inicial...
             LogGroup logGroupInitialLambda = new(this, $"{appName}APIInitialCreationLambdaLogGroup", new LogGroupProps {
                 LogGroupName = $"/aws/lambda/{appName}APIInitialCreationLambda/logs",
                 Retention = RetentionDays.ONE_MONTH,
                 RemovalPolicy = RemovalPolicy.DESTROY
             });
 
-            // Luego la creaci髇 del rol para la funci髇 lambda...
+            // Luego la creaci贸n del rol para la funci贸n lambda...
             IRole roleInitialLambda = new Role(this, $"{appName}APIInitialCreationLambdaRole", new RoleProps {
                 RoleName = $"{appName}APIInitialCreationLambdaRole",
                 Description = $"Role para Lambda de creacion inicial {appName}",
@@ -1096,7 +1096,7 @@ namespace Cdk
             });
             rdsSecurityGroup.AddIngressRule(Peer.SecurityGroupId(securityGroupInitialLambda.SecurityGroupId), Port.POSTGRES, $"Ingress para funcion lambda de creacion inicial {appName}");
 
-            // Creaci髇 de la funci髇 lambda
+            // Creaci贸n de la funci贸n lambda
             Function functionInitial = new(this, $"{appName}APIInitialCreationLambda", new FunctionProps {
                 Runtime = Runtime.DOTNET_10,
                 Handler = initialCreationHandler,

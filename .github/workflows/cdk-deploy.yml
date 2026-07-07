@@ -57,17 +57,17 @@ jobs:
               
             - name: Sonar Begin
               env:
-                  PROJECT_NAME_TEST: ${{ vars.PROJECT_NAME_TEST }}
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
               run: |
                 dotnet-sonarscanner begin \
                   /k:"${{ vars.SONAR_PROJECT_KEY }}" \
                   /o:"${{ vars.SONAR_ORGANIZATION_KEY }}" \
                   /d:sonar.token="$SONAR_TOKEN" \
+                  /d:sonar.sourceEncoding="UTF-8" \
                   /d:sonar.cs.vstest.reportsPaths="**/*.trx" \
                   /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
-                  /d:sonar.tests="$PROJECT_NAME_TEST" \
-                  /d:sonar.coverage.exclusions="**/*.Design/**,**/Cdk/**"
+                  /d:sonar.coverage.exclusions="**/*.Design/**,**/Cdk/**" \
+                  /d:sonar.exclusions="**/*.jpeg,**/*.jpg,**/*.png,**/*.ico"
                   
             - name: Build
               run: dotnet build --configuration Release --no-restore

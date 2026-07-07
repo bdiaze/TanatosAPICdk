@@ -1,4 +1,4 @@
-using Amazon.APIGateway;
+﻿using Amazon.APIGateway;
 using Amazon.CognitoIdentityProvider;
 using Amazon.DynamoDBv2;
 using Amazon.KeyManagementService;
@@ -40,7 +40,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi(c => {
 	c.AddDocumentTransformer((document, context, cancellationToken) => {
 		document.Info = new() {
-			Title = "API T�natos - Minimal API AoT",
+			Title = "API Tánatos - Minimal API AoT",
 			Version = "v1"
 		};
 
