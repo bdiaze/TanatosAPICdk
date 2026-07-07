@@ -14,7 +14,7 @@
     <PackageReference Include="AWS.Cryptography.EncryptionSDK" Version="5.0.0" />
     <PackageReference Include="AWSSDK.APIGateway" Version="4.0.100.2" />
     <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.101" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.100.2" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.101" />
     <PackageReference Include="AWSSDK.S3" Version="4.0.100.2" />
     <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.100.2" />
     <PackageReference Include="Cronos" Version="0.13.0" />
