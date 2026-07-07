@@ -14,7 +14,8 @@
           </ExcludeByAttribute>
           <Exclude>
             [*.Design]*,
-            [*.Test]*
+            [*.Test]*,
+            [Cdk]*
           </Exclude>
         </Configuration>
       </DataCollector>

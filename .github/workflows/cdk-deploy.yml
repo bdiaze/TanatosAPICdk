@@ -6,7 +6,7 @@ on:
             - main
       
 jobs:
-    validate:
+    Validate:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Repositorio
@@ -57,6 +57,7 @@ jobs:
               
             - name: Sonar Begin
               env:
+                  PROJECT_NAME_TEST: ${{ vars.PROJECT_NAME_TEST }}
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
               run: |
                 dotnet-sonarscanner begin \
@@ -64,7 +65,9 @@ jobs:
                   /o:"${{ vars.SONAR_ORGANIZATION_KEY }}" \
                   /d:sonar.token="$SONAR_TOKEN" \
                   /d:sonar.cs.vstest.reportsPaths="**/*.trx" \
-                  /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
+                  /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+                  /d:sonar.tests="$PROJECT_NAME_TEST" \
+                  /d:sonar.coverage.exclusions="**/*.Design/**,**/Cdk/**"
                   
             - name: Build
               run: dotnet build --configuration Release --no-restore
@@ -79,8 +82,8 @@ jobs:
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
               run: dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
-    deploy:
-        needs: validate
+    Deploy:
+        needs: Validate
         runs-on: ubuntu-latest
         environment: Production
         permissions:
