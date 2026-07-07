@@ -13,6 +13,8 @@
             GeneratedCodeAttribute
           </ExcludeByAttribute>
           <Exclude>
+            [*.Design]*,
+            [*.Test]*
           </Exclude>
         </Configuration>
       </DataCollector>

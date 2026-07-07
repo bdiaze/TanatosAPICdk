@@ -8,7 +8,6 @@ on:
 jobs:
     validate:
         runs-on: ubuntu-latest
-        environment: Production
         steps:
             - name: Checkout Repositorio
               uses: actions/checkout@v7
@@ -16,21 +15,21 @@ jobs:
                   fetch-depth: 0
                   
             - name: Instalar .NET
-              uses: actions/setup-dotnet@v4
+              uses: actions/setup-dotnet@v5
               with:
                   dotnet-version: ${{ vars.VERSION_DOTNET }}
                 
-            - name: Set up JDK 17
-              uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+            - name: Instalar JDK
+              uses: actions/setup-java@v5
               with:
-                  java-version: 17
+                  java-version: ${{ vars.VERSION_JAVA }}
                   distribution: 'temurin'
                                 
             - name: Add .NET tools to PATH
               run: echo "$HOME/.dotnet-sonarscanner" >> $GITHUB_PATH
                                 
             - name: Cache SonarScanner Tool
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               id: sonar-tool-cache
               with:
                 path: ~/.dotnet-sonarscanner
@@ -41,7 +40,7 @@ jobs:
               run: dotnet tool install dotnet-sonarscanner --version ${{ vars.VERSION_SONARSCANNER }} --tool-path ~/.dotnet-sonarscanner
               
             - name: Cache NuGet
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: ~/.nuget/packages
                   key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.sln') }}
@@ -51,17 +50,19 @@ jobs:
               run: dotnet restore
               
             - name: Cache Sonar
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: ~/.sonar/cache
                   key: ${{ runner.os }}-sonar
               
             - name: Sonar Begin
+              env:
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
               run: |
                 dotnet-sonarscanner begin \
                   /k:"${{ vars.SONAR_PROJECT_KEY }}" \
                   /o:"${{ vars.SONAR_ORGANIZATION_KEY }}" \
-                  /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+                  /d:sonar.token="$SONAR_TOKEN" \
                   /d:sonar.cs.vstest.reportsPaths="**/*.trx" \
                   /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
                   
@@ -74,7 +75,9 @@ jobs:
                 dotnet test --configuration Release --no-build --settings coverlet.runsettings --logger "trx"
                 
             - name: Sonar End
-              run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+              env:
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+              run: dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
     deploy:
         needs: validate
@@ -170,7 +173,7 @@ jobs:
               run: echo "$HOME/.dotnet-ef" >> $GITHUB_PATH
               
             - name: Cache .NET EF
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               id: ef-cache
               with:
                 path: ~/.dotnet-ef
@@ -181,7 +184,7 @@ jobs:
               run: dotnet tool install dotnet-ef --version ${{ vars.VERSION_DOTNET_EF }} --tool-path ~/.dotnet-ef
               
             - name: Cache NuGet
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: ~/.nuget/packages
                   key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.sln') }}
