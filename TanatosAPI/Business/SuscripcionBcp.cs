@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Logging;
 using Npgsql;
 using System.Transactions;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
@@ -17,6 +18,20 @@ namespace TanatosAPI.Business {
 
 		public bool PerteneceAlUsuario(Suscripcion suscripcion, string sub) {
 			return suscripcion.Sub == sub;
+		}
+
+		public List<Suscripcion> FiltrarExpiradas(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
+			fechaReferencia ??= dateTimeProvider.UtcNow;
+			return [.. suscripciones.Where(s =>
+				(s.Estado == 1 /* Activa */ || s.Estado == 2 /* Cancelada */) &&
+				s.FechaExpiracion != null &&
+				s.FechaExpiracion.Value < fechaReferencia
+			)];
+		}
+
+		public List<Suscripcion> FiltrarExpiradasConFlow(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
+			fechaReferencia ??= dateTimeProvider.UtcNow;
+			return [.. FiltrarExpiradas(suscripciones, fechaReferencia).Where(s => !string.IsNullOrEmpty(s.FlowSubscriptionId))];
 		}
 
 		public List<Suscripcion> FiltrarEnCurso(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
@@ -40,16 +55,22 @@ namespace TanatosAPI.Business {
 			fechaReferencia ??= dateTimeProvider.UtcNow;
 
 			return [.. suscripciones.Where(s =>
-				(s.Estado == 4 /* Pago Pendiente */) &&
+				(s.Estado == 1 /* Activa */ || s.Estado == 2 /* Cancelada */ || s.Estado == 4 /* Pago Pendiente */) &&
 				(s.FechaInicio == null || s.FechaInicio.Value > fechaReferencia) 
 			)];
 		}
 
+		public List<Suscripcion> FiltrarFuturasConFlow(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
+			fechaReferencia ??= dateTimeProvider.UtcNow;
+			return [.. FiltrarFuturas(suscripciones, fechaReferencia).Where(s => !string.IsNullOrEmpty(s.FlowSubscriptionId))];
+		}
+
 		public List<Suscripcion> FiltrarPagosEnCurso(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
 			fechaReferencia ??= dateTimeProvider.UtcNow;
+			List<Suscripcion> expiradasConFlowNoCancelada = [.. FiltrarExpiradasConFlow(suscripciones, fechaReferencia).Where(s => s.Estado != 2 /* Cancelada */)];
 			List<Suscripcion> enCursoConFlowNoCancelada = [.. FiltrarEnCursoConFlow(suscripciones, fechaReferencia).Where(s => s.Estado != 2 /* Cancelada */)];
-			List<Suscripcion> futuras = FiltrarFuturas(suscripciones, fechaReferencia);
-			return [..enCursoConFlowNoCancelada, ..futuras];
+			List<Suscripcion> futuras = [.. FiltrarFuturasConFlow(suscripciones, fechaReferencia).Where(s => s.Estado != 2 /* Cancelada */)];
+			return [.. expiradasConFlowNoCancelada, ..enCursoConFlowNoCancelada, ..futuras];
 		}
 
 		public bool AlgunaConPagoEnCurso(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
@@ -69,6 +90,7 @@ namespace TanatosAPI.Business {
 		}
 
 		public DateTime ProximaFechaSinSuscripcion(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
+			if (AlgunaConPagoEnCurso(suscripciones, fechaReferencia)) throw new InvalidOperationException("Aún existen suscripciones con pagos en curso"); 
 			fechaReferencia ??= dateTimeProvider.UtcNow;
 			return ProximaFechaExpiracion(suscripciones, fechaReferencia) ?? fechaReferencia.Value;
 		}
@@ -85,7 +107,7 @@ namespace TanatosAPI.Business {
 			// Se obtienen las suscripciones del usuario...
 			List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(sub, true, transaction);
 
-			if (suscripciones.Any(s => s.FechaExpiracion != null && s.FechaExpiracion > dateTimeProvider.UtcNow)) {
+			if (FiltrarEnCurso(suscripciones).Count != 0) {
 				return true;
 			}
 
@@ -93,13 +115,19 @@ namespace TanatosAPI.Business {
 		}
 
 		public async Task Cancelar(Suscripcion suscripcion, NpgsqlTransaction? transaction = null) {
+			if (suscripcion.FlowSubscriptionId == null) {
+				throw new ErrorValidacion(TipoErrorValidacion.TipoNoValido, "La suscripción no está asociada a un subscription de Flow", "No se puede cancelar una suscripción gratuita.");
+			}
+
+			if (suscripcion.Estado == 5 /* En Creación */) {
+				throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "No se puede cancelar una suscripción en creación", "No se puede cancelar la suscripción dado su estado.");
+			}
+
 			if (suscripcion.Estado != 2) {
 				suscripcion.Estado = 2;
 				suscripcion.FechaExpiracion = dateTimeProvider.UtcNow;
 
-				if (suscripcion.FlowSubscriptionId != null) {
-					await flowHelper.SubscriptionCancel(suscripcion.FlowSubscriptionId);
-				}
+				await flowHelper.SubscriptionCancel(suscripcion.FlowSubscriptionId);
 
 				await suscripcionDao.Actualizar(suscripcion, transaction);
 			}

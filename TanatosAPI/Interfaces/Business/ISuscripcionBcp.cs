@@ -5,6 +5,8 @@ namespace TanatosAPI.Interfaces.Business {
 	public interface ISuscripcionBcp {
 		public bool EstaVigente(Suscripcion? suscripcion);
 		public bool PerteneceAlUsuario(Suscripcion suscripcion, string sub);
+		public List<Suscripcion> FiltrarExpiradas(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null);
+		public List<Suscripcion> FiltrarExpiradasConFlow(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null);
 		public List<Suscripcion> FiltrarEnCurso(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null);
 		public List<Suscripcion> FiltrarEnCursoConFlow(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null);
 		public List<Suscripcion> FiltrarFuturas(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null);
