@@ -6,7 +6,77 @@ on:
             - main
       
 jobs:
-    build:
+    validate:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repositorio
+              uses: actions/checkout@v7
+              with:
+                  fetch-depth: 0
+                  
+            - name: Instalar .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: ${{ vars.VERSION_DOTNET }}
+                
+            - name: Set up JDK 17
+              uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+              with:
+                  java-version: 17
+                  distribution: 'temurin'
+                                
+            - name: Add .NET tools to PATH
+              run: echo "$HOME/.dotnet-sonarscanner" >> $GITHUB_PATH
+                                
+            - name: Cache SonarScanner Tool
+              uses: actions/cache@v4
+              id: sonar-tool-cache
+              with:
+                path: ~/.dotnet-sonarscanner
+                key: ${{ runner.os }}-sonar-scanner-tool-${{ vars.VERSION_SONARSCANNER }}
+                                
+            - name: Instalar SonarScanner
+              if: steps.sonar-tool-cache.outputs.cache-hit != 'true'
+              run: dotnet tool install dotnet-sonarscanner --version ${{ vars.VERSION_SONARSCANNER }} --tool-path ~/.dotnet-sonarscanner
+              
+            - name: Cache NuGet
+              uses: actions/cache@v4
+              with:
+                  path: ~/.nuget/packages
+                  key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.sln') }}
+                  restore-keys: ${{ runner.os }}-nuget-
+              
+            - name: .NET Restore
+              run: dotnet restore
+              
+            - name: Cache Sonar
+              uses: actions/cache@v4
+              with:
+                  path: ~/.sonar/cache
+                  key: ${{ runner.os }}-sonar
+              
+            - name: Sonar Begin
+              run: |
+                dotnet-sonarscanner begin \
+                  /k:"${{ vars.SONAR_PROJECT_KEY }}" \
+                  /o:"${{ vars.SONAR_ORGANIZATION_KEY }}" \
+                  /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+                  /d:sonar.cs.vstest.reportsPaths="**/*.trx" \
+                  /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
+                  
+            - name: Build
+              run: dotnet build --configuration Release --no-restore
+
+            - name: Test con coverage
+              working-directory: ${{ vars.TEST_DIRECTORY }}
+              run: |
+                dotnet test --configuration Release --no-build --settings coverlet.runsettings --logger "trx"
+                
+            - name: Sonar End
+              run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+    deploy:
+        needs: validate
         runs-on: ubuntu-latest
         environment: Production
         permissions:
@@ -80,7 +150,7 @@ jobs:
                         
         steps:
             - name: Checkout Repositorio
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
       
             - name: Instalar .NET
               uses: actions/setup-dotnet@v4
@@ -91,47 +161,34 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ vars.VERSION_NODEJS }}
-                                                      
+                           
             - name: Instalar AWS CDK
               run: npm install --ignore-scripts -g aws-cdk@2.1125.0
               
+            - name: Add .NET tools to PATH
+              run: echo "$HOME/.dotnet-ef" >> $GITHUB_PATH
+              
+            - name: Cache .NET EF
+              uses: actions/cache@v4
+              id: ef-cache
+              with:
+                path: ~/.dotnet-ef
+                key: ${{ runner.os }}-dotnet-ef-${{ vars.VERSION_DOTNET_EF }}
+              
             - name: Instalar .NET EF
-              run: dotnet tool install --global dotnet-ef --version ${{ vars.VERSION_DOTNET_EF }}
+              if: steps.ef-cache.outputs.cache-hit != 'true'
+              run: dotnet tool install dotnet-ef --version ${{ vars.VERSION_DOTNET_EF }} --tool-path ~/.dotnet-ef
+              
+            - name: Cache NuGet
+              uses: actions/cache@v4
+              with:
+                  path: ~/.nuget/packages
+                  key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.sln') }}
+                  restore-keys: ${{ runner.os }}-nuget-
               
             - name: .NET Restore
               run: dotnet restore
-              
-            - name: Test con coverage
-              working-directory: ${{ vars.TEST_DIRECTORY }}
-              run: |
-                dotnet test --configuration Release \
-                  --collect:"XPlat Code Coverage" \
-                  --results-directory ./coverage \
-                  -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Program.cs,**/*.g.cs" \
-                  -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*]Microsoft.AspNetCore.OpenApi.Generated.*,[*]System.Runtime.CompilerServices.*"
-                xml=$(find ./coverage -name "coverage.cobertura.xml" | head -1)
-                echo "--- Coverage por Clase ---"
-                tr '\n' ' ' < "$xml" | grep -oP '<class [^>]*>' | while read -r line; do
-                    name=$(echo "$line" | grep -oP ' name="\K[^"]*' | sed 's/&lt;/</g; s/&gt;/>/g; s/&amp;/\&/g')
-                    line_rate=$(echo "$line" | grep -oP ' line-rate="\K[^"]*')
-                    branch_rate=$(echo "$line" | grep -oP ' branch-rate="\K[^"]*')
-                    line_pct=$(echo "scale=2; $line_rate * 100" | bc)
-                    branch_pct=$(echo "scale=2; $branch_rate * 100" | bc)
-                    echo "Line: ${line_pct}% - Branch: ${branch_pct}% - ${name}"
-                done                
-                line_rate=$(grep -oP ' line-rate="\K[^"]+' "$xml" | head -1)
-                branch_rate=$(grep -oP ' branch-rate="\K[^"]+' "$xml" | head -1)
-                line_pct=$(echo "scale=2; $line_rate * 100" | bc)
-                branch_pct=$(echo "scale=2; $branch_rate * 100" | bc)
-                echo "--- Resumen Final ---"
-                echo "Line Coverage:   $line_pct%"
-                echo "Branch Coverage: $branch_pct%"
-                # if [ "$line_pct" -lt 70 ]; then
-                #   echo "Coverage insuficiente: $line_pct% (mínimo 70%)"
-                #   exit 1
-                # fi
-                echo "¡Coverage aceptado!"
-              
+                          
             - name: Publish .NET Initial Creation Lambda
               working-directory: ${{ vars.INITIAL_CREATION_DIRECTORY }}
               run: dotnet publish /p:PublishDir=../publish /p:PublishReadyToRun=true -r linux-arm64 --no-self-contained
