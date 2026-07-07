@@ -12,11 +12,11 @@
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="2.1.0" />
     <PackageReference Include="AWS.Cryptography.EncryptionSDK" Version="5.0.0" />
-    <PackageReference Include="AWSSDK.APIGateway" Version="4.0.100.1" />
-    <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.100.1" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.100.1" />
-    <PackageReference Include="AWSSDK.S3" Version="4.0.100.1" />
-    <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.100.1" />
+    <PackageReference Include="AWSSDK.APIGateway" Version="4.0.100.2" />
+    <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.101" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.100.2" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.100.2" />
+    <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.100.2" />
     <PackageReference Include="Cronos" Version="0.13.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
