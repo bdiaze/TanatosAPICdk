@@ -90,6 +90,7 @@ jobs:
         environment: Production
         permissions:
             contents: read
+            packages: read
             id-token: write
         env:
             APP_NAME: ${{ vars.APP_NAME }}
@@ -209,10 +210,18 @@ jobs:
               working-directory: ${{ vars.INITIAL_CREATION_DIRECTORY }}/publish
               run: zip -r -q -T ./publish.zip ./*
             
+            - name: Log in to GHCR
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ vars.DOCKER_IMAGE_REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+            
             - name: Publish .NET AoT Minimal API
+              env:
+                  DOCKER_SRC: ${{ vars.DOCKER_IMAGE_REGISTRY }}/${{ github.repository_owner }}/aot-builder:latest
               run: |
-                  docker run --rm -v ${{ github.workspace }}:/src -w /src public.ecr.aws/amazonlinux/amazonlinux:2023 \bash -c "
-                    yum install -y dotnet-sdk-10.0 gcc zlib-devel && 
+                  docker run --rm -v ${{ github.workspace }}:/src -w /src ${{ env.DOCKER_SRC }} \bash -c "
                     dotnet publish ${{ vars.PROJECT_NAME }} /p:PublishDir=../publish /p:PublishAot=true -r linux-x64 --self-contained &&
                     cd ./publish &&
                     zip -r -T ./publish.zip ./*"
