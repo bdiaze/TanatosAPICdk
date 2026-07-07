@@ -67,7 +67,7 @@ jobs:
                   /d:sonar.cs.vstest.reportsPaths="**/*.trx" \
                   /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
                   /d:sonar.coverage.exclusions="**/*.Design/**,**/Cdk/**" \
-                  /d:sonar.exclusions="**/*.jpeg,**/*.jpg,**/*.png,**/*.ico"
+                  /d:sonar.exclusions="**/*.jpeg,**/*.jpg,**/*.png,**/*.ico,**/MigrationScripts.sql"
                   
             - name: Build
               run: dotnet build --configuration Release --no-restore
