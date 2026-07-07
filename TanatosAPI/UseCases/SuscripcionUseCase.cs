@@ -117,7 +117,7 @@ namespace TanatosAPI.UseCases {
 			}
 		}
 
-		public async Task CancelarSuscripcion(string sub, long idSuscripcion, NpgsqlTransaction? transaction = null) {
+		public async Task CancelarSuscripcion(string sub, NpgsqlTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
 			NpgsqlConnection? connection = null;
 
@@ -127,9 +127,13 @@ namespace TanatosAPI.UseCases {
 					transaction = await connection.BeginTransactionAsync();
 				}
 
-				Suscripcion? existente = (await suscripcionBcp.ObtenerVigentesPorSub(sub, transaction)).FirstOrDefault(s => s.Id == idSuscripcion);
-				if (existente != null && (existente.Estado == 1 /* Activa */ || existente.Estado == 4 /* Pago Pendiente */)) {
-					await suscripcionBcp.Cancelar(existente, transaction);
+				DateTime now = dateTimeProvider.UtcNow;
+				List<Suscripcion> suscripciones = await suscripcionBcp.ObtenerVigentesPorSub(sub, transaction);
+				if (suscripcionBcp.AlgunaConPagoEnCurso(suscripciones, now)) {
+					List<Suscripcion> pagoEnCurso = suscripcionBcp.FiltrarPagosEnCurso(suscripciones, now);
+					foreach (Suscripcion enCurso in pagoEnCurso) {
+						await suscripcionBcp.Cancelar(enCurso, transaction);
+					}
 				}
 
 				if (ownsTransaction) {

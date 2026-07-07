@@ -145,17 +145,17 @@ namespace TanatosAPI.Endpoints {
 
 
 		private static IEndpointRouteBuilder MapCancelarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{idSuscripcion}", async (long idSuscripcion, IHostEnvironment environment, ClaimsPrincipal user, SuscripcionUseCase suscripcionUseCase) => {
+			routes.MapDelete("/", async (IHostEnvironment environment, ClaimsPrincipal user, SuscripcionUseCase suscripcionUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-					await suscripcionUseCase.CancelarSuscripcion(sub, idSuscripcion);
+					await suscripcionUseCase.CancelarSuscripcion(sub);
 
 					LambdaLogger.Log(
 						$"[DELETE] - [Suscripcion] - [Cancelar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Cancelación exitosa de la suscripción - ID Suscripcion: {idSuscripcion}.");
+						$"Cancelación exitosa de la suscripción.");
 
 					return Results.Ok();
 				} catch (ErrorValidacion ex) {
@@ -167,7 +167,7 @@ namespace TanatosAPI.Endpoints {
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[DELETE] - [Suscripcion] - [Cancelar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error al cancelar la suscripción - ID Suscripcion: {idSuscripcion}. " +
+						$"Ocurrió un error al cancelar la suscripción. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
