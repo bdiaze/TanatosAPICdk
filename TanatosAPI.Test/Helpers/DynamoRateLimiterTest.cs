@@ -31,7 +31,7 @@ namespace TanatosAPI.Test.Helpers {
 
 		[Fact]
 		public async Task CheckAsync_Valido() {
-			dynamo.QueryAsync(Arg.Any<QueryRequest>()).Returns(new QueryResponse {
+			dynamo.QueryAsync(Arg.Any<QueryRequest>(), Arg.Any<CancellationToken>()).Returns(new QueryResponse {
 				Items = []
 			});
 
@@ -44,13 +44,13 @@ namespace TanatosAPI.Test.Helpers {
 			Assert.True(retorno.Allowed);
 			Assert.Equal(99, retorno.Remaining);
 			Assert.Equal(FECHA_DUMMY, retorno.RetryAfter);
-			await dynamo.Received(1).QueryAsync(Arg.Any<QueryRequest>());
-			await dynamo.Received(1).PutItemAsync(Arg.Any<PutItemRequest>());
+			await dynamo.Received(1).QueryAsync(Arg.Any<QueryRequest>(), Arg.Any<CancellationToken>());
+			await dynamo.Received(1).PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task CheckAsync_NotAllowed() {
-			dynamo.QueryAsync(Arg.Any<QueryRequest>()).Returns(new QueryResponse {
+			dynamo.QueryAsync(Arg.Any<QueryRequest>(), Arg.Any<CancellationToken>()).Returns(new QueryResponse {
 				Items = [
 					new Dictionary<string, AttributeValue>() {
 						["SK"] = new AttributeValue($"{(new DateTimeOffset(FECHA_DUMMY)).ToUnixTimeMilliseconds():D15}#{Guid.NewGuid():N}")
@@ -72,8 +72,8 @@ namespace TanatosAPI.Test.Helpers {
 			Assert.Equal(0, retorno.Remaining);
 			Assert.Equal(FECHA_DUMMY.AddMinutes(1), retorno.RetryAfter);
 
-			await dynamo.Received(1).QueryAsync(Arg.Any<QueryRequest>());
-			await dynamo.DidNotReceive().PutItemAsync(Arg.Any<PutItemRequest>());
+			await dynamo.Received(1).QueryAsync(Arg.Any<QueryRequest>(), Arg.Any<CancellationToken>());
+			await dynamo.DidNotReceive().PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>());
 		}
 	}
 }

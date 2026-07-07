@@ -27,7 +27,7 @@ namespace TanatosAPI.Test.Helpers {
 
 		[Fact]
 		public async Task ObtenerUsuarioTest_Existente() {
-			client.AdminGetUserAsync(Arg.Any<AdminGetUserRequest>()).Returns(new AdminGetUserResponse {
+			client.AdminGetUserAsync(Arg.Any<AdminGetUserRequest>(), Arg.Any<CancellationToken>()).Returns(new AdminGetUserResponse {
 				UserAttributes = [
 					new AttributeType() { Name = "given_name", Value = "Nombre Test" },
 					new AttributeType() { Name = "family_name", Value = "Apellido Test" },
@@ -39,12 +39,12 @@ namespace TanatosAPI.Test.Helpers {
 			Assert.Equal("Nombre Test", atributos["given_name"]);
 			Assert.Equal("Apellido Test", atributos["family_name"]);
 			Assert.Equal("email@test.com", atributos["email"]);
-			await client.Received(1).AdminGetUserAsync(Arg.Any<AdminGetUserRequest>());
+			await client.Received(1).AdminGetUserAsync(Arg.Any<AdminGetUserRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ObtenerUsuarioTest_ExistenteRepetido() {
-			client.AdminGetUserAsync(Arg.Any<AdminGetUserRequest>()).Returns(new AdminGetUserResponse {
+			client.AdminGetUserAsync(Arg.Any<AdminGetUserRequest>(), Arg.Any<CancellationToken>()).Returns(new AdminGetUserResponse {
 				UserAttributes = [
 					new AttributeType() { Name = "given_name", Value = "Nombre Test" },
 					new AttributeType() { Name = "family_name", Value = "Apellido Test" },
@@ -59,12 +59,12 @@ namespace TanatosAPI.Test.Helpers {
 			Assert.Equal("Nombre Test", atributos["given_name"]);
 			Assert.Equal("Apellido Test", atributos["family_name"]);
 			Assert.Equal("email@test.com", atributos["email"]);
-			await client.DidNotReceive().AdminGetUserAsync(Arg.Any<AdminGetUserRequest>());
+			await client.DidNotReceive().AdminGetUserAsync(Arg.Any<AdminGetUserRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ObtenerUsuarioTest_NoExistenteUserAttributes() {
-			client.AdminGetUserAsync(Arg.Any<AdminGetUserRequest>()).Returns(new AdminGetUserResponse {
+			client.AdminGetUserAsync(Arg.Any<AdminGetUserRequest>(), Arg.Any<CancellationToken>()).Returns(new AdminGetUserResponse {
 				UserAttributes = null
 			});
 
@@ -73,87 +73,87 @@ namespace TanatosAPI.Test.Helpers {
 
 		[Fact]
 		public async Task ObtenerUsuarioTest_NoExistenteResponse() {
-			client.AdminGetUserAsync(Arg.Any<AdminGetUserRequest>()).Returns((AdminGetUserResponse?)null);
+			client.AdminGetUserAsync(Arg.Any<AdminGetUserRequest>(), Arg.Any<CancellationToken>()).Returns((AdminGetUserResponse?)null);
 
 			await Assert.ThrowsAsync<InvalidOperationException>(() => cognitoHelper.ObtenerUsuario("sub-test-123"));
 		}
 
 		[Fact]
 		public async Task ConfirmarRegistroTest_Valido() {
-			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>()).Returns(new ConfirmSignUpResponse {
+			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>(), Arg.Any<CancellationToken>()).Returns(new ConfirmSignUpResponse {
 				HttpStatusCode = HttpStatusCode.OK,
 			});
 
 			await cognitoHelper.ConfirmarRegistro("correo@test.cl", "codigo-test");
 
-			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>());
+			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ConfirmarRegistroTest_StatusCodeError() {
-			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>()).Returns(new ConfirmSignUpResponse {
+			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>(), Arg.Any<CancellationToken>()).Returns(new ConfirmSignUpResponse {
 				HttpStatusCode = HttpStatusCode.BadRequest,
 			});
 
 			await Assert.ThrowsAsync<InvalidOperationException>(() => cognitoHelper.ConfirmarRegistro("correo@test.cl", "codigo-test"));
-			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>());
+			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ConfirmarRegistroTest_CodigoInvalido() {
-			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>()).ThrowsAsync(new CodeMismatchException());
+			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>(), Arg.Any<CancellationToken>()).ThrowsAsync(new CodeMismatchException());
 
 			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cognitoHelper.ConfirmarRegistro("correo@test.cl", "codigo-test"));
 			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
-			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>());
+			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ReenviarCodigoVerificacionTest_Valido() {
-			client.ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>()).Returns(new ResendConfirmationCodeResponse {
+			client.ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>(), Arg.Any<CancellationToken>()).Returns(new ResendConfirmationCodeResponse {
 				HttpStatusCode = HttpStatusCode.OK,
 			});
 
 			await cognitoHelper.ReenviarCodigoVerificacion("correo@test.cl");
 
-			await client.Received(1).ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>());
+			await client.Received(1).ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ReenviarCodigoVerificacionTest_StatusCodeError() {
-			client.ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>()).Returns(new ResendConfirmationCodeResponse {
+			client.ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>(), Arg.Any<CancellationToken>()).Returns(new ResendConfirmationCodeResponse {
 				HttpStatusCode = HttpStatusCode.BadRequest,
 			});
 
 			await Assert.ThrowsAsync<InvalidOperationException>(() => cognitoHelper.ReenviarCodigoVerificacion("correo@test.cl"));
-			await client.Received(1).ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>());
+			await client.Received(1).ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ReenviarCodigoVerificacionTest_CodigoInvalido() {
-			client.ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>()).ThrowsAsync(new LimitExceededException());
+			client.ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>(), Arg.Any<CancellationToken>()).ThrowsAsync(new LimitExceededException());
 
 			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cognitoHelper.ReenviarCodigoVerificacion("correo@test.cl"));
 			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
-			await client.Received(1).ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>());
+			await client.Received(1).ResendConfirmationCodeAsync(Arg.Any<ResendConfirmationCodeRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ConfirmarRegistroTest_CodigoCaducado() {
-			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>()).ThrowsAsync(new ExpiredCodeException());
+			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>(), Arg.Any<CancellationToken>()).ThrowsAsync(new ExpiredCodeException());
 
 			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cognitoHelper.ConfirmarRegistro("correo@test.cl", "codigo-test"));
 			Assert.Equal(TipoErrorValidacion.AccesoCaducado, ex.TipoErrorValidacion);
-			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>());
+			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ConfirmarRegistroTest_YaVerificado() {
-			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>()).ThrowsAsync(new NotAuthorizedException());
+			client.ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>(), Arg.Any<CancellationToken>()).ThrowsAsync(new NotAuthorizedException());
 
 			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cognitoHelper.ConfirmarRegistro("correo@test.cl", "codigo-test"));
 			Assert.Equal(TipoErrorValidacion.EstadoNoValido, ex.TipoErrorValidacion);
-			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>());
+			await client.Received(1).ConfirmSignUpAsync(Arg.Any<ConfirmSignUpRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]

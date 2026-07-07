@@ -20,18 +20,18 @@ namespace TanatosAPI.Test.Helpers {
 
 		[Fact]
 		public async Task ObtenerSecretoTest_Existente() {
-			client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>()).Returns(new GetSecretValueResponse {
+			client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>()).Returns(new GetSecretValueResponse {
 				SecretString = "SECRET-STRING-TEST"
 			});
 
 			string retorno = await secretManagerHelper.ObtenerSecreto("secret-arn-test");
 			Assert.Equal("SECRET-STRING-TEST", retorno);
-			await client.Received(1).GetSecretValueAsync(Arg.Any<GetSecretValueRequest>());
+			await client.Received(1).GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ObtenerSecretoTest_ExistenteRepetido() {
-			client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>()).Returns(new GetSecretValueResponse {
+			client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>()).Returns(new GetSecretValueResponse {
 				SecretString = "SECRET-STRING-TEST"
 			});
 
@@ -40,25 +40,25 @@ namespace TanatosAPI.Test.Helpers {
 
 			string retorno = await secretManagerHelper.ObtenerSecreto("secret-arn-test");
 			Assert.Equal("SECRET-STRING-TEST", retorno);
-			await client.DidNotReceive().GetSecretValueAsync(Arg.Any<GetSecretValueRequest>());
+			await client.DidNotReceive().GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ObtenerSecretoTest_NoExistenteValue() {
-			client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>()).Returns(new GetSecretValueResponse {
+			client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>()).Returns(new GetSecretValueResponse {
 				SecretString = null
 			});
 
 			await Assert.ThrowsAsync<InvalidOperationException>(() => secretManagerHelper.ObtenerSecreto("secret-arn-test"));
-			await client.Received(1).GetSecretValueAsync(Arg.Any<GetSecretValueRequest>());
+			await client.Received(1).GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ObtenerSecretoTest_NoExistenteResponse() {
-			client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>()).Returns((GetSecretValueResponse?)null);
+			client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>()).Returns((GetSecretValueResponse?)null);
 
 			await Assert.ThrowsAsync<InvalidOperationException>(() => secretManagerHelper.ObtenerSecreto("secret-arn-test"));
-			await client.Received(1).GetSecretValueAsync(Arg.Any<GetSecretValueRequest>());
+			await client.Received(1).GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>());
 		}
 	}
 }

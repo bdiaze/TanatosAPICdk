@@ -20,18 +20,18 @@ namespace TanatosAPI.Test.Helpers {
 
 		[Fact]
 		public async Task ObtenerApiKeyTest_Existente() {
-			apiClient.GetApiKeyAsync(Arg.Any<GetApiKeyRequest>()).Returns(new GetApiKeyResponse {
+			apiClient.GetApiKeyAsync(Arg.Any<GetApiKeyRequest>(), Arg.Any<CancellationToken>()).Returns(new GetApiKeyResponse {
 				Value = "API-KEY-TEST"
 			});
 
 			string retorno = await apiKeyHelper.ObtenerApiKey("api-key-id-test");
 			Assert.Equal("API-KEY-TEST", retorno);
-			await apiClient.Received(1).GetApiKeyAsync(Arg.Any<GetApiKeyRequest>());
+			await apiClient.Received(1).GetApiKeyAsync(Arg.Any<GetApiKeyRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ObtenerApiKeyTest_ExistenteRepetido() {
-			apiClient.GetApiKeyAsync(Arg.Any<GetApiKeyRequest>()).Returns(new GetApiKeyResponse {
+			apiClient.GetApiKeyAsync(Arg.Any<GetApiKeyRequest>(), Arg.Any<CancellationToken>()).Returns(new GetApiKeyResponse {
 				Value = "API-KEY-TEST"
 			});
 
@@ -40,25 +40,25 @@ namespace TanatosAPI.Test.Helpers {
 
 			string retorno = await apiKeyHelper.ObtenerApiKey("api-key-id-test");
 			Assert.Equal("API-KEY-TEST", retorno);
-			await apiClient.DidNotReceive().GetApiKeyAsync(Arg.Any<GetApiKeyRequest>());
+			await apiClient.DidNotReceive().GetApiKeyAsync(Arg.Any<GetApiKeyRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ObtenerApiKeyTest_NoExistenteValue() {
-			apiClient.GetApiKeyAsync(Arg.Any<GetApiKeyRequest>()).Returns(new GetApiKeyResponse {
+			apiClient.GetApiKeyAsync(Arg.Any<GetApiKeyRequest>(), Arg.Any<CancellationToken>()).Returns(new GetApiKeyResponse {
 				Value = null
 			});
 
 			await Assert.ThrowsAsync<InvalidOperationException>(() => apiKeyHelper.ObtenerApiKey("api-key-id-test"));
-			await apiClient.Received(1).GetApiKeyAsync(Arg.Any<GetApiKeyRequest>());
+			await apiClient.Received(1).GetApiKeyAsync(Arg.Any<GetApiKeyRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task ObtenerApiKeyTest_NoExistenteResponse() {
-			apiClient.GetApiKeyAsync(Arg.Any<GetApiKeyRequest>()).Returns((GetApiKeyResponse?)null);
+			apiClient.GetApiKeyAsync(Arg.Any<GetApiKeyRequest>(), Arg.Any<CancellationToken>()).Returns((GetApiKeyResponse?)null);
 
 			await Assert.ThrowsAsync<InvalidOperationException>(() => apiKeyHelper.ObtenerApiKey("api-key-id-test"));
-			await apiClient.Received(1).GetApiKeyAsync(Arg.Any<GetApiKeyRequest>());
+			await apiClient.Received(1).GetApiKeyAsync(Arg.Any<GetApiKeyRequest>(), Arg.Any<CancellationToken>());
 		}
 
 	}

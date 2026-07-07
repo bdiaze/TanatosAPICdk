@@ -58,7 +58,7 @@ namespace TanatosAPI.Test.Helpers {
 
 		[Fact]
 		public async Task ObtenerObjectMetadataTest() {
-			amazonS3.GetObjectMetadataAsync(Arg.Any<GetObjectMetadataRequest>()).Returns(new GetObjectMetadataResponse {
+			amazonS3.GetObjectMetadataAsync(Arg.Any<GetObjectMetadataRequest>(), Arg.Any<CancellationToken>()).Returns(new GetObjectMetadataResponse {
 				ContentLength = 1024,
 				ContentType = "content-type-test"
 			});
@@ -66,18 +66,18 @@ namespace TanatosAPI.Test.Helpers {
 			(long contentLength, string contentType) = await s3Helper.ObtenerObjectMetadata("bucket-name-test", "bucket-key-test");
 			Assert.Equal(1024, contentLength);
 			Assert.Equal("content-type-test", contentType);
-			await amazonS3.Received(1).GetObjectMetadataAsync(Arg.Any<GetObjectMetadataRequest>());
+			await amazonS3.Received(1).GetObjectMetadataAsync(Arg.Any<GetObjectMetadataRequest>(), Arg.Any<CancellationToken>());
 		}
 
 		[Fact]
 		public async Task AgregarTagTest() {
-			amazonS3.GetObjectTaggingAsync(Arg.Any<GetObjectTaggingRequest>()).Returns(new GetObjectTaggingResponse {
+			amazonS3.GetObjectTaggingAsync(Arg.Any<GetObjectTaggingRequest>(), Arg.Any<CancellationToken>()).Returns(new GetObjectTaggingResponse {
 				Tagging = []
 			});
 
 			await s3Helper.AgregarTag("bucket-name-test", "bucket-key-test", "tag-key-test", "tag-value-test");
-			await amazonS3.Received(1).GetObjectTaggingAsync(Arg.Any<GetObjectTaggingRequest>());
-			await amazonS3.Received(1).PutObjectTaggingAsync(Arg.Any<PutObjectTaggingRequest>());
+			await amazonS3.Received(1).GetObjectTaggingAsync(Arg.Any<GetObjectTaggingRequest>(), Arg.Any<CancellationToken>());
+			await amazonS3.Received(1).PutObjectTaggingAsync(Arg.Any<PutObjectTaggingRequest>(), Arg.Any<CancellationToken>());
 		}
 	}
 }
