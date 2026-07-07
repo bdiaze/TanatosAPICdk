@@ -50,7 +50,7 @@ namespace TanatosAPI.Test.Helpers {
 
 			await rateLimitMiddleware.InvokeAsync(context);
 
-			requestDelegate.Received(1);
+			await requestDelegate.Received(1)(context);
 			await rateLimiter.DidNotReceive().CheckAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<RateLimitContext>());
 		}
 
@@ -60,7 +60,7 @@ namespace TanatosAPI.Test.Helpers {
 
 			await rateLimitMiddleware.InvokeAsync(context);
 
-			requestDelegate.Received(1);
+			await requestDelegate.Received(1)(context);
 			await rateLimiter.DidNotReceive().CheckAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<RateLimitContext>());
 		}
 
@@ -78,7 +78,7 @@ namespace TanatosAPI.Test.Helpers {
 
 			Assert.Equal(expectedMaxRequest, context.Response.Headers["X-RateLimit-Limit"]);
 			Assert.Equal(expectedRemaining, context.Response.Headers["X-RateLimit-Remaining"]);
-			requestDelegate.Received(1);
+			await requestDelegate.Received(1)(context);
 			await rateLimiter.Received(1).CheckAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<RateLimitContext>());
 		}
 
@@ -101,7 +101,7 @@ namespace TanatosAPI.Test.Helpers {
 			Assert.Equal(429, context.Response.StatusCode);
 			Assert.Equal("application/json", context.Response.ContentType);
 			await rateLimiter.Received(1).CheckAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<RateLimitContext>());
-			requestDelegate.DidNotReceive();
+			await requestDelegate.DidNotReceive()(context);
 		}
 	}
 }
