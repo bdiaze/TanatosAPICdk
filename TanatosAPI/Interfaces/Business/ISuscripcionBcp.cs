@@ -12,6 +12,7 @@ namespace TanatosAPI.Interfaces.Business {
 		public List<Suscripcion> FiltrarFuturas(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null);
 		public List<Suscripcion> FiltrarPagosEnCurso(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null);
 		public bool AlgunaConPagoEnCurso(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null);
+		public DateTime? ProximaFechaCobro(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null);
 		public DateTime? ProximaFechaExpiracion(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null);
 		public DateTime ProximaFechaSinSuscripcion(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null);
 		public Task<List<Suscripcion>> ObtenerVigentesPorSub(string sub, NpgsqlTransaction? transaction = null);

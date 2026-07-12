@@ -34,6 +34,7 @@ namespace TanatosAPI.Test.Business {
 			long idPlan = 10,
 			DateTime? fechaInicio = null,
 			DateTime? fechaExpiracion = null,
+			DateTime? fechaProximoCobro = null,
 			DateTime? fechaCancelacion = null,
 			short estado = 1,
 			string? flowCustomerId = "flow-customer-id-test",
@@ -47,6 +48,7 @@ namespace TanatosAPI.Test.Business {
 			IdPlan = idPlan,
 			FechaInicio = fechaInicio,
 			FechaExpiracion = fechaExpiracion,
+			FechaProximoCobro = fechaProximoCobro,
 			FechaCancelacion = fechaCancelacion,
 			Estado = estado,
 			FlowCustomerId = flowCustomerId,
@@ -59,113 +61,113 @@ namespace TanatosAPI.Test.Business {
 		#region Casos
 		#region Sin Suscripciones
 		// Usuario sin ningún tipo de suscripción...
-		private static readonly List<Suscripcion> CASO_01_USUARIO_SIN_SUSCRIPCIONES = [];
+		public static readonly List<Suscripcion> CASO_01_USUARIO_SIN_SUSCRIPCIONES = [];
 		#endregion
 		#region Solo suscrición gratuita
 		// Usuario con suscripción gratuida activa...
-		private static readonly List<Suscripcion> CASO_02_USUARIO_GRATUITA_ACTIVA = [
-			SuscripcionDummy(flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15))
+		public static readonly List<Suscripcion> CASO_02_USUARIO_GRATUITA_ACTIVA = [
+			SuscripcionDummy(idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15))
 		];
 		// Usuario con suscripción gratuita expirada (estado activa pero fecha expiración pasada)...
-		private static readonly List<Suscripcion> CASO_03_USUARIO_GRATUITA_EXPIRADA = [
-			SuscripcionDummy(flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15))
+		public static readonly List<Suscripcion> CASO_03_USUARIO_GRATUITA_EXPIRADA = [
+			SuscripcionDummy(idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15))
 		];
 		#endregion
 		#region Con alguna suscripción de pago (sin gratuita)
 		// Usuario sin suscripción gratuita, pero con suscripción de pago activa...
-		private static readonly List<Suscripcion> CASO_04_USUARIO_PAGO_ACTIVO = [
-			SuscripcionDummy(fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15))
+		public static readonly List<Suscripcion> CASO_04_USUARIO_PAGO_ACTIVO = [
+			SuscripcionDummy(idPlan: 2, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15), fechaProximoCobro: FECHA_DUMMY.AddDays(15))
 		];
 		// Usuario sin suscripción gratuita, pero con suscripción de pago expirada (nuevo pago no procesado)...
-		private static readonly List<Suscripcion> CASO_05_USUARIO_PAGO_EXPIRADA = [
-			SuscripcionDummy(fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15))
+		public static readonly List<Suscripcion> CASO_05_USUARIO_PAGO_EXPIRADA = [
+			SuscripcionDummy(idPlan: 2, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15), fechaProximoCobro: FECHA_DUMMY.AddDays(-15))
 		];
 		// Usuario sin suscripción gratuita, pero con suscripción de pago cancelada pero aún activa...
-		private static readonly List<Suscripcion> CASO_06_USUARIO_PAGO_CANCELADA_ACTIVA = [
-			SuscripcionDummy(estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15))
+		public static readonly List<Suscripcion> CASO_06_USUARIO_PAGO_CANCELADA_ACTIVA = [
+			SuscripcionDummy(idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15), fechaProximoCobro: FECHA_DUMMY.AddDays(15))
 		];
 		// Usuario sin suscripción gratuita, pero con suscripción de pago cancelada ya expirada...
-		private static readonly List<Suscripcion> CASO_07_USUARIO_PAGO_CANCELADA_EXPIRADA = [
-			SuscripcionDummy(estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15))
+		public static readonly List<Suscripcion> CASO_07_USUARIO_PAGO_CANCELADA_EXPIRADA = [
+			SuscripcionDummy(idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15), fechaProximoCobro: FECHA_DUMMY.AddDays(-15))
 		];
 		// Usuario con suscripción cancelada expirada, con una suscripción de pago activa...	
-		private static readonly List<Suscripcion> CASO_19_USUARIO_PAGO_CANC_EXP_PAGO_ACTIVO = [
-			SuscripcionDummy(id: 1, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15)),
-			SuscripcionDummy(id: 2, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15))
+		public static readonly List<Suscripcion> CASO_19_USUARIO_PAGO_CANC_EXP_PAGO_ACTIVO = [
+			SuscripcionDummy(id: 1, idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15), fechaProximoCobro: FECHA_DUMMY.AddDays(-15)),
+			SuscripcionDummy(id: 2, idPlan: 2, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15), fechaProximoCobro: FECHA_DUMMY.AddDays(15))
 		];
 		#endregion
 		#region Con alguna suscripción de pago (y con gratuita previa)
 		// Usuario con suscripción gratuita anterior, y con suscripción de pago activa...
-		private static readonly List<Suscripcion> CASO_08_USUARIO_GRAT_ANT_PAGO_ACTIVO = [
-			SuscripcionDummy(id: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15)),
-			SuscripcionDummy(id: 2, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15))
+		public static readonly List<Suscripcion> CASO_08_USUARIO_GRAT_ANT_PAGO_ACTIVO = [
+			SuscripcionDummy(id: 1, idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15)),
+			SuscripcionDummy(id: 2, idPlan: 2, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15), fechaProximoCobro: FECHA_DUMMY.AddDays(15))
 		];
 		// Usuario con suscripción gratuita anterior, y con suscripción de pago expirada (nuevo pago no procesado)...
-		private static readonly List<Suscripcion> CASO_09_USUARIO_GRAT_ANT_PAGO_EXPIRADA = [
-			SuscripcionDummy(id: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-75), fechaExpiracion: FECHA_DUMMY.AddDays(-45)),
-			SuscripcionDummy(id: 2, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15))
+		public static readonly List<Suscripcion> CASO_09_USUARIO_GRAT_ANT_PAGO_EXPIRADA = [
+			SuscripcionDummy(id: 1, idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-75), fechaExpiracion: FECHA_DUMMY.AddDays(-45)),
+			SuscripcionDummy(id: 2, idPlan: 2, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15), fechaProximoCobro: FECHA_DUMMY.AddDays(-15))
 		];
 		// Usuario con suscripción gratuita anterior, y con suscripción de pago cancelada pero aún activa...
-		private static readonly List<Suscripcion> CASO_10_USUARIO_GRAT_ANT_PAGO_CANCELADA_ACTIVA = [
-			SuscripcionDummy(id: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15)),
-			SuscripcionDummy(id: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15))
+		public static readonly List<Suscripcion> CASO_10_USUARIO_GRAT_ANT_PAGO_CANCELADA_ACTIVA = [
+			SuscripcionDummy(id: 1, idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15)),
+			SuscripcionDummy(id: 2, idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15), fechaProximoCobro: FECHA_DUMMY.AddDays(15))
 		];
 		// Usuario sin suscripción gratuita anterior, pero con suscripción de pago cancelada ya expirada...
-		private static readonly List<Suscripcion> CASO_11_USUARIO_GRAT_ANT_PAGO_CANCELADA_EXPIRADA = [
-			SuscripcionDummy(id: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-75), fechaExpiracion: FECHA_DUMMY.AddDays(-45)),
-			SuscripcionDummy(id: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15))
+		public static readonly List<Suscripcion> CASO_11_USUARIO_GRAT_ANT_PAGO_CANCELADA_EXPIRADA = [
+			SuscripcionDummy(id: 1, idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-75), fechaExpiracion: FECHA_DUMMY.AddDays(-45)),
+			SuscripcionDummy(id: 2, idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15), fechaProximoCobro: FECHA_DUMMY.AddDays(-15))
 		];
 		#endregion
 		#region Con suscripción de pago pendiente de primer pago
 		// Sin suscripción previa (aún a la espera de confirmación del pago)
-		private static readonly List<Suscripcion> CASO_12_USUARIO_PAGO_PEND_SIN_PREVIAS = [
-			SuscripcionDummy(estado: 4 /* Pago Pendiente */, fechaInicio: null, fechaExpiracion: null)
+		public static readonly List<Suscripcion> CASO_12_USUARIO_PAGO_PEND_SIN_PREVIAS = [
+			SuscripcionDummy(idPlan: 2, estado: 4 /* Pago Pendiente */, fechaInicio: null, fechaExpiracion: null, fechaProximoCobro: FECHA_DUMMY)
 		];
 		// Con suscripción gratuita previa, (aún a la espera de confirmación del pago)
-		private static readonly List<Suscripcion> CASO_13_USUARIO_GRAT_ANT_PAGO_PEND = [
-			SuscripcionDummy(id: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-75), fechaExpiracion: FECHA_DUMMY.AddDays(-45)),
-			SuscripcionDummy(id: 2, estado: 4 /* Pago Pendiente */, fechaInicio: null, fechaExpiracion: null)
+		public static readonly List<Suscripcion> CASO_13_USUARIO_GRAT_ANT_PAGO_PEND = [
+			SuscripcionDummy(id: 1, idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-75), fechaExpiracion: FECHA_DUMMY.AddDays(-45)),
+			SuscripcionDummy(id: 2, idPlan: 2, estado: 4 /* Pago Pendiente */, fechaInicio: null, fechaExpiracion: null, fechaProximoCobro: FECHA_DUMMY)
 		];
 		// Con suscripción gratuita activa, (y pago pendiente de suscripción futura)
-		private static readonly List<Suscripcion> CASO_14_USUARIO_GRAT_ACT_PAGO_PEND_FUT = [
-			SuscripcionDummy(id: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15)),
-			SuscripcionDummy(id: 2, estado: 4 /* Pago Pendiente */, fechaInicio: null, fechaExpiracion: null)
+		public static readonly List<Suscripcion> CASO_14_USUARIO_GRAT_ACT_PAGO_PEND_FUT = [
+			SuscripcionDummy(id: 1, idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15)),
+			SuscripcionDummy(id: 2, idPlan: 2, estado: 4 /* Pago Pendiente */, fechaInicio: null, fechaExpiracion: null, fechaProximoCobro: FECHA_DUMMY.AddDays(15))
 		];
 		// Con suscripción de pago cancelada activa (y pago pendiente de suscripción futura)
-		private static readonly List<Suscripcion> CASO_15_USUARIO_PAGO_CANC_ACT_PAGO_PEND_FUT = [
-			SuscripcionDummy(id: 1, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15)),
-			SuscripcionDummy(id: 2, estado: 4 /* Pago Pendiente */, fechaInicio: null, fechaExpiracion: null)
+		public static readonly List<Suscripcion> CASO_15_USUARIO_PAGO_CANC_ACT_PAGO_PEND_FUT = [
+			SuscripcionDummy(id: 1, idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15), fechaProximoCobro: FECHA_DUMMY.AddDays(15)),
+			SuscripcionDummy(id: 2, idPlan: 2, estado: 4 /* Pago Pendiente */, fechaInicio: null, fechaExpiracion: null, fechaProximoCobro: FECHA_DUMMY.AddDays(15))
 		];
 		// Con suscripción de pago cancelada expirada (aún a la espera de confirmación del pago)
-		private static readonly List<Suscripcion> CASO_16_USUARIO_PAGO_CANC_EXP_PAGO_PEND_FUT = [
-			SuscripcionDummy(id: 1, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15)),
-			SuscripcionDummy(id: 2, estado: 4 /* Pago Pendiente */, fechaInicio: null, fechaExpiracion: null)
+		public static readonly List<Suscripcion> CASO_16_USUARIO_PAGO_CANC_EXP_PAGO_PEND_FUT = [
+			SuscripcionDummy(id: 1, idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15), fechaProximoCobro: FECHA_DUMMY.AddDays(-15)),
+			SuscripcionDummy(id: 2, idPlan: 2, estado: 4 /* Pago Pendiente */, fechaInicio: null, fechaExpiracion: null, fechaProximoCobro: FECHA_DUMMY)
 		];
 		// Con suscripción gratuita previa, de pago cancelada expirada, pago cancelada activa y pago futura pendiente
-		private static readonly List<Suscripcion> CASO_20_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_PEND_FUT = [
-			SuscripcionDummy(id: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-75), fechaExpiracion: FECHA_DUMMY.AddDays(-45)),
-			SuscripcionDummy(id: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15)),
-			SuscripcionDummy(id: 3, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15)),
-			SuscripcionDummy(id: 4, estado: 4 /* Pago Pendiente */, fechaInicio: null, fechaExpiracion: null)
+		public static readonly List<Suscripcion> CASO_20_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_PEND_FUT = [
+			SuscripcionDummy(id: 1, idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-75), fechaExpiracion: FECHA_DUMMY.AddDays(-45)),
+			SuscripcionDummy(id: 2, idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15), fechaProximoCobro: FECHA_DUMMY.AddDays(-15)),
+			SuscripcionDummy(id: 3, idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15), fechaProximoCobro:  FECHA_DUMMY.AddDays(15)),
+			SuscripcionDummy(id: 4, idPlan: 2, estado: 4 /* Pago Pendiente */, fechaInicio: null, fechaExpiracion: null, fechaProximoCobro: FECHA_DUMMY.AddDays(15))
 		];
 		// Con suscripción gratuita previa, de pago cancelada expirada, pago cancelada activa y pago futura cancelada
-		private static readonly List<Suscripcion> CASO_21_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_CANC_FUT = [
-			SuscripcionDummy(id: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-75), fechaExpiracion: FECHA_DUMMY.AddDays(-45)),
-			SuscripcionDummy(id: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15)),
-			SuscripcionDummy(id: 3, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15)),
-			SuscripcionDummy(id: 4, estado: 2 /* Cancelada */, fechaInicio: null, fechaExpiracion: null)
+		public static readonly List<Suscripcion> CASO_21_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_CANC_FUT = [
+			SuscripcionDummy(id: 1, idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-75), fechaExpiracion: FECHA_DUMMY.AddDays(-45)),
+			SuscripcionDummy(id: 2, idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15), fechaProximoCobro: FECHA_DUMMY.AddDays(-15)),
+			SuscripcionDummy(id: 3, idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15), fechaProximoCobro: FECHA_DUMMY.AddDays(15)),
+			SuscripcionDummy(id: 4, idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: null, fechaExpiracion: null, fechaProximoCobro: FECHA_DUMMY.AddDays(15))
 		];
 		#endregion
 		#region Con suscripción gratuita posterior
 		// Con suscripción gratuita activa
-		private static readonly List<Suscripcion> CASO_17_USUARIO_GRAT_ACTIVA_POST_GRAT = [
-			SuscripcionDummy(id: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15)),
-			SuscripcionDummy(id: 2, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(15), fechaExpiracion: FECHA_DUMMY.AddDays(45))
+		public static readonly List<Suscripcion> CASO_17_USUARIO_GRAT_ACTIVA_POST_GRAT = [
+			SuscripcionDummy(id: 1, idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15)),
+			SuscripcionDummy(id: 2, idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(15), fechaExpiracion: FECHA_DUMMY.AddDays(45))
 		];
 		// Con suscripción de pago cancelada activa
-		private static readonly List<Suscripcion> CASO_18_USUARIO_PAGO_CANC_ACT_POST_GRAT = [
-			SuscripcionDummy(id: 1, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15)),
-			SuscripcionDummy(id: 2, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(15), fechaExpiracion: FECHA_DUMMY.AddDays(45))
+		public static readonly List<Suscripcion> CASO_18_USUARIO_PAGO_CANC_ACT_POST_GRAT = [
+			SuscripcionDummy(id: 1, idPlan: 2, estado: 2 /* Cancelada */, fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15), fechaProximoCobro: FECHA_DUMMY.AddDays(15)),
+			SuscripcionDummy(id: 2, idPlan: 1, flowCustomerId: null, flowSubscriptionId: null, fechaInicio: FECHA_DUMMY.AddDays(15), fechaExpiracion: FECHA_DUMMY.AddDays(45))
 		];
 		#endregion
 		#endregion
@@ -500,6 +502,43 @@ namespace TanatosAPI.Test.Business {
 			bool retorno = suscripcionBcp.AlgunaConPagoEnCurso(CASO_19_USUARIO_PAGO_CANC_EXP_PAGO_ACTIVO);
 			Assert.True(retorno);
 		}
+
+		public static TheoryData<List<Suscripcion>, DateTime?> ProximaFechaCobro => new() {
+			{ CASO_01_USUARIO_SIN_SUSCRIPCIONES, null },
+			{ CASO_02_USUARIO_GRATUITA_ACTIVA, null },
+			{ CASO_03_USUARIO_GRATUITA_EXPIRADA, null },
+			{ CASO_04_USUARIO_PAGO_ACTIVO, FECHA_DUMMY.AddDays(15) },
+			{ CASO_05_USUARIO_PAGO_EXPIRADA, FECHA_DUMMY.AddDays(-15) },
+			{ CASO_06_USUARIO_PAGO_CANCELADA_ACTIVA, null },
+			{ CASO_07_USUARIO_PAGO_CANCELADA_EXPIRADA, null },
+			{ CASO_08_USUARIO_GRAT_ANT_PAGO_ACTIVO, FECHA_DUMMY.AddDays(15) },
+			{ CASO_09_USUARIO_GRAT_ANT_PAGO_EXPIRADA, FECHA_DUMMY.AddDays(-15) },
+			{ CASO_10_USUARIO_GRAT_ANT_PAGO_CANCELADA_ACTIVA, null },
+			{ CASO_11_USUARIO_GRAT_ANT_PAGO_CANCELADA_EXPIRADA, null },
+			{ CASO_12_USUARIO_PAGO_PEND_SIN_PREVIAS, FECHA_DUMMY },
+			{ CASO_13_USUARIO_GRAT_ANT_PAGO_PEND, FECHA_DUMMY },
+			{ CASO_14_USUARIO_GRAT_ACT_PAGO_PEND_FUT, FECHA_DUMMY.AddDays(15) },
+			{ CASO_15_USUARIO_PAGO_CANC_ACT_PAGO_PEND_FUT, FECHA_DUMMY.AddDays(15) },
+			{ CASO_16_USUARIO_PAGO_CANC_EXP_PAGO_PEND_FUT, FECHA_DUMMY },
+			{ CASO_17_USUARIO_GRAT_ACTIVA_POST_GRAT, null },
+			{ CASO_18_USUARIO_PAGO_CANC_ACT_POST_GRAT, null },
+			{ CASO_19_USUARIO_PAGO_CANC_EXP_PAGO_ACTIVO, FECHA_DUMMY.AddDays(15) },
+			{ CASO_20_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_PEND_FUT, FECHA_DUMMY.AddDays(15) },
+			{ CASO_21_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_CANC_FUT, null }
+		};
+		[Theory]
+		[MemberData(nameof(ProximaFechaCobro))]
+		public void ProximaFechaCobroTest(List<Suscripcion> suscripciones, DateTime? expectedResult) {
+			DateTime? retorno = suscripcionBcp.ProximaFechaCobro(suscripciones, FECHA_DUMMY);
+			Assert.Equal(expectedResult, retorno);
+		}
+
+		[Fact]
+		public void ProximaFechaCobro_SinDummy() {
+			DateTime? retorno = suscripcionBcp.ProximaFechaCobro(CASO_19_USUARIO_PAGO_CANC_EXP_PAGO_ACTIVO);
+			Assert.Equal(FECHA_DUMMY.AddDays(15), retorno);
+		}
+
 
 		public static TheoryData<List<Suscripcion>, DateTime?> ProximaFechaExpiracion => new() {
 			{ CASO_01_USUARIO_SIN_SUSCRIPCIONES, null },

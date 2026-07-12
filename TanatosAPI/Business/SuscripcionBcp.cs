@@ -69,13 +69,22 @@ namespace TanatosAPI.Business {
 			fechaReferencia ??= dateTimeProvider.UtcNow;
 			List<Suscripcion> expiradasConFlowNoCancelada = [.. FiltrarExpiradasConFlow(suscripciones, fechaReferencia).Where(s => s.Estado != 2 /* Cancelada */)];
 			List<Suscripcion> enCursoConFlowNoCancelada = [.. FiltrarEnCursoConFlow(suscripciones, fechaReferencia).Where(s => s.Estado != 2 /* Cancelada */)];
-			List<Suscripcion> futuras = [.. FiltrarFuturasConFlow(suscripciones, fechaReferencia).Where(s => s.Estado != 2 /* Cancelada */)];
-			return [.. expiradasConFlowNoCancelada, ..enCursoConFlowNoCancelada, ..futuras];
+			List<Suscripcion> futurasConFlowNoCancelada = [.. FiltrarFuturasConFlow(suscripciones, fechaReferencia).Where(s => s.Estado != 2 /* Cancelada */)];
+			return [.. expiradasConFlowNoCancelada, .. enCursoConFlowNoCancelada, .. futurasConFlowNoCancelada];
 		}
 
 		public bool AlgunaConPagoEnCurso(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
 			fechaReferencia ??= dateTimeProvider.UtcNow;
 			return FiltrarPagosEnCurso(suscripciones, fechaReferencia).Count != 0;
+		}
+
+		public DateTime? ProximaFechaCobro(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
+			fechaReferencia ??= dateTimeProvider.UtcNow;
+			List<Suscripcion> todas = FiltrarPagosEnCurso(suscripciones, fechaReferencia);
+			if (!todas.Any(s => s.FechaProximoCobro != null)) {
+				return null;
+			}
+			return todas.Where(s => s.FechaProximoCobro != null).Max(s => s.FechaProximoCobro!.Value);
 		}
 
 		public DateTime? ProximaFechaExpiracion(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
@@ -90,8 +99,8 @@ namespace TanatosAPI.Business {
 		}
 
 		public DateTime ProximaFechaSinSuscripcion(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
-			if (AlgunaConPagoEnCurso(suscripciones, fechaReferencia)) throw new InvalidOperationException("Aún existen suscripciones con pagos en curso"); 
 			fechaReferencia ??= dateTimeProvider.UtcNow;
+			if (AlgunaConPagoEnCurso(suscripciones, fechaReferencia)) throw new InvalidOperationException("Aún existen suscripciones con pagos en curso"); 
 			return ProximaFechaExpiracion(suscripciones, fechaReferencia) ?? fechaReferencia.Value;
 		}
 
