@@ -133,8 +133,8 @@ namespace TanatosAPI.Business {
 			}
 
 			if (suscripcion.Estado != 2) {
-				suscripcion.Estado = 2;
-				suscripcion.FechaExpiracion = dateTimeProvider.UtcNow;
+				suscripcion.Estado = 2; // Cancelada
+				suscripcion.FechaCancelacion = dateTimeProvider.UtcNow;
 
 				await flowHelper.SubscriptionCancel(suscripcion.FlowSubscriptionId);
 
