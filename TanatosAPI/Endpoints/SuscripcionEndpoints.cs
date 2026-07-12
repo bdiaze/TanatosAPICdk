@@ -22,6 +22,7 @@ namespace TanatosAPI.Endpoints {
 	public static class SuscripcionEndpoints {
 		public static IEndpointRouteBuilder MapSuscripcionEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/Suscripcion");
+			group.MapObtenerResumenEndpoint();
 			group.MapObtenerVigentesEndpoint();
 			group.MapCrearEndpoint();
 			group.MapCancelarEndpoint();
@@ -29,6 +30,48 @@ namespace TanatosAPI.Endpoints {
 
 			RouteGroupBuilder publicGroup = routes.MapGroup("/public/Suscripcion");
 			publicGroup.MapWebhookEndpoint();
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapObtenerResumenEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/Resumen", async (IHostEnvironment environment, ClaimsPrincipal user, SuscripcionUseCase suscripcionUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+
+					(Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica) = await suscripcionUseCase.ObtenerResumenSuscripcion(sub);
+
+					SalSuscripcionResumen retorno = new() {
+						NombrePlanEnCurso = planEnCurso?.Nombre,
+						PrecioPlanEnCurso = planEnCurso?.Precio,
+						NombrePlanPagoEnCurso = planPagoEnCurso?.Nombre,
+						PrecioPlanPagoEnCurso = planPagoEnCurso?.Precio,
+						FechaExpiracion = fechaExpiracion,
+						FechaProximoCobro = fechaProximoCobro,
+						RenovacionAutomatica = renovacionAutomatica
+					};
+
+					LambdaLogger.Log(
+						$"[GET] - [Suscripcion] - [ObtenerResumen] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa del resumen de suscripción del cliente.");
+
+					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Suscripcion] - [ObtenerResumen] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Suscripcion] - [ObtenerResumen] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener el resumen de suscripción del cliente. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Suscripciones.Read.Self");
 
 			return routes;
 		}
