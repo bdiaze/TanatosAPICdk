@@ -677,7 +677,7 @@ namespace TanatosAPI.Test.Business {
 		public async Task CancelarTest_Valido() {
 			await suscripcionBcp.Cancelar(SuscripcionDummy(id: 10, estado: 1 /* Activa */, flowSubscriptionId: "flow-subscription-id-test-cancel"));
 			await flowHelper.Received(1).SubscriptionCancel("flow-subscription-id-test-cancel");
-			await suscripcionDao.Received(1).Actualizar(Arg.Is<Suscripcion>(s => s.Id == 10 && s.Estado == 2 && s.FechaExpiracion == FECHA_DUMMY));
+			await suscripcionDao.Received(1).Actualizar(Arg.Is<Suscripcion>(s => s.Id == 10 && s.Estado == 2 && s.FechaCancelacion == FECHA_DUMMY));
 		}
 
 		[Fact]

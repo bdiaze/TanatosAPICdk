@@ -432,7 +432,7 @@ namespace TanatosAPI.Test.UseCases {
 			]);
 			suscripcionBcp.ProximaFechaExpiracion(Arg.Any<List<Suscripcion>>()).Returns((DateTime?)null);
 			flowHelper.SubscriptionCreate("flow-plan-id-test", "flow-customer-id-test", Arg.Any<DateTime?>()).Returns(new SalFlowSubscriptionCreate() {
-				Status = 0, // Inactiva
+				Status = 4, // Cancelada
 				SubscriptionId = "flow-subscription-id-test",
 				NextInvoiceDate = "2020-07-01 12:30:15" // Formato: yyyy-MM-dd HH:mm:ss - UTC: 2020-07-01 16:30:15
 			});
