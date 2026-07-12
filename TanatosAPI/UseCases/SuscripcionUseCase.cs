@@ -20,18 +20,18 @@ namespace TanatosAPI.UseCases {
 			})];
 		}
 
-		public async Task<string?> SuscribirseAPlan(string sub, long idPlan, NpgsqlTransaction? transaction = null) {
+		public async Task<string?> SuscribirseAPlan(string sub, long idPlan, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
-			NpgsqlConnection? connection = null;
+			IDatabaseConnection? connection = null;
 
 			try {
 				if (ownsTransaction) {
-					connection = await connectionHelper.ObtenerConexion();
+					connection = await connectionHelper.ObtenerConexionWrapper();
 					transaction = await connection.BeginTransactionAsync();
 				}
 
-				Plan plan = await planBcp.ObtenerPorIdValidandoVigencia(idPlan, transaction);
-				List<Suscripcion> suscripciones = await suscripcionBcp.ObtenerVigentesPorSub(sub, transaction);
+				Plan plan = await planBcp.ObtenerPorIdValidandoVigencia(idPlan, transaction!.NpgsqlTransaction());
+				List<Suscripcion> suscripciones = await suscripcionBcp.ObtenerVigentesPorSub(sub, transaction!.NpgsqlTransaction());
 
 				if (suscripcionBcp.AlgunaConPagoEnCurso(suscripciones)) {
 					throw new ErrorValidacion(TipoErrorValidacion.YaExiste, "El usuario ya tiene una suscripción con pago en curso", "Ya cuentas con una suscripción activa.");
@@ -43,7 +43,7 @@ namespace TanatosAPI.UseCases {
 
 				string? urlRedirect = null;
 
-				await suscripcionBcp.EliminarCreacionNoConfirmada(suscripciones, transaction);
+				await suscripcionBcp.EliminarCreacionNoConfirmada(suscripciones, transaction!.NpgsqlTransaction());
 
 				short estado;
 				DateTime? fechaInicio;
@@ -58,11 +58,11 @@ namespace TanatosAPI.UseCases {
 					fechaExpiracion = null;
 				}
 
-				Suscripcion nuevo = await suscripcionBcp.Crear(sub, plan.Id, fechaInicio, fechaExpiracion, estado, transaction);
+				Suscripcion nuevo = await suscripcionBcp.Crear(sub, plan.Id, fechaInicio, fechaExpiracion, estado, transaction!.NpgsqlTransaction());
 
 				if (plan.FlowPlanId != null) {
-					nuevo.FlowCustomerId = await usuarioBcp.RegistrarUsuarioEnFlow(sub, transaction);
-					await suscripcionBcp.Modificar(nuevo, transaction);
+					nuevo.FlowCustomerId = await usuarioBcp.RegistrarUsuarioEnFlow(sub, transaction!.NpgsqlTransaction());
+					await suscripcionBcp.Modificar(nuevo, transaction!.NpgsqlTransaction());
 					urlRedirect = await usuarioBcp.RegistrarTarjetaEnFlow(nuevo.FlowCustomerId!);
 				}
 
@@ -84,17 +84,17 @@ namespace TanatosAPI.UseCases {
 			}
 		}
 
-		public async Task<List<Plan>> SuscribirseAPlanesGratuitos(string sub, NpgsqlTransaction? transaction = null) {
+		public async Task<List<Plan>> SuscribirseAPlanesGratuitos(string sub, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
-			NpgsqlConnection? connection = null;
+			IDatabaseConnection? connection = null;
 
 			try {
 				if (ownsTransaction) {
-					connection = await connectionHelper.ObtenerConexion();
+					connection = await connectionHelper.ObtenerConexionWrapper();
 					transaction = await connection.BeginTransactionAsync();
 				}
 
-				List<Plan> planesGratuitos = await planBcp.ObtenerPlanesGratuitos(transaction);
+				List<Plan> planesGratuitos = await planBcp.ObtenerPlanesGratuitos(transaction!.NpgsqlTransaction());
 				foreach (Plan plan in planesGratuitos) {
 					await SuscribirseAPlan(sub, plan.Id, transaction);
 				}
@@ -117,22 +117,22 @@ namespace TanatosAPI.UseCases {
 			}
 		}
 
-		public async Task CancelarSuscripcion(string sub, NpgsqlTransaction? transaction = null) {
+		public async Task CancelarSuscripcion(string sub, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
-			NpgsqlConnection? connection = null;
+			IDatabaseConnection? connection = null;
 
 			try {
 				if (ownsTransaction) {
-					connection = await connectionHelper.ObtenerConexion();
+					connection = await connectionHelper.ObtenerConexionWrapper();
 					transaction = await connection.BeginTransactionAsync();
 				}
 
 				DateTime now = dateTimeProvider.UtcNow;
-				List<Suscripcion> suscripciones = await suscripcionBcp.ObtenerVigentesPorSub(sub, transaction);
+				List<Suscripcion> suscripciones = await suscripcionBcp.ObtenerVigentesPorSub(sub, transaction!.NpgsqlTransaction());
 				if (suscripcionBcp.AlgunaConPagoEnCurso(suscripciones, now)) {
 					List<Suscripcion> pagoEnCurso = suscripcionBcp.FiltrarPagosEnCurso(suscripciones, now);
 					foreach (Suscripcion enCurso in pagoEnCurso) {
-						await suscripcionBcp.Cancelar(enCurso, transaction);
+						await suscripcionBcp.Cancelar(enCurso, transaction!.NpgsqlTransaction());
 					}
 				}
 
@@ -182,20 +182,20 @@ namespace TanatosAPI.UseCases {
 			return redirect;
 		}
 
-		public async Task ProcesarWebhookFlowCustomerRegister(SalFlowCustomerGetRegisterStatus registerStatus, NpgsqlTransaction? transaction = null) {
+		public async Task ProcesarWebhookFlowCustomerRegister(SalFlowCustomerGetRegisterStatus registerStatus, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
-			NpgsqlConnection? connection = null;
+			IDatabaseConnection? connection = null;
 			try {
 				if (ownsTransaction) {
-					connection = await connectionHelper.ObtenerConexion();
+					connection = await connectionHelper.ObtenerConexionWrapper();
 					transaction = await connection.BeginTransactionAsync();
 				}
 
 				if (registerStatus.Status?.Trim() == "1" /* Registrado */ && registerStatus.CustomerId != null) {
-					Usuario? usuario = await usuarioBcp.ObtenerPorFlowCustomerId(registerStatus.CustomerId, transaction);
+					Usuario? usuario = await usuarioBcp.ObtenerPorFlowCustomerId(registerStatus.CustomerId, transaction!.NpgsqlTransaction());
 					if (usuario != null) {
-						List<Suscripcion> suscripciones = await suscripcionBcp.ObtenerVigentesPorSub(usuario.Sub, transaction);
-						List<Plan> planesVigentes = await planBcp.ObtenerVigentes(transaction);
+						List<Suscripcion> suscripciones = await suscripcionBcp.ObtenerVigentesPorSub(usuario.Sub, transaction!.NpgsqlTransaction());
+						List<Plan> planesVigentes = await planBcp.ObtenerVigentes(transaction!.NpgsqlTransaction());
 						Suscripcion? suscripcionActivar = suscripciones
 							.Where(s => s.Estado == 5 /* En Creación */ && planesVigentes.Any(p => p.Id == s.IdPlan))
 							.OrderByDescending(s => s.FechaCreacion)
@@ -212,7 +212,7 @@ namespace TanatosAPI.UseCases {
 							if (salFlowSubscriptionCreate.Status == 1 /* Activa */) {
 								suscripcionActivar.Estado = 4; // Pago Pendiente
 								suscripcionActivar.FlowSubscriptionId = salFlowSubscriptionCreate.SubscriptionId;
-								await suscripcionBcp.Modificar(suscripcionActivar, transaction);
+								await suscripcionBcp.Modificar(suscripcionActivar, transaction!.NpgsqlTransaction());
 							}
 						}
 					}
@@ -234,12 +234,12 @@ namespace TanatosAPI.UseCases {
 			}
 		}
 
-		public async Task ProcesarWebhookFlowPayment(SalFlowPaymentGetStatus paymentStatus, NpgsqlTransaction? transaction = null) {
+		public async Task ProcesarWebhookFlowPayment(SalFlowPaymentGetStatus paymentStatus, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
-			NpgsqlConnection? connection = null;
+			IDatabaseConnection? connection = null;
 			try {
 				if (ownsTransaction) {
-					connection = await connectionHelper.ObtenerConexion();
+					connection = await connectionHelper.ObtenerConexionWrapper();
 					transaction = await connection.BeginTransactionAsync();
 				}
 
@@ -251,11 +251,11 @@ namespace TanatosAPI.UseCases {
 
 					SalFlowInvoiceGet salFlowInvoiceGet = await flowHelper.InvoiceGet(flowInvoiceId);
 
-					Suscripcion? suscripcion = await suscripcionBcp.ObtenerPorFlowSubscriptionId(flowSubscriptionId, transaction);
+					Suscripcion? suscripcion = await suscripcionBcp.ObtenerPorFlowSubscriptionId(flowSubscriptionId, transaction!.NpgsqlTransaction());
 					if (suscripcion != null) {
-						Plan? plan = await planBcp.ObtenerPorId(suscripcion.IdPlan, transaction);
+						Plan? plan = await planBcp.ObtenerPorId(suscripcion.IdPlan, transaction!.NpgsqlTransaction());
 						if (plan != null) {
-							Pago? pagoExistente = await pagoBcp.ObtenerPorFlow(suscripcion.FlowSubscriptionId!, flowInvoiceId, transaction);
+							Pago? pagoExistente = await pagoBcp.ObtenerPorFlow(suscripcion.FlowSubscriptionId!, flowInvoiceId, transaction!.NpgsqlTransaction());
 							if (pagoExistente == null) {
 								DateTime ahora = dateTimeProvider.UtcNow;
 
@@ -275,16 +275,16 @@ namespace TanatosAPI.UseCases {
 									fechaPago,
 									suscripcion.FlowSubscriptionId!,
 									flowInvoiceId,
-									transaction
+									transaction!.NpgsqlTransaction()
 								);
 
-								suscripcion.FechaInicio ??= suscripcionBcp.ProximaFechaSinSuscripcion(await suscripcionBcp.ObtenerVigentesPorSub(suscripcion.Sub, transaction));
+								suscripcion.FechaInicio ??= suscripcionBcp.ProximaFechaSinSuscripcion(await suscripcionBcp.ObtenerVigentesPorSub(suscripcion.Sub, transaction!.NpgsqlTransaction()));
 								DateTime fechaReferencia = suscripcion.FechaExpiracion == null ? 
 									suscripcion.FechaInicio!.Value : 
 									(ahora > suscripcion.FechaExpiracion.Value ? ahora : suscripcion.FechaExpiracion.Value);
 								suscripcion.FechaExpiracion = DateTimeHelper.SumarMeses(DateTime.SpecifyKind(fechaReferencia, DateTimeKind.Utc), plan.DuracionMeses);
 								suscripcion.Estado = 1 /* Activa */;
-								await suscripcionBcp.Modificar(suscripcion, transaction);
+								await suscripcionBcp.Modificar(suscripcion, transaction!.NpgsqlTransaction());
 							}
 						}
 					}
