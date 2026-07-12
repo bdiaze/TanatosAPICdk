@@ -12,6 +12,7 @@ using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 using TanatosAPI.Test.Business;
 using TanatosAPI.UseCases;
@@ -40,6 +41,69 @@ namespace TanatosAPI.Test.UseCases {
 			connectionHelper.ObtenerConexionWrapper().Returns(connection);
 
 			suscripcionUseCase = new(connectionHelper, dateTimeProvider, suscripcionBcp, planBcp, usuarioBcp, eventoPagoBcp, pagoBcp, flowHelper);
+		}
+
+		private static Plan PlanGratuito = PlanBcpTest.PlanDummy(id: 1, nombre: "nombre-plan-gratuito-test", precio: 0);
+		private static Plan PlanDePago = PlanBcpTest.PlanDummy(id: 2, nombre: "nombre-plan-pago-test", precio: 9990);
+
+		public static TheoryData<List<Suscripcion>, (Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica)> ResumenSuscripcion => new() {
+			{ SuscripcionBcpTest.CASO_01_USUARIO_SIN_SUSCRIPCIONES, (null, null, null, null, false) },
+			{ SuscripcionBcpTest.CASO_02_USUARIO_GRATUITA_ACTIVA, (PlanGratuito, null, FECHA_DUMMY.AddDays(15), null, false) },
+			{ SuscripcionBcpTest.CASO_03_USUARIO_GRATUITA_EXPIRADA, (null, null, null, null, false) },
+			{ SuscripcionBcpTest.CASO_04_USUARIO_PAGO_ACTIVO, (PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
+			{ SuscripcionBcpTest.CASO_05_USUARIO_PAGO_EXPIRADA, (null, PlanDePago, null, FECHA_DUMMY.AddDays(-15), true) },
+			{ SuscripcionBcpTest.CASO_06_USUARIO_PAGO_CANCELADA_ACTIVA, (PlanDePago, null, FECHA_DUMMY.AddDays(15), null, false) },
+			{ SuscripcionBcpTest.CASO_07_USUARIO_PAGO_CANCELADA_EXPIRADA, (null, null, null, null, false) },
+			{ SuscripcionBcpTest.CASO_08_USUARIO_GRAT_ANT_PAGO_ACTIVO, (PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
+			{ SuscripcionBcpTest.CASO_09_USUARIO_GRAT_ANT_PAGO_EXPIRADA, (null, PlanDePago, null, FECHA_DUMMY.AddDays(-15), true) },
+			{ SuscripcionBcpTest.CASO_10_USUARIO_GRAT_ANT_PAGO_CANCELADA_ACTIVA, (PlanDePago, null, FECHA_DUMMY.AddDays(15), null, false) },
+			{ SuscripcionBcpTest.CASO_11_USUARIO_GRAT_ANT_PAGO_CANCELADA_EXPIRADA, (null, null, null, null, false) },
+			{ SuscripcionBcpTest.CASO_12_USUARIO_PAGO_PEND_SIN_PREVIAS, (null, PlanDePago, null, FECHA_DUMMY, true) },
+			{ SuscripcionBcpTest.CASO_13_USUARIO_GRAT_ANT_PAGO_PEND, (null, PlanDePago, null, FECHA_DUMMY, true) },
+			{ SuscripcionBcpTest.CASO_14_USUARIO_GRAT_ACT_PAGO_PEND_FUT, (PlanGratuito, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
+			{ SuscripcionBcpTest.CASO_15_USUARIO_PAGO_CANC_ACT_PAGO_PEND_FUT, (PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
+			{ SuscripcionBcpTest.CASO_16_USUARIO_PAGO_CANC_EXP_PAGO_PEND_FUT, (null, PlanDePago, null, FECHA_DUMMY, true) },
+			{ SuscripcionBcpTest.CASO_17_USUARIO_GRAT_ACTIVA_POST_GRAT, (PlanGratuito, null, FECHA_DUMMY.AddDays(45), null, false) },
+			{ SuscripcionBcpTest.CASO_18_USUARIO_PAGO_CANC_ACT_POST_GRAT, (PlanDePago, null, FECHA_DUMMY.AddDays(45), null, false) },
+			{ SuscripcionBcpTest.CASO_19_USUARIO_PAGO_CANC_EXP_PAGO_ACTIVO, (PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
+			{ SuscripcionBcpTest.CASO_20_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_PEND_FUT, (PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
+			{ SuscripcionBcpTest.CASO_21_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_CANC_FUT, (PlanDePago, null, FECHA_DUMMY.AddDays(15), null, false) }
+		};
+		[Theory]
+		[MemberData(nameof(ResumenSuscripcion))]
+		public async Task ObtenerResumenSuscripcionTest(List<Suscripcion> suscripciones, (Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica) expected) {
+			ISuscripcionDao suscripcionDao = Substitute.For<ISuscripcionDao>();
+			SuscripcionBcp suscripcionBcpReferencia = new(dateTimeProvider, suscripcionDao, flowHelper);
+			
+			suscripcionBcp.ObtenerVigentesPorSub("sub-test", Arg.Any<NpgsqlTransaction?>()).Returns(suscripciones);
+			suscripcionBcp.FiltrarEnCurso(Arg.Any<List<Suscripcion>>(), Arg.Any<DateTime?>()).Returns(ci => suscripcionBcpReferencia.FiltrarEnCurso(ci.Arg<List<Suscripcion>>(), ci.Arg<DateTime?>()));
+			suscripcionBcp.FiltrarPagosEnCurso(Arg.Any<List<Suscripcion>>(), Arg.Any<DateTime?>()).Returns(ci => suscripcionBcpReferencia.FiltrarPagosEnCurso(ci.Arg<List<Suscripcion>>(), ci.Arg<DateTime?>()));
+			suscripcionBcp.AlgunaConPagoEnCurso(Arg.Any<List<Suscripcion>>(), Arg.Any<DateTime?>()).Returns(ci => suscripcionBcpReferencia.AlgunaConPagoEnCurso(ci.Arg<List<Suscripcion>>(), ci.Arg<DateTime?>()));
+			suscripcionBcp.ProximaFechaCobro(Arg.Any<List<Suscripcion>>(), Arg.Any<DateTime?>()).Returns(ci => suscripcionBcpReferencia.ProximaFechaCobro(ci.Arg<List<Suscripcion>>(), ci.Arg<DateTime?>()));
+			suscripcionBcp.ProximaFechaExpiracion(Arg.Any<List<Suscripcion>>(), Arg.Any<DateTime?>()).Returns(ci => suscripcionBcpReferencia.ProximaFechaExpiracion(ci.Arg<List<Suscripcion>>(), ci.Arg<DateTime?>()));
+
+			planBcp.ObtenerPorId(PlanGratuito.Id, Arg.Any<NpgsqlTransaction?>()).Returns(PlanGratuito);
+			planBcp.ObtenerPorId(PlanDePago.Id, Arg.Any<NpgsqlTransaction?>()).Returns(PlanDePago);
+
+			(Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica) retorno = await suscripcionUseCase.ObtenerResumenSuscripcion("sub-test");
+			if (expected.planEnCurso == null) {
+				Assert.Null(retorno.planEnCurso);
+			} else {
+				Assert.Equal(expected.planEnCurso!.Id, retorno.planEnCurso?.Id);
+				Assert.Equal(expected.planEnCurso!.Nombre, retorno.planEnCurso?.Nombre);
+				Assert.Equal(expected.planEnCurso!.Precio, retorno.planEnCurso?.Precio);
+			}
+			if (expected.planPagoEnCurso == null) {
+				Assert.Null(retorno.planPagoEnCurso);
+			} else {
+				Assert.Equal(expected.planPagoEnCurso!.Id, retorno.planPagoEnCurso?.Id);
+				Assert.Equal(expected.planPagoEnCurso!.Nombre, retorno.planPagoEnCurso?.Nombre);
+				Assert.Equal(expected.planPagoEnCurso!.Precio, retorno.planPagoEnCurso?.Precio);
+			}
+			Assert.Equal(expected.fechaExpiracion, retorno.fechaExpiracion);
+			Assert.Equal(expected.fechaProximoCobro, retorno.fechaProximoCobro);
+			Assert.Equal(expected.renovacionAutomatica, retorno.renovacionAutomatica);
+			await suscripcionBcp.Received(1).ObtenerVigentesPorSub("sub-test", Arg.Any<NpgsqlTransaction?>());
 		}
 
 		[Fact]
@@ -264,7 +328,8 @@ namespace TanatosAPI.Test.UseCases {
 			suscripcionBcp.ProximaFechaExpiracion(Arg.Any<List<Suscripcion>>()).Returns((DateTime?)null);
 			flowHelper.SubscriptionCreate("flow-plan-id-test", "flow-customer-id-test", Arg.Any<DateTime?>()).Returns(new SalFlowSubscriptionCreate() {
 				Status = 1, // Activa
-				SubscriptionId = "flow-subscription-id-test"
+				SubscriptionId = "flow-subscription-id-test",
+				NextInvoiceDate = "2020-07-01 12:30:15" // Formato: yyyy-MM-dd HH:mm:ss - UTC: 2020-07-01 16:30:15
 			});
 
 			await suscripcionUseCase.ProcesarWebhookFlowCustomerRegister(new SalFlowCustomerGetRegisterStatus() {
@@ -274,11 +339,12 @@ namespace TanatosAPI.Test.UseCases {
 			await connection.Received(1).BeginTransactionAsync();
 			await flowHelper.Received(1).SubscriptionCreate("flow-plan-id-test", "flow-customer-id-test", Arg.Any<DateTime?>());
 			await suscripcionBcp.Received(1).Modificar(
-				Arg.Is<Suscripcion>(s => 
-					s.Id == 100 && 
-					s.Estado == 4 /* Pago Pendiente */ && 
-					s.FlowSubscriptionId == "flow-subscription-id-test"
-				), 
+				Arg.Is<Suscripcion>(s =>
+					s.Id == 100 &&
+					s.Estado == 4 /* Pago Pendiente */ &&
+					s.FlowSubscriptionId == "flow-subscription-id-test" &&
+					s.FechaProximoCobro == new DateTime(2020, 7, 1, 16, 30, 15, DateTimeKind.Utc)
+				),
 				Arg.Any<NpgsqlTransaction?>()
 			);
 			await transaction.Received(1).CommitAsync();
@@ -301,7 +367,6 @@ namespace TanatosAPI.Test.UseCases {
 			await transaction.Received(1).DisposeAsync();
 			await connection.Received(1).DisposeAsync();
 		}
-
 
 		[Fact]
 		public async Task ProcesarWebhookFlowCustomerRegisterTest_RegisterStatusInvalido() {
@@ -368,7 +433,8 @@ namespace TanatosAPI.Test.UseCases {
 			suscripcionBcp.ProximaFechaExpiracion(Arg.Any<List<Suscripcion>>()).Returns((DateTime?)null);
 			flowHelper.SubscriptionCreate("flow-plan-id-test", "flow-customer-id-test", Arg.Any<DateTime?>()).Returns(new SalFlowSubscriptionCreate() {
 				Status = 0, // Inactiva
-				SubscriptionId = "flow-subscription-id-test"
+				SubscriptionId = "flow-subscription-id-test",
+				NextInvoiceDate = "2020-07-01 12:30:15" // Formato: yyyy-MM-dd HH:mm:ss - UTC: 2020-07-01 16:30:15
 			});
 
 			await suscripcionUseCase.ProcesarWebhookFlowCustomerRegister(new SalFlowCustomerGetRegisterStatus() {
@@ -395,6 +461,9 @@ namespace TanatosAPI.Test.UseCases {
 					}
 				}
 			});
+			flowHelper.SubscriptionGet("sus_flow-subscription-id-test").Returns(new SalFlowSubscriptionGet() {
+				NextInvoiceDate = "2020-07-01 12:30:15" // Formato: yyyy-MM-dd HH:mm:ss - UTC: 2020-07-01 16:30:15
+			});
 			suscripcionBcp.ObtenerPorFlowSubscriptionId("sus_flow-subscription-id-test", Arg.Any<NpgsqlTransaction?>()).Returns(
 				SuscripcionBcpTest.SuscripcionDummy(
 					id: 100, sub: "sub-test", idPlan: 10, flowSubscriptionId: "sus_flow-subscription-id-test", 
@@ -416,7 +485,8 @@ namespace TanatosAPI.Test.UseCases {
 				Arg.Is<Suscripcion>(s => 
 					s.Id == 100 && 
 					s.FechaInicio == FECHA_DUMMY.AddDays(-15) && 
-					s.FechaExpiracion == FECHA_DUMMY.AddDays(15).AddMonths(1) && 
+					s.FechaExpiracion == FECHA_DUMMY.AddDays(15).AddMonths(1) &&
+					s.FechaProximoCobro == new DateTime(2020, 7, 1, 16, 30, 15, DateTimeKind.Utc) &&
 					s.Estado == 1 /* Activa */), 
 				Arg.Any<NpgsqlTransaction?>()
 			);
@@ -428,7 +498,7 @@ namespace TanatosAPI.Test.UseCases {
 
 		[Fact]
 		public async Task ProcesarWebhookFlowPaymentTest_Invalido() {
-			flowHelper.InvoiceGet("flow-invoice-id-test").ThrowsAsync<Exception>();
+			suscripcionBcp.ObtenerPorFlowSubscriptionId("sus_flow-subscription-id-test").ThrowsAsync<Exception>();
 
 			await Assert.ThrowsAsync<Exception>(() => suscripcionUseCase.ProcesarWebhookFlowPayment(new SalFlowPaymentGetStatus() {
 				Status = 2, // Pagada
@@ -458,15 +528,6 @@ namespace TanatosAPI.Test.UseCases {
 
 		[Fact]
 		public async Task ProcesarWebhookFlowPaymentTest_SinSuscripcion() {
-			flowHelper.InvoiceGet("flow-invoice-id-test").Returns(new SalFlowInvoiceGet() {
-				Amount = "9990",
-				Currency = "CLP",
-				Payment = new SalFlowPaymentGetStatus() {
-					PaymentData = new SalFlowPaymentData() {
-						Date = "2020-06-01 12:30:15" // Formato: yyyy-MM-dd HH:mm:ss - UTC: 2020-06-01 16:30:15
-					}
-				}
-			});
 			suscripcionBcp.ObtenerPorFlowSubscriptionId("sus_flow-subscription-id-test", Arg.Any<NpgsqlTransaction?>()).Returns((Suscripcion?)null);
 			
 			await suscripcionUseCase.ProcesarWebhookFlowPayment(new SalFlowPaymentGetStatus() {
@@ -484,15 +545,6 @@ namespace TanatosAPI.Test.UseCases {
 
 		[Fact]
 		public async Task ProcesarWebhookFlowPaymentTest_SinPlan() {
-			flowHelper.InvoiceGet("flow-invoice-id-test").Returns(new SalFlowInvoiceGet() {
-				Amount = "9990",
-				Currency = "CLP",
-				Payment = new SalFlowPaymentGetStatus() {
-					PaymentData = new SalFlowPaymentData() {
-						Date = "2020-06-01 12:30:15" // Formato: yyyy-MM-dd HH:mm:ss - UTC: 2020-06-01 16:30:15
-					}
-				}
-			});
 			suscripcionBcp.ObtenerPorFlowSubscriptionId("sus_flow-subscription-id-test", Arg.Any<NpgsqlTransaction?>()).Returns(
 				SuscripcionBcpTest.SuscripcionDummy(
 					id: 100, sub: "sub-test", idPlan: 10, flowSubscriptionId: "sus_flow-subscription-id-test",
@@ -516,15 +568,6 @@ namespace TanatosAPI.Test.UseCases {
 
 		[Fact]
 		public async Task ProcesarWebhookFlowPaymentTest_PagoDuplicado() {
-			flowHelper.InvoiceGet("flow-invoice-id-test").Returns(new SalFlowInvoiceGet() {
-				Amount = "9990",
-				Currency = "CLP",
-				Payment = new SalFlowPaymentGetStatus() {
-					PaymentData = new SalFlowPaymentData() {
-						Date = "2020-06-01 12:30:15" // Formato: yyyy-MM-dd HH:mm:ss - UTC: 2020-06-01 16:30:15
-					}
-				}
-			});
 			suscripcionBcp.ObtenerPorFlowSubscriptionId("sus_flow-subscription-id-test", Arg.Any<NpgsqlTransaction?>()).Returns(
 				SuscripcionBcpTest.SuscripcionDummy(
 					id: 100, sub: "sub-test", idPlan: 10, flowSubscriptionId: "sus_flow-subscription-id-test",
@@ -551,6 +594,14 @@ namespace TanatosAPI.Test.UseCases {
 
 		[Fact]
 		public async Task ProcesarWebhookFlowPaymentTest_SinFechaPago() {
+			suscripcionBcp.ObtenerPorFlowSubscriptionId("sus_flow-subscription-id-test", Arg.Any<NpgsqlTransaction?>()).Returns(
+				SuscripcionBcpTest.SuscripcionDummy(
+					id: 100, sub: "sub-test", idPlan: 10, flowSubscriptionId: "sus_flow-subscription-id-test",
+					fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15)
+				)
+			);
+			planBcp.ObtenerPorId(10, Arg.Any<NpgsqlTransaction?>()).Returns(PlanBcpTest.PlanDummy(id: 10));
+			pagoBcp.ObtenerPorFlow("sus_flow-subscription-id-test", "flow-invoice-id-test", Arg.Any<NpgsqlTransaction?>()).Returns((Pago?)null);
 			flowHelper.InvoiceGet("flow-invoice-id-test").Returns(new SalFlowInvoiceGet() {
 				Amount = "9990",
 				Currency = "CLP",
@@ -560,14 +611,9 @@ namespace TanatosAPI.Test.UseCases {
 					}
 				}
 			});
-			suscripcionBcp.ObtenerPorFlowSubscriptionId("sus_flow-subscription-id-test", Arg.Any<NpgsqlTransaction?>()).Returns(
-				SuscripcionBcpTest.SuscripcionDummy(
-					id: 100, sub: "sub-test", idPlan: 10, flowSubscriptionId: "sus_flow-subscription-id-test",
-					fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15)
-				)
-			);
-			planBcp.ObtenerPorId(10, Arg.Any<NpgsqlTransaction?>()).Returns(PlanBcpTest.PlanDummy(id: 10));
-			pagoBcp.ObtenerPorFlow("sus_flow-subscription-id-test", "flow-invoice-id-test", Arg.Any<NpgsqlTransaction?>()).Returns((Pago?)null);
+			flowHelper.SubscriptionGet("sus_flow-subscription-id-test").Returns(new SalFlowSubscriptionGet() {
+				NextInvoiceDate = null
+			});
 			suscripcionBcp.ObtenerVigentesPorSub("sub-test", Arg.Any<NpgsqlTransaction?>()).Returns([]);
 			suscripcionBcp.ProximaFechaSinSuscripcion(Arg.Any<List<Suscripcion>>()).Returns(FECHA_DUMMY.AddDays(15));
 
@@ -582,6 +628,7 @@ namespace TanatosAPI.Test.UseCases {
 					s.Id == 100 &&
 					s.FechaInicio == FECHA_DUMMY.AddDays(-15) &&
 					s.FechaExpiracion == FECHA_DUMMY.AddDays(15).AddMonths(1) &&
+					s.FechaProximoCobro == null &&
 					s.Estado == 1 /* Activa */),
 				Arg.Any<NpgsqlTransaction?>()
 			);
@@ -593,6 +640,14 @@ namespace TanatosAPI.Test.UseCases {
 
 		[Fact]
 		public async Task ProcesarWebhookFlowPaymentTest_PagoAtrasado() {
+			suscripcionBcp.ObtenerPorFlowSubscriptionId("sus_flow-subscription-id-test", Arg.Any<NpgsqlTransaction?>()).Returns(
+				SuscripcionBcpTest.SuscripcionDummy(
+					id: 100, sub: "sub-test", idPlan: 10, flowSubscriptionId: "sus_flow-subscription-id-test",
+					fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15)
+				)
+			);
+			planBcp.ObtenerPorId(10, Arg.Any<NpgsqlTransaction?>()).Returns(PlanBcpTest.PlanDummy(id: 10));
+			pagoBcp.ObtenerPorFlow("sus_flow-subscription-id-test", "flow-invoice-id-test", Arg.Any<NpgsqlTransaction?>()).Returns((Pago?)null);
 			flowHelper.InvoiceGet("flow-invoice-id-test").Returns(new SalFlowInvoiceGet() {
 				Amount = "9990",
 				Currency = "CLP",
@@ -602,14 +657,9 @@ namespace TanatosAPI.Test.UseCases {
 					}
 				}
 			});
-			suscripcionBcp.ObtenerPorFlowSubscriptionId("sus_flow-subscription-id-test", Arg.Any<NpgsqlTransaction?>()).Returns(
-				SuscripcionBcpTest.SuscripcionDummy(
-					id: 100, sub: "sub-test", idPlan: 10, flowSubscriptionId: "sus_flow-subscription-id-test",
-					fechaInicio: FECHA_DUMMY.AddDays(-45), fechaExpiracion: FECHA_DUMMY.AddDays(-15)
-				)
-			);
-			planBcp.ObtenerPorId(10, Arg.Any<NpgsqlTransaction?>()).Returns(PlanBcpTest.PlanDummy(id: 10));
-			pagoBcp.ObtenerPorFlow("sus_flow-subscription-id-test", "flow-invoice-id-test", Arg.Any<NpgsqlTransaction?>()).Returns((Pago?)null);
+			flowHelper.SubscriptionGet("sus_flow-subscription-id-test").Returns(new SalFlowSubscriptionGet() {
+				NextInvoiceDate = "2020-07-01 12:30:15" // Formato: yyyy-MM-dd HH:mm:ss - UTC: 2020-07-01 16:30:15
+			});
 			suscripcionBcp.ObtenerVigentesPorSub("sub-test", Arg.Any<NpgsqlTransaction?>()).Returns([]);
 			suscripcionBcp.ProximaFechaSinSuscripcion(Arg.Any<List<Suscripcion>>()).Returns(FECHA_DUMMY.AddDays(15));
 
@@ -624,6 +674,7 @@ namespace TanatosAPI.Test.UseCases {
 					s.Id == 100 &&
 					s.FechaInicio == FECHA_DUMMY.AddDays(-45) &&
 					s.FechaExpiracion == FECHA_DUMMY.AddMonths(1) &&
+					s.FechaProximoCobro == new DateTime(2020, 7, 1, 16, 30, 15, DateTimeKind.Utc) &&
 					s.Estado == 1 /* Activa */),
 				Arg.Any<NpgsqlTransaction?>()
 			);
@@ -671,6 +722,14 @@ namespace TanatosAPI.Test.UseCases {
 			eventoPagoBcp.Insertar(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>()).Returns(EventoPagoBcpTest.EventoPagoDummy(id: 100, procesado: false));
 
 			// Métodos para PaymentGetStatus...
+			suscripcionBcp.ObtenerPorFlowSubscriptionId("sus_flow-subscription-id-test", Arg.Any<NpgsqlTransaction?>()).Returns(
+				SuscripcionBcpTest.SuscripcionDummy(
+					id: 100, sub: "sub-test", idPlan: 10, flowSubscriptionId: "sus_flow-subscription-id-test",
+					fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15)
+				)
+			);
+			planBcp.ObtenerPorId(10, Arg.Any<NpgsqlTransaction?>()).Returns(PlanBcpTest.PlanDummy(id: 10));
+			pagoBcp.ObtenerPorFlow("sus_flow-subscription-id-test", "flow-invoice-id-test", Arg.Any<NpgsqlTransaction?>()).Returns((Pago?)null);
 			flowHelper.InvoiceGet("flow-invoice-id-test").Returns(new SalFlowInvoiceGet() {
 				Amount = "9990",
 				Currency = "CLP",
@@ -680,14 +739,9 @@ namespace TanatosAPI.Test.UseCases {
 					}
 				}
 			});
-			suscripcionBcp.ObtenerPorFlowSubscriptionId("sus_flow-subscription-id-test", Arg.Any<NpgsqlTransaction?>()).Returns(
-				SuscripcionBcpTest.SuscripcionDummy(
-					id: 100, sub: "sub-test", idPlan: 10, flowSubscriptionId: "sus_flow-subscription-id-test",
-					fechaInicio: FECHA_DUMMY.AddDays(-15), fechaExpiracion: FECHA_DUMMY.AddDays(15)
-				)
-			);
-			planBcp.ObtenerPorId(10, Arg.Any<NpgsqlTransaction?>()).Returns(PlanBcpTest.PlanDummy(id: 10));
-			pagoBcp.ObtenerPorFlow("sus_flow-subscription-id-test", "flow-invoice-id-test", Arg.Any<NpgsqlTransaction?>()).Returns((Pago?)null);
+			flowHelper.SubscriptionGet("sus_flow-subscription-id-test").Returns(new SalFlowSubscriptionGet() {
+				NextInvoiceDate = "2020-07-01 12:30:15" // Formato: yyyy-MM-dd HH:mm:ss - UTC: 2020-07-01 16:30:15
+			});
 			suscripcionBcp.ObtenerVigentesPorSub("sub-test", Arg.Any<NpgsqlTransaction?>()).Returns([]);
 			suscripcionBcp.ProximaFechaSinSuscripcion(Arg.Any<List<Suscripcion>>()).Returns(FECHA_DUMMY.AddDays(15));
 

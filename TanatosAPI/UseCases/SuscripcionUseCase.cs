@@ -10,7 +10,41 @@ using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.UseCases {
-	public class SuscripcionUseCase(IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, ISuscripcionBcp suscripcionBcp, IPlanBcp planBcp, IUsuarioBcp usuarioBcp, IEventoPagoBcp eventoPagoBcp, IPagoBcp pagoBcp, IFlowHelper flowHelper) {		
+	public class SuscripcionUseCase(IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, ISuscripcionBcp suscripcionBcp, IPlanBcp planBcp, IUsuarioBcp usuarioBcp, IEventoPagoBcp eventoPagoBcp, IPagoBcp pagoBcp, IFlowHelper flowHelper) {
+
+		// NombrePlan y PrecioPlan: Información de la suscripción en curso.
+		// FechaExpiración: Solo para casos que no tienen renovación automática (en otras palabras, gratuitas o de pago canceladas).
+		// FechaPróximoCobro: Solo para casos con renovación automática (en otras palabras, de pago activas, o pago pendiente).
+		// RenovaciónAutomática: True para pagos en curso, false para todo lo demás.
+		public async Task<(Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica)> ObtenerResumenSuscripcion(string sub) {
+			DateTime now = dateTimeProvider.UtcNow;
+			List<Suscripcion> suscripciones = await suscripcionBcp.ObtenerVigentesPorSub(sub);
+
+			Suscripcion? enCurso = suscripcionBcp.FiltrarEnCurso(suscripciones, now).FirstOrDefault();
+			Plan? planEnCurso = enCurso != null ? await planBcp.ObtenerPorId(enCurso.IdPlan) : null;
+
+			Suscripcion? pagoEnCurso = suscripcionBcp.FiltrarPagosEnCurso(suscripciones, now).FirstOrDefault();
+			Plan? planPagoEnCurso = pagoEnCurso != null ? await planBcp.ObtenerPorId(pagoEnCurso.IdPlan) : null;
+
+			DateTime? expiracion = null;
+			DateTime? proximoCobro = null;
+			bool tienePagoEnCurso = false;
+			if (suscripcionBcp.AlgunaConPagoEnCurso(suscripciones, now)) {
+				tienePagoEnCurso = true;
+				proximoCobro = suscripcionBcp.ProximaFechaCobro(suscripciones, now);
+			} else {
+				expiracion = suscripcionBcp.ProximaFechaExpiracion(suscripciones, now);
+			}
+
+			return (
+				planEnCurso,
+				planPagoEnCurso,
+				expiracion,
+				proximoCobro,
+				tienePagoEnCurso
+			);
+		}
+		
 		public async Task<List<Suscripcion>> ObtenerVigentesPorSubConPlan(string sub) {
 			List<Suscripcion> suscripciones = await suscripcionBcp.ObtenerVigentesPorSub(sub);
 			Dictionary<long, Plan> planes = (await planBcp.ObtenerTodos()).ToDictionary(p => p.Id, p => p);
@@ -209,9 +243,18 @@ namespace TanatosAPI.UseCases {
 
 							// Se crea suscripción en Flow...
 							SalFlowSubscriptionCreate salFlowSubscriptionCreate = await flowHelper.SubscriptionCreate(plan.FlowPlanId!, usuario.FlowCustomerId!, fechaInicio);
+
+							DateTime? fechaProximoCobro = null;
+							if (salFlowSubscriptionCreate.NextInvoiceDate != null) {
+								if (DateTime.TryParseExact(salFlowSubscriptionCreate.NextInvoiceDate, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime subscriptionNextInvoiceDate)) {
+									fechaProximoCobro = DateTimeHelper.TransformarFechaTimezoneAUTC(subscriptionNextInvoiceDate);
+								}
+							}
+
 							if (salFlowSubscriptionCreate.Status == 1 /* Activa */) {
 								suscripcionActivar.Estado = 4; // Pago Pendiente
 								suscripcionActivar.FlowSubscriptionId = salFlowSubscriptionCreate.SubscriptionId;
+								suscripcionActivar.FechaProximoCobro = fechaProximoCobro;
 								await suscripcionBcp.Modificar(suscripcionActivar, transaction!.NpgsqlTransaction());
 							}
 						}
@@ -249,8 +292,6 @@ namespace TanatosAPI.UseCases {
 					string flowInvoiceId = commerceOrderParts[2];
 					string flowInvoiceDate = commerceOrderParts[3];
 
-					SalFlowInvoiceGet salFlowInvoiceGet = await flowHelper.InvoiceGet(flowInvoiceId);
-
 					Suscripcion? suscripcion = await suscripcionBcp.ObtenerPorFlowSubscriptionId(flowSubscriptionId, transaction!.NpgsqlTransaction());
 					if (suscripcion != null) {
 						Plan? plan = await planBcp.ObtenerPorId(suscripcion.IdPlan, transaction!.NpgsqlTransaction());
@@ -259,10 +300,19 @@ namespace TanatosAPI.UseCases {
 							if (pagoExistente == null) {
 								DateTime ahora = dateTimeProvider.UtcNow;
 
+								SalFlowInvoiceGet salFlowInvoiceGet = await flowHelper.InvoiceGet(flowInvoiceId);
 								DateTime fechaPago = ahora;
 								if (salFlowInvoiceGet.Payment?.PaymentData?.Date != null) {
 									if (DateTime.TryParseExact(salFlowInvoiceGet.Payment?.PaymentData?.Date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime paymenteDataDate)) {
 										fechaPago = DateTimeHelper.TransformarFechaTimezoneAUTC(paymenteDataDate);
+									}
+								}
+
+								SalFlowSubscriptionGet salFlowSubscriptionGet = await flowHelper.SubscriptionGet(flowSubscriptionId);
+								DateTime? fechaProximoCobro = null;
+								if (salFlowSubscriptionGet.NextInvoiceDate != null) {
+									if (DateTime.TryParseExact(salFlowSubscriptionGet.NextInvoiceDate, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime subscriptionNextInvoiceDate)) {
+										fechaProximoCobro = DateTimeHelper.TransformarFechaTimezoneAUTC(subscriptionNextInvoiceDate);
 									}
 								}
 
@@ -283,6 +333,7 @@ namespace TanatosAPI.UseCases {
 									suscripcion.FechaInicio!.Value : 
 									(ahora > suscripcion.FechaExpiracion.Value ? ahora : suscripcion.FechaExpiracion.Value);
 								suscripcion.FechaExpiracion = DateTimeHelper.SumarMeses(DateTime.SpecifyKind(fechaReferencia, DateTimeKind.Utc), plan.DuracionMeses);
+								suscripcion.FechaProximoCobro = fechaProximoCobro;
 								suscripcion.Estado = 1 /* Activa */;
 								await suscripcionBcp.Modificar(suscripcion, transaction!.NpgsqlTransaction());
 							}
