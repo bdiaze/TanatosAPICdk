@@ -2,10 +2,12 @@
 using Microsoft.IdentityModel.Logging;
 using Npgsql;
 using System.Diagnostics;
+using System.Security.Claims;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.Flow;
 using TanatosAPI.Entities.Others.Plan;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
@@ -14,7 +16,8 @@ namespace TanatosAPI.Endpoints {
 	public static class PlanEndpoints {
 		public static IEndpointRouteBuilder MapPlanEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/Plan");
-			group.MapObtenerVigentes();
+			group.MapObtenerVigentes(); 
+			group.MapObtenerDisponibles();
 			group.MapObtenerPorVigencia();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
@@ -53,6 +56,46 @@ namespace TanatosAPI.Endpoints {
 
 			return routes;
 		}
+
+		private static IEndpointRouteBuilder MapObtenerDisponibles(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/Disponibles", async (IHostEnvironment environment, ClaimsPrincipal user, IPlanDao planDao, ISuscripcionBcp suscripcionBcp) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+
+					List<Suscripcion> suscripcion = await suscripcionBcp.ObtenerVigentesPorSub(sub);
+					List<Plan> planes = await planDao.ObtenerPorVigencia(true);
+
+					List<SalPlan> retorno = [.. planes
+						.Where(p => !p.SuscripcionUnica || !suscripcion.Any(s => s.IdPlan == p.Id))
+						.Select(p => new SalPlan() {
+							Id = p.Id,
+							Nombre = p.Nombre,
+							Precio = p.Precio,
+							DuracionMeses = p.DuracionMeses,
+							SuscripcionUnica = p.SuscripcionUnica,
+						})
+					];
+
+					LambdaLogger.Log(
+						$"[GET] - [Plan] - [ObtenerDisponibles] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de los planes disponibles - Cant. Registros: {retorno.Count}.");
+
+					return Results.Ok(retorno);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Plan] - [ObtenerDisponibles] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener los planes disponibles. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Suscripciones.Read.Self", "Sistema.Read.Public");
+
+			return routes;
+		}
+
+
 
 		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
 			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, IPlanDao planDao) => {
