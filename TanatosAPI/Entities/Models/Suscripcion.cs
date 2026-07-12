@@ -27,6 +27,9 @@ namespace TanatosAPI.Entities.Models {
 		[Column("fecha_expiracion", TypeName = "timestamp with time zone")]
 		public DateTime? FechaExpiracion { get; set; }
 
+		[Column("fecha_proximo_cobro", TypeName = "timestamp with time zone")]
+		public DateTime? FechaProximoCobro { get; set; }
+
 		[Column("fecha_cancelacion", TypeName = "timestamp with time zone")]
 		public DateTime? FechaCancelacion { get; set; }
 

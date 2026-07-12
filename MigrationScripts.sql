@@ -2529,3 +2529,22 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260712172552_ColumnProximoCobroSuscripcion') THEN
+    ALTER TABLE tanatos.suscripcion ADD fecha_proximo_cobro timestamp with time zone;
+    COMMENT ON COLUMN tanatos.suscripcion.fecha_proximo_cobro IS 'Fecha del próximo cobro de la suscripción.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260712172552_ColumnProximoCobroSuscripcion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260712172552_ColumnProximoCobroSuscripcion', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+

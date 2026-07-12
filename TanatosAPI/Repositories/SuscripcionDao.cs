@@ -12,7 +12,7 @@ namespace TanatosAPI.Repositories {
 
 		public async Task<Suscripcion?> Obtener(long id, NpgsqlTransaction? transaction = null) {
             string query =
-                "SELECT ID, SUB, ID_PLAN, FECHA_INICIO, FECHA_EXPIRACION, FECHA_CANCELACION, ESTADO, FLOW_CUSTOMER_ID, FLOW_SUBSCRIPTION_ID, " +
+                "SELECT ID, SUB, ID_PLAN, FECHA_INICIO, FECHA_EXPIRACION, FECHA_PROXIMO_COBRO, FECHA_CANCELACION, ESTADO, FLOW_CUSTOMER_ID, FLOW_SUBSCRIPTION_ID, " +
                 "FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.SUSCRIPCION WHERE ID = @ID";
 
             bool disposeConnection = transaction?.Connection == null;
@@ -32,13 +32,14 @@ namespace TanatosAPI.Repositories {
                         IdPlan = reader.GetInt64(2),
                         FechaInicio = await reader.IsDBNullAsync(3) ? null : reader.GetDateTime(3),
                         FechaExpiracion = await reader.IsDBNullAsync(4) ? null : reader.GetDateTime(4),
-                        FechaCancelacion = await reader.IsDBNullAsync(5) ? null : reader.GetDateTime(5),
-                        Estado = reader.GetInt16(6),
-                        FlowCustomerId = await reader.IsDBNullAsync(7) ? null : reader.GetString(7),
-                        FlowSubscriptionId = await reader.IsDBNullAsync(8) ? null : reader.GetString(8),
-                        FechaCreacion = reader.GetDateTime(9),
-                        FechaEliminacion = await reader.IsDBNullAsync(10) ? null : reader.GetDateTime(10),
-                        Vigencia = reader.GetBoolean(11)
+                        FechaProximoCobro = await reader.IsDBNullAsync(5) ? null : reader.GetDateTime(5),
+						FechaCancelacion = await reader.IsDBNullAsync(6) ? null : reader.GetDateTime(6),
+                        Estado = reader.GetInt16(7),
+                        FlowCustomerId = await reader.IsDBNullAsync(8) ? null : reader.GetString(8),
+                        FlowSubscriptionId = await reader.IsDBNullAsync(9) ? null : reader.GetString(9),
+                        FechaCreacion = reader.GetDateTime(10),
+                        FechaEliminacion = await reader.IsDBNullAsync(11) ? null : reader.GetDateTime(11),
+                        Vigencia = reader.GetBoolean(12)
                     };
                 }
                 return retorno;
@@ -51,7 +52,7 @@ namespace TanatosAPI.Repositories {
 
 		public async Task<Suscripcion?> ObtenerPorFlowSubscriptionId(string flowSubscriptionId, NpgsqlTransaction? transaction = null) {
 			string query =
-                "SELECT ID, SUB, ID_PLAN, FECHA_INICIO, FECHA_EXPIRACION, FECHA_CANCELACION, ESTADO, FLOW_CUSTOMER_ID, FLOW_SUBSCRIPTION_ID, " +
+				"SELECT ID, SUB, ID_PLAN, FECHA_INICIO, FECHA_EXPIRACION, FECHA_PROXIMO_COBRO, FECHA_CANCELACION, ESTADO, FLOW_CUSTOMER_ID, FLOW_SUBSCRIPTION_ID, " +
                 "FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.SUSCRIPCION WHERE FLOW_SUBSCRIPTION_ID = @FLOWSUBSCRIPTIONID";
 
             bool disposeConnection = transaction?.Connection == null;
@@ -71,14 +72,15 @@ namespace TanatosAPI.Repositories {
                         IdPlan = reader.GetInt64(2),
                         FechaInicio = await reader.IsDBNullAsync(3) ? null : reader.GetDateTime(3),
                         FechaExpiracion = await reader.IsDBNullAsync(4) ? null : reader.GetDateTime(4),
-                        FechaCancelacion = await reader.IsDBNullAsync(5) ? null : reader.GetDateTime(5),
-                        Estado = reader.GetInt16(6),
-                        FlowCustomerId = await reader.IsDBNullAsync(7) ? null : reader.GetString(7),
-                        FlowSubscriptionId = await reader.IsDBNullAsync(8) ? null : reader.GetString(8),
-                        FechaCreacion = reader.GetDateTime(9),
-                        FechaEliminacion = await reader.IsDBNullAsync(10) ? null : reader.GetDateTime(10),
-                        Vigencia = reader.GetBoolean(11)
-                    };
+						FechaProximoCobro = await reader.IsDBNullAsync(5) ? null : reader.GetDateTime(5),
+						FechaCancelacion = await reader.IsDBNullAsync(6) ? null : reader.GetDateTime(6),
+						Estado = reader.GetInt16(7),
+						FlowCustomerId = await reader.IsDBNullAsync(8) ? null : reader.GetString(8),
+						FlowSubscriptionId = await reader.IsDBNullAsync(9) ? null : reader.GetString(9),
+						FechaCreacion = reader.GetDateTime(10),
+						FechaEliminacion = await reader.IsDBNullAsync(11) ? null : reader.GetDateTime(11),
+						Vigencia = reader.GetBoolean(12)
+					};
                 }
                 return retorno;
             } finally {
@@ -90,7 +92,7 @@ namespace TanatosAPI.Repositories {
 
 		public async Task<List<Suscripcion>> ObtenerPorSub(string sub, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
-				"SELECT ID, SUB, ID_PLAN, FECHA_INICIO, FECHA_EXPIRACION, FECHA_CANCELACION, ESTADO, FLOW_CUSTOMER_ID, FLOW_SUBSCRIPTION_ID, " +
+				"SELECT ID, SUB, ID_PLAN, FECHA_INICIO, FECHA_EXPIRACION, FECHA_PROXIMO_COBRO, FECHA_CANCELACION, ESTADO, FLOW_CUSTOMER_ID, FLOW_SUBSCRIPTION_ID, " +
 				"FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.SUSCRIPCION WHERE SUB = @SUB AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
 
 			bool disposeConnection = transaction?.Connection == null;
@@ -112,13 +114,14 @@ namespace TanatosAPI.Repositories {
 						IdPlan = reader.GetInt64(2),
 						FechaInicio = await reader.IsDBNullAsync(3) ? null : reader.GetDateTime(3),
 						FechaExpiracion = await reader.IsDBNullAsync(4) ? null : reader.GetDateTime(4),
-						FechaCancelacion = await reader.IsDBNullAsync(5) ? null : reader.GetDateTime(5),
-						Estado = reader.GetInt16(6),
-						FlowCustomerId = await reader.IsDBNullAsync(7) ? null : reader.GetString(7),
-						FlowSubscriptionId = await reader.IsDBNullAsync(8) ? null : reader.GetString(8),
-						FechaCreacion = reader.GetDateTime(9),
-						FechaEliminacion = await reader.IsDBNullAsync(10) ? null : reader.GetDateTime(10),
-						Vigencia = reader.GetBoolean(11)
+						FechaProximoCobro = await reader.IsDBNullAsync(5) ? null : reader.GetDateTime(5),
+						FechaCancelacion = await reader.IsDBNullAsync(6) ? null : reader.GetDateTime(6),
+						Estado = reader.GetInt16(7),
+						FlowCustomerId = await reader.IsDBNullAsync(8) ? null : reader.GetString(8),
+						FlowSubscriptionId = await reader.IsDBNullAsync(9) ? null : reader.GetString(9),
+						FechaCreacion = reader.GetDateTime(10),
+						FechaEliminacion = await reader.IsDBNullAsync(11) ? null : reader.GetDateTime(11),
+						Vigencia = reader.GetBoolean(12)
 					});
 				}
 
@@ -132,8 +135,8 @@ namespace TanatosAPI.Repositories {
 
 		public async Task<long> Insertar(Suscripcion item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"INSERT INTO TANATOS.SUSCRIPCION(SUB, ID_PLAN, FECHA_INICIO, FECHA_EXPIRACION, FECHA_CANCELACION, ESTADO, FLOW_CUSTOMER_ID, FLOW_SUBSCRIPTION_ID, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
-				"VALUES (@SUB, @IDPLAN, @FECHAINICIO, @FECHAEXPIRACION, @FECHACANCELACION, @ESTADO, @FLOWCUSTOMERID, @FLOWSUBSCRIPTIONID, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
+				"INSERT INTO TANATOS.SUSCRIPCION(SUB, ID_PLAN, FECHA_INICIO, FECHA_EXPIRACION, FECHA_PROXIMO_COBRO, FECHA_CANCELACION, ESTADO, FLOW_CUSTOMER_ID, FLOW_SUBSCRIPTION_ID, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
+				"VALUES (@SUB, @IDPLAN, @FECHAINICIO, @FECHAEXPIRACION, @FECHAPROXIMOCOBRO, @FECHACANCELACION, @ESTADO, @FLOWCUSTOMERID, @FLOWSUBSCRIPTIONID, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
 				"RETURNING ID";
 
             bool disposeConnection = transaction?.Connection == null;
@@ -145,7 +148,8 @@ namespace TanatosAPI.Repositories {
                 command.Parameters.AddWithValue("IDPLAN", item.IdPlan);
                 command.Parameters.AddWithValue("FECHAINICIO", (object?)item.FechaInicio ?? DBNull.Value);
                 command.Parameters.AddWithValue("FECHAEXPIRACION", (object?)item.FechaExpiracion ?? DBNull.Value);
-                command.Parameters.AddWithValue("FECHACANCELACION", (object?)item.FechaCancelacion ?? DBNull.Value);
+				command.Parameters.AddWithValue("FECHAPROXIMOCOBRO", (object?)item.FechaProximoCobro ?? DBNull.Value);
+				command.Parameters.AddWithValue("FECHACANCELACION", (object?)item.FechaCancelacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("ESTADO", item.Estado);
                 command.Parameters.AddWithValue("FLOWCUSTOMERID", (object?)item.FlowCustomerId ?? DBNull.Value);
                 command.Parameters.AddWithValue("FLOWSUBSCRIPTIONID", (object?)item.FlowSubscriptionId ?? DBNull.Value);
@@ -162,7 +166,7 @@ namespace TanatosAPI.Repositories {
 
 		public async Task Actualizar(Suscripcion item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"UPDATE TANATOS.SUSCRIPCION SET SUB = @SUB, ID_PLAN = @IDPLAN, FECHA_INICIO = @FECHAINICIO, FECHA_EXPIRACION = @FECHAEXPIRACION, " +
+				"UPDATE TANATOS.SUSCRIPCION SET SUB = @SUB, ID_PLAN = @IDPLAN, FECHA_INICIO = @FECHAINICIO, FECHA_EXPIRACION = @FECHAEXPIRACION, FECHA_PROXIMO_COBRO = @FECHAPROXIMOCOBRO, " +
 				"FECHA_CANCELACION = @FECHACANCELACION, ESTADO = @ESTADO, FLOW_CUSTOMER_ID = @FLOWCUSTOMERID, FLOW_SUBSCRIPTION_ID = @FLOWSUBSCRIPTIONID, " +
 				"FECHA_CREACION = @FECHACREACION, FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
 				"WHERE ID = @ID";
@@ -176,7 +180,8 @@ namespace TanatosAPI.Repositories {
                 command.Parameters.AddWithValue("IDPLAN", item.IdPlan);
                 command.Parameters.AddWithValue("FECHAINICIO", (object?)item.FechaInicio ?? DBNull.Value);
                 command.Parameters.AddWithValue("FECHAEXPIRACION", (object?)item.FechaExpiracion ?? DBNull.Value);
-                command.Parameters.AddWithValue("FECHACANCELACION", (object?)item.FechaCancelacion ?? DBNull.Value);
+				command.Parameters.AddWithValue("FECHAPROXIMOCOBRO", (object?)item.FechaProximoCobro ?? DBNull.Value);
+				command.Parameters.AddWithValue("FECHACANCELACION", (object?)item.FechaCancelacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("ESTADO", item.Estado);
                 command.Parameters.AddWithValue("FLOWCUSTOMERID", (object?)item.FlowCustomerId ?? DBNull.Value);
                 command.Parameters.AddWithValue("FLOWSUBSCRIPTIONID", (object?)item.FlowSubscriptionId ?? DBNull.Value);

@@ -394,7 +394,8 @@ namespace TanatosAPI.Design.Contexts {
                 entity.Property(o => o.IdPlan).HasComment("Identificador del plan al que el usuario está suscrito.");
                 entity.Property(o => o.FechaInicio).HasComment("Fecha en que se inició la suscripción.");
                 entity.Property(o => o.FechaExpiracion).HasComment("Fecha en que expira la suscripción.");
-                entity.Property(o => o.FechaCancelacion).HasComment("Fecha en que se cancela la suscripción.");
+				entity.Property(o => o.FechaProximoCobro).HasComment("Fecha del próximo cobro de la suscripción.");
+				entity.Property(o => o.FechaCancelacion).HasComment("Fecha en que se cancela la suscripción.");
                 entity.Property(o => o.Estado).HasComment("Estado de la suscripción. 1: Activa - 2: Cancelada - 3: Expirada - 4: Pago Pendiente.");
                 entity.Property(o => o.FlowCustomerId).HasComment("ID del cliente en la plataforma Flow.");
                 entity.Property(o => o.FlowSubscriptionId).HasComment("ID de la suscripción en la plataforma Flow.");
