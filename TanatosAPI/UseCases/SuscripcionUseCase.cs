@@ -251,7 +251,7 @@ namespace TanatosAPI.UseCases {
 								}
 							}
 
-							if (salFlowSubscriptionCreate.Status == 1 /* Activa */) {
+							if (salFlowSubscriptionCreate.Status == 0 /* Inactivo */ || salFlowSubscriptionCreate.Status == 1 /* Activa */) {
 								suscripcionActivar.Estado = 4; // Pago Pendiente
 								suscripcionActivar.FlowSubscriptionId = salFlowSubscriptionCreate.SubscriptionId;
 								suscripcionActivar.FechaProximoCobro = fechaProximoCobro;
