@@ -1,4 +1,4 @@
-using Amazon.Lambda.Core;
+锘縰sing Amazon.Lambda.Core;
 using Amazon.SecretsManager;
 using InitialCreationLambda.Helpers;
 using Microsoft.Extensions.DependencyInjection;
@@ -79,14 +79,14 @@ public class Function
                 retorno.Add(mensaje);
             }
 
-            // Se crea usuario de aplicaci髇...
+            // Se crea usuario de aplicaci贸n...
             string appUsername = connectionStringSecrets[$"{appName}AppUsername"];
             if (appUsername.Contains('"')) {
                 throw new InvalidOperationException($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Error con el nombre de usuario de aplicacion para app \"{appName}\" - Caracteres invalidos...");
             }
             string appPassword = connectionStringSecrets[$"{appName}AppPassword"];
             if (appPassword.Contains('\'')) {
-                throw new InvalidOperationException($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Error con la contrase馻 del usuario de aplicacion para app \"{appName}\" - Caracteres invalidos...");
+                throw new InvalidOperationException($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Error con la contrase帽a del usuario de aplicacion para app \"{appName}\" - Caracteres invalidos...");
             }
 
             LambdaLogger.Log($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Creando usuario de aplicacion para app \"{appName}\"...");
@@ -99,18 +99,18 @@ public class Function
                 retorno.Add(mensaje);
             }
 
-            // Se otorgan permisos sobre el usuario dew aplicaci髇...
+            // Se otorgan permisos sobre el usuario dew aplicaci贸n...
             LambdaLogger.Log($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Otorgando permisos para usuario de aplicacion para app \"{appName}\"...");
             try {
-                // Se habilita que usuario de aplicaci髇 pueda usar el nuevo esquema...
+                // Se habilita que usuario de aplicaci贸n pueda usar el nuevo esquema...
                 using NpgsqlCommand cmd = new($"GRANT USAGE ON SCHEMA \"{appSchemaName}\" TO \"{appUsername}\"", conn);
                 cmd.ExecuteNonQuery();
 
-                // Se definen los permisos por defecto para el usuario de aplicaci髇, sobre las tablas creadas por el usuario administrador en el nuevo esquema...
+                // Se definen los permisos por defecto para el usuario de aplicaci贸n, sobre las tablas creadas por el usuario administrador en el nuevo esquema...
                 using NpgsqlCommand cmd2 = new($"ALTER DEFAULT PRIVILEGES FOR USER \"{connectionStringSecrets[$"{appName}AdmUsername"]}\" IN SCHEMA \"{appSchemaName}\" GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO \"{appUsername}\"", conn);
                 cmd2.ExecuteNonQuery();
 
-                // Se definen los permisos por defecto para el usuario de aplicaci髇, sobre las secuencias creadas por el usuario administrador en el nuevo esquema..
+                // Se definen los permisos por defecto para el usuario de aplicaci贸n, sobre las secuencias creadas por el usuario administrador en el nuevo esquema..
                 using NpgsqlCommand cmd3 = new($"ALTER DEFAULT PRIVILEGES FOR USER \"{connectionStringSecrets[$"{appName}AdmUsername"]}\" IN SCHEMA \"{appSchemaName}\" GRANT USAGE ON SEQUENCES TO \"{appUsername}\"", conn);
                 cmd3.ExecuteNonQuery();
             } catch (Exception ex) {
@@ -119,7 +119,7 @@ public class Function
                 retorno.Add(mensaje);
             }
 
-            // Se aplica la migraci髇 de EFCore...
+            // Se aplica la migraci贸n de EFCore...
             LambdaLogger.Log($"[Elapsed Time: {sw.ElapsedMilliseconds} ms] - Se inicia migracion EFCore del modelo de datos...");
             try {
                 string script = File.ReadAllText(migrationScript);
