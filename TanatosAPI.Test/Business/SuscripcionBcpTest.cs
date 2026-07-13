@@ -576,38 +576,34 @@ namespace TanatosAPI.Test.Business {
 			Assert.Equal(FECHA_DUMMY.AddDays(15), retorno);
 		}
 
-		public static TheoryData<List<Suscripcion>, (DateTime result, bool exception)> ProximaFechaSinSuscripcion => new() {
-			{ CASO_01_USUARIO_SIN_SUSCRIPCIONES, (FECHA_DUMMY, false) },
-			{ CASO_02_USUARIO_GRATUITA_ACTIVA, (FECHA_DUMMY.AddDays(15), false) },
-			{ CASO_03_USUARIO_GRATUITA_EXPIRADA, (FECHA_DUMMY, false) },
-			{ CASO_04_USUARIO_PAGO_ACTIVO, (FECHA_DUMMY.AddDays(15), true) },
-			{ CASO_05_USUARIO_PAGO_EXPIRADA, (FECHA_DUMMY, true) },
-			{ CASO_06_USUARIO_PAGO_CANCELADA_ACTIVA, (FECHA_DUMMY.AddDays(15), false) },
-			{ CASO_07_USUARIO_PAGO_CANCELADA_EXPIRADA, (FECHA_DUMMY, false) },
-			{ CASO_08_USUARIO_GRAT_ANT_PAGO_ACTIVO, (FECHA_DUMMY.AddDays(15), true) },
-			{ CASO_09_USUARIO_GRAT_ANT_PAGO_EXPIRADA, (FECHA_DUMMY, true) },
-			{ CASO_10_USUARIO_GRAT_ANT_PAGO_CANCELADA_ACTIVA, (FECHA_DUMMY.AddDays(15), false) },
-			{ CASO_11_USUARIO_GRAT_ANT_PAGO_CANCELADA_EXPIRADA, (FECHA_DUMMY, false) },
-			{ CASO_12_USUARIO_PAGO_PEND_SIN_PREVIAS, (FECHA_DUMMY, true) },
-			{ CASO_13_USUARIO_GRAT_ANT_PAGO_PEND, (FECHA_DUMMY, true) },
-			{ CASO_14_USUARIO_GRAT_ACT_PAGO_PEND_FUT, (FECHA_DUMMY.AddDays(15), true) },
-			{ CASO_15_USUARIO_PAGO_CANC_ACT_PAGO_PEND_FUT, (FECHA_DUMMY.AddDays(15), true) },
-			{ CASO_16_USUARIO_PAGO_CANC_EXP_PAGO_PEND_FUT, (FECHA_DUMMY, true) },
-			{ CASO_17_USUARIO_GRAT_ACTIVA_POST_GRAT, (FECHA_DUMMY.AddDays(45), false) },
-			{ CASO_18_USUARIO_PAGO_CANC_ACT_POST_GRAT, (FECHA_DUMMY.AddDays(45), false) },
-			{ CASO_19_USUARIO_PAGO_CANC_EXP_PAGO_ACTIVO, (FECHA_DUMMY.AddDays(15), true) },
-			{ CASO_20_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_PEND_FUT, (FECHA_DUMMY.AddDays(15), true) },
-			{ CASO_21_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_CANC_FUT, (FECHA_DUMMY.AddDays(15), false) }
+		public static TheoryData<List<Suscripcion>, DateTime> ProximaFechaSinSuscripcion => new() {
+			{ CASO_01_USUARIO_SIN_SUSCRIPCIONES, FECHA_DUMMY },
+			{ CASO_02_USUARIO_GRATUITA_ACTIVA, FECHA_DUMMY.AddDays(15) },
+			{ CASO_03_USUARIO_GRATUITA_EXPIRADA, FECHA_DUMMY },
+			{ CASO_04_USUARIO_PAGO_ACTIVO, FECHA_DUMMY.AddDays(15) },
+			{ CASO_05_USUARIO_PAGO_EXPIRADA, FECHA_DUMMY },
+			{ CASO_06_USUARIO_PAGO_CANCELADA_ACTIVA, FECHA_DUMMY.AddDays(15) },
+			{ CASO_07_USUARIO_PAGO_CANCELADA_EXPIRADA, FECHA_DUMMY },
+			{ CASO_08_USUARIO_GRAT_ANT_PAGO_ACTIVO, FECHA_DUMMY.AddDays(15) },
+			{ CASO_09_USUARIO_GRAT_ANT_PAGO_EXPIRADA, FECHA_DUMMY },
+			{ CASO_10_USUARIO_GRAT_ANT_PAGO_CANCELADA_ACTIVA, FECHA_DUMMY.AddDays(15) },
+			{ CASO_11_USUARIO_GRAT_ANT_PAGO_CANCELADA_EXPIRADA, FECHA_DUMMY },
+			{ CASO_12_USUARIO_PAGO_PEND_SIN_PREVIAS, FECHA_DUMMY },
+			{ CASO_13_USUARIO_GRAT_ANT_PAGO_PEND, FECHA_DUMMY },
+			{ CASO_14_USUARIO_GRAT_ACT_PAGO_PEND_FUT, FECHA_DUMMY.AddDays(15)},
+			{ CASO_15_USUARIO_PAGO_CANC_ACT_PAGO_PEND_FUT, FECHA_DUMMY.AddDays(15) },
+			{ CASO_16_USUARIO_PAGO_CANC_EXP_PAGO_PEND_FUT, FECHA_DUMMY },
+			{ CASO_17_USUARIO_GRAT_ACTIVA_POST_GRAT, FECHA_DUMMY.AddDays(45) },
+			{ CASO_18_USUARIO_PAGO_CANC_ACT_POST_GRAT, FECHA_DUMMY.AddDays(45) },
+			{ CASO_19_USUARIO_PAGO_CANC_EXP_PAGO_ACTIVO, FECHA_DUMMY.AddDays(15) },
+			{ CASO_20_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_PEND_FUT, FECHA_DUMMY.AddDays(15) },
+			{ CASO_21_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_CANC_FUT, FECHA_DUMMY.AddDays(15) }
 		};
 		[Theory]
 		[MemberData(nameof(ProximaFechaSinSuscripcion))]
-		public void ProximaFechaSinSuscripcionTest(List<Suscripcion> suscripciones, (DateTime result, bool exception) expected) {
-			if (expected.exception) {
-				Assert.Throws<InvalidOperationException>(() => suscripcionBcp.ProximaFechaSinSuscripcion(suscripciones, FECHA_DUMMY));
-			} else {
-				DateTime retorno = suscripcionBcp.ProximaFechaSinSuscripcion(suscripciones, FECHA_DUMMY);
-				Assert.Equal(expected.result, retorno);
-			}
+		public void ProximaFechaSinSuscripcionTest(List<Suscripcion> suscripciones, DateTime expectedResult) {
+			DateTime retorno = suscripcionBcp.ProximaFechaSinSuscripcion(suscripciones, FECHA_DUMMY);
+			Assert.Equal(expectedResult, retorno);
 		}
 
 		[Fact]

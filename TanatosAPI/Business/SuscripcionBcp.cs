@@ -99,8 +99,7 @@ namespace TanatosAPI.Business {
 		}
 
 		public DateTime ProximaFechaSinSuscripcion(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
-			fechaReferencia ??= dateTimeProvider.UtcNow;
-			if (AlgunaConPagoEnCurso(suscripciones, fechaReferencia)) throw new InvalidOperationException("Aún existen suscripciones con pagos en curso"); 
+			fechaReferencia ??= dateTimeProvider.UtcNow; 
 			return ProximaFechaExpiracion(suscripciones, fechaReferencia) ?? fechaReferencia.Value;
 		}
 
