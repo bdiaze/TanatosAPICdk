@@ -201,6 +201,7 @@ builder.Services.AddScoped<ICargoDao, CargoDao>();
 builder.Services.AddScoped<IEmpleadoDao, EmpleadoDao>();
 builder.Services.AddScoped<IPreguntaFrecuenteDao, PreguntaFrecuenteDao>();
 builder.Services.AddScoped<IVideoTutorialDao, VideoTutorialDao>();
+builder.Services.AddScoped<IEvaluacionDao, EvaluacionDao>();
 #endregion
 
 #region Singleton BCP
@@ -224,6 +225,7 @@ builder.Services.AddScoped<IVideoTutorialBcp, VideoTutorialBcp>();
 builder.Services.AddScoped<IPlanBcp, PlanBcp>();
 builder.Services.AddScoped<IEventoPagoBcp, EventoPagoBcp>();
 builder.Services.AddScoped<IPagoBcp, PagoBcp>();
+builder.Services.AddScoped<IEvaluacionBcp, EvaluacionBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -238,6 +240,7 @@ builder.Services.AddScoped<SuscripcionUseCase>();
 builder.Services.AddScoped<NegocioUseCase>();
 builder.Services.AddScoped<NormaSuscritaUseCase>();
 builder.Services.AddScoped<NotificacionUseCase>();
+builder.Services.AddScoped<EvaluacionUseCase>();
 #endregion
 
 string cognitoRegion;
