@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
@@ -68,6 +69,20 @@ namespace TanatosAPI.Test.Business {
 				), 
 				Arg.Any<NpgsqlTransaction?>()
 			);
+		}
+
+		[Fact]
+		public async Task InsertarTest_PuntajeMenor() {
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => evaluacionBcp.Insertar("sub-test", 0, "comentario-test"));
+			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
+			await evaluacionDao.DidNotReceive().Insertar(Arg.Any<Evaluacion>(), Arg.Any<NpgsqlTransaction?>());
+		}
+
+		[Fact]
+		public async Task InsertarTest_PuntajeMayor() {
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => evaluacionBcp.Insertar("sub-test", 100, "comentario-test"));
+			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
+			await evaluacionDao.DidNotReceive().Insertar(Arg.Any<Evaluacion>(), Arg.Any<NpgsqlTransaction?>());
 		}
 	}
 }
