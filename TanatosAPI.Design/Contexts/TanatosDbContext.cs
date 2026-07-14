@@ -605,6 +605,16 @@ namespace TanatosAPI.Design.Contexts {
 				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el video tutorial.");
 				entity.Property(o => o.Vigencia).HasComment("Vigencia del video tutorial.");
 			});
+
+            modelBuilder.Entity<Evaluacion>(entity => {
+				entity.HasIndex(o => o.FechaCreacion);
+				entity.ToTable(o => o.HasComment("Tabla que contiene las evaluaciones emitidas por los usuarios."));
+				entity.Property(o => o.Id).HasComment("Identificador de la evaluación.");
+				entity.Property(o => o.Sub).HasComment("Identificador del usuario quien emitió la evaluación.");
+				entity.Property(o => o.Puntaje).HasComment("Puntaje que dejó el usuario.");
+				entity.Property(o => o.Comentario).HasComment("Comentario que dejó el usuario.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se emitió la evaluación.");
+			});
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -668,5 +678,7 @@ namespace TanatosAPI.Design.Contexts {
         public DbSet<PreguntaFrecuente> PreguntasFrecuentes { get; set; }
 
         public DbSet<VideoTutorial> VideosTutoriales { get; set; }
+
+        public DbSet<Evaluacion> Evaluaciones { get; set; }
 	}
 }
