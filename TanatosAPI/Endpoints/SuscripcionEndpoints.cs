@@ -41,9 +41,11 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-					(Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica) = await suscripcionUseCase.ObtenerResumenSuscripcion(sub);
+					(bool tienePlanEmpresa, Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica) = 
+						await suscripcionUseCase.ObtenerResumenSuscripcion(sub);
 
 					SalSuscripcionResumen retorno = new() {
+						TienePlanEmpresa = tienePlanEmpresa,
 						NombrePlanEnCurso = planEnCurso?.Nombre,
 						PrecioPlanEnCurso = planEnCurso?.Precio,
 						NombrePlanPagoEnCurso = planPagoEnCurso?.Nombre,

@@ -16,9 +16,11 @@ namespace TanatosAPI.UseCases {
 		// FechaExpiración: Solo para casos que no tienen renovación automática (en otras palabras, gratuitas o de pago canceladas).
 		// FechaPróximoCobro: Solo para casos con renovación automática (en otras palabras, de pago activas, o pago pendiente).
 		// RenovaciónAutomática: True para pagos en curso, false para todo lo demás.
-		public async Task<(Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica)> ObtenerResumenSuscripcion(string sub) {
+		public async Task<(bool tienePlanEmpresa, Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica)> ObtenerResumenSuscripcion(string sub) {
 			DateTime now = dateTimeProvider.UtcNow;
 			List<Suscripcion> suscripciones = await suscripcionBcp.ObtenerVigentesPorSub(sub);
+
+			bool tienePlanEmpresa = suscripcionBcp.TienePlanEmpresa(suscripciones, now);
 
 			Suscripcion? enCurso = suscripcionBcp.FiltrarEnCurso(suscripciones, now).FirstOrDefault();
 			Plan? planEnCurso = enCurso != null ? await planBcp.ObtenerPorId(enCurso.IdPlan) : null;
@@ -37,6 +39,7 @@ namespace TanatosAPI.UseCases {
 			}
 
 			return (
+				tienePlanEmpresa,
 				planEnCurso,
 				planPagoEnCurso,
 				expiracion,

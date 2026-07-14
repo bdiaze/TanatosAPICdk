@@ -46,36 +46,37 @@ namespace TanatosAPI.Test.UseCases {
 		private static Plan PlanGratuito = PlanBcpTest.PlanDummy(id: 1, nombre: "nombre-plan-gratuito-test", precio: 0);
 		private static Plan PlanDePago = PlanBcpTest.PlanDummy(id: 2, nombre: "nombre-plan-pago-test", precio: 9990);
 
-		public static TheoryData<List<Suscripcion>, (Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica)> ResumenSuscripcion => new() {
-			{ SuscripcionBcpTest.CASO_01_USUARIO_SIN_SUSCRIPCIONES, (null, null, null, null, false) },
-			{ SuscripcionBcpTest.CASO_02_USUARIO_GRATUITA_ACTIVA, (PlanGratuito, null, FECHA_DUMMY.AddDays(15), null, false) },
-			{ SuscripcionBcpTest.CASO_03_USUARIO_GRATUITA_EXPIRADA, (null, null, null, null, false) },
-			{ SuscripcionBcpTest.CASO_04_USUARIO_PAGO_ACTIVO, (PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
-			{ SuscripcionBcpTest.CASO_05_USUARIO_PAGO_EXPIRADA, (null, PlanDePago, null, FECHA_DUMMY.AddDays(-15), true) },
-			{ SuscripcionBcpTest.CASO_06_USUARIO_PAGO_CANCELADA_ACTIVA, (PlanDePago, null, FECHA_DUMMY.AddDays(15), null, false) },
-			{ SuscripcionBcpTest.CASO_07_USUARIO_PAGO_CANCELADA_EXPIRADA, (null, null, null, null, false) },
-			{ SuscripcionBcpTest.CASO_08_USUARIO_GRAT_ANT_PAGO_ACTIVO, (PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
-			{ SuscripcionBcpTest.CASO_09_USUARIO_GRAT_ANT_PAGO_EXPIRADA, (null, PlanDePago, null, FECHA_DUMMY.AddDays(-15), true) },
-			{ SuscripcionBcpTest.CASO_10_USUARIO_GRAT_ANT_PAGO_CANCELADA_ACTIVA, (PlanDePago, null, FECHA_DUMMY.AddDays(15), null, false) },
-			{ SuscripcionBcpTest.CASO_11_USUARIO_GRAT_ANT_PAGO_CANCELADA_EXPIRADA, (null, null, null, null, false) },
-			{ SuscripcionBcpTest.CASO_12_USUARIO_PAGO_PEND_SIN_PREVIAS, (null, PlanDePago, null, FECHA_DUMMY, true) },
-			{ SuscripcionBcpTest.CASO_13_USUARIO_GRAT_ANT_PAGO_PEND, (null, PlanDePago, null, FECHA_DUMMY, true) },
-			{ SuscripcionBcpTest.CASO_14_USUARIO_GRAT_ACT_PAGO_PEND_FUT, (PlanGratuito, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
-			{ SuscripcionBcpTest.CASO_15_USUARIO_PAGO_CANC_ACT_PAGO_PEND_FUT, (PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
-			{ SuscripcionBcpTest.CASO_16_USUARIO_PAGO_CANC_EXP_PAGO_PEND_FUT, (null, PlanDePago, null, FECHA_DUMMY, true) },
-			{ SuscripcionBcpTest.CASO_17_USUARIO_GRAT_ACTIVA_POST_GRAT, (PlanGratuito, null, FECHA_DUMMY.AddDays(45), null, false) },
-			{ SuscripcionBcpTest.CASO_18_USUARIO_PAGO_CANC_ACT_POST_GRAT, (PlanDePago, null, FECHA_DUMMY.AddDays(45), null, false) },
-			{ SuscripcionBcpTest.CASO_19_USUARIO_PAGO_CANC_EXP_PAGO_ACTIVO, (PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
-			{ SuscripcionBcpTest.CASO_20_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_PEND_FUT, (PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
-			{ SuscripcionBcpTest.CASO_21_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_CANC_FUT, (PlanDePago, null, FECHA_DUMMY.AddDays(15), null, false) }
+		public static TheoryData<List<Suscripcion>, (bool tienePlanEmpresa, Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica)> ResumenSuscripcion => new() {
+			{ SuscripcionBcpTest.CASO_01_USUARIO_SIN_SUSCRIPCIONES, (false, null, null, null, null, false) },
+			{ SuscripcionBcpTest.CASO_02_USUARIO_GRATUITA_ACTIVA, (true, PlanGratuito, null, FECHA_DUMMY.AddDays(15), null, false) },
+			{ SuscripcionBcpTest.CASO_03_USUARIO_GRATUITA_EXPIRADA, (false, null, null, null, null, false) },
+			{ SuscripcionBcpTest.CASO_04_USUARIO_PAGO_ACTIVO, (true, PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
+			{ SuscripcionBcpTest.CASO_05_USUARIO_PAGO_EXPIRADA, (false, null, PlanDePago, null, FECHA_DUMMY.AddDays(-15), true) },
+			{ SuscripcionBcpTest.CASO_06_USUARIO_PAGO_CANCELADA_ACTIVA, (true, PlanDePago, null, FECHA_DUMMY.AddDays(15), null, false) },
+			{ SuscripcionBcpTest.CASO_07_USUARIO_PAGO_CANCELADA_EXPIRADA, (false, null, null, null, null, false) },
+			{ SuscripcionBcpTest.CASO_08_USUARIO_GRAT_ANT_PAGO_ACTIVO, (true, PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
+			{ SuscripcionBcpTest.CASO_09_USUARIO_GRAT_ANT_PAGO_EXPIRADA, (false, null, PlanDePago, null, FECHA_DUMMY.AddDays(-15), true) },
+			{ SuscripcionBcpTest.CASO_10_USUARIO_GRAT_ANT_PAGO_CANCELADA_ACTIVA, (true, PlanDePago, null, FECHA_DUMMY.AddDays(15), null, false) },
+			{ SuscripcionBcpTest.CASO_11_USUARIO_GRAT_ANT_PAGO_CANCELADA_EXPIRADA, (false, null, null, null, null, false) },
+			{ SuscripcionBcpTest.CASO_12_USUARIO_PAGO_PEND_SIN_PREVIAS, (false, null, PlanDePago, null, FECHA_DUMMY, true) },
+			{ SuscripcionBcpTest.CASO_13_USUARIO_GRAT_ANT_PAGO_PEND, (false, null, PlanDePago, null, FECHA_DUMMY, true) },
+			{ SuscripcionBcpTest.CASO_14_USUARIO_GRAT_ACT_PAGO_PEND_FUT, (true, PlanGratuito, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
+			{ SuscripcionBcpTest.CASO_15_USUARIO_PAGO_CANC_ACT_PAGO_PEND_FUT, (true, PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
+			{ SuscripcionBcpTest.CASO_16_USUARIO_PAGO_CANC_EXP_PAGO_PEND_FUT, (false, null, PlanDePago, null, FECHA_DUMMY, true) },
+			{ SuscripcionBcpTest.CASO_17_USUARIO_GRAT_ACTIVA_POST_GRAT, (true, PlanGratuito, null, FECHA_DUMMY.AddDays(45), null, false) },
+			{ SuscripcionBcpTest.CASO_18_USUARIO_PAGO_CANC_ACT_POST_GRAT, (true, PlanDePago, null, FECHA_DUMMY.AddDays(45), null, false) },
+			{ SuscripcionBcpTest.CASO_19_USUARIO_PAGO_CANC_EXP_PAGO_ACTIVO, (true, PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
+			{ SuscripcionBcpTest.CASO_20_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_PEND_FUT, (true, PlanDePago, PlanDePago, null, FECHA_DUMMY.AddDays(15), true) },
+			{ SuscripcionBcpTest.CASO_21_USUARIO_GRAT_ANT_PAGO_CANC_EXP_PAGO_CANC_ACT_PAGO_CANC_FUT, (true, PlanDePago, null, FECHA_DUMMY.AddDays(15), null, false) }
 		};
 		[Theory]
 		[MemberData(nameof(ResumenSuscripcion))]
-		public async Task ObtenerResumenSuscripcionTest(List<Suscripcion> suscripciones, (Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica) expected) {
+		public async Task ObtenerResumenSuscripcionTest(List<Suscripcion> suscripciones, (bool tienePlanEmpresa, Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica) expected) {
 			ISuscripcionDao suscripcionDao = Substitute.For<ISuscripcionDao>();
 			SuscripcionBcp suscripcionBcpReferencia = new(dateTimeProvider, suscripcionDao, flowHelper);
 			
 			suscripcionBcp.ObtenerVigentesPorSub("sub-test", Arg.Any<NpgsqlTransaction?>()).Returns(suscripciones);
+			suscripcionBcp.TienePlanEmpresa(Arg.Any<List<Suscripcion>>(), Arg.Any<DateTime?>()).Returns(ci => suscripcionBcpReferencia.TienePlanEmpresa(ci.Arg<List<Suscripcion>>(), ci.Arg<DateTime?>()));
 			suscripcionBcp.FiltrarEnCurso(Arg.Any<List<Suscripcion>>(), Arg.Any<DateTime?>()).Returns(ci => suscripcionBcpReferencia.FiltrarEnCurso(ci.Arg<List<Suscripcion>>(), ci.Arg<DateTime?>()));
 			suscripcionBcp.FiltrarPagosEnCurso(Arg.Any<List<Suscripcion>>(), Arg.Any<DateTime?>()).Returns(ci => suscripcionBcpReferencia.FiltrarPagosEnCurso(ci.Arg<List<Suscripcion>>(), ci.Arg<DateTime?>()));
 			suscripcionBcp.AlgunaConPagoEnCurso(Arg.Any<List<Suscripcion>>(), Arg.Any<DateTime?>()).Returns(ci => suscripcionBcpReferencia.AlgunaConPagoEnCurso(ci.Arg<List<Suscripcion>>(), ci.Arg<DateTime?>()));
@@ -85,7 +86,9 @@ namespace TanatosAPI.Test.UseCases {
 			planBcp.ObtenerPorId(PlanGratuito.Id, Arg.Any<NpgsqlTransaction?>()).Returns(PlanGratuito);
 			planBcp.ObtenerPorId(PlanDePago.Id, Arg.Any<NpgsqlTransaction?>()).Returns(PlanDePago);
 
-			(Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica) retorno = await suscripcionUseCase.ObtenerResumenSuscripcion("sub-test");
+			(bool tienePlanEmpresa, Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica) retorno = 
+				await suscripcionUseCase.ObtenerResumenSuscripcion("sub-test");
+			Assert.Equal(expected.tienePlanEmpresa, retorno.tienePlanEmpresa);
 			if (expected.planEnCurso == null) {
 				Assert.Null(retorno.planEnCurso);
 			} else {

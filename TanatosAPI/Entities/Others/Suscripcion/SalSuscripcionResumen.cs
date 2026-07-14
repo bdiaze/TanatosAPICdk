@@ -3,6 +3,7 @@
 namespace TanatosAPI.Entities.Others.Suscripcion {
 	[ExcludeFromCodeCoverage]
 	public class SalSuscripcionResumen {
+		public required bool TienePlanEmpresa { get; set; }
 		public string? NombrePlanEnCurso { get; set; }
 		public decimal? PrecioPlanEnCurso { get; set; }
 		public string? NombrePlanPagoEnCurso { get; set; }
