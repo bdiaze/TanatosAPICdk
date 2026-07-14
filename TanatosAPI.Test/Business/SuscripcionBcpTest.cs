@@ -661,10 +661,23 @@ namespace TanatosAPI.Test.Business {
 		};
 		[Theory]
 		[MemberData(nameof(TienePlanEmpresa))]
-		public async Task TienePlanEmpresaTest(List<Suscripcion> suscripciones, bool expectedResult) {
+		public void TienePlanEmpresaTest(List<Suscripcion> suscripciones, bool expectedResult) {
+			bool retorno = suscripcionBcp.TienePlanEmpresa(suscripciones, FECHA_DUMMY);
+			Assert.Equal(expectedResult, retorno);
+		}
+
+		[Fact]
+		public void TienePlanEmpresaTest_SinDummy() {
+			bool retorno = suscripcionBcp.TienePlanEmpresa(CASO_18_USUARIO_PAGO_CANC_ACT_POST_GRAT);
+			Assert.True(retorno);
+		}
+
+		[Theory]
+		[MemberData(nameof(TienePlanEmpresa))]
+		public async Task ConsultaTienePlanEmpresaTest(List<Suscripcion> suscripciones, bool expectedResult) {
 			suscripcionDao.ObtenerPorSub(Arg.Any<string>(), true).Returns(suscripciones);
 
-			bool retorno = await suscripcionBcp.TienePlanEmpresa("sub-test");
+			bool retorno = await suscripcionBcp.ConsultaTienePlanEmpresa("sub-test");
 			Assert.Equal(expectedResult, retorno);
 			await suscripcionDao.Received(1).ObtenerPorSub(Arg.Any<string>(), true);
 		}
