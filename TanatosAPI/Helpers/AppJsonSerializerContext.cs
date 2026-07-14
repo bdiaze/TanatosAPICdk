@@ -9,6 +9,7 @@ using TanatosAPI.Entities.Others.Cargo;
 using TanatosAPI.Entities.Others.DestinatarioNotificacion;
 using TanatosAPI.Entities.Others.DocumentoAdjunto;
 using TanatosAPI.Entities.Others.Empleado;
+using TanatosAPI.Entities.Others.Evaluacion;
 using TanatosAPI.Entities.Others.Flow;
 using TanatosAPI.Entities.Others.Google;
 using TanatosAPI.Entities.Others.Hermes;
@@ -151,6 +152,9 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(SalVideoTutorial))]
 	[JsonSerializable(typeof(List<SalVideoTutorial>))]
 	[JsonSerializable(typeof(List<SalVideoTutorialHabilitado>))]
+	[JsonSerializable(typeof(List<SalEvaluacion>))]
+	[JsonSerializable(typeof(EntEvaluacionCrear))]
+	[JsonSerializable(typeof(SalEvaluacionCrear))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }

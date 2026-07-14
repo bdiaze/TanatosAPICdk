@@ -365,6 +365,7 @@ app.MapPerfilEndpoints();
 app.MapPreguntaFrecuenteEndpoints();
 app.MapVideoTutorialEndpoints();
 app.MapFlowEndpoints();
+app.MapEvaluacionEndpoints();
 
 
 await app.RunAsync();
