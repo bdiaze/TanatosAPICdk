@@ -111,7 +111,7 @@ namespace TanatosAPI.UseCases {
 			}
 
 			// Se valida si el usuario tiene plan Empresa...
-			bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub, transaction);
+			bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(sub, transaction);
 			if (!tienePlanEmpresa) {
 				// Dado que no tiene plan Empresa, se valida si el tipo de receptor requiere plan Empresa...
 				if (tipoReceptorDestinatario.RequierePlanEmpresa) {

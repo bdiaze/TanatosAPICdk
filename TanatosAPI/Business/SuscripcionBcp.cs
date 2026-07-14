@@ -111,15 +111,14 @@ namespace TanatosAPI.Business {
 			return await suscripcionDao.ObtenerPorFlowSubscriptionId(flowSubscriptionId, transaction);
 		}
 
-		public async Task<bool> TienePlanEmpresa(string sub, NpgsqlTransaction? transaction = null) {
+		public bool TienePlanEmpresa(List<Suscripcion> suscripciones, DateTime? fechaReferencia = null) {
+			return FiltrarEnCurso(suscripciones).Count != 0;
+		}
+
+		public async Task<bool> ConsultaTienePlanEmpresa(string sub, NpgsqlTransaction? transaction = null) {
 			// Se obtienen las suscripciones del usuario...
 			List<Suscripcion> suscripciones = await suscripcionDao.ObtenerPorSub(sub, true, transaction);
-
-			if (FiltrarEnCurso(suscripciones).Count != 0) {
-				return true;
-			}
-
-			return false;
+			return TienePlanEmpresa(suscripciones);
 		}
 
 		public async Task Cancelar(Suscripcion suscripcion, NpgsqlTransaction? transaction = null) {

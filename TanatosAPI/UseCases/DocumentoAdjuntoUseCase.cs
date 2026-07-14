@@ -55,7 +55,7 @@ namespace TanatosAPI.UseCases {
                 throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "La obligación no pertenece al usuario", "El vencimiento es inválido.");
             }
 
-            if (!await suscripcionBcp.TienePlanEmpresa(normaSuscrita!.Sub)) {
+            if (!await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita!.Sub)) {
                 throw new ErrorValidacion(TipoErrorValidacion.RestringidoPorPlan, $"Tu plan no permite adjuntar documentos.");
             }
 

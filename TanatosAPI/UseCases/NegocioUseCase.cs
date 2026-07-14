@@ -16,7 +16,7 @@ namespace TanatosAPI.UseCases {
 			if (negocioSeleccionado == null) return false;
 
 			// Se valida si el usuario tiene plan Empresa...
-			bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub, transaction);
+			bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(sub, transaction);
 			if (tienePlanEmpresa) return true;
 
 			// Dado que no tiene plan Empresa, se valida si el negocio corresponde al primer negocio creado por el usuario...

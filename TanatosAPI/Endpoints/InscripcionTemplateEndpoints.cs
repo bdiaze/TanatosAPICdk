@@ -80,7 +80,7 @@ namespace TanatosAPI.Endpoints {
 					}
 										
 					// Se valida que el usuario tenga plan empresa si este template requiere de dicho plan...
-					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
+					bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(sub);
 					if (templateExistente.RequierePlanEmpresa && !tienePlanEmpresa) {
 						LambdaLogger.Log(
 							$"[POST] - [InscripcionTemplate] - [Activar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +

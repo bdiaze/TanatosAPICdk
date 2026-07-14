@@ -133,7 +133,7 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					// Se valida que si no tiene plan empresa, no se incluyan destinatarios...
-					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
+					bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(sub);
 					if (!tienePlanEmpresa && entrada.Destinatarios.Count != 0) {
 						LambdaLogger.Log(
 							$"[POST] - [Empleado] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
@@ -291,7 +291,7 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					// Se valida que si no tiene plan empresa, no se incluyan destinatarios...
-					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
+					bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(sub);
 					if (!tienePlanEmpresa && entrada.Destinatarios.Count != 0) {
 						LambdaLogger.Log(
 							$"[PUT] - [Empleado] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +

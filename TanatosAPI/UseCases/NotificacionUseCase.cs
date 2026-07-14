@@ -48,7 +48,7 @@ namespace TanatosAPI.UseCases {
 			// Se sobreescribe el cargo responsable si el usuario no tiene plan empresa o si el cargo no está vigente...
 			long? idCargoResponsable = normaSuscrita.IdCargo;
 
-			bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(normaSuscrita.Sub, transaction);
+			bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita.Sub, transaction);
 			if (!tienePlanEmpresa) idCargoResponsable = null;
 
 			if (idCargoResponsable != null) {

@@ -37,7 +37,7 @@ namespace TanatosAPI.Endpoints {
 						Nombre = usuario.Nombre,
 						Apellido = usuario.Apellido,
 						Email = usuario.CorreoElectronico,
-						TienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub)
+						TienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(sub)
 					};
 
 					LambdaLogger.Log(
@@ -124,7 +124,7 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					// Se valida que el usuario tenga plan empresa si este no es su único negocio...
-					if (negociosVigentes.Count > 0 && !await suscripcionBcp.TienePlanEmpresa(sub)) {
+					if (negociosVigentes.Count > 0 && !await suscripcionBcp.ConsultaTienePlanEmpresa(sub)) {
 						LambdaLogger.Log(
 							$"[POST] - [Negocio] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"Tu plan no permite registrar un negocio adicional.");
@@ -205,7 +205,7 @@ namespace TanatosAPI.Endpoints {
 
 					// Se valida que el usuario tenga plan empresa si no esta editando su primer negocio...
 					Negocio primerNegocio = negociosVigentes.OrderBy(n => n.FechaCreacion).First();
-					if (primerNegocio.Id != existente!.Id && !await suscripcionBcp.TienePlanEmpresa(sub)) {
+					if (primerNegocio.Id != existente!.Id && !await suscripcionBcp.ConsultaTienePlanEmpresa(sub)) {
 						LambdaLogger.Log(
 							$"[PUT] - [Negocio] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
 							$"Tu plan no permite actualizar la información de este negocio.");

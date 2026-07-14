@@ -470,7 +470,7 @@ namespace TanatosAPI.Endpoints {
                     CategoriaNorma? categoriaTemplateNorma = (templateNorma?.IdCategoriaNorma != null && categorias.TryGetValue(templateNorma.IdCategoriaNorma, out CategoriaNorma? ctn)) ? ctn : null;
 
                     SalNormaSuscritaObtenerPorIdConVencimiento retorno = new() {
-						TienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(existente.Sub),
+						TienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(existente.Sub),
 						IdNegocio = negocio?.Id,
 						NombreNegocio = negocio?.Nombre,
 						Id = existente.Id,
@@ -599,7 +599,7 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					// Se valida que si no tiene plan empresa, no se incluya un cargo...
-					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
+					bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(sub);
 					if (!tienePlanEmpresa && entrada.IdCargo != null) {
 						LambdaLogger.Log(
 							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
@@ -861,7 +861,7 @@ namespace TanatosAPI.Endpoints {
 					}
 
 					// Se valida que si no tiene plan empresa, no se incluya un cargo...
-					bool tienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(sub);
+					bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(sub);
 					if (!tienePlanEmpresa && entrada.IdCargo != null) {
 						LambdaLogger.Log(
 							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
@@ -1385,7 +1385,7 @@ namespace TanatosAPI.Endpoints {
 
 
                     SalNormaSuscritaObtenerPorIdConVencimiento retorno = new() {
-						TienePlanEmpresa = await suscripcionBcp.TienePlanEmpresa(existente.Sub),
+						TienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(existente.Sub),
 						IdNegocio = negocio?.Id,
 						NombreNegocio = negocio?.Nombre,
 						Id = existente.Id,
