@@ -103,6 +103,7 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(SalNormaSuscritaCompletarNorma))]
 	[JsonSerializable(typeof(SalNegocioInformacionUsuario))]
 	[JsonSerializable(typeof(EntMensajeIngresar))]
+	[JsonSerializable(typeof(List<SalMensaje>))]
 	[JsonSerializable(typeof(EntWhatsappEnviar))]
 	[JsonSerializable(typeof(Plan))]
 	[JsonSerializable(typeof(List<Plan>))]

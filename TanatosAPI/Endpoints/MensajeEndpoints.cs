@@ -1,4 +1,5 @@
 ﻿using Amazon.Lambda.Core;
+using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Security.Claims;
@@ -8,7 +9,6 @@ using TanatosAPI.Entities.Others.Mensaje;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
-using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Endpoints {
 	public static class MensajeEndpoints {
@@ -25,21 +25,28 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtener(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/{fechaInicial}/{fechaFinal}", async (DateTime fechaInicial, DateTime fechaFinal, IHostEnvironment environment, IMensajeDao mensajeDao) => {
+			routes.MapGet("/", async ([FromQuery] DateTime fechaDesde, [FromQuery] DateTime fechaHasta, IHostEnvironment environment, IMensajeDao mensajeDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 			try {
-					List<Mensaje> retorno = await mensajeDao.ObtenerPorRangoFechas(fechaInicial, fechaFinal);
+					List<Mensaje> mensajes = await mensajeDao.ObtenerPorRangoFechas(fechaDesde, fechaHasta);
+					List<SalMensaje> retorno = [.. mensajes.Select(m => new SalMensaje() {
+						Sub = m.Sub,
+						Nombre = m.Nombre,
+						Correo = m.Correo,
+						Contenido = m.Contenido,
+						FechaCreacion = m.FechaCreacion
+					})];
 
 					LambdaLogger.Log(
 						$"[GET] - [Mensaje] - [Obtener] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Obtención exitosa de los mensajes - Fecha Inicial: {fechaInicial:O} - Fecha Final: {fechaFinal:O}  - Cant. Registros: {retorno.Count}.");
+						$"Obtención exitosa de los mensajes - Fecha Inicial: {fechaDesde:O} - Fecha Final: {fechaHasta:O}  - Cant. Registros: {retorno.Count}.");
 
 					return Results.Ok(retorno);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [Mensaje] - [Obtener] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error al obtener los mensajes - Fecha Inicial: {fechaInicial:O} - Fecha Final: {fechaFinal:O}. " +
+						$"Ocurrió un error al obtener los mensajes - Fecha Inicial: {fechaDesde:O} - Fecha Final: {fechaHasta:O}. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
