@@ -15,7 +15,7 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-	public class NormaSuscritaUseCase(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, IKairosHelper kairosHelper, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, ITipoPeriodicidadDao tipoPeriodicidadDao, ITipoUnidadTiempoDao tipoUnidadTiempoDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, INotificacionNormaSuscritaDao notificacionNormaSuscritaDao, ITemplateNormaDao templateNormaDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, FiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, NotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp) {
+	public class NormaSuscritaUseCase(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, IKairosHelper kairosHelper, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ITipoUnidadTiempoDao tipoUnidadTiempoDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, INotificacionNormaSuscritaDao notificacionNormaSuscritaDao, ITemplateNormaDao templateNormaDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, FiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, NotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp) {
 		public async Task ActualizarProgramacionProcesosNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			List<string> procesosProgramados = [];
 			List<EntKairosIngresarProceso> procesosDesprogramados = [];
@@ -58,7 +58,7 @@ namespace TanatosAPI.UseCases {
 					// Si la norma suscrita está activada, se programan las notificaciones que no están programadas, y desprograman las que no son necesarias...
 				} else if ((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) != null) {
 					long idTipoPeriodicidad = (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
-					TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId(idTipoPeriodicidad, transaction) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
+					TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadBcp.ObtenerPorId(idTipoPeriodicidad, transaction) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
 
 					if (!string.IsNullOrWhiteSpace(tipoPeriodicidad.Cron)) {
 						// Se arma listado de las configuraciones de notificaciones previas...

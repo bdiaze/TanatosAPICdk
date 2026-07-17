@@ -1,11 +1,12 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class HistorialNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, DocumentoAdjuntoBcp documentoAdjuntoBcp, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, ITemplateNormaDao templateNormaDao, ITipoPeriodicidadDao tipoPeriodicidadDao) {
+	public class HistorialNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, DocumentoAdjuntoBcp documentoAdjuntoBcp, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, ITemplateNormaDao templateNormaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp) {
 		public bool EstaVigente(HistorialNormaSuscrita? historialNormaSuscrita) {
 			return historialNormaSuscrita != null && historialNormaSuscrita.Vigencia;
 		}
@@ -69,7 +70,7 @@ namespace TanatosAPI.Business {
 			}
 
 			long idTipoPeriodicidad = (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
-			TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadDao.ObtenerPorId(idTipoPeriodicidad, transaction) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
+			TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadBcp.ObtenerPorId(idTipoPeriodicidad, transaction) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
 			if (!string.IsNullOrWhiteSpace(tipoPeriodicidad.Cron)) {
 				// Nos aseguramos de que la fecha esté en UTC...
 				DateTime vencimientoActual = DateTime.SpecifyKind(historialNormaSuscrita.FechaVencimiento, DateTimeKind.Utc);

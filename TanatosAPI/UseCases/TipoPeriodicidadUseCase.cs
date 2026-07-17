@@ -1,9 +1,10 @@
 ﻿using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
+using TanatosAPI.Interfaces.Business;
 
 namespace TanatosAPI.UseCases {
-	public class TipoPeriodicidadUseCase(TipoPeriodicidadBcp tipoPeriodicidadBcp) {
+	public class TipoPeriodicidadUseCase(ITipoPeriodicidadBcp tipoPeriodicidadBcp) {
 		public async Task<List<TipoPeriodicidad>> ObtenerVigentes() {
 			return await tipoPeriodicidadBcp.ObtenerVigentes();
 		}
