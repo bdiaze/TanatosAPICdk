@@ -226,6 +226,7 @@ builder.Services.AddScoped<IPlanBcp, PlanBcp>();
 builder.Services.AddScoped<IEventoPagoBcp, EventoPagoBcp>();
 builder.Services.AddScoped<IPagoBcp, PagoBcp>();
 builder.Services.AddScoped<IEvaluacionBcp, EvaluacionBcp>();
+builder.Services.AddScoped<ITipoPeriodicidadBcp, TipoPeriodicidadBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -241,6 +242,7 @@ builder.Services.AddScoped<NegocioUseCase>();
 builder.Services.AddScoped<NormaSuscritaUseCase>();
 builder.Services.AddScoped<NotificacionUseCase>();
 builder.Services.AddScoped<EvaluacionUseCase>();
+builder.Services.AddScoped<TipoPeriodicidadUseCase>();
 #endregion
 
 string cognitoRegion;
