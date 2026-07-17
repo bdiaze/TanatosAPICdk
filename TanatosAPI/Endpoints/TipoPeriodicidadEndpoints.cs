@@ -1,8 +1,11 @@
 ﻿using Amazon.Lambda.Core;
 using System.Diagnostics;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Entities.Others.TipoPeriodicidad;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
+using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
 	public static class TipoPeriodicidadEndpoints {
@@ -18,17 +21,27 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ITipoPeriodicidadDao tipoPeriodicidadDao) => {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, TipoPeriodicidadUseCase tipoPeriodicidadUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					List<TipoPeriodicidad> retorno = await tipoPeriodicidadDao.ObtenerPorVigencia(true);
+					List<TipoPeriodicidad> periodicidades = await tipoPeriodicidadUseCase.ObtenerVigentes();
+					List<SalTipoPeriodicidad> retorno = [.. periodicidades.Select(p => new SalTipoPeriodicidad() {
+						Id = p.Id,
+						Nombre = p.Nombre,
+						Descripcion = p.Descripcion
+					})];
 
 					LambdaLogger.Log(
 						$"[GET] - [TipoPeriodicidad] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de los tipos de periodicidad vigentes - Cant. Registros: {retorno.Count}.");
-
 					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [TipoPeriodicidad] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [TipoPeriodicidad] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
@@ -42,7 +55,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, ITipoPeriodicidadDao tipoPeriodicidadDao) => {
+			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, TipoPeriodicidadUseCase tipoPeriodicidadUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -52,13 +65,18 @@ namespace TanatosAPI.Endpoints {
 						_ => null
 					};
 
-					List<TipoPeriodicidad> retorno = await tipoPeriodicidadDao.ObtenerPorVigencia(vig);
+					List<TipoPeriodicidad> retorno = await tipoPeriodicidadUseCase.ObtenerPorVigencia(vig);
 
 					LambdaLogger.Log(
 						$"[GET] - [TipoPeriodicidad] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de los tipos de periodicidad por vigencia - Vigencia: {vigencia} - Cant. Registros: {retorno.Count}.");
-
 					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [TipoPeriodicidad] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [TipoPeriodicidad] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
@@ -72,28 +90,32 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (TipoPeriodicidad entrada, IHostEnvironment environment, ITipoPeriodicidadDao tipoPeriodicidadDao) => {
+			routes.MapPost("/", async (TipoPeriodicidad entrada, IHostEnvironment environment, TipoPeriodicidadUseCase tipoPeriodicidadUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					TipoPeriodicidad? existente = await tipoPeriodicidadDao.ObtenerPorId(entrada.Id);
-
-					if (existente != null) {
-						LambdaLogger.Log(
-							$"[POST] - [TipoPeriodicidad] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"Ya existe un tipo de periodicidad con ID {entrada.Id}.");
-
-						return Results.BadRequest($"Ya existe un tipo de periodicidad con ID {entrada.Id}.");
-					}
-
-					await tipoPeriodicidadDao.Insertar(entrada);
-					existente = entrada;
+					TipoPeriodicidad nuevo = await tipoPeriodicidadUseCase.Crear(
+						entrada.Id,
+						entrada.Nombre,
+						entrada.Descripcion,
+						entrada.Cron,
+						entrada.FrecuenciaDias,
+						entrada.DeltaDias,
+						entrada.DeltaMeses,
+						entrada.DeltaAnnos,
+						entrada.Vigencia
+					);
 
 					LambdaLogger.Log(
 						$"[POST] - [TipoPeriodicidad] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Creación exitosa del tipo de periodicidad - ID: {entrada.Id}.");
-
-					return Results.Ok(existente);
+					return Results.Ok(nuevo);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[POST] - [TipoPeriodicidad] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [TipoPeriodicidad] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
@@ -107,28 +129,32 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (TipoPeriodicidad entrada, IHostEnvironment environment, ITipoPeriodicidadDao tipoPeriodicidadDao) => {
+			routes.MapPut("/", async (TipoPeriodicidad entrada, IHostEnvironment environment, TipoPeriodicidadUseCase tipoPeriodicidadUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					TipoPeriodicidad? existente = await tipoPeriodicidadDao.ObtenerPorId(entrada.Id);
-
-					if (existente == null) {
-						LambdaLogger.Log(
-							$"[PUT] - [TipoPeriodicidad] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"No existe el tipo de periodicidad con ID {entrada.Id}.");
-
-						return Results.BadRequest($"No existe el tipo de periodicidad con ID {entrada.Id}.");
-					}
-
-					await tipoPeriodicidadDao.Actualizar(entrada);
-					existente = entrada;
+					TipoPeriodicidad existente = await tipoPeriodicidadUseCase.Modificar(
+						entrada.Id,
+						entrada.Nombre,
+						entrada.Descripcion,
+						entrada.Cron,
+						entrada.FrecuenciaDias,
+						entrada.DeltaDias,
+						entrada.DeltaMeses,
+						entrada.DeltaAnnos,
+						entrada.Vigencia
+					);
 
 					LambdaLogger.Log(
 						$"[PUT] - [TipoPeriodicidad] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Actualización exitosa del tipo de periodicidad - ID: {entrada.Id}.");
-
 					return Results.Ok(existente);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [TipoPeriodicidad] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[PUT] - [TipoPeriodicidad] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
@@ -142,27 +168,22 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ITipoPeriodicidadDao tipoPeriodicidadDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, TipoPeriodicidadUseCase tipoPeriodicidadUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					TipoPeriodicidad? existente = await tipoPeriodicidadDao.ObtenerPorId(id);
-
-					if (existente == null) {
-						LambdaLogger.Log(
-							$"[DELETE] - [TipoPeriodicidad] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"No existe el tipo de periodicidad con ID {id}.");
-
-						return Results.BadRequest($"No existe el tipo de periodicidad con ID {id}.");
-					}
-
-					await tipoPeriodicidadDao.Eliminar(id);
+					await tipoPeriodicidadUseCase.Eliminar(id);
 
 					LambdaLogger.Log(
 						$"[DELETE] - [TipoPeriodicidad] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Eliminación exitosa del tipo de periodicidad - ID: {id}.");
-
 					return Results.Ok();
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[DELETE] - [TipoPeriodicidad] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
 				} catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[DELETE] - [TipoPeriodicidad] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +

@@ -22,6 +22,7 @@ using TanatosAPI.Entities.Others.Perfil;
 using TanatosAPI.Entities.Others.Plan;
 using TanatosAPI.Entities.Others.PreguntaFrecuente;
 using TanatosAPI.Entities.Others.Suscripcion;
+using TanatosAPI.Entities.Others.TipoPeriodicidad;
 using TanatosAPI.Entities.Others.VideoTutorial;
 using TanatosAPI.Entities.Others.Whatsapp;
 
@@ -63,6 +64,7 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(List<TipoFiscalizador>))]
 	[JsonSerializable(typeof(TipoPeriodicidad))]
 	[JsonSerializable(typeof(List<TipoPeriodicidad>))]
+	[JsonSerializable(typeof(List<SalTipoPeriodicidad>))]
 	[JsonSerializable(typeof(TipoReceptorNotificacion))]
 	[JsonSerializable(typeof(List<TipoReceptorNotificacion>))]
 	[JsonSerializable(typeof(TipoUnidadTiempo))]
