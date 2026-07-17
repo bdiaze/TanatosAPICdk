@@ -23,7 +23,10 @@ namespace TanatosAPI.Entities.Models {
 		[Column("cron")]
 		public string? Cron { get; set; }
 
-        [Column("delta_dias")]
+		[Column("frecuencia_dias")]
+		public int? FrecuenciaDias { get; set; }
+
+		[Column("delta_dias")]
         public int? DeltaDias { get; set; }
 
         [Column("delta_meses")]

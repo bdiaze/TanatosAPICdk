@@ -2586,3 +2586,22 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260717024150_CampoFrecuenciaDiasTipoPeriodicidad') THEN
+    ALTER TABLE tanatos.tipo_periodicidad ADD frecuencia_dias integer;
+    COMMENT ON COLUMN tanatos.tipo_periodicidad.frecuencia_dias IS 'Frecuencia en días del tipo de periodicidad.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260717024150_CampoFrecuenciaDiasTipoPeriodicidad') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260717024150_CampoFrecuenciaDiasTipoPeriodicidad', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+
