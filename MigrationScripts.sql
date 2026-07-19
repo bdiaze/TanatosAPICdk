@@ -2605,3 +2605,22 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260719155715_CampoOrdenTipoPeriodicidad') THEN
+    ALTER TABLE tanatos.tipo_periodicidad ADD orden integer NOT NULL DEFAULT 0;
+    COMMENT ON COLUMN tanatos.tipo_periodicidad.orden IS 'Orden visual de la periodicidad.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260719155715_CampoOrdenTipoPeriodicidad') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260719155715_CampoOrdenTipoPeriodicidad', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+

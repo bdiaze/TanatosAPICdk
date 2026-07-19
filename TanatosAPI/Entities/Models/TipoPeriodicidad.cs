@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
@@ -34,6 +35,11 @@ namespace TanatosAPI.Entities.Models {
 
         [Column("delta_annos")]
         public int? DeltaAnnos { get; set; }
+
+		[Required]
+		[Column("orden")]
+		[DefaultValue(0)]
+		public int Orden { get; set; } = 0;
 
 		[Required]
 		[Column("vigencia")]

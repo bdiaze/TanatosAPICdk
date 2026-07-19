@@ -540,7 +540,8 @@ namespace TanatosAPI.Design.Contexts {
 				entity.Property(o => o.DeltaDias).HasComment("Delta en días de la periodicidad.");
                 entity.Property(o => o.DeltaMeses).HasComment("Delta en meses de la periodicidad.");
                 entity.Property(o => o.DeltaAnnos).HasComment("Delta en años de la periodicidad.");
-                entity.Property(o => o.Vigencia).HasComment("Vigencia del tipo de periodicidad.");
+				entity.Property(o => o.Orden).HasComment("Orden visual de la periodicidad.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del tipo de periodicidad.");
             });
 
             modelBuilder.Entity<TipoReceptorNotificacion>(entity => {
