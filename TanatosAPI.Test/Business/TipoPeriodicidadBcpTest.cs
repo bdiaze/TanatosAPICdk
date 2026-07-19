@@ -96,7 +96,7 @@ namespace TanatosAPI.Test.Business {
 
 		[Fact]
 		public async Task CrearTest_Valido() {
-			TipoPeriodicidad retorno = await tipoPeriodicidadBcp.Crear(10, "nombre-test", "descripcion-test", "cron-test", null, 7, null, null, true);
+			TipoPeriodicidad retorno = await tipoPeriodicidadBcp.Crear(10, "nombre-test", "descripcion-test", "cron-test", null, 7, null, null, 0, true);
 			Assert.Equal(10, retorno.Id);
 			Assert.Equal("nombre-test", retorno.Nombre);
 			Assert.Equal("descripcion-test", retorno.Descripcion);
@@ -105,6 +105,7 @@ namespace TanatosAPI.Test.Business {
 			Assert.Equal(7, retorno.DeltaDias);
 			Assert.Null(retorno.DeltaMeses);
 			Assert.Null(retorno.DeltaAnnos);
+			Assert.Equal(0, retorno.Orden);
 			Assert.True(retorno.Vigencia);
 			await tipoPeriodicidadDao.Received(1).Insertar(
 				Arg.Is<TipoPeriodicidad>(p => 
@@ -124,14 +125,14 @@ namespace TanatosAPI.Test.Business {
 
 		[Fact]
 		public async Task CrearTest_SinCronNiFrecuencia() {
-			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => tipoPeriodicidadBcp.Crear(10, "nombre-test", "descripcion-test", null, null, 7, null, null, true));
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => tipoPeriodicidadBcp.Crear(10, "nombre-test", "descripcion-test", null, null, 7, null, null, 0, true));
 			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
 			await tipoPeriodicidadDao.DidNotReceive().Insertar(Arg.Any<TipoPeriodicidad>(), Arg.Any<NpgsqlTransaction?>());
 		}
 
 		[Fact]
 		public async Task CrearTest_ConCronYFrecuencia() {
-			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => tipoPeriodicidadBcp.Crear(10, "nombre-test", "descripcion-test", "cron-test", 7, 7, null, null, true));
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => tipoPeriodicidadBcp.Crear(10, "nombre-test", "descripcion-test", "cron-test", 7, 7, null, null, 0, true));
 			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
 			await tipoPeriodicidadDao.DidNotReceive().Insertar(Arg.Any<TipoPeriodicidad>(), Arg.Any<NpgsqlTransaction?>());
 		}

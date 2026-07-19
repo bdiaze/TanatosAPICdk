@@ -104,6 +104,7 @@ namespace TanatosAPI.Endpoints {
 						entrada.DeltaDias,
 						entrada.DeltaMeses,
 						entrada.DeltaAnnos,
+						entrada.Orden,
 						entrada.Vigencia
 					);
 
@@ -143,6 +144,7 @@ namespace TanatosAPI.Endpoints {
 						entrada.DeltaDias,
 						entrada.DeltaMeses,
 						entrada.DeltaAnnos,
+						entrada.Orden,
 						entrada.Vigencia
 					);
 

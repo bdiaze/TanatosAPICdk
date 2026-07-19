@@ -18,7 +18,7 @@ namespace TanatosAPI.Business {
 			return await tipoPeriodicidadDao.ObtenerPorVigencia(vigencia, transaction);
 		}
 
-		public async Task<TipoPeriodicidad> Crear(long id, string nombre, string? descripcion, string? cron, int? frecuenciaDias, int? deltaDias, int? deltaMeses, int? deltaAnnos, bool vigencia, NpgsqlTransaction? transaction = null) {
+		public async Task<TipoPeriodicidad> Crear(long id, string nombre, string? descripcion, string? cron, int? frecuenciaDias, int? deltaDias, int? deltaMeses, int? deltaAnnos, int orden, bool vigencia, NpgsqlTransaction? transaction = null) {
 			if (cron == null && frecuenciaDias == null) {
 				throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "Se debe definir una configuración de cron o frecuencia en días.");
 			}
@@ -36,6 +36,7 @@ namespace TanatosAPI.Business {
 				DeltaDias = deltaDias,
 				DeltaMeses = deltaMeses,
 				DeltaAnnos = deltaAnnos,
+				Orden = orden,
 				Vigencia = vigencia
 			};
 			await tipoPeriodicidadDao.Insertar(nuevo, transaction);
