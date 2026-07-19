@@ -29,7 +29,8 @@ namespace TanatosAPI.Endpoints {
 					List<SalTipoPeriodicidad> retorno = [.. periodicidades.Select(p => new SalTipoPeriodicidad() {
 						Id = p.Id,
 						Nombre = p.Nombre,
-						Descripcion = p.Descripcion
+						Descripcion = p.Descripcion,
+						Orden = p.Orden,
 					})];
 
 					LambdaLogger.Log(
