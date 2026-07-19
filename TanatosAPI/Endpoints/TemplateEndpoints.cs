@@ -5,9 +5,11 @@ using System.Diagnostics;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
+using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
 	public static class TemplateEndpoints {
@@ -328,7 +330,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaBcp templateNormaBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
+			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaUseCase templateNormaUseCase, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -440,7 +442,7 @@ namespace TanatosAPI.Endpoints {
 					try {
 						// Se eliminan las normas que ya no existen...
 						foreach(TemplateNorma normaEliminar in existente.TemplateNormas.Where(tne => (!entrada.TemplateNormas?.Any(tni => tni.IdTemplate == tne.IdTemplate && tni.IdNorma == tne.IdNorma)) ?? true)) {
-							await templateNormaBcp.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, transaction);
+							await templateNormaUseCase.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, transaction);
 						}
 
 						
@@ -528,7 +530,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaBcp templateNormaBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaUseCase templateNormaUseCase, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -546,7 +548,7 @@ namespace TanatosAPI.Endpoints {
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
 					try {
-						await templateNormaBcp.Eliminar(id, null, transaction);
+						await templateNormaUseCase.Eliminar(id, null, transaction);
                         await templateActividadDao.Eliminar(id, null, transaction);
 						await templateDao.Eliminar(id, transaction);
 

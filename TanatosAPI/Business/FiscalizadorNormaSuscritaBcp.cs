@@ -1,44 +1,60 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class FiscalizadorNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, IFiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao) {
-		public async Task ActualizarPorNormaSuscrita(NormaSuscrita normaSuscrita, HashSet<long> idTiposFiscalizadores, NpgsqlTransaction? transaction = null) {
-			List<FiscalizadorNormaSuscrita> fiscalizadoresExistentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
+	public class FiscalizadorNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, IFiscalizadorNormaSuscritaDao fiscalizadorNormaSuscritaDao) : IFiscalizadorNormaSuscritaBcp {
+		public async Task<List<FiscalizadorNormaSuscrita>> ObtenerVigentesPorNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			return await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(idNormaSuscrita, true, transaction);
+		}
+		
+		public async Task Eliminar(FiscalizadorNormaSuscrita fiscalizadorNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			if (fiscalizadorNormaSuscrita.Vigencia) {
+				fiscalizadorNormaSuscrita.FechaEliminacion = dateTimeProvider.UtcNow;
+				fiscalizadorNormaSuscrita.Vigencia = false;
+				await fiscalizadorNormaSuscritaDao.Actualizar(fiscalizadorNormaSuscrita, transaction);
+			}
+		}
+		
+		public async Task EliminarPorNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			List<FiscalizadorNormaSuscrita> fiscalizadoresVigentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(idNormaSuscrita, true, transaction);
+			foreach (FiscalizadorNormaSuscrita fiscalizador in fiscalizadoresVigentes) {
+				await Eliminar(fiscalizador, transaction);
+			}
+		}
+
+		public async Task<FiscalizadorNormaSuscrita> Insertar(long idNormaSuscrita, long idTipoFiscalizador, NpgsqlTransaction? transaction = null) {
+			FiscalizadorNormaSuscrita nuevo = new() {
+				Id = 0,
+				IdNormaSuscrita = idNormaSuscrita,
+				IdTipoFiscalizador = idTipoFiscalizador,
+				FechaCreacion = dateTimeProvider.UtcNow,
+				FechaEliminacion = null,
+				Vigencia = true
+			};
+			nuevo.Id = await fiscalizadorNormaSuscritaDao.Insertar(nuevo, transaction);
+			return nuevo;
+		}
+
+		public async Task ActualizarPorNormaSuscrita(long idNormaSuscrita, HashSet<long> idTiposFiscalizadores, NpgsqlTransaction? transaction = null) {
+			List<FiscalizadorNormaSuscrita> fiscalizadoresExistentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(idNormaSuscrita, true, transaction);
+			HashSet<long> existentes = [.. fiscalizadoresExistentes.Select(n => n.IdTipoFiscalizador)];
 
 			// Se eliminan los fiscalizadores existentes que no se incluyen en la entrada...
 			foreach (FiscalizadorNormaSuscrita fiscalizadorExistente in fiscalizadoresExistentes) {
-				if (!idTiposFiscalizadores.Any(n => n == fiscalizadorExistente.IdTipoFiscalizador)) {
-					fiscalizadorExistente.FechaEliminacion = dateTimeProvider.UtcNow;
-					fiscalizadorExistente.Vigencia = false;
-					await fiscalizadorNormaSuscritaDao.Actualizar(fiscalizadorExistente, transaction);
+				if (!idTiposFiscalizadores.Contains(fiscalizadorExistente.IdTipoFiscalizador)) {
+					await Eliminar(fiscalizadorExistente, transaction);
 				}
 			}
 
 			// Se agregan los nuevos fiscalizadores...
 			foreach (long idTipoFiscalizadorNuevo in idTiposFiscalizadores) {
-				if (!fiscalizadoresExistentes.Any(fe => fe.IdTipoFiscalizador == idTipoFiscalizadorNuevo)) {
-					await fiscalizadorNormaSuscritaDao.Insertar(new FiscalizadorNormaSuscrita {
-						Id = 0,
-						IdNormaSuscrita = normaSuscrita.Id,
-						IdTipoFiscalizador = idTipoFiscalizadorNuevo,
-						FechaCreacion = dateTimeProvider.UtcNow,
-						FechaEliminacion = null,
-						Vigencia = true
-					}, transaction);
+				if (!existentes.Contains(idTipoFiscalizadorNuevo)) {
+					await Insertar(idNormaSuscrita, idTipoFiscalizadorNuevo, transaction);
 				}
-			}
-		}
-
-		public async Task EliminarPorNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
-			List<FiscalizadorNormaSuscrita> fiscalizadoresVigentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true, transaction);
-			foreach (FiscalizadorNormaSuscrita fiscalizador in fiscalizadoresVigentes) {
-				fiscalizador.FechaEliminacion = dateTimeProvider.UtcNow;
-				fiscalizador.Vigencia = false;
-				await fiscalizadorNormaSuscritaDao.Actualizar(fiscalizador, transaction);
 			}
 		}
 	}

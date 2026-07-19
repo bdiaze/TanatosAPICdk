@@ -1,11 +1,12 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class NormaSuscritaBcp(INormaSuscritaDao normaSuscritaDao) {
+	public class NormaSuscritaBcp(INormaSuscritaDao normaSuscritaDao) : INormaSuscritaBcp {
 		public bool EstaVigente(NormaSuscrita? normaSuscrita) {
 			return normaSuscrita != null && normaSuscrita.Vigencia;
 		}
@@ -14,8 +15,8 @@ namespace TanatosAPI.Business {
 			return normaSuscrita.Sub == sub;
 		}
 
-		public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita) {
-            return await normaSuscritaDao.ObtenerPorId(idNormaSuscrita);
+		public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
+            return await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction);
         }
 	}
 }
