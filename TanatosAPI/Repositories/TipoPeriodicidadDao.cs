@@ -10,7 +10,7 @@ namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
     public class TipoPeriodicidadDao(IDatabaseConnectionHelper connectionHelper) : ITipoPeriodicidadDao {
 		public async Task<TipoPeriodicidad?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
-			string query = "SELECT ID, NOMBRE, DESCRIPCION, CRON, FRECUENCIA_DIAS, DELTA_DIAS, DELTA_MESES, DELTA_ANNOS, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE ID = @ID";
+			string query = "SELECT ID, NOMBRE, DESCRIPCION, CRON, FRECUENCIA_DIAS, DELTA_DIAS, DELTA_MESES, DELTA_ANNOS, ORDEN, VIGENCIA FROM TANATOS.TIPO_PERIODICIDAD WHERE ID = @ID";
 
 			bool disposeConnection = transaction?.Connection == null;
 			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
@@ -33,7 +33,8 @@ namespace TanatosAPI.Repositories {
 						DeltaDias = await reader.IsDBNullAsync(5) ? null : reader.GetInt32(5),
 						DeltaMeses = await reader.IsDBNullAsync(6) ? null : reader.GetInt32(6),
                         DeltaAnnos = await reader.IsDBNullAsync(7) ? null : reader.GetInt32(7),
-                        Vigencia = reader.GetBoolean(8),
+						Orden = reader.GetInt32(8),
+						Vigencia = reader.GetBoolean(9),
 					};
 				}
 
@@ -46,7 +47,7 @@ namespace TanatosAPI.Repositories {
 		}
 
 		public async Task<List<TipoPeriodicidad>> ObtenerPorVigencia(bool? vigencia, NpgsqlTransaction? transaction = null) {
-			string query = "SELECT ID, NOMBRE, DESCRIPCION, CRON, FRECUENCIA_DIAS, DELTA_DIAS, DELTA_MESES, DELTA_ANNOS, VIGENCIA " +
+			string query = "SELECT ID, NOMBRE, DESCRIPCION, CRON, FRECUENCIA_DIAS, DELTA_DIAS, DELTA_MESES, DELTA_ANNOS, ORDEN, VIGENCIA " +
                 "FROM TANATOS.TIPO_PERIODICIDAD WHERE (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
 
             bool disposeConnection = transaction?.Connection == null;
@@ -69,7 +70,8 @@ namespace TanatosAPI.Repositories {
 						DeltaDias = await reader.IsDBNullAsync(5) ? null : reader.GetInt32(5),
 						DeltaMeses = await reader.IsDBNullAsync(6) ? null : reader.GetInt32(6),
 						DeltaAnnos = await reader.IsDBNullAsync(7) ? null : reader.GetInt32(7),
-						Vigencia = reader.GetBoolean(8),
+						Orden = reader.GetInt32(8),
+						Vigencia = reader.GetBoolean(9),
 					});
                 }
                 return retorno;
@@ -82,8 +84,8 @@ namespace TanatosAPI.Repositories {
 
 		public async Task Insertar(TipoPeriodicidad item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"INSERT INTO TANATOS.TIPO_PERIODICIDAD(ID, NOMBRE, DESCRIPCION, CRON, FRECUENCIA_DIAS, DELTA_DIAS, DELTA_MESES, DELTA_ANNOS, VIGENCIA) " +
-				"VALUES (@ID, @NOMBRE, @DESCRIPCION, @CRON, @FRECUENCIADIAS, @DELTADIAS, @DELTAMESES, @DELTAANNOS, @VIGENCIA)";
+				"INSERT INTO TANATOS.TIPO_PERIODICIDAD(ID, NOMBRE, DESCRIPCION, CRON, FRECUENCIA_DIAS, DELTA_DIAS, DELTA_MESES, DELTA_ANNOS, ORDEN, VIGENCIA) " +
+				"VALUES (@ID, @NOMBRE, @DESCRIPCION, @CRON, @FRECUENCIADIAS, @DELTADIAS, @DELTAMESES, @DELTAANNOS, @ORDEN, @VIGENCIA)";
 
             bool disposeConnection = transaction?.Connection == null;
             NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
@@ -98,7 +100,8 @@ namespace TanatosAPI.Repositories {
 				command.Parameters.AddWithValue("DELTADIAS", (object?)item.DeltaDias ?? DBNull.Value);
                 command.Parameters.AddWithValue("DELTAMESES", (object?)item.DeltaMeses ?? DBNull.Value);
                 command.Parameters.AddWithValue("DELTAANNOS", (object?)item.DeltaAnnos ?? DBNull.Value);
-                command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
+				command.Parameters.AddWithValue("ORDEN", item.Orden);
+				command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
                 await command.ExecuteNonQueryAsync();
             } finally {
                 if (disposeConnection && connection != null) {
@@ -110,7 +113,7 @@ namespace TanatosAPI.Repositories {
 		public async Task Actualizar(TipoPeriodicidad item, NpgsqlTransaction? transaction = null) {
 			string query =
 				"UPDATE TANATOS.TIPO_PERIODICIDAD SET NOMBRE = @NOMBRE, DESCRIPCION = @DESCRIPCION, CRON = @CRON, FRECUENCIA_DIAS = @FRECUENCIADIAS, " +
-                "DELTA_DIAS = @DELTADIAS, DELTA_MESES = @DELTAMESES, DELTA_ANNOS = @DELTAANNOS, VIGENCIA = @VIGENCIA " +
+				"DELTA_DIAS = @DELTADIAS, DELTA_MESES = @DELTAMESES, DELTA_ANNOS = @DELTAANNOS, ORDEN = @ORDEN, VIGENCIA = @VIGENCIA " +
                 "WHERE ID = @ID";
 
             bool disposeConnection = transaction?.Connection == null;
@@ -125,7 +128,8 @@ namespace TanatosAPI.Repositories {
 				command.Parameters.AddWithValue("DELTADIAS", (object?)item.DeltaDias ?? DBNull.Value);
                 command.Parameters.AddWithValue("DELTAMESES", (object?)item.DeltaMeses ?? DBNull.Value);
                 command.Parameters.AddWithValue("DELTAANNOS", (object?)item.DeltaAnnos ?? DBNull.Value);
-                command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
+				command.Parameters.AddWithValue("ORDEN", item.Orden);
+				command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
                 command.Parameters.AddWithValue("ID", item.Id);
                 await command.ExecuteNonQueryAsync();
             } finally {
