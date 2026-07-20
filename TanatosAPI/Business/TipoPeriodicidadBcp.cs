@@ -6,6 +6,10 @@ using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Business {
 	public class TipoPeriodicidadBcp(ITipoPeriodicidadDao tipoPeriodicidadDao) : ITipoPeriodicidadBcp {
+		public bool EstaVigente(TipoPeriodicidad? periodicidad) {
+			return periodicidad != null && periodicidad.Vigencia;
+		}
+
 		public async Task<TipoPeriodicidad?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
 			return await tipoPeriodicidadDao.ObtenerPorId(id, transaction);
 		}
