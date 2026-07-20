@@ -15,7 +15,7 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-	public class NormaSuscritaUseCase(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, IKairosHelper kairosHelper, INormaSuscritaBcp normaSuscritaBcp, ITemplateNormaBcp templateNormaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ITipoUnidadTiempoDao tipoUnidadTiempoDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp) {
+	public class NormaSuscritaUseCase(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, IKairosHelper kairosHelper, NotificacionNormaSuscritaUseCase notificacionNormaSuscritaUseCase, INormaSuscritaBcp normaSuscritaBcp, ITemplateNormaBcp templateNormaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, IHistorialNormaSuscritaDao historialNormaSuscritaDao, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp) {
 		public async Task<(NormaSuscrita?, TemplateNorma?)> ObtenerPorIdConTemplate(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			NormaSuscrita? normaSuscrita = await normaSuscritaBcp.ObtenerPorId(idNormaSuscrita, transaction);
 			TemplateNorma? templateNorma = null;
@@ -61,33 +61,33 @@ namespace TanatosAPI.UseCases {
 					normaSuscrita.ProcesosNotificaciones = null;
 					await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 
-					// Si la norma suscrita está activada, se programan las notificaciones que no están programadas, y desprograman las que no son necesarias...
-				} else if ((normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) != null) {
+				} else {
+					// Si la norma suscrita está activada, se programan las notificaciones que no están programadas, y desprograman las que no son necesarias..
 					long idTipoPeriodicidad = (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
 					TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadBcp.ObtenerPorId(idTipoPeriodicidad, transaction) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
 
+					if (tipoPeriodicidadBcp.EstaVigente(tipoPeriodicidad)) {
+						// Se obtienen las notificaciones previas asociadas a la norma suscrita...
+						List<(TipoUnidadTiempo UnidadTiempo, int CantAntelacion)> antelaciones = await notificacionNormaSuscritaUseCase.ObtenerAntelacionesConsiderandoTemplate(normaSuscrita.Id, normaSuscrita.IdTemplate, normaSuscrita.IdNorma, transaction);
+						DateTime proximoVencimiento = await historialNormaSuscritaBcp.ObtenerProximoVencimiento(normaSuscrita.Id, transaction);
+
+						if (!string.IsNullOrWhiteSpace(tipoPeriodicidad.Cron)) {
+							List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> crons = await notificacionNormaSuscritaUseCase.GenerarCrons(
+								proximoVencimiento,
+								tipoPeriodicidad.Cron,
+								antelaciones
+							);
+
+
+						} else if (tipoPeriodicidad.FrecuenciaDias != null) {
+
+
+
+						}
+					}
+
+
 					if (!string.IsNullOrWhiteSpace(tipoPeriodicidad.Cron)) {
-						// Se arma listado de las configuraciones de notificaciones previas...
-						HashSet<(long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> configNotifPrevias = [];
-						configNotifPrevias.Add((null, null));
-
-						List<NotificacionNormaSuscrita> notificacionesNormaSuscrita = await notificacionNormaSuscritaBcp.ObtenerVigentesPorNormaSuscrita(idNormaSuscrita, transaction);
-						foreach (NotificacionNormaSuscrita notificacionNormaSuscrita in notificacionesNormaSuscrita) {
-							configNotifPrevias.Add((notificacionNormaSuscrita.IdTipoUnidadTiempoAntelacion, notificacionNormaSuscrita.CantAntelacion));
-						}
-
-						if (notificacionesNormaSuscrita.Count == 0 && normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
-							List<TemplateNormaNotificacion> templateNormaNotificacions = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma, transaction);
-							foreach (TemplateNormaNotificacion templateNormaNotificacion in templateNormaNotificacions) {
-								configNotifPrevias.Add((templateNormaNotificacion.IdTipoUnidadTiempoAntelacion, templateNormaNotificacion.CantAntelacion));
-							}
-						}
-
-						List<TipoUnidadTiempo> tiposUnidadTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true, transaction);
-
-						// Se arman los cron a programar según los próximos vencimientos...
-						HashSet<string> cronVencimiento = [];
-						Dictionary<string, (long? IdTipoUnidadTiempoAntelacion, int? CantAntelacion)> crons = [];
 
 						HistorialNormaSuscrita? proximoVencimiento = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).OrderByDescending(v => v.FechaVencimiento).FirstOrDefault();
 						if (proximoVencimiento != null) {
@@ -200,21 +200,9 @@ namespace TanatosAPI.UseCases {
 					}
 				}
 			} catch {
-				await Programar(procesosDesprogramados);
-				await Desprogramar(procesosProgramados);
+				await normaSuscritaBcp.ProgramarVariosProcesosNotificacion(procesosDesprogramados);
+				await normaSuscritaBcp.DesprogramarVariosProcesosNotificacion(procesosProgramados);
 				throw;
-			}
-		}
-
-		public async Task Programar(List<EntKairosIngresarProceso> procesosProgramar) {
-			foreach (EntKairosIngresarProceso proceso in procesosProgramar) {
-				await kairosHelper.IngresarProceso(proceso);
-			}
-		}
-
-		public async Task Desprogramar(List<string> idProcesosDesprogramar) {
-			foreach (string idProceso in idProcesosDesprogramar) {
-				await kairosHelper.EliminarProceso(idProceso);
 			}
 		}
 
