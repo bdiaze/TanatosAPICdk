@@ -206,11 +206,11 @@ builder.Services.AddScoped<IEvaluacionDao, EvaluacionDao>();
 
 #region Singleton BCP
 builder.Services.AddScoped<INormaSuscritaBcp, NormaSuscritaBcp>();
-builder.Services.AddScoped<HistorialNormaSuscritaBcp>();
+builder.Services.AddScoped<IHistorialNormaSuscritaBcp, HistorialNormaSuscritaBcp>();
 builder.Services.AddScoped<IFiscalizadorNormaSuscritaBcp, FiscalizadorNormaSuscritaBcp>();
 builder.Services.AddScoped<INotificacionNormaSuscritaBcp, NotificacionNormaSuscritaBcp>();
 builder.Services.AddScoped<DestinatarioNotificacionBcp>();
-builder.Services.AddScoped<DocumentoAdjuntoBcp>();
+builder.Services.AddScoped<IDocumentoAdjuntoBcp, DocumentoAdjuntoBcp>();
 builder.Services.AddScoped<MensajeBcp>();
 builder.Services.AddScoped<ISuscripcionBcp, SuscripcionBcp>();
 builder.Services.AddScoped<ITemplateNormaBcp, TemplateNormaBcp>();
@@ -227,6 +227,8 @@ builder.Services.AddScoped<IEventoPagoBcp, EventoPagoBcp>();
 builder.Services.AddScoped<IPagoBcp, PagoBcp>();
 builder.Services.AddScoped<IEvaluacionBcp, EvaluacionBcp>();
 builder.Services.AddScoped<ITipoPeriodicidadBcp, TipoPeriodicidadBcp>();
+builder.Services.AddScoped<ITemplateNormaNotificacionBcp, TemplateNormaNotificacionBcp>();
+builder.Services.AddScoped<ITipoUnidadTiempoBcp, TipoUnidadTiempoBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -244,6 +246,8 @@ builder.Services.AddScoped<NotificacionUseCase>();
 builder.Services.AddScoped<EvaluacionUseCase>();
 builder.Services.AddScoped<TipoPeriodicidadUseCase>();
 builder.Services.AddScoped<TemplateNormaUseCase>();
+builder.Services.AddScoped<NotificacionNormaSuscritaUseCase>();
+builder.Services.AddScoped<HistorialNormaSuscritaUseCase>();
 #endregion
 
 string cognitoRegion;
