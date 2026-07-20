@@ -1,4 +1,5 @@
 ﻿using Npgsql;
+using System.Transactions;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
@@ -6,7 +7,7 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class HistorialNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, DocumentoAdjuntoBcp documentoAdjuntoBcp, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, ITemplateNormaDao templateNormaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp) {
+	public class HistorialNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, IHistorialNormaSuscritaDao historialNormaSuscritaDao) : IHistorialNormaSuscritaBcp {
 		public bool EstaVigente(HistorialNormaSuscrita? historialNormaSuscrita) {
 			return historialNormaSuscrita != null && historialNormaSuscrita.Vigencia;
 		}
@@ -23,91 +24,46 @@ namespace TanatosAPI.Business {
 			return await historialNormaSuscritaDao.ObtenerPorId(idHistorialNormaSuscrita);
 		}
 		
-		public async Task Crear(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			historialNormaSuscrita.Id = await historialNormaSuscritaDao.Insertar(historialNormaSuscrita, transaction);
+		public async Task<List<HistorialNormaSuscrita>> ObtenerVigentesPorNormaSuscritaNoCompletadas(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			return await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction);
 		}
 
-		public async Task EliminarPorNormaSuscrita(NormaSuscrita normaSuscrita, bool ignorarVencidos = false, NpgsqlTransaction? transaction = null) {
-			List<HistorialNormaSuscrita> historialesVigentes = await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(normaSuscrita.Id, null, true, transaction);
+		public async Task<DateTime> ObtenerProximoVencimiento(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			HistorialNormaSuscrita proximoVencimiento = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction))
+				.OrderByDescending(v => v.FechaVencimiento)
+				.FirstOrDefault() ?? throw new InvalidOperationException("La obligación no cuenta con un vencimiento no completado.");
+			return proximoVencimiento.FechaVencimiento;
+		}
 
-			if (ignorarVencidos) {
-				historialesVigentes = [.. historialesVigentes.Where(h => h.FechaVencimiento > dateTimeProvider.UtcNow)];
-			}
+		public async Task<HistorialNormaSuscrita> Crear(long idNormaSuscrita, DateTime fechaVencimiento, NpgsqlTransaction? transaction = null) {
+			HistorialNormaSuscrita nuevo = new() { 
+				Id = 0,
+				IdNormaSuscrita = idNormaSuscrita,
+				FechaVencimiento = fechaVencimiento,
+				FechaCompletitud = null,
+				FechaCreacion = dateTimeProvider.UtcNow,
+				FechaEliminacion = null,
+				Vigencia = true
+			};
+			nuevo.Id = await historialNormaSuscritaDao.Insertar(nuevo, transaction);
+			return nuevo;
+		}
 
-			foreach (HistorialNormaSuscrita historial in historialesVigentes) {
-				historial.FechaEliminacion = dateTimeProvider.UtcNow;
-				historial.Vigencia = false;
-				await historialNormaSuscritaDao.Actualizar(historial, transaction);
-
-				await documentoAdjuntoBcp.EliminarPorHistorialNormaSuscrita(historial.Id, transaction);
+		public async Task Eliminar(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			if (historialNormaSuscrita.Vigencia) {
+				historialNormaSuscrita.FechaEliminacion = dateTimeProvider.UtcNow;
+				historialNormaSuscrita.Vigencia = false;
+				await historialNormaSuscritaDao.Actualizar(historialNormaSuscrita, transaction);
 			}
 		}
 
-		public async Task CompletarHistorialNormaSuscrita(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
+		public async Task Completar(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			if (historialNormaSuscrita.FechaCompletitud == null) {
 				historialNormaSuscrita.FechaCompletitud = dateTimeProvider.UtcNow;
 				await historialNormaSuscritaDao.Actualizar(historialNormaSuscrita, transaction);
-
-				await ProgramarSiguienteVencimiento(historialNormaSuscrita, transaction);
 			}
 		}
-
-		public async Task ProgramarSiguienteVencimiento(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			// Solo se programa el siguiente vencimiento si no existe otro vencimiento futuro, no completado, distinto a la referencia...
-			List<HistorialNormaSuscrita> historialesFuturos = [.. 
-				(await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(historialNormaSuscrita.IdNormaSuscrita, true, transaction))
-					.Where(hns => hns.FechaCompletitud == null && hns.Id != historialNormaSuscrita.Id && hns.FechaVencimiento > dateTimeProvider.UtcNow)
-			];
-			if (historialesFuturos.Count > 0) {
-				return;
-			}
-
-			// Se obtiene norma suscrita y/o template...
-			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(historialNormaSuscrita.IdNormaSuscrita, transaction) ?? throw new InvalidOperationException("ID norma suscrita inválida");
-			TemplateNorma? templateNorma = null;
-			if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null && normaSuscrita.IdTipoPeriodicidad == null) {
-				templateNorma = (await templateNormaDao.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
-			}
-
-			long idTipoPeriodicidad = (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
-			TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadBcp.ObtenerPorId(idTipoPeriodicidad, transaction) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
-			if (!string.IsNullOrWhiteSpace(tipoPeriodicidad.Cron)) {
-				// Nos aseguramos de que la fecha esté en UTC...
-				DateTime vencimientoActual = DateTime.SpecifyKind(historialNormaSuscrita.FechaVencimiento, DateTimeKind.Utc);
-
-				// Se transforma la fecha de vencimiento actual a zona horaria de Chile...
-				TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
-				DateTime proximoVencimiento = TimeZoneInfo.ConvertTimeFromUtc(vencimientoActual, timeZoneInfo);
-
-				// Se añaden los deltas de la periodicidad...
-				if (tipoPeriodicidad.DeltaDias != null) {
-					proximoVencimiento = proximoVencimiento.AddDays(tipoPeriodicidad.DeltaDias.Value);
-				}
-				if (tipoPeriodicidad.DeltaMeses != null) {
-					proximoVencimiento = proximoVencimiento.AddMonths(tipoPeriodicidad.DeltaMeses.Value);
-				}
-				if (tipoPeriodicidad.DeltaAnnos != null) {
-					proximoVencimiento = proximoVencimiento.AddYears(tipoPeriodicidad.DeltaAnnos.Value);
-				}
-
-				// Se convierte próximo vencimiento calculado a UTC...
-				proximoVencimiento = TimeZoneInfo.ConvertTimeToUtc(proximoVencimiento, timeZoneInfo);
-
-				if (vencimientoActual != proximoVencimiento) {
-					// Se crea el próximo vencimiento...
-					HistorialNormaSuscrita nuevoHistorialNormaSuscrita = new() {
-						Id = 0,
-						IdNormaSuscrita = historialNormaSuscrita.IdNormaSuscrita,
-						FechaVencimiento = proximoVencimiento,
-						FechaCreacion = dateTimeProvider.UtcNow,
-						Vigencia = true
-					};
-
-					await Crear(nuevoHistorialNormaSuscrita, transaction);
-				}
-			}
-		}
-
+				
 		public DateTime CalcularVencimientoFuturo(DateTime fechaReferenciaUTC, TipoPeriodicidad tipoPeriodicidad) {
 			// Nos aseguramos de que la fecha esté en UTC...
 			if (fechaReferenciaUTC.Kind != DateTimeKind.Utc)
