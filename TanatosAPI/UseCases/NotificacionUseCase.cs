@@ -12,7 +12,7 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-	public class NotificacionUseCase(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, IHtmlRenderer renderer, IHermesHelper hermesHelper, IUsuarioBcp usuarioBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, ISuscripcionBcp suscripcionBcp, INormaSuscritaDao normaSuscritaDao, ITipoUnidadTiempoDao tipoUnidadTiempoDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IHistorialNotificacionDao historialNotificacionDao, ITemplateNormaDao templateNormaDao, IDestinatarioNotificacionDao destinatarioNotificacionDao, ICargoDao cargoDao, IEmpleadoDao empleadoDao) {
+	public class NotificacionUseCase(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, IHtmlRenderer renderer, IHermesHelper hermesHelper, IUsuarioBcp usuarioBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, ISuscripcionBcp suscripcionBcp, INormaSuscritaDao normaSuscritaDao, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IHistorialNotificacionDao historialNotificacionDao, ITemplateNormaDao templateNormaDao, IDestinatarioNotificacionDao destinatarioNotificacionDao, ICargoDao cargoDao, IEmpleadoDao empleadoDao) {
 		private const int DIAS_CADUCIDAD_CODIGO_ACCESO = 30;
 
 		public async Task ProcesarNotificacion(long idNormaSuscrita, string cron, long? idTipoUnidadTiempoAntelacion, int? cantAntelacion, bool? esVencimiento, bool programarSiguienteEjecucion, NpgsqlTransaction? transaction = null) {
@@ -75,7 +75,7 @@ namespace TanatosAPI.UseCases {
 			}
 
 			// Se obtienen los tipos de unidades de tiempo...
-			List<TipoUnidadTiempo> tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true, transaction);
+			List<TipoUnidadTiempo> tiposUnidadesTiempo = await tipoUnidadTiempoBcp.ObtenerPorVigencia(true, transaction);
 			TipoUnidadTiempo? unidadTiempo = tiposUnidadesTiempo.FirstOrDefault(ut => ut.Id == idTipoUnidadTiempoAntelacion);
 
 			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");

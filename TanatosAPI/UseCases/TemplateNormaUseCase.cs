@@ -6,11 +6,11 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-	public class TemplateNormaUseCase(NormaSuscritaUseCase normaSuscritaUseCase, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, ITemplateNormaDao templateNormaDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, INormaSuscritaDao normaSuscritaDao) {
+	public class TemplateNormaUseCase(NormaSuscritaUseCase normaSuscritaUseCase, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, ITemplateNormaDao templateNormaDao, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, INormaSuscritaDao normaSuscritaDao) {
 		public async Task Eliminar(long idTemplate, long? idNorma, NpgsqlTransaction? transaction = null) {
 			Dictionary<long, TemplateNorma> templateNormas = (await templateNormaDao.ObtenerPorTemplate(idTemplate, transaction)).ToDictionary(tn => tn.IdNorma, tn => tn);
 			Dictionary<long, HashSet<(long IdTipoUnidadTiempoAntelacion, int CantAntelacion)>> templateNormasNotificaciones =
-				(await templateNormaNotificacionDao.ObtenerPorTemplateNorma(idTemplate, idNorma, transaction))
+				(await templateNormaNotificacionBcp.ObtenerPorTemplateNorma(idTemplate, idNorma, transaction))
 				.GroupBy(tnn => tnn.IdNorma)
 				.ToDictionary(tnn => tnn.Key, tnn => tnn.Select(x => (x.IdTipoUnidadTiempoAntelacion, x.CantAntelacion)).ToHashSet());
 			Dictionary<long, HashSet<long>> templateNormasFiscalizadores =
@@ -54,7 +54,7 @@ namespace TanatosAPI.UseCases {
 				}
 			}
 
-			await templateNormaNotificacionDao.Eliminar(idTemplate, idNorma, null, null, transaction);
+			await templateNormaNotificacionBcp.Eliminar(idTemplate, idNorma, null, null, transaction);
 			await templateNormaFiscalizadorDao.Eliminar(idTemplate, idNorma, null, transaction);
 			await templateNormaDao.Eliminar(idTemplate, idNorma, transaction);
 		}

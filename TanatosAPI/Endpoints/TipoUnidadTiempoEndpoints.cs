@@ -1,6 +1,8 @@
 ﻿using Amazon.Lambda.Core;
 using System.Diagnostics;
+using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
@@ -18,11 +20,11 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ITipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					List<TipoUnidadTiempo> retorno = await tipoUnidadTiempoDao.ObtenerPorVigencia(true);
+					List<TipoUnidadTiempo> retorno = await tipoUnidadTiempoBcp.ObtenerPorVigencia(true);
 
 					LambdaLogger.Log(
 						$"[GET] - [TipoUnidadTiempo] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
@@ -42,7 +44,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, ITipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -52,7 +54,7 @@ namespace TanatosAPI.Endpoints {
 						_ => null
 					};
 
-					List<TipoUnidadTiempo> retorno = await tipoUnidadTiempoDao.ObtenerPorVigencia(vig);
+					List<TipoUnidadTiempo> retorno = await tipoUnidadTiempoBcp.ObtenerPorVigencia(vig);
 
 					LambdaLogger.Log(
 						$"[GET] - [TipoUnidadTiempo] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
@@ -72,11 +74,11 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (TipoUnidadTiempo entrada, IHostEnvironment environment, ITipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapPost("/", async (TipoUnidadTiempo entrada, IHostEnvironment environment, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					TipoUnidadTiempo? existente = await tipoUnidadTiempoDao.ObtenerPorId(entrada.Id);
+					TipoUnidadTiempo? existente = await tipoUnidadTiempoBcp.ObtenerPorId(entrada.Id);
 
 					if (existente != null) {
 						LambdaLogger.Log(
@@ -107,11 +109,11 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (TipoUnidadTiempo entrada, IHostEnvironment environment, ITipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapPut("/", async (TipoUnidadTiempo entrada, IHostEnvironment environment, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					TipoUnidadTiempo? existente = await tipoUnidadTiempoDao.ObtenerPorId(entrada.Id);
+					TipoUnidadTiempo? existente = await tipoUnidadTiempoBcp.ObtenerPorId(entrada.Id);
 
 					if (existente == null) {
 						LambdaLogger.Log(
@@ -142,11 +144,11 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ITipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					TipoUnidadTiempo? existente = await tipoUnidadTiempoDao.ObtenerPorId(id);
+					TipoUnidadTiempo? existente = await tipoUnidadTiempoBcp.ObtenerPorId(id);
 
 					if (existente == null) {
 						LambdaLogger.Log(

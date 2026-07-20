@@ -62,7 +62,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActivarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Activar", async (EntInscripcionTemplateActivar entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, NormaSuscritaUseCase normaSuscritaUseCase, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, ISuscripcionBcp suscripcionBcp, IInscripcionTemplateDao inscripcionTemplateDao, INormaSuscritaDao normaSuscritaDao, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao) => {
+			routes.MapPost("/Activar", async (EntInscripcionTemplateActivar entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, NormaSuscritaUseCase normaSuscritaUseCase, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, ISuscripcionBcp suscripcionBcp, IInscripcionTemplateDao inscripcionTemplateDao, INormaSuscritaDao normaSuscritaDao, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -158,14 +158,7 @@ namespace TanatosAPI.Endpoints {
 									TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
 
 									DateTime proximoVencimiento = cron.GetNextOccurrence(dateTimeProvider.UtcNow, timeZoneInfo) ?? throw new InvalidOperationException("No se pudo calcular el próximo vencimiento para obligación con activación automática");
-									HistorialNormaSuscrita historialNormaSuscrita = new() {
-										Id = 0,
-										IdNormaSuscrita = normaSuscrita.Id,
-										FechaVencimiento = proximoVencimiento,
-										FechaCreacion = dateTimeProvider.UtcNow,
-										Vigencia = true
-									};
-									await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
+									_ = await historialNormaSuscritaBcp.Crear(normaSuscrita.Id, proximoVencimiento, transaction);
 
 									normaSuscrita.FechaActivacion = dateTimeProvider.UtcNow;
 									normaSuscrita.Activado = true;
@@ -175,14 +168,7 @@ namespace TanatosAPI.Endpoints {
 									DateTime vencimientoLocal = localNow.AddDays(templateNorma.DiasActivacionAutomatica.Value);
 									DateTime proximoVencimiento = DateTimeHelper.TransformarFechaTimezoneAUTC(vencimientoLocal);
 
-									HistorialNormaSuscrita historialNormaSuscrita = new() {
-										Id = 0,
-										IdNormaSuscrita = normaSuscrita.Id,
-										FechaVencimiento = proximoVencimiento,
-										FechaCreacion = dateTimeProvider.UtcNow,
-										Vigencia = true
-									};
-									await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
+									_ = await historialNormaSuscritaBcp.Crear(normaSuscrita.Id, proximoVencimiento, transaction);
 
 									normaSuscrita.FechaActivacion = dateTimeProvider.UtcNow;
 									normaSuscrita.Activado = true;

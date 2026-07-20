@@ -37,7 +37,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, INormaSuscritaDao normaSuscritaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICategoriaNormaDao categoriaNormaDao, ICargoDao cargoDao, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao) => {
+			routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, INormaSuscritaDao normaSuscritaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, ICategoriaNormaDao categoriaNormaDao, ICargoDao cargoDao, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -128,7 +128,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorId(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/ObtenerPorId/{idNormaSuscrita}", async (long idNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICategoriaNormaDao categoriaNormaDao, ICargoDao cargoDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, ITipoFiscalizadorDao tipoFiscalizadorDao, ITipoUnidadTiempoDao tipoUnidadTiempoDao, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao) => {
+			routes.MapGet("/ObtenerPorId/{idNormaSuscrita}", async (long idNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICategoriaNormaDao categoriaNormaDao, ICargoDao cargoDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, ITipoFiscalizadorDao tipoFiscalizadorDao, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp) => {
 
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -159,7 +159,7 @@ namespace TanatosAPI.Endpoints {
 
 					Dictionary<long, TipoUnidadTiempo> unidadesTiempo = [];
 					if (notificacionesNormaSuscrita.Count > 0) {
-						unidadesTiempo = (await tipoUnidadTiempoDao.ObtenerPorVigencia(true)).ToDictionary(ut => ut.Id, ut => ut);
+						unidadesTiempo = (await tipoUnidadTiempoBcp.ObtenerPorVigencia(true)).ToDictionary(ut => ut.Id, ut => ut);
 					}
 
 					Template? template = null;
@@ -179,9 +179,9 @@ namespace TanatosAPI.Endpoints {
 						}
 
 						// Obtengo la información de las notificaciones del template norma...
-						templateNormaNotificaciones = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(templateNorma!.IdTemplate, templateNorma!.IdNorma);
+						templateNormaNotificaciones = await templateNormaNotificacionBcp.ObtenerPorTemplateNorma(templateNorma!.IdTemplate, templateNorma!.IdNorma);
 						if (templateNormaNotificaciones.Count > 0 && (unidadesTiempo == null || unidadesTiempo.Count == 0)) {
-							unidadesTiempo = (await tipoUnidadTiempoDao.ObtenerPorVigencia(true)).ToDictionary(ut => ut.Id, ut => ut);
+							unidadesTiempo = (await tipoUnidadTiempoBcp.ObtenerPorVigencia(true)).ToDictionary(ut => ut.Id, ut => ut);
 						}
 					}
 
@@ -386,7 +386,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorIdConVencimiento(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/ObtenerPorIdConVencimiento/{idNormaSuscrita}/{idHistorialNormaSuscrita}", async (long idNormaSuscrita, long idHistorialNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, ISuscripcionBcp suscripcionBcp, INegocioDao negocioDao, INormaSuscritaDao normaSuscritaDao, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IDocumentoAdjuntoDao documentoAdjuntoDao, ICategoriaNormaDao categoriaNormaDao, ICargoDao cargoDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ITipoFiscalizadorDao tipoFiscalizadorDao, ITipoUnidadTiempoDao tipoUnidadTiempoDao, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao) => {
+			routes.MapGet("/ObtenerPorIdConVencimiento/{idNormaSuscrita}/{idHistorialNormaSuscrita}", async (long idNormaSuscrita, long idHistorialNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, ISuscripcionBcp suscripcionBcp, INegocioDao negocioDao, INormaSuscritaDao normaSuscritaDao, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IDocumentoAdjuntoDao documentoAdjuntoDao, ICategoriaNormaDao categoriaNormaDao, ICargoDao cargoDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ITipoFiscalizadorDao tipoFiscalizadorDao, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -542,7 +542,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntNormaSuscritaCrear entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, ISuscripcionBcp suscripcionBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, NormaSuscritaUseCase normaSuscritaUseCase, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IHistorialNotificacionDao historialNotificacionDao, ICargoDao cargoDao, IDestinatarioNotificacionDao destinatarioNotificacionDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICategoriaNormaDao categoriaNormaDao, INegocioDao negocioDao, ITipoFiscalizadorDao tipoFiscalizadorDao, ITipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapPost("/", async (EntNormaSuscritaCrear entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, ISuscripcionBcp suscripcionBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, NormaSuscritaUseCase normaSuscritaUseCase, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IHistorialNotificacionDao historialNotificacionDao, ICargoDao cargoDao, IDestinatarioNotificacionDao destinatarioNotificacionDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICategoriaNormaDao categoriaNormaDao, INegocioDao negocioDao, ITipoFiscalizadorDao tipoFiscalizadorDao, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -663,7 +663,7 @@ namespace TanatosAPI.Endpoints {
 							return Results.BadRequest($"Las notificaciones incluyen duplicados.");
 						}
 
-						tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true);
+						tiposUnidadesTiempo = await tipoUnidadTiempoBcp.ObtenerPorVigencia(true);
 						foreach (EntNotificacionNormaSuscritaCrear notificacion in entrada.Notificaciones) {
 							if (!tiposUnidadesTiempo.Any(tut => tut.Id == notificacion.IdTipoUnidadTiempoAntelacion)) {
 								LambdaLogger.Log(
@@ -729,14 +729,7 @@ namespace TanatosAPI.Endpoints {
 						)).ToHashSet() ?? [], transaction);
 
 						if (entrada.Activado) {
-							HistorialNormaSuscrita historialNormaSuscrita = new() {
-								Id = 0,
-								IdNormaSuscrita = nuevo.Id,
-								FechaVencimiento = entrada.ProximoVencimiento!.Value,
-								FechaCreacion = dateTimeProvider.UtcNow,
-								Vigencia = true
-							};
-							await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);							
+							_ = await historialNormaSuscritaBcp.Crear(nuevo.Id, entrada.ProximoVencimiento!.Value, transaction);	
 						}
 
 						await normaSuscritaUseCase.ActualizarProgramacionProcesosNormaSuscrita(nuevo.Id, transaction);
@@ -803,7 +796,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async(EntNormaSuscritaActualizar entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, ISuscripcionBcp suscripcionBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, NormaSuscritaUseCase normaSuscritaUseCase, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICargoDao cargoDao, ICategoriaNormaDao categoriaNormaDao, INegocioDao negocioDao, ITipoFiscalizadorDao tipoFiscalizadorDao, ITipoUnidadTiempoDao tipoUnidadTiempoDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao) => {
+			routes.MapPut("/", async(EntNormaSuscritaActualizar entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, HistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, ISuscripcionBcp suscripcionBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, NormaSuscritaUseCase normaSuscritaUseCase, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICargoDao cargoDao, ICategoriaNormaDao categoriaNormaDao, INegocioDao negocioDao, ITipoFiscalizadorDao tipoFiscalizadorDao, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp) => {
 				
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -925,7 +918,7 @@ namespace TanatosAPI.Endpoints {
 							return Results.BadRequest($"Las notificaciones incluyen duplicados.");
 						}
 
-						tiposUnidadesTiempo = await tipoUnidadTiempoDao.ObtenerPorVigencia(true);
+						tiposUnidadesTiempo = await tipoUnidadTiempoBcp.ObtenerPorVigencia(true);
 						foreach (EntNotificacionNormaSuscritaActualizar notificacion in entrada.Notificaciones) {
 							if (!tiposUnidadesTiempo.Any(tut => tut.Id == notificacion.IdTipoUnidadTiempoAntelacion)) {
 								LambdaLogger.Log(
@@ -1019,7 +1012,7 @@ namespace TanatosAPI.Endpoints {
 						}
 
 						// Se comparan las notificaciones...
-						List<TemplateNormaNotificacion> templateNormaNotificaciones = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(existente.IdTemplate.Value, existente.IdNorma);
+						List<TemplateNormaNotificacion> templateNormaNotificaciones = await templateNormaNotificacionBcp.ObtenerPorTemplateNorma(existente.IdTemplate.Value, existente.IdNorma);
 						HashSet<(long, int)> setNotificacionesTemplate = [.. templateNormaNotificaciones.Select(tn => (tn.IdTipoUnidadTiempoAntelacion, tn.CantAntelacion))];
 						HashSet<(long, int)> setNotificacionesEntrada = [.. entrada.Notificaciones?.Select(n => (n.IdTipoUnidadTiempoAntelacion, n.CantAntelacion)) ?? []];
 
@@ -1045,22 +1038,15 @@ namespace TanatosAPI.Endpoints {
 						if (entrada.Activado) {
 							if (proximoVencimientoExistente?.FechaVencimiento != entrada.ProximoVencimiento) {
 								if (proximoVencimientoExistente != null) {
-									await historialNormaSuscritaBcp.EliminarPorNormaSuscrita(existente, true, transaction);
+									await historialNormaSuscritaUseCase.EliminarPorNormaSuscrita(existente.Id, true, transaction);
 								}
 
-								HistorialNormaSuscrita historialNormaSuscrita = new() {
-									Id = 0,
-									IdNormaSuscrita = existente.Id,
-									FechaVencimiento = entrada.ProximoVencimiento!.Value,
-									FechaCreacion = dateTimeProvider.UtcNow,
-									Vigencia = true
-								};
-								await historialNormaSuscritaBcp.Crear(historialNormaSuscrita, transaction);
+								_ = await historialNormaSuscritaBcp.Crear(existente.Id, entrada.ProximoVencimiento!.Value, transaction);
 							}
 						// En caso de que norma suscrita esté inactiva, se elimina el próximo vencimiento existente...
 						} else {
 							if (proximoVencimientoExistente != null) {
-								await historialNormaSuscritaBcp.EliminarPorNormaSuscrita(existente, false, transaction);
+								await historialNormaSuscritaUseCase.EliminarPorNormaSuscrita(existente.Id, false, transaction);
 							}
 						}
 
@@ -1128,7 +1114,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCompletarNormaEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/CompletarNorma", async (EntNormaSuscritaCompletarNorma entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao) => {
+			routes.MapPut("/CompletarNorma", async (EntNormaSuscritaCompletarNorma entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, HistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao) => {
 
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -1167,7 +1153,7 @@ namespace TanatosAPI.Endpoints {
 					SalNormaSuscritaCompletarNorma retorno = new();
 
 					try {
-						await historialNormaSuscritaBcp.CompletarHistorialNormaSuscrita(historialExistente, transaction);
+						await historialNormaSuscritaUseCase.CompletarHistorialNormaSuscrita(historialExistente, transaction);
 						retorno.FechaCompletitud = historialExistente.FechaCompletitud;
 
 						await transaction.CommitAsync();
@@ -1290,7 +1276,7 @@ namespace TanatosAPI.Endpoints {
         }
 
 		private static IEndpointRouteBuilder MapObtenerPorCodigoAccesoConVencimiento(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/ObtenerPorCodigoAccesoConVencimiento", async ([FromQuery] string codigoAcceso, IHostEnvironment environment, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, ISuscripcionBcp suscripcionBcp, INegocioDao negocioDao, INormaSuscritaDao normaSuscritaDao, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IHistorialNotificacionDao historialNotificacionDao, IDocumentoAdjuntoDao documentoAdjuntoDao, ICategoriaNormaDao categoriaNormaDao, ICargoDao cargoDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ITipoFiscalizadorDao tipoFiscalizadorDao, ITipoUnidadTiempoDao tipoUnidadTiempoDao, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao) => {
+			routes.MapGet("/ObtenerPorCodigoAccesoConVencimiento", async ([FromQuery] string codigoAcceso, IHostEnvironment environment, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, ISuscripcionBcp suscripcionBcp, INegocioDao negocioDao, INormaSuscritaDao normaSuscritaDao, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IHistorialNotificacionDao historialNotificacionDao, IDocumentoAdjuntoDao documentoAdjuntoDao, ICategoriaNormaDao categoriaNormaDao, ICargoDao cargoDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ITipoFiscalizadorDao tipoFiscalizadorDao, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -1456,7 +1442,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCompletarNormaPorCodigoAccesoEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/CompletarNormaPorCodigoAcceso", async (EntNormaSuscritaCompletarNormaPorCodigoAcceso entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, HistorialNormaSuscritaBcp historialNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IHistorialNotificacionDao historialNotificacionDao) => {
+			routes.MapPut("/CompletarNormaPorCodigoAcceso", async (EntNormaSuscritaCompletarNormaPorCodigoAcceso entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, HistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IHistorialNotificacionDao historialNotificacionDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -1502,7 +1488,7 @@ namespace TanatosAPI.Endpoints {
 					SalNormaSuscritaCompletarNorma retorno = new();
 
 					try {
-						await historialNormaSuscritaBcp.CompletarHistorialNormaSuscrita(historialExistente, transaction);
+						await historialNormaSuscritaUseCase.CompletarHistorialNormaSuscrita(historialExistente, transaction);
 						retorno.FechaCompletitud = historialExistente.FechaCompletitud;
 
 						await transaction.CommitAsync();
