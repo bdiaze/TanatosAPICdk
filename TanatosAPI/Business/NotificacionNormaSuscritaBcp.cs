@@ -10,6 +10,10 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
 	public class NotificacionNormaSuscritaBcp(IDateTimeProvider dateTimeProvider, INotificacionNormaSuscritaDao notificacionNormaSuscritaDao) : INotificacionNormaSuscritaBcp {
+		public HashSet<(long IdTipoUnidadTiempoAntelacion, int CantAntelacion)> ExtraerAntelaciones(List<NotificacionNormaSuscrita> notificaciones) {
+			return [.. notificaciones.Select(n => (n.IdTipoUnidadTiempoAntelacion, n.CantAntelacion))];
+		}
+
 		public async Task<List<NotificacionNormaSuscrita>> ObtenerVigentesPorNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			return await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(idNormaSuscrita, true, transaction);
 		}
