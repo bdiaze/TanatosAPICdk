@@ -2,12 +2,13 @@
 using System.Runtime.CompilerServices;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class DocumentoAdjuntoBcp(IDateTimeProvider dateTimeProvider, IDocumentoAdjuntoDao documentoAdjuntoDao, IDocumentoAdjuntoHelper documentoAdjuntoHelper) {
+	public class DocumentoAdjuntoBcp(IDateTimeProvider dateTimeProvider, IDocumentoAdjuntoDao documentoAdjuntoDao, IDocumentoAdjuntoHelper documentoAdjuntoHelper) : IDocumentoAdjuntoBcp {
 		public const long MAX_FILE_SIZE = 10 * 1024 * 1024;
 		public static readonly string[] ALLOWED_FILES_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
 
