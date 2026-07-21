@@ -72,25 +72,25 @@ namespace TanatosAPI.Test.UseCases {
 		[Fact]
 		public async Task RegistrarCategoriaTest_NuevaCategoria() {
 			categoriaNormaBcp.ObtenerPorId(Arg.Any<long>()).Returns((CategoriaNorma?)null);
-			categoriaNormaBcp.RegistrarCategoria(Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>()).Returns(
+			categoriaNormaBcp.Crear(Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>()).Returns(
 				CategoriaNormaDummy(id: 1, nombre: "Nombre", nombreCorto: "NombreCorto", descripcion: "Descripcion", vigencia: true)	
 			);
 
-			CategoriaNorma categoria = await categoriaNormaUseCase.RegistrarCategoria(1, "Nombre", "NombreCorto", "Descripcion", true);
+			CategoriaNorma categoria = await categoriaNormaUseCase.Crear(1, "Nombre", "NombreCorto", "Descripcion", true);
 
 			Assert.Equal(1, categoria.Id);
 			Assert.Equal("Nombre", categoria.Nombre);
 			Assert.Equal("NombreCorto", categoria.NombreCorto);
 			Assert.Equal("Descripcion", categoria.Descripcion);
 			Assert.True(categoria.Vigencia);
-			await categoriaNormaBcp.Received(1).RegistrarCategoria(1, "Nombre", "NombreCorto", "Descripcion", true);
+			await categoriaNormaBcp.Received(1).Crear(1, "Nombre", "NombreCorto", "Descripcion", true);
 		}
 
 		[Fact]
 		public async Task RegistrarCategoriaTest_IdYaUsado() {
 			categoriaNormaBcp.ObtenerPorId(1).Returns(CategoriaNormaDummy(id: 1, nombre: "UnNombreCualquiera"));
 
-			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => categoriaNormaUseCase.RegistrarCategoria(1, "UnNombreDistinto", "UnNombreCorto", "UnaDescripcion", true));
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => categoriaNormaUseCase.Crear(1, "UnNombreDistinto", "UnNombreCorto", "UnaDescripcion", true));
 			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
 		}
 
@@ -99,7 +99,7 @@ namespace TanatosAPI.Test.UseCases {
 			CategoriaNorma existente = CategoriaNormaDummy();
 			categoriaNormaBcp.ObtenerPorId(existente.Id).Returns(existente);
 
-			CategoriaNorma categoria = await categoriaNormaUseCase.RegistrarCategoria(
+			CategoriaNorma categoria = await categoriaNormaUseCase.Crear(
 				existente.Id,
 				existente.Nombre,
 				existente.NombreCorto,
@@ -112,7 +112,7 @@ namespace TanatosAPI.Test.UseCases {
 			Assert.Equal(existente.NombreCorto, categoria.NombreCorto);
 			Assert.Equal(existente.Descripcion, categoria.Descripcion);
 			Assert.Equal(existente.Vigencia, categoria.Vigencia);
-			await categoriaNormaBcp.DidNotReceive().RegistrarCategoria(Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>());
+			await categoriaNormaBcp.DidNotReceive().Crear(Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>());
 		}
 
 		[Fact]
@@ -121,7 +121,7 @@ namespace TanatosAPI.Test.UseCases {
 
 			CategoriaNorma noExistente = CategoriaNormaDummy();
 
-			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => categoriaNormaUseCase.ActualizarCategoria(
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => categoriaNormaUseCase.Actualizar(
 				noExistente.Id, noExistente.Nombre, noExistente.NombreCorto, noExistente.Descripcion, noExistente.Vigencia
 			));
 			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
@@ -132,7 +132,7 @@ namespace TanatosAPI.Test.UseCases {
 			CategoriaNorma existente = CategoriaNormaDummy();
 			categoriaNormaBcp.ObtenerPorId(existente.Id).Returns(existente);
 
-			CategoriaNorma categoria = await categoriaNormaUseCase.ActualizarCategoria(
+			CategoriaNorma categoria = await categoriaNormaUseCase.Actualizar(
 				existente.Id,
 				existente.Nombre,
 				existente.NombreCorto,
@@ -145,7 +145,7 @@ namespace TanatosAPI.Test.UseCases {
 			Assert.Equal(existente.NombreCorto, categoria.NombreCorto);
 			Assert.Equal(existente.Descripcion, categoria.Descripcion);
 			Assert.Equal(existente.Vigencia, categoria.Vigencia);
-			await categoriaNormaBcp.DidNotReceive().ActualizarCategoria(Arg.Any<CategoriaNorma>());
+			await categoriaNormaBcp.DidNotReceive().Actualizar(Arg.Any<CategoriaNorma>());
 		}
 
 		[Fact]
@@ -154,14 +154,14 @@ namespace TanatosAPI.Test.UseCases {
 
 			categoriaNormaBcp.ObtenerPorId(existente.Id).Returns(existente);
 
-			CategoriaNorma categoria = await categoriaNormaUseCase.ActualizarCategoria(existente.Id, "DistintoNombre", "DistintoNombreCorto", "DistintaDescripcion", true);
+			CategoriaNorma categoria = await categoriaNormaUseCase.Actualizar(existente.Id, "DistintoNombre", "DistintoNombreCorto", "DistintaDescripcion", true);
 
 			Assert.Equal(1, categoria.Id);
 			Assert.Equal("DistintoNombre", categoria.Nombre);
 			Assert.Equal("DistintoNombreCorto", categoria.NombreCorto);
 			Assert.Equal("DistintaDescripcion", categoria.Descripcion);
 			Assert.True(categoria.Vigencia);
-			await categoriaNormaBcp.Received(1).ActualizarCategoria(Arg.Is<CategoriaNorma>(c =>
+			await categoriaNormaBcp.Received(1).Actualizar(Arg.Is<CategoriaNorma>(c =>
 				c.Id == existente.Id &&
 				c.Nombre == "DistintoNombre" &&
 				c.NombreCorto == "DistintoNombreCorto" &&
@@ -176,16 +176,16 @@ namespace TanatosAPI.Test.UseCases {
 
 			categoriaNormaBcp.ObtenerPorId(existente.Id).Returns(existente);
 
-			await categoriaNormaUseCase.EliminarCategoria(existente.Id);
-			await categoriaNormaBcp.Received(1).EliminarCategoria(existente.Id);
+			await categoriaNormaUseCase.Eliminar(existente.Id);
+			await categoriaNormaBcp.Received(1).Eliminar(existente.Id);
 		}
 
 		[Fact]
 		public async Task EliminarCategoriaTest_NoExistente() {
 			categoriaNormaBcp.ObtenerPorId(Arg.Any<long>()).Returns((CategoriaNorma?)null);
 
-			await categoriaNormaUseCase.EliminarCategoria(1);
-			await categoriaNormaBcp.DidNotReceive().EliminarCategoria(Arg.Any<long>());
+			await categoriaNormaUseCase.Eliminar(1);
+			await categoriaNormaBcp.DidNotReceive().Eliminar(Arg.Any<long>());
 		}
 	}
 }

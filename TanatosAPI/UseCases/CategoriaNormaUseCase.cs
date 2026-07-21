@@ -14,7 +14,7 @@ namespace TanatosAPI.UseCases {
 			return await categoriaNormaBcp.ObtenerPorVigencia(vigencia);
 		}
 
-		public async Task<CategoriaNorma> RegistrarCategoria(long id, string nombre, string? nombreCorto, string? descripcion, bool vigencia) {
+		public async Task<CategoriaNorma> Crear(long id, string nombre, string? nombreCorto, string? descripcion, bool vigencia) {
 			CategoriaNorma? existente = await categoriaNormaBcp.ObtenerPorId(id);
 			if (existente != null) {
 				if (existente.Nombre != nombre || existente.NombreCorto != nombreCorto || existente.Descripcion != descripcion || existente.Vigencia != vigencia) {
@@ -24,10 +24,10 @@ namespace TanatosAPI.UseCases {
 				}
 			}
 
-			return await categoriaNormaBcp.RegistrarCategoria(id, nombre, nombreCorto, descripcion, vigencia);
+			return await categoriaNormaBcp.Crear(id, nombre, nombreCorto, descripcion, vigencia);
 		}
 
-		public async Task<CategoriaNorma> ActualizarCategoria(long id, string nombre, string? nombreCorto, string? descripcion, bool vigencia) {
+		public async Task<CategoriaNorma> Actualizar(long id, string nombre, string? nombreCorto, string? descripcion, bool vigencia) {
 			CategoriaNorma? existente = await categoriaNormaBcp.ObtenerPorId(id);
 			if (existente == null) {
 				throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, $"No existe la categoría de norma con ID {id}.");
@@ -38,16 +38,16 @@ namespace TanatosAPI.UseCases {
 				existente.NombreCorto = nombreCorto;
 				existente.Descripcion = descripcion;
 				existente.Vigencia = vigencia;
-				await categoriaNormaBcp.ActualizarCategoria(existente);
+				await categoriaNormaBcp.Actualizar(existente);
 			}
 
 			return existente;
 		}
 
-		public async Task EliminarCategoria(long id) {
+		public async Task Eliminar(long id) {
 			CategoriaNorma? existente = await categoriaNormaBcp.ObtenerPorId(id);
 			if (existente != null) {
-				await categoriaNormaBcp.EliminarCategoria(id);
+				await categoriaNormaBcp.Eliminar(id);
 			}
 		}
 	}

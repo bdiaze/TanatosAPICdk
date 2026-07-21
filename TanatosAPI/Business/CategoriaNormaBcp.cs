@@ -16,7 +16,7 @@ namespace TanatosAPI.Business {
 			return await categoriaNormaDao.ObtenerPorVigencia(vigencia);
 		}
 
-		public async Task<CategoriaNorma> RegistrarCategoria(long id, string nombre, string? nombreCorto, string? descripcion, bool vigencia) {
+		public async Task<CategoriaNorma> Crear(long id, string nombre, string? nombreCorto, string? descripcion, bool vigencia) {
 			CategoriaNorma nuevo = new() { 
 				Id = id,
 				Nombre = nombre,
@@ -28,11 +28,11 @@ namespace TanatosAPI.Business {
 			return nuevo;
 		}
 
-		public async Task ActualizarCategoria(CategoriaNorma categoriaNorma) {
+		public async Task Actualizar(CategoriaNorma categoriaNorma) {
 			await categoriaNormaDao.Actualizar(categoriaNorma);
 		}
 
-		public async Task EliminarCategoria(long id) {
+		public async Task Eliminar(long id) {
 			await categoriaNormaDao.Eliminar(id);
 		}
 	}

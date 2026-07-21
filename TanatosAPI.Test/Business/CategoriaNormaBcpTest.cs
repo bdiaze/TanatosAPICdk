@@ -86,7 +86,7 @@ namespace TanatosAPI.Test.Business {
 		[InlineData(1, "Nombre1", "NombreCorto1", "Descripcion1", true)]
 		[InlineData(2, "Nombre2", "NombreCorto2", "Descripcion2", false)]
 		public async Task RegistrarCategoriaTest(long id, string nombre, string? nombreCorto, string? descripcion, bool vigencia) {
-			CategoriaNorma categoria = await categoriaNormaBcp.RegistrarCategoria(id, nombre, nombreCorto, descripcion, vigencia);
+			CategoriaNorma categoria = await categoriaNormaBcp.Crear(id, nombre, nombreCorto, descripcion, vigencia);
 			
 			Assert.Equal(id, categoria.Id);
 			Assert.Equal(nombre, categoria.Nombre);
@@ -105,7 +105,7 @@ namespace TanatosAPI.Test.Business {
 		[Fact]
 		public async Task ActualizarCategoriaTest() {
 			CategoriaNorma categoria = CategoriaNormaDummy();
-			await categoriaNormaBcp.ActualizarCategoria(categoria);
+			await categoriaNormaBcp.Actualizar(categoria);
 			await categoriaNormaDao.Received(1).Actualizar(Arg.Is<CategoriaNorma>(c =>
 				c.Id == categoria.Id &&
 				c.Nombre == categoria.Nombre &&
@@ -117,7 +117,7 @@ namespace TanatosAPI.Test.Business {
 
 		[Fact]
 		public async Task EliminarCategoriaTest() {
-			await categoriaNormaBcp.EliminarCategoria(1);
+			await categoriaNormaBcp.Eliminar(1);
 			await categoriaNormaDao.Received(1).Eliminar(Arg.Is<long>(c => c == 1));
 		}
 	}
