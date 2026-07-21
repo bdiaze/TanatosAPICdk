@@ -28,6 +28,9 @@ namespace TanatosAPI.UseCases {
         }
         
         public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string? sub, long idHistorialNormaSuscrita, string nombreArchivo, string mime, long tamanno) {
+            nombreArchivo = nombreArchivo.Trim();
+            mime = mime.Trim();
+
             if (!documentoAdjuntoBcp.TamannoValido(tamanno)) {
                 throw new ErrorValidacion(TipoErrorValidacion.TamannoNoValido, $"El tamaño del archivo es inválido.");
             }
@@ -71,6 +74,9 @@ namespace TanatosAPI.UseCases {
         }
 
         public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubidaPorCodigoAcceso(string codigoAcceso, string nombreArchivo, string mime, long tamanno) {
+            nombreArchivo = nombreArchivo.Trim();
+            mime = mime.Trim();
+
             HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAcceso(codigoAcceso);
             if (!historialNotificacionBcp.EstaVigente(historialNotificacion)) {
                 throw new ErrorValidacion(TipoErrorValidacion.AccesoCaducado, "La notificación no está vigente", "El código de acceso es inválido.");
