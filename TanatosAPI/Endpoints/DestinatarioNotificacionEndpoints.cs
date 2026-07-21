@@ -26,7 +26,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static void MapValidarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Validar/", async (EntDestinatarioNotificacionValidar entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase) => {
+			routes.MapPost("/Validar/", async (EntDestinatarioNotificacionValidar entrada, IHostEnvironment environment, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -35,7 +35,6 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[POST] - [DestinatarioNotificacion] - [Validar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Se valida exitosamente el destinatario de notificación.");
-
 					return Results.Ok();
                 } catch (ErrorValidacion ex) {
                     LambdaLogger.Log(
