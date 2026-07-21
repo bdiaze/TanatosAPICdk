@@ -36,5 +36,22 @@ namespace TanatosAPI.UseCases {
 
 			return crons;
 		}
-	}
+
+		public async Task<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>> GenerarFrecuenciasDias(DateTime proximoVencimientoUtc, int frecuenciaDias, List<(TipoUnidadTiempo TipoUnidadTiempo, int CantAntelacion)> antelaciones) {
+			List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> frecuencias = [];
+
+            // Se añade primera frecuencia correspondiente al vencimiento, sin info de antelación...
+            DateTime proximoVencimientoChile = DateTimeHelper.TransformarFechaUTCATimezone(proximoVencimientoUtc);
+            frecuencias.Add((frecuenciaDias, proximoVencimientoChile, null, null, true));
+
+            // Por cada antelación, se calcula fecha de programación y se agrega cron respectivo...
+            foreach ((TipoUnidadTiempo tipoUnidadTiempo, int cantAntelacion) in antelaciones) {
+                DateTime fechaProgramacionChile = NotificacionPreviaHelper.ObtenerFechaChileNotificacionPrevia(proximoVencimientoChile, cantAntelacion, tipoUnidadTiempo);
+                frecuencias.Add((frecuenciaDias, fechaProgramacionChile, tipoUnidadTiempo, cantAntelacion, false));
+            }
+
+            return frecuencias;
+        }
+
+    }
 }
