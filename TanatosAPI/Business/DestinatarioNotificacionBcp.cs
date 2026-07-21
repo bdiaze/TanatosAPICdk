@@ -6,12 +6,13 @@ using System.Transactions;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.Hermes;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class DestinatarioNotificacionBcp(IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, IHermesHelper hermesHelper, IHtmlRenderer renderer, IDestinatarioNotificacionDao destinatarioNotificacionDao) {
+	public class DestinatarioNotificacionBcp(IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, IHermesHelper hermesHelper, IHtmlRenderer renderer, IDestinatarioNotificacionDao destinatarioNotificacionDao) : IDestinatarioNotificacionBcp {
 		public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
         public bool EstaVigente(DestinatarioNotificacion? destinatarioNotificacion) {

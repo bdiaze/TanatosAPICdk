@@ -2,11 +2,12 @@
 using System.Net;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.Hermes;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Business {
-	public class MensajeBcp(IDateTimeProvider dateTimeProvider, IMensajeDao mensajeDao, IHermesHelper hermesHelper, IVariableEntornoHelper variableEntorno, IHtmlRenderer renderer) {
+	public class MensajeBcp(IDateTimeProvider dateTimeProvider, IMensajeDao mensajeDao, IHermesHelper hermesHelper, IVariableEntornoHelper variableEntorno, IHtmlRenderer renderer) : IMensajeBcp {
 		public async Task<Mensaje> Ingresar(string nombre, string correo, string contenido, string? sub = null) {
 
 			Mensaje nuevo = new() { 
