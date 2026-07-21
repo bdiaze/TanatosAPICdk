@@ -13,7 +13,7 @@ namespace TanatosAPI.UseCases {
 			return await cargoBcp.ObtenerVigentes(sub, negocio.Id);
 		}
 
-		public async Task<Cargo> RegistrarCargo(string sub, string nombre, long idNegocio) {
+		public async Task<Cargo> Crear(string sub, string nombre, long idNegocio) {
 			nombre = nombre.Trim();
 
 			Negocio negocio = await negocioBcp.ObtenerPorIdValidandoVigenciaYPertenencia(idNegocio, sub);
@@ -27,7 +27,7 @@ namespace TanatosAPI.UseCases {
 			return await cargoBcp.Insertar(sub, nombre, negocio.Id);
 		}
 
-		public async Task<Cargo> ActualizarCargo(string sub, long idCargo, string nombre) {
+		public async Task<Cargo> Actualizar(string sub, long idCargo, string nombre) {
 			nombre = nombre.Trim();
 
 			Cargo existente = await cargoBcp.ObtenerPorIdValidandoVigenciaYPertenencia(idCargo, sub);
@@ -47,7 +47,7 @@ namespace TanatosAPI.UseCases {
 			return existente;
 		}
 
-		public async Task EliminarCargo(string sub, long idCargo, IDatabaseTransaction? transaction = null) {
+		public async Task Eliminar(string sub, long idCargo, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
 			IDatabaseConnection? connection = null;
 			try {

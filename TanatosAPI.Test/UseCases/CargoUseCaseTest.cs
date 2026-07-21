@@ -90,7 +90,7 @@ namespace TanatosAPI.Test.UseCases {
 			cargoBcp.ObtenerVigentes("sub-test-123", 10).Returns([]);
 			cargoBcp.Insertar("sub-test-123", "nombre-cargo-test", 10).Returns(CargoDummy(id: 99, sub: "sub-test-123", nombre: "nombre-cargo-test", idNegocio: 10, vigencia: true));
 			
-			Cargo cargo = await cargoUseCase.RegistrarCargo("sub-test-123", "nombre-cargo-test", 10);
+			Cargo cargo = await cargoUseCase.Crear("sub-test-123", "nombre-cargo-test", 10);
 			Assert.Equal(99, cargo.Id);
 			Assert.Equal("sub-test-123", cargo.Sub);
 			Assert.Equal("nombre-cargo-test", cargo.Nombre);
@@ -108,7 +108,7 @@ namespace TanatosAPI.Test.UseCases {
 				CargoDummy(id: 1, sub: "sub-test-123", nombre: "nombre-cargo-test", idNegocio: 10, vigencia: true)
 			]);
 
-			Cargo cargo = await cargoUseCase.RegistrarCargo("sub-test-123", "nombre-cargo-test", 10);
+			Cargo cargo = await cargoUseCase.Crear("sub-test-123", "nombre-cargo-test", 10);
 			Assert.Equal(1, cargo.Id);
 			Assert.Equal("sub-test-123", cargo.Sub);
 			Assert.Equal("nombre-cargo-test", cargo.Nombre);
@@ -127,7 +127,7 @@ namespace TanatosAPI.Test.UseCases {
 				CargoDummy(id: 1, sub: "sub-test-123", idNegocio: 10, vigencia: true)
 			]);
 			
-			Cargo cargo = await cargoUseCase.ActualizarCargo("sub-test-123", 1, "nuevo-nombre-cargo");
+			Cargo cargo = await cargoUseCase.Actualizar("sub-test-123", 1, "nuevo-nombre-cargo");
 			Assert.Equal(1, cargo.Id);
 			Assert.Equal("sub-test-123", cargo.Sub);
 			Assert.Equal("nuevo-nombre-cargo", cargo.Nombre);
@@ -148,7 +148,7 @@ namespace TanatosAPI.Test.UseCases {
 				CargoDummy(id: 2, sub: "sub-test-123", nombre: "otro-con-mismo-nombre", idNegocio: 10, vigencia: true)
 			]);
 
-			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoUseCase.ActualizarCargo("sub-test-123", 1, nombre: "otro-con-mismo-nombre"));
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoUseCase.Actualizar("sub-test-123", 1, nombre: "otro-con-mismo-nombre"));
 			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
 			await cargoBcp.Received(1).ObtenerPorIdValidandoVigenciaYPertenencia(1, "sub-test-123");
 			await negocioBcp.Received(1).ObtenerPorIdValidandoVigenciaYPertenencia(10, "sub-test-123");
@@ -164,7 +164,7 @@ namespace TanatosAPI.Test.UseCases {
 				CargoDummy(id: 1, sub: "sub-test-123", nombre: "antiguo-nombre-cargo", idNegocio: 10, vigencia: true),
 			]);
 
-			Cargo cargo = await cargoUseCase.ActualizarCargo("sub-test-123", 1, "antiguo-nombre-cargo");
+			Cargo cargo = await cargoUseCase.Actualizar("sub-test-123", 1, "antiguo-nombre-cargo");
 			Assert.Equal(1, cargo.Id);
 			Assert.Equal("sub-test-123", cargo.Sub);
 			Assert.Equal("antiguo-nombre-cargo", cargo.Nombre);
@@ -182,7 +182,7 @@ namespace TanatosAPI.Test.UseCases {
 			cargoBcp.PerteneceAlUsuario(Arg.Any<Cargo>(), Arg.Any<string>()).Returns(true);
 			cargoBcp.EstaVigente(Arg.Any<Cargo>()).Returns(true);
 
-			await cargoUseCase.EliminarCargo("sub-test-123", 1, null);
+			await cargoUseCase.Eliminar("sub-test-123", 1, null);
 
 			await connectionHelper.Received(1).ObtenerConexionWrapper();
 			await connection.Received(1).BeginTransactionAsync();
@@ -202,7 +202,7 @@ namespace TanatosAPI.Test.UseCases {
 			cargoBcp.ObtenerPorId(1, Arg.Any<NpgsqlTransaction>()).Returns(CargoDummy(id: 1, sub: "sub-test-123", nombre: "antiguo-nombre-cargo", idNegocio: 10, vigencia: true));
 			cargoBcp.PerteneceAlUsuario(Arg.Any<Cargo>(), Arg.Any<string>()).Returns(false);
 
-			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoUseCase.EliminarCargo("sub-test-123", 1, null));
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoUseCase.Eliminar("sub-test-123", 1, null));
 			Assert.Equal(TipoErrorValidacion.NoPertenece, ex.TipoErrorValidacion);
 
 			await connectionHelper.Received(1).ObtenerConexionWrapper();
@@ -223,7 +223,7 @@ namespace TanatosAPI.Test.UseCases {
 			cargoBcp.PerteneceAlUsuario(Arg.Any<Cargo>(), Arg.Any<string>()).Returns(true);
 			cargoBcp.EstaVigente(Arg.Any<Cargo>()).Returns(false);
 
-			await cargoUseCase.EliminarCargo("sub-test-123", 1, null);
+			await cargoUseCase.Eliminar("sub-test-123", 1, null);
 
 			await connectionHelper.Received(1).ObtenerConexionWrapper();
 			await connection.Received(1).BeginTransactionAsync();
@@ -245,7 +245,7 @@ namespace TanatosAPI.Test.UseCases {
 			cargoBcp.EstaVigente(Arg.Any<Cargo>()).Returns(true);
 			cargoBcp.Eliminar(Arg.Any<Cargo>(), Arg.Any<NpgsqlTransaction>()).ThrowsAsync(new Exception("error-test"));
 
-			await Assert.ThrowsAsync<Exception>(() => cargoUseCase.EliminarCargo("sub-test-123", 1, null));
+			await Assert.ThrowsAsync<Exception>(() => cargoUseCase.Eliminar("sub-test-123", 1, null));
 
 			await connectionHelper.Received(1).ObtenerConexionWrapper();
 			await connection.Received(1).BeginTransactionAsync();
@@ -265,7 +265,7 @@ namespace TanatosAPI.Test.UseCases {
 			cargoBcp.ObtenerPorId(1, Arg.Any<NpgsqlTransaction>()).Returns((Cargo?)null);
 			cargoBcp.EstaVigente(Arg.Any<Cargo>()).Returns(false);
 
-			await cargoUseCase.EliminarCargo("sub-test-123", 1, null);
+			await cargoUseCase.Eliminar("sub-test-123", 1, null);
 
 			await connectionHelper.Received(1).ObtenerConexionWrapper();
 			await connection.Received(1).BeginTransactionAsync();
@@ -284,7 +284,7 @@ namespace TanatosAPI.Test.UseCases {
 		public async Task EliminarCargoTest_ExcepcionSinConexion() {
 			connection.BeginTransactionAsync().ThrowsAsync(new Exception("error-test"));
 
-			await Assert.ThrowsAsync<Exception>(() => cargoUseCase.EliminarCargo("sub-test-123", 1, null));
+			await Assert.ThrowsAsync<Exception>(() => cargoUseCase.Eliminar("sub-test-123", 1, null));
 
 			await connectionHelper.Received(1).ObtenerConexionWrapper();
 			await connection.Received(1).BeginTransactionAsync();
@@ -306,7 +306,7 @@ namespace TanatosAPI.Test.UseCases {
 			cargoBcp.EstaVigente(Arg.Any<Cargo>()).Returns(true);
 			cargoBcp.Eliminar(Arg.Any<Cargo>(), Arg.Any<NpgsqlTransaction>()).ThrowsAsync(new Exception("error-test"));
 
-			await Assert.ThrowsAsync<Exception>(() => cargoUseCase.EliminarCargo("sub-test-123", 1, transaction));
+			await Assert.ThrowsAsync<Exception>(() => cargoUseCase.Eliminar("sub-test-123", 1, transaction));
 
 			await connectionHelper.DidNotReceive().ObtenerConexionWrapper();
 			await connection.DidNotReceive().BeginTransactionAsync();
