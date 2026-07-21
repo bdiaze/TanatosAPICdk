@@ -209,14 +209,14 @@ builder.Services.AddScoped<INormaSuscritaBcp, NormaSuscritaBcp>();
 builder.Services.AddScoped<IHistorialNormaSuscritaBcp, HistorialNormaSuscritaBcp>();
 builder.Services.AddScoped<IFiscalizadorNormaSuscritaBcp, FiscalizadorNormaSuscritaBcp>();
 builder.Services.AddScoped<INotificacionNormaSuscritaBcp, NotificacionNormaSuscritaBcp>();
-builder.Services.AddScoped<DestinatarioNotificacionBcp>();
+builder.Services.AddScoped<IDestinatarioNotificacionBcp, DestinatarioNotificacionBcp>();
 builder.Services.AddScoped<IDocumentoAdjuntoBcp, DocumentoAdjuntoBcp>();
-builder.Services.AddScoped<MensajeBcp>();
+builder.Services.AddScoped<IMensajeBcp, MensajeBcp>();
 builder.Services.AddScoped<ISuscripcionBcp, SuscripcionBcp>();
 builder.Services.AddScoped<ITemplateNormaBcp, TemplateNormaBcp>();
 builder.Services.AddScoped<INegocioBcp, NegocioBcp>();
 builder.Services.AddScoped<IUsuarioBcp, UsuarioBcp>();
-builder.Services.AddScoped<HistorialNotificacionBcp>();
+builder.Services.AddScoped<IHistorialNotificacionBcp, HistorialNotificacionBcp>();
 builder.Services.AddScoped<ICargoBcp, CargoBcp>();
 builder.Services.AddScoped<IEmpleadoBcp, EmpleadoBcp>();
 builder.Services.AddScoped<ICategoriaNormaBcp, CategoriaNormaBcp>();
@@ -248,6 +248,7 @@ builder.Services.AddScoped<TipoPeriodicidadUseCase>();
 builder.Services.AddScoped<TemplateNormaUseCase>();
 builder.Services.AddScoped<NotificacionNormaSuscritaUseCase>();
 builder.Services.AddScoped<HistorialNormaSuscritaUseCase>();
+builder.Services.AddScoped<TipoUnidadTiempoUseCase>();
 #endregion
 
 string cognitoRegion;
