@@ -37,7 +37,7 @@ namespace TanatosAPI.Business {
 			return await cargoDao.ObtenerPorSub(sub, idNegocio, true);
 		}
 
-		public async Task<Cargo> Insertar(string sub, string nombre, long idNegocio) {
+		public async Task<Cargo> Crear(string sub, string nombre, long idNegocio) {
 			Cargo nuevo = new() {
 				Id = 0,
 				Sub = sub,
@@ -51,7 +51,7 @@ namespace TanatosAPI.Business {
 			return nuevo;
 		}
 
-		public async Task Modificar(Cargo cargo) {
+		public async Task Actualizar(Cargo cargo) {
 			await cargoDao.Actualizar(cargo);
 		}
 

@@ -88,7 +88,7 @@ namespace TanatosAPI.Test.UseCases {
 		public async Task RegistrarCargoTest_Valido() {
 			negocioBcp.ObtenerPorIdValidandoVigenciaYPertenencia(10, "sub-test-123").Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
 			cargoBcp.ObtenerVigentes("sub-test-123", 10).Returns([]);
-			cargoBcp.Insertar("sub-test-123", "nombre-cargo-test", 10).Returns(CargoDummy(id: 99, sub: "sub-test-123", nombre: "nombre-cargo-test", idNegocio: 10, vigencia: true));
+			cargoBcp.Crear("sub-test-123", "nombre-cargo-test", 10).Returns(CargoDummy(id: 99, sub: "sub-test-123", nombre: "nombre-cargo-test", idNegocio: 10, vigencia: true));
 			
 			Cargo cargo = await cargoUseCase.Crear("sub-test-123", "nombre-cargo-test", 10);
 			Assert.Equal(99, cargo.Id);
@@ -98,7 +98,7 @@ namespace TanatosAPI.Test.UseCases {
 			Assert.True(cargo.Vigencia);
 			await negocioBcp.Received(1).ObtenerPorIdValidandoVigenciaYPertenencia(10, "sub-test-123");
 			await cargoBcp.Received(1).ObtenerVigentes("sub-test-123", 10);
-			await cargoBcp.Received(1).Insertar("sub-test-123", "nombre-cargo-test", 10);
+			await cargoBcp.Received(1).Crear("sub-test-123", "nombre-cargo-test", 10);
 		}
 
 		[Fact]
@@ -116,7 +116,7 @@ namespace TanatosAPI.Test.UseCases {
 			Assert.True(cargo.Vigencia);
 			await negocioBcp.Received(1).ObtenerPorIdValidandoVigenciaYPertenencia(10, "sub-test-123");
 			await cargoBcp.Received(1).ObtenerVigentes("sub-test-123", 10);
-			await cargoBcp.DidNotReceive().Insertar("sub-test-123", "nombre-cargo-test", 10);
+			await cargoBcp.DidNotReceive().Crear("sub-test-123", "nombre-cargo-test", 10);
 		}
 
 		[Fact]
@@ -136,7 +136,7 @@ namespace TanatosAPI.Test.UseCases {
 			await cargoBcp.Received(1).ObtenerPorIdValidandoVigenciaYPertenencia(1, "sub-test-123");
 			await negocioBcp.Received(1).ObtenerPorIdValidandoVigenciaYPertenencia(10, "sub-test-123");
 			await cargoBcp.Received(1).ObtenerVigentes("sub-test-123", 10);
-			await cargoBcp.Received(1).Modificar(Arg.Is<Cargo>(c => c.Id == 1 && c.Nombre == "nuevo-nombre-cargo" && c.Sub == "sub-test-123"));
+			await cargoBcp.Received(1).Actualizar(Arg.Is<Cargo>(c => c.Id == 1 && c.Nombre == "nuevo-nombre-cargo" && c.Sub == "sub-test-123"));
 		}
 
 		[Fact]
@@ -153,7 +153,7 @@ namespace TanatosAPI.Test.UseCases {
 			await cargoBcp.Received(1).ObtenerPorIdValidandoVigenciaYPertenencia(1, "sub-test-123");
 			await negocioBcp.Received(1).ObtenerPorIdValidandoVigenciaYPertenencia(10, "sub-test-123");
 			await cargoBcp.Received(1).ObtenerVigentes("sub-test-123", 10);
-			await cargoBcp.DidNotReceive().Modificar(Arg.Any<Cargo>());
+			await cargoBcp.DidNotReceive().Actualizar(Arg.Any<Cargo>());
 		}
 
 		[Fact]
@@ -173,7 +173,7 @@ namespace TanatosAPI.Test.UseCases {
 			await cargoBcp.Received(1).ObtenerPorIdValidandoVigenciaYPertenencia(1, "sub-test-123");
 			await negocioBcp.Received(1).ObtenerPorIdValidandoVigenciaYPertenencia(10, "sub-test-123");
 			await cargoBcp.Received(1).ObtenerVigentes("sub-test-123", 10);
-			await cargoBcp.DidNotReceive().Modificar(Arg.Any<Cargo>());
+			await cargoBcp.DidNotReceive().Actualizar(Arg.Any<Cargo>());
 		}
 
 		[Fact]

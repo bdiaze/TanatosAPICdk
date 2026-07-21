@@ -8,8 +8,8 @@ namespace TanatosAPI.Interfaces.Business {
 		public Task<Cargo?> ObtenerPorId(long idCargo, NpgsqlTransaction? transaction = null);
 		public Task<Cargo> ObtenerPorIdValidandoVigenciaYPertenencia(long idCargo, string sub, NpgsqlTransaction? transaction = null);
 		public Task<List<Cargo>> ObtenerVigentes(string sub, long? idNegocio);
-		public Task<Cargo> Insertar(string sub, string nombre, long idNegocio);
-		public Task Modificar(Cargo cargo);
+		public Task<Cargo> Crear(string sub, string nombre, long idNegocio);
+		public Task Actualizar(Cargo cargo);
 		public Task Eliminar(Cargo cargo, NpgsqlTransaction? transaction = null);
 	}
 }

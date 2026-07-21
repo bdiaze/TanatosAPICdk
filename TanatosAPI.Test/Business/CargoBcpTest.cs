@@ -130,7 +130,7 @@ namespace TanatosAPI.Test.Business {
 		public async Task RegistrarCargoTest() {
 			cargoDao.Insertar(Arg.Any<Cargo>()).Returns(99);
 
-			Cargo cargo = await cargoBcp.Insertar("sub-test-1", "nombre-cargo-1", 10);
+			Cargo cargo = await cargoBcp.Crear("sub-test-1", "nombre-cargo-1", 10);
 
 			Assert.Equal(99, cargo.Id);
 			Assert.Equal("sub-test-1", cargo.Sub);
@@ -144,7 +144,7 @@ namespace TanatosAPI.Test.Business {
 		[Fact]
 		public async Task ModificarCargoTest() {
 			Cargo cargo = CargoDummy();
-			await cargoBcp.Modificar(cargo);
+			await cargoBcp.Actualizar(cargo);
 			await cargoDao.Received(1).Actualizar(Arg.Any<Cargo>());
 		}
 

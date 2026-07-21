@@ -24,7 +24,7 @@ namespace TanatosAPI.UseCases {
 				return cargoExistente;
 			}
 
-			return await cargoBcp.Insertar(sub, nombre, negocio.Id);
+			return await cargoBcp.Crear(sub, nombre, negocio.Id);
 		}
 
 		public async Task<Cargo> Actualizar(string sub, long idCargo, string nombre) {
@@ -41,7 +41,7 @@ namespace TanatosAPI.UseCases {
 
 			if (existente.Nombre != nombre) {
 				existente.Nombre = nombre;
-				await cargoBcp.Modificar(existente);
+				await cargoBcp.Actualizar(existente);
 			}
 
 			return existente;
