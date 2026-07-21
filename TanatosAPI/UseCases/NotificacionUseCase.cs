@@ -12,14 +12,14 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-	public class NotificacionUseCase(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, IHtmlRenderer renderer, IHermesHelper hermesHelper, IUsuarioBcp usuarioBcp, DestinatarioNotificacionBcp destinatarioNotificacionBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, ISuscripcionBcp suscripcionBcp, INormaSuscritaDao normaSuscritaDao, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IHistorialNotificacionDao historialNotificacionDao, ITemplateNormaDao templateNormaDao, IDestinatarioNotificacionDao destinatarioNotificacionDao, ICargoDao cargoDao, IEmpleadoDao empleadoDao) {
+	public class NotificacionUseCase(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, HistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, IHtmlRenderer renderer, IHermesHelper hermesHelper, IUsuarioBcp usuarioBcp, IDestinatarioNotificacionBcp destinatarioNotificacionBcp, ISuscripcionBcp suscripcionBcp, INormaSuscritaBcp normaSuscritaBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionDao historialNotificacionDao, ITemplateNormaDao templateNormaDao, IDestinatarioNotificacionDao destinatarioNotificacionDao, ICargoDao cargoDao, IEmpleadoDao empleadoDao) {
 		private const int DIAS_CADUCIDAD_CODIGO_ACCESO = 30;
 
 		public async Task ProcesarNotificacion(long idNormaSuscrita, string cron, long? idTipoUnidadTiempoAntelacion, int? cantAntelacion, bool? esVencimiento, bool programarSiguienteEjecucion, NpgsqlTransaction? transaction = null) {
 			esVencimiento ??= programarSiguienteEjecucion;
 
 			// Se obtiene norma suscrita y/o template...
-			NormaSuscrita normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new InvalidOperationException("ID norma suscrita inválida");
+			NormaSuscrita normaSuscrita = await normaSuscritaBcp.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new InvalidOperationException("ID norma suscrita inválida");
 			TemplateNorma? templateNorma = null;
 			if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
 				templateNorma = (await templateNormaDao.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
@@ -100,14 +100,14 @@ namespace TanatosAPI.UseCases {
 				DateTime fechaVencimientoChile = NotificacionPreviaHelper.ObtenerFechaReferenciaChileSegunNotificacionPrevia(masCercanaChile, cantAntelacion.Value, unidadTiempo);
 				DateTime fechaVencimientoUTC = DateTimeHelper.TransformarFechaTimezoneAUTC(fechaVencimientoChile);
 
-				vencimiento = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).FirstOrDefault(v => v.FechaVencimiento == fechaVencimientoUTC);
+				vencimiento = (await historialNormaSuscritaBcp.ObtenerVigentesPorNormaSuscritaNoCompletadas(idNormaSuscrita, transaction)).FirstOrDefault(v => v.FechaVencimiento == fechaVencimientoUTC);
 			} else if (!esVencimiento.Value) {
 				// Si no estamos en una fecha de vencimiento, pero tampoco tenemos información de la notificación previa, se asume último vencimiento...
-				vencimiento = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).OrderByDescending(v => v.FechaVencimiento).FirstOrDefault();
+				vencimiento = (await historialNormaSuscritaBcp.ObtenerVigentesPorNormaSuscritaNoCompletadas(idNormaSuscrita, transaction)).OrderByDescending(v => v.FechaVencimiento).FirstOrDefault();
 
 			} else {
 				// Si estamos en una fecha de vencimiento, se busca el vencimiento que coincide con la fecha del cron...
-				vencimiento = (await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction)).FirstOrDefault(v => v.FechaVencimiento == masCercanaUTC);
+				vencimiento = (await historialNormaSuscritaBcp.ObtenerVigentesPorNormaSuscritaNoCompletadas(idNormaSuscrita, transaction)).FirstOrDefault(v => v.FechaVencimiento == masCercanaUTC);
 			}
 
 			if (vencimiento != null) {
@@ -273,7 +273,7 @@ namespace TanatosAPI.UseCases {
 				}
 
 				if (programarSiguienteEjecucion) {
-					await historialNormaSuscritaBcp.ProgramarSiguienteVencimiento(vencimiento, transaction);
+					await historialNormaSuscritaUseCase.ProgramarSiguienteVencimiento(vencimiento, transaction);
 				}
 			}
 		}
