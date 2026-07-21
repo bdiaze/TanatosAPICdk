@@ -1,4 +1,6 @@
-﻿using Npgsql;
+﻿using Microsoft.AspNetCore.Mvc;
+using Npgsql;
+using System.Collections.Specialized;
 using System.Globalization;
 using System.Text.Json;
 using TanatosAPI.Entities.Models;
@@ -10,13 +12,37 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class NormaSuscritaBcp(INormaSuscritaDao normaSuscritaDao, IKairosHelper kairosHelper) : INormaSuscritaBcp {
+	public class NormaSuscritaBcp(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, IKairosHelper kairosHelper, INormaSuscritaDao normaSuscritaDao) : INormaSuscritaBcp {
 		public bool EstaVigente(NormaSuscrita? normaSuscrita) {
 			return normaSuscrita != null && normaSuscrita.Vigencia;
 		}
 
 		public bool Pertenece(NormaSuscrita normaSuscrita, string sub) {
 			return normaSuscrita.Sub == sub;
+		}
+
+        public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
+            return await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction);
+        }
+
+        public async Task Actualizar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
+		}
+
+		public async Task Eliminar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			if (normaSuscrita.Vigencia) {
+                DateTime utcNow = dateTimeProvider.UtcNow;
+
+                if (normaSuscrita.Activado) {
+                    normaSuscrita.FechaDesactivacion = utcNow;
+                    normaSuscrita.Activado = false;
+                }
+
+                normaSuscrita.FechaEliminacion = utcNow;
+                normaSuscrita.Vigencia = false;
+
+                await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
+            }
 		}
 
 		public async Task ProgramarUnProcesoNotificacion(EntKairosIngresarProceso procesosProgramar) {
@@ -38,90 +64,196 @@ namespace TanatosAPI.Business {
 				await DesprogramarUnProcesoNotificacion(idProceso);
 			}
 		}
-
-		public (string?, EntKairosIngresarProceso?) DictJsonElementAEntKairosIngresarProceso(Dictionary<string, JsonElement> proceso) {
-			if (proceso.TryGetValue("IdProceso", out JsonElement jsonIdProceso)) {
-				string? idProceso = (jsonIdProceso.ValueKind == JsonValueKind.String) ? jsonIdProceso.GetString() : null;
-				if (idProceso != null) {
-					if (proceso.TryGetValue("Nombre", out JsonElement jsonNombre) && jsonNombre.ValueKind == JsonValueKind.String &&
-						proceso.TryGetValue("ArnRol", out JsonElement jsonArnRol) && jsonArnRol.ValueKind == JsonValueKind.String &&
-						proceso.TryGetValue("ArnProceso", out JsonElement jsonArnProceso) && jsonArnProceso.ValueKind == JsonValueKind.String &&
-						proceso.TryGetValue("Parametros", out JsonElement jsonParametros) && jsonParametros.ValueKind == JsonValueKind.String &&
-						proceso.TryGetValue("Habilitado", out JsonElement jsonHabilitado) && (jsonHabilitado.ValueKind == JsonValueKind.True || jsonHabilitado.ValueKind == JsonValueKind.False)) {
-
-						string? cron = null;
-						if (proceso.TryGetValue("Cron", out JsonElement jsonCron) && jsonCron.ValueKind == JsonValueKind.String) {
-							cron = jsonCron.GetString();
-						}
-
-						int? frecuenciaDias = null;
-						if (proceso.TryGetValue("FrecuenciaDias", out JsonElement jsonFrecuenciaDias) && jsonFrecuenciaDias.ValueKind == JsonValueKind.Number) {
-							frecuenciaDias = jsonFrecuenciaDias.GetInt32();
-						}
-
-						DateTime? inicioEjecucionUtc = null;
-						if (proceso.TryGetValue("InicioEjecucionUtc", out JsonElement jsonInicioEjecucionUtc) && jsonInicioEjecucionUtc.ValueKind == JsonValueKind.String) {
-							inicioEjecucionUtc = DateTime.ParseExact(
-								jsonInicioEjecucionUtc.GetString()!,
-								"O",
-								CultureInfo.InvariantCulture,
-								DateTimeStyles.RoundtripKind
-							);
-						}
-
-						if (cron == null && frecuenciaDias == null) throw new InvalidOperationException("El diccionario no contiene cron ni frecuencia en días.");
-						if (cron != null && frecuenciaDias != null) throw new InvalidOperationException("El diccionario no puede contener cron y frecuencia en días.");
-						if (frecuenciaDias != null && inicioEjecucionUtc == null) throw new InvalidOperationException("El diccionario no contiene inicio de ejecución.");
-
-						return (
-							idProceso,
-							new EntKairosIngresarProceso() {
-								Nombre = jsonNombre.GetString()!,
-								Cron = cron,
-								FrecuenciaDias = frecuenciaDias,
-								InicioEjecucionUtc = inicioEjecucionUtc,
-								ArnRol = jsonArnRol.GetString()!,
-								ArnProceso = jsonArnProceso.GetString()!,
-								Parametros = jsonParametros.GetString()!,
-								Habilitado = jsonHabilitado.GetBoolean()
-							}
-						);
-					}
-				}	
-			}
-
-			throw new InvalidOperationException("El diccionario no contiene todos los elementos para armar entrada de Kairos");
-		}
-
-		public Dictionary<string, JsonElement> SalKairosIngresarProcesoADictJsonElement(SalKairosIngresarProceso proceso, string? cron, int? frecuenciaDias, DateTime? inicioEjecucionUtc) {
-			return new() {
-				["IdProceso"] = JsonSerializer.SerializeToElement(proceso.IdProceso, AppJsonSerializerContext.Default.String),
-				["IdCalendarizacion"] = JsonSerializer.SerializeToElement(proceso.IdCalendarizacion, AppJsonSerializerContext.Default.String),
-				["Nombre"] = JsonSerializer.SerializeToElement(proceso.Nombre, AppJsonSerializerContext.Default.String),
-				["ArnRol"] = JsonSerializer.SerializeToElement(proceso.ArnRol, AppJsonSerializerContext.Default.String),
-				["ArnProceso"] = JsonSerializer.SerializeToElement(proceso.ArnProceso, AppJsonSerializerContext.Default.String),
-				["Parametros"] = JsonSerializer.SerializeToElement(proceso.Parametros, AppJsonSerializerContext.Default.String),
-				["Habilitado"] = JsonSerializer.SerializeToElement(proceso.Habilitado, AppJsonSerializerContext.Default.Boolean),
-				["FechaCreacion"] = JsonSerializer.SerializeToElement(proceso.FechaCreacion, AppJsonSerializerContext.Default.DateTime),
-				["Cron"] = JsonSerializer.SerializeToElement(cron, AppJsonSerializerContext.Default.String),
-				["FrecuenciaDias"] = JsonSerializer.SerializeToElement(frecuenciaDias, AppJsonSerializerContext.Default.NullableInt32),
-				["InicioEjecucionUtc"] = JsonSerializer.SerializeToElement(inicioEjecucionUtc?.ToString("O", CultureInfo.InvariantCulture), AppJsonSerializerContext.Default.String)
-			};
-		}
-
-		public async Task<(List<(string? cron, int? frecuenciaDias, DateTime? inicioEjecucionUtc)> procesosProgramados, List<EntKairosIngresarProceso> procesosDesprogramados)> ActualizarProcesosProgramados(NormaSuscrita normaSuscrita, HashSet<(string? cron, int? frecuenciaDias, DateTime? inicioEjecucionUtc)> procesos) {
-			List<(string? cron, int? frecuenciaDias, DateTime? inicioEjecucionUtc)> procesosProgramados = [];
-			List<EntKairosIngresarProceso> procesosDesprogramados = [];
-
-			// Se obtiene los procesos existentes...
-
-
-
-			return (procesosProgramados, procesosDesprogramados);
-		}
-
-		public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-            return await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction);
+		
+		public async Task ReversarProcesos(List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados) {
+            await ProgramarVariosProcesosNotificacion([.. procesosDesprogramados.Select(p => new EntKairosIngresarProceso() {
+				Nombre = p.Nombre,
+				Cron = p.Cron,
+				FrecuenciaDias = p.FrecuenciaDias,
+				InicioEjecucionUtc = p.InicioEjecucionUtc,
+				ArnRol = p.ArnRol,
+				ArnProceso = p.ArnProceso,
+				Parametros = p.Parametros,
+				Habilitado = p.Habilitado
+			})]);
+            await DesprogramarVariosProcesosNotificacion([.. procesosProgramados.Select(p => p.IdProceso)]);
         }
-	}
+
+		public List<ProcesoNotificacion> ExtraerCronsAEliminar(NormaSuscrita normaSuscrita, List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> cronsDeseados) {
+			HashSet<(string Cron, long? IdUnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> deseados = [.. cronsDeseados.Select(c => (c.Cron, c.UnidadTiempoAntelacion?.Id, c.CantAntelacion, c.EsVencimiento))];
+
+            List<ProcesoNotificacion> aEliminar = [];
+			foreach (ProcesoNotificacion existente in normaSuscrita.ProcesosNotificaciones.Where(p => p.Cron != null)) {
+				EntKairosParametrosProceso parametros = JsonSerializer.Deserialize(existente.Parametros, AppJsonSerializerContext.Default.EntKairosParametrosProceso)!;
+                if (!deseados.Contains((existente.Cron!, parametros.IdTipoUnidadTiempoAntelacion, parametros.CantAntelacion, parametros.EsVencimiento ?? false))) {
+					aEliminar.Add(existente);
+				}
+			}
+			return aEliminar;
+        }
+
+		public List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> ExtraerCronsACrear(NormaSuscrita normaSuscrita, List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> cronsDeseados) {
+			HashSet<(string Cron, long? IdUnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> existentes = [.. normaSuscrita.ProcesosNotificaciones
+				.Where(p => p.Cron != null)
+				.Select(p => {
+					EntKairosParametrosProceso parametros = JsonSerializer.Deserialize(p.Parametros, AppJsonSerializerContext.Default.EntKairosParametrosProceso)!;
+					return (p.Cron!, parametros.IdTipoUnidadTiempoAntelacion, parametros.CantAntelacion, parametros.EsVencimiento ?? false);
+				})
+			];
+
+			List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> aCrear = [];
+			foreach ((string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento) deseado in cronsDeseados) {
+				if (!existentes.Contains((deseado.Cron, deseado.UnidadTiempoAntelacion?.Id, deseado.CantAntelacion, deseado.EsVencimiento))) {
+					aCrear.Add(deseado);
+				}
+			}
+			return aCrear;
+        }
+
+        public async Task<(List<ProcesoNotificacion> procesosCronProgramados, List<ProcesoNotificacion> procesosCronDesprogramados)> ActualizarProcesosCronProgramados(NormaSuscrita normaSuscrita, List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> cronsDeseados, NpgsqlTransaction? transaction = null) {
+			List<ProcesoNotificacion> procesosProgramados = [];
+			List<ProcesoNotificacion> procesosDesprogramados = [];
+
+			try {
+				List<ProcesoNotificacion> cronsAEliminar = ExtraerCronsAEliminar(normaSuscrita, cronsDeseados);
+				List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> cronsACrear = ExtraerCronsACrear(normaSuscrita, cronsDeseados);
+
+				foreach (ProcesoNotificacion eliminar in cronsAEliminar) {
+					await DesprogramarUnProcesoNotificacion(eliminar.IdProceso);
+					procesosDesprogramados.Add(eliminar);
+
+					normaSuscrita.ProcesosNotificaciones.RemoveAll(p => p.IdProceso == eliminar.IdProceso);
+				}
+
+				foreach ((string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento) crear in cronsACrear) {
+					EntKairosParametrosProceso parametros = new() {
+						IdNormaSuscrita = normaSuscrita.Id,
+						Cron = crear.Cron,
+						IdTipoUnidadTiempoAntelacion = crear.UnidadTiempoAntelacion?.Id,
+						CantAntelacion = crear.CantAntelacion,
+						EsVencimiento = crear.EsVencimiento,
+						ProgramarSiguienteEjecucion = crear.EsVencimiento
+					};
+
+					SalKairosIngresarProceso retorno = await kairosHelper.IngresarProceso(new EntKairosIngresarProceso {
+						Nombre = $"{variableEntornoHelper.Obtener("APP_NAME")} - NormaSuscrita {normaSuscrita.Id} - Cron {crear.Cron}",
+						Cron = crear.Cron,
+						Parametros = JsonSerializer.Serialize(parametros, AppJsonSerializerContext.Default.EntKairosParametrosProceso),
+						ArnProceso = variableEntornoHelper.Obtener("NOTIFICACIONES_LAMBDA_ARN"),
+						ArnRol = variableEntornoHelper.Obtener("NOTIFICACIONES_EJECUCION_ROLE_ARN"),
+						Habilitado = true,
+					});
+					ProcesoNotificacion proceso = new() { 
+						IdProceso = retorno.IdProceso,
+						IdCalendarizacion = retorno.IdCalendarizacion,
+						Nombre = retorno.Nombre,
+						ArnRol = retorno.ArnRol,
+						ArnProceso = retorno.ArnProceso,
+						Parametros = retorno.Parametros,
+						Habilitado = retorno.Habilitado,
+						FechaCreacion = retorno.FechaCreacion,
+						Cron = crear.Cron
+					};
+					procesosProgramados.Add(proceso);
+					normaSuscrita.ProcesosNotificaciones.Add(proceso);
+				}
+
+				await Actualizar(normaSuscrita, transaction);
+			} catch {
+                await ReversarProcesos(procesosProgramados, procesosDesprogramados);
+                throw;
+            }
+            return (procesosProgramados, procesosDesprogramados);
+		}
+
+        public List<ProcesoNotificacion> ExtraerFrecuenciasDiasAEliminar(NormaSuscrita normaSuscrita, List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> frecuenciasDiasDeseadas) {
+            HashSet<(int FrecuenciaDias, DateTime InicioEjecucionUtc, long? IdUnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> deseados = [.. frecuenciasDiasDeseadas.Select(c => (c.FrecuenciaDias, c.InicioEjecucionUtc, c.UnidadTiempoAntelacion?.Id, c.CantAntelacion, c.EsVencimiento))];
+
+            List<ProcesoNotificacion> aEliminar = [];
+            foreach (ProcesoNotificacion existente in normaSuscrita.ProcesosNotificaciones.Where(p => p.FrecuenciaDias != null && p.InicioEjecucionUtc != null)) {
+                EntKairosParametrosProceso parametros = JsonSerializer.Deserialize(existente.Parametros, AppJsonSerializerContext.Default.EntKairosParametrosProceso)!;
+                if (!deseados.Contains((existente.FrecuenciaDias!.Value, existente.InicioEjecucionUtc!.Value, parametros.IdTipoUnidadTiempoAntelacion, parametros.CantAntelacion, parametros.EsVencimiento ?? false))) {
+                    aEliminar.Add(existente);
+                }
+            }
+            return aEliminar;
+        }
+
+        public List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> ExtraerFrecuenciasDiasACrear(NormaSuscrita normaSuscrita, List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> frecuenciasDiasDeseadas) {
+            HashSet<(int FrecuenciaDias, DateTime InicioEjecucionUtc, long? IdUnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> existentes = [.. normaSuscrita.ProcesosNotificaciones
+                .Where(p => p.FrecuenciaDias != null && p.InicioEjecucionUtc != null)
+                .Select(p => {
+                    EntKairosParametrosProceso parametros = JsonSerializer.Deserialize(p.Parametros, AppJsonSerializerContext.Default.EntKairosParametrosProceso)!;
+                    return (p.FrecuenciaDias!.Value, p.InicioEjecucionUtc!.Value, parametros.IdTipoUnidadTiempoAntelacion, parametros.CantAntelacion, parametros.EsVencimiento ?? false);
+                })
+            ];
+
+            List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> aCrear = [];
+            foreach ((int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento) deseado in frecuenciasDiasDeseadas) {
+                if (!existentes.Contains((deseado.FrecuenciaDias, deseado.InicioEjecucionUtc, deseado.UnidadTiempoAntelacion?.Id, deseado.CantAntelacion, deseado.EsVencimiento))) {
+                    aCrear.Add(deseado);
+                }
+            }
+            return aCrear;
+        }
+
+        public async Task<(List<ProcesoNotificacion> frecuenciasDiasProgramados, List<ProcesoNotificacion> frecuenciasDiasDesprogramadas)> ActualizarProcesosFrecuenciaDiasProgramados(NormaSuscrita normaSuscrita, List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> frecuenciasDiasDeseadas, NpgsqlTransaction? transaction = null) {
+            List<ProcesoNotificacion> procesosProgramados = [];
+            List<ProcesoNotificacion> procesosDesprogramados = [];
+
+            try {
+                List<ProcesoNotificacion> cronsAEliminar = ExtraerFrecuenciasDiasAEliminar(normaSuscrita, frecuenciasDiasDeseadas);
+                List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> cronsACrear = ExtraerFrecuenciasDiasACrear(normaSuscrita, frecuenciasDiasDeseadas);
+
+                foreach (ProcesoNotificacion eliminar in cronsAEliminar) {
+                    await DesprogramarUnProcesoNotificacion(eliminar.IdProceso);
+                    procesosDesprogramados.Add(eliminar);
+
+                    normaSuscrita.ProcesosNotificaciones.RemoveAll(p => p.IdProceso == eliminar.IdProceso);
+                }
+
+                foreach ((int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento) crear in cronsACrear) {
+                    EntKairosParametrosProceso parametros = new() {
+                        IdNormaSuscrita = normaSuscrita.Id,
+						FrecuenciaDias = crear.FrecuenciaDias,
+						InicioEjecucionUtc = crear.InicioEjecucionUtc,
+                        IdTipoUnidadTiempoAntelacion = crear.UnidadTiempoAntelacion?.Id,
+                        CantAntelacion = crear.CantAntelacion,
+                        EsVencimiento = crear.EsVencimiento,
+                        ProgramarSiguienteEjecucion = crear.EsVencimiento
+                    };
+
+                    SalKairosIngresarProceso retorno = await kairosHelper.IngresarProceso(new EntKairosIngresarProceso {
+						Nombre = $"{variableEntornoHelper.Obtener("APP_NAME")} - NormaSuscrita {normaSuscrita.Id} - Inicio {crear.InicioEjecucionUtc:dd-MM-yyyy HH:mm} - Frecuencia {crear.FrecuenciaDias} Días",
+						FrecuenciaDias = crear.FrecuenciaDias,
+						InicioEjecucionUtc = crear.InicioEjecucionUtc,
+                        Parametros = JsonSerializer.Serialize(parametros, AppJsonSerializerContext.Default.EntKairosParametrosProceso),
+                        ArnProceso = variableEntornoHelper.Obtener("NOTIFICACIONES_LAMBDA_ARN"),
+                        ArnRol = variableEntornoHelper.Obtener("NOTIFICACIONES_EJECUCION_ROLE_ARN"),
+                        Habilitado = true,
+                    });
+                    ProcesoNotificacion proceso = new() {
+                        IdProceso = retorno.IdProceso,
+                        IdCalendarizacion = retorno.IdCalendarizacion,
+                        Nombre = retorno.Nombre,
+                        ArnRol = retorno.ArnRol,
+                        ArnProceso = retorno.ArnProceso,
+                        Parametros = retorno.Parametros,
+                        Habilitado = retorno.Habilitado,
+                        FechaCreacion = retorno.FechaCreacion,
+						FrecuenciaDias = crear.FrecuenciaDias,
+						InicioEjecucionUtc = crear.InicioEjecucionUtc
+                    };
+                    procesosProgramados.Add(proceso);
+                    normaSuscrita.ProcesosNotificaciones.Add(proceso);
+                }
+
+                await Actualizar(normaSuscrita, transaction);
+            } catch {
+                await ReversarProcesos(procesosProgramados, procesosDesprogramados);
+                throw;
+            }
+            return (procesosProgramados, procesosDesprogramados);
+        }
+    }
 }
