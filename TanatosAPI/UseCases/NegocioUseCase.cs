@@ -25,7 +25,7 @@ namespace TanatosAPI.UseCases {
 			else return true;
 		}
 
-		public async Task EliminarNegocio(Negocio negocio, NpgsqlTransaction? transaction = null) {
+		public async Task EliminarNegocio(Negocio negocio, NpgsqlTransaction transaction) {
 			if (negocio.Vigencia) {
 				negocio.FechaEliminacion = dateTimeProvider.UtcNow;
 				negocio.Vigencia = false;
