@@ -77,14 +77,7 @@ namespace TanatosAPI.UseCases {
             nombreArchivo = nombreArchivo.Trim();
             mime = mime.Trim();
 
-            HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAcceso(codigoAcceso);
-            if (!historialNotificacionBcp.EstaVigente(historialNotificacion)) {
-                throw new ErrorValidacion(TipoErrorValidacion.AccesoCaducado, "La notificación no está vigente", "El código de acceso es inválido.");
-            }
-
-            if (!historialNotificacionBcp.CodigoAccesoVigente(historialNotificacion!)) {
-                throw new ErrorValidacion(TipoErrorValidacion.AccesoCaducado, "El código de acceso ha caducado", "El código de acceso es inválido.");
-            }
+            HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAccesoValidandoVigencia(codigoAcceso);
 
             return await GenerarUrlSubida(null, historialNotificacion!.IdHistorialNormaSuscrita, nombreArchivo, mime, tamanno);
         }
@@ -122,14 +115,7 @@ namespace TanatosAPI.UseCases {
         }
 
         public async Task ConfirmarSubidaPorCodigoAcceso(string codigoAcceso, long idDocumentoAdjunto) {
-            HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAcceso(codigoAcceso);
-            if (!historialNotificacionBcp.EstaVigente(historialNotificacion)) {
-                throw new ErrorValidacion(TipoErrorValidacion.AccesoCaducado, "La notificación no está vigente", "El código de acceso es inválido.");
-            }
-
-            if (!historialNotificacionBcp.CodigoAccesoVigente(historialNotificacion!)) {
-                throw new ErrorValidacion(TipoErrorValidacion.AccesoCaducado, "El código de acceso ha caducado", "El código de acceso es inválido.");
-            }
+            HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAccesoValidandoVigencia(codigoAcceso);
 
             await ConfirmarSubida(null, idDocumentoAdjunto, historialNotificacion!.IdHistorialNormaSuscrita);
         }
@@ -163,14 +149,7 @@ namespace TanatosAPI.UseCases {
         }
 
         public async Task<string> GenerarUrlBajadaPorCodigoAcceso(string codigoAcceso, long idDocumentoAdjunto) {
-            HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAcceso(codigoAcceso);
-            if (!historialNotificacionBcp.EstaVigente(historialNotificacion)) {
-                throw new ErrorValidacion(TipoErrorValidacion.AccesoCaducado, "La notificación no está vigente", "El código de acceso es inválido.");
-            }
-
-            if (!historialNotificacionBcp.CodigoAccesoVigente(historialNotificacion!)) {
-                throw new ErrorValidacion(TipoErrorValidacion.AccesoCaducado, "El código de acceso ha caducado", "El código de acceso es inválido.");
-            }
+            HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAccesoValidandoVigencia(codigoAcceso);
 
             return await GenerarUrlBajada(null, idDocumentoAdjunto, historialNotificacion!.IdHistorialNormaSuscrita);
         }
@@ -210,14 +189,7 @@ namespace TanatosAPI.UseCases {
         }
 
         public async Task EliminarPorCodigoAcceso(string codigoAcceso, long idDocumentoAdjunto) {
-            HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAcceso(codigoAcceso);
-            if (!historialNotificacionBcp.EstaVigente(historialNotificacion)) {
-                throw new ErrorValidacion(TipoErrorValidacion.AccesoCaducado, "La notificación no está vigente", "El código de acceso es inválido.");
-            }
-
-            if (!historialNotificacionBcp.CodigoAccesoVigente(historialNotificacion!)) {
-                throw new ErrorValidacion(TipoErrorValidacion.AccesoCaducado, "El código de acceso ha caducado", "El código de acceso es inválido.");
-            }
+            HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAccesoValidandoVigencia(codigoAcceso);
 
             await Eliminar(null, idDocumentoAdjunto, historialNotificacion!.IdHistorialNormaSuscrita);
         }
