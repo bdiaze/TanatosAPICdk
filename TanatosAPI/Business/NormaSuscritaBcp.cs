@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Npgsql;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Text.Json;
+using System.Transactions;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.Kairos;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
@@ -21,24 +24,103 @@ namespace TanatosAPI.Business {
 			return normaSuscrita.Sub == sub;
 		}
 
+        public bool EsEditable(NormaSuscrita normaSuscrita) {
+            return normaSuscrita.Editable;
+        }
+
+		public async Task<List<NormaSuscrita>> ObtenerVigentesPorSubYNegocio(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {
+			return await normaSuscritaDao.ObtenerPorSub(sub, idNegocio, true, transaction);
+		}
+
         public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
             return await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction);
+        }
+
+        public async Task<NormaSuscrita> ObtenerValidandoVigencia(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			NormaSuscrita? obligacion = await ObtenerPorId(idNormaSuscrita, transaction);
+			if (!EstaVigente(obligacion)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "La obligación no está vigente.");
+            return obligacion!;
+        }
+
+		public async Task<NormaSuscrita?> ObtenerSiVigente(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
+            NormaSuscrita? obligacion = await ObtenerPorId(idNormaSuscrita, transaction);
+			if (EstaVigente(obligacion)) return obligacion;
+			return null;
+        }
+
+		public async Task<NormaSuscrita?> ObtenerSiVigenteValidandoPertenencia(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null) {
+			NormaSuscrita? obligacion = await ObtenerSiVigente(idNormaSuscrita, transaction);
+			if (obligacion == null) return null; 
+            if (!Pertenece(obligacion!, sub)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "La obligación no pertenece al usuario", "La obligación no está vigente.");
+			return obligacion;
+		}
+
+		public async Task<NormaSuscrita?> ObtenerSiVigenteValidandoPertenenciaYEditable(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null) {
+			NormaSuscrita? obligacion = await ObtenerSiVigenteValidandoPertenencia(idNormaSuscrita, sub, transaction);
+			if (obligacion == null) return null;
+			if (!EsEditable(obligacion)) throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La obligación no es editable por el usuario", "La obligación no está vigente.");
+			return obligacion;
+		}
+
+        public async Task<NormaSuscrita> ObtenerValidandoVigenciaYPertenencia(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null) {
+            NormaSuscrita obligacion = await ObtenerValidandoVigencia(idNormaSuscrita, transaction);
+			if (!Pertenece(obligacion, sub)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "La obligación no pertenece al usuario", "La obligación no está vigente.");
+			return obligacion!;
+        }
+
+		public async Task<NormaSuscrita> CrearObligacionUsuario(string sub, long idNegocio, string nombre, string? descripcion, string? multa, long? idTipoPeriodicidad, long? idCategoriaNorma, long? idCargo, bool activado, NpgsqlTransaction? transaction = null) {
+            nombre = nombre.Trim();
+            descripcion = string.IsNullOrWhiteSpace(descripcion) ? null : descripcion.Trim();
+            multa = string.IsNullOrWhiteSpace(multa) ? null : multa.Trim();
+
+			// Se valida que no exista otra obligación con el mismo nombre...
+			List<NormaSuscrita> vigentes = await ObtenerVigentesPorSubYNegocio(sub, idNegocio);
+			if (vigentes.Any(o => o.Nombre == nombre)) throw new ErrorValidacion(TipoErrorValidacion.YaExiste, "Ya existe una obligación con dicho nombre."); 
+
+            DateTime now = dateTimeProvider.UtcNow;
+            NormaSuscrita nuevo = new() {
+                Id = 0,
+                Sub = sub,
+                IdNegocio = idNegocio,
+                IdTemplate = null,
+                IdNorma = null,
+                Nombre = nombre,
+                Descripcion = descripcion,
+                Multa = multa,
+                IdTipoPeriodicidad = idTipoPeriodicidad,
+                IdCategoriaNorma = idCategoriaNorma,
+                IdCargo = idCargo,
+                OrdenVisual = null,
+                Editable = true,
+                FechaActivacion = activado ? now : null,
+                FechaDesactivacion = null,
+                Activado = activado,
+                FechaCreacion = now,
+                FechaEliminacion = null,
+                Vigencia = true
+            };
+            nuevo.Id = await normaSuscritaDao.Insertar(nuevo, transaction);
+			return nuevo;
         }
 
         public async Task Actualizar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
 			await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 		}
 
+		public async Task Desactivar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			if (normaSuscrita.Activado) {
+                normaSuscrita.FechaDesactivacion = dateTimeProvider.UtcNow;
+                normaSuscrita.Activado = false;
+
+				await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
+            }
+		}
+
 		public async Task Eliminar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
 			if (normaSuscrita.Vigencia) {
-                DateTime utcNow = dateTimeProvider.UtcNow;
+				await Desactivar(normaSuscrita, transaction);
 
-                if (normaSuscrita.Activado) {
-                    normaSuscrita.FechaDesactivacion = utcNow;
-                    normaSuscrita.Activado = false;
-                }
-
-                normaSuscrita.FechaEliminacion = utcNow;
+                normaSuscrita.FechaEliminacion = dateTimeProvider.UtcNow;
                 normaSuscrita.Vigencia = false;
 
                 await normaSuscritaDao.Actualizar(normaSuscrita, transaction);

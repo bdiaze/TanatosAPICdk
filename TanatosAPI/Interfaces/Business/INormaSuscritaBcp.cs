@@ -7,7 +7,15 @@ namespace TanatosAPI.Interfaces.Business {
 	public interface INormaSuscritaBcp {
 		public bool EstaVigente(NormaSuscrita? normaSuscrita);
 		public bool Pertenece(NormaSuscrita normaSuscrita, string sub);
-		public Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita, NpgsqlTransaction? transaction = null);
+		public bool EsEditable(NormaSuscrita normaSuscrita);
+		public Task<List<NormaSuscrita>> ObtenerVigentesPorSubYNegocio(string sub, long idNegocio, NpgsqlTransaction? transaction = null);
+        public Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita, NpgsqlTransaction? transaction = null);
+		public Task<NormaSuscrita?> ObtenerSiVigente(long idNormaSuscrita, NpgsqlTransaction? transaction = null);
+		public Task<NormaSuscrita?> ObtenerSiVigenteValidandoPertenencia(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null);
+		public Task<NormaSuscrita?> ObtenerSiVigenteValidandoPertenenciaYEditable(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null);
+        public Task<NormaSuscrita> ObtenerValidandoVigencia(long idNormaSuscrita, NpgsqlTransaction? transaction = null);
+		public Task<NormaSuscrita> ObtenerValidandoVigenciaYPertenencia(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null);
+		public Task<NormaSuscrita> CrearObligacionUsuario(string sub, long idNegocio, string nombre, string? descripcion, string? multa, long? idTipoPeriodicidad, long? idCategoriaNorma, long? idCargo, bool activado, NpgsqlTransaction? transaction = null);
 		public Task Actualizar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null);
 		public Task Eliminar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null);
 		public Task ProgramarUnProcesoNotificacion(EntKairosIngresarProceso procesosProgramar);
