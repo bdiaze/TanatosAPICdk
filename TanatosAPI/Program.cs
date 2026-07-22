@@ -229,6 +229,7 @@ builder.Services.AddScoped<IEvaluacionBcp, EvaluacionBcp>();
 builder.Services.AddScoped<ITipoPeriodicidadBcp, TipoPeriodicidadBcp>();
 builder.Services.AddScoped<ITemplateNormaNotificacionBcp, TemplateNormaNotificacionBcp>();
 builder.Services.AddScoped<ITipoUnidadTiempoBcp, TipoUnidadTiempoBcp>();
+builder.Services.AddScoped<ITipoFiscalizadorBcp, TipoFiscalizadorBcp>();
 #endregion
 
 #region Singleton UseCases
