@@ -9,14 +9,14 @@ using TanatosAPI.Interfaces.Helpers;
 namespace TanatosAPI.UseCases {
 	public class CargoUseCase(IDatabaseConnectionHelper connectionHelper, ICargoBcp cargoBcp, INegocioBcp negocioBcp, IEmpleadoBcp empleadoBcp) {
 		public async Task<List<Cargo>> ObtenerVigentes(string sub, long idNegocio) {
-			Negocio negocio = await negocioBcp.ObtenerPorIdValidandoVigenciaYPertenencia(idNegocio, sub);
+			Negocio negocio = await negocioBcp.ObtenerValidandoVigenciaYPertenencia(idNegocio, sub);
 			return await cargoBcp.ObtenerVigentes(sub, negocio.Id);
 		}
 
 		public async Task<Cargo> Crear(string sub, string nombre, long idNegocio) {
 			nombre = nombre.Trim();
 
-			Negocio negocio = await negocioBcp.ObtenerPorIdValidandoVigenciaYPertenencia(idNegocio, sub);
+			Negocio negocio = await negocioBcp.ObtenerValidandoVigenciaYPertenencia(idNegocio, sub);
 
 			List<Cargo> existentes = await cargoBcp.ObtenerVigentes(sub, negocio.Id);
 			Cargo? cargoExistente = existentes.FirstOrDefault(c => c.Nombre.Equals(nombre, StringComparison.OrdinalIgnoreCase));
@@ -30,8 +30,8 @@ namespace TanatosAPI.UseCases {
 		public async Task<Cargo> Actualizar(string sub, long idCargo, string nombre) {
 			nombre = nombre.Trim();
 
-			Cargo existente = await cargoBcp.ObtenerPorIdValidandoVigenciaYPertenencia(idCargo, sub);
-			Negocio? negocio = await negocioBcp.ObtenerPorIdValidandoVigenciaYPertenencia(existente!.IdNegocio, sub);
+			Cargo existente = await cargoBcp.ObtenerValidandoVigenciaYPertenencia(idCargo, sub);
+			Negocio? negocio = await negocioBcp.ObtenerValidandoVigenciaYPertenencia(existente!.IdNegocio, sub);
 
 			List<Cargo> existentes = await cargoBcp.ObtenerVigentes(sub, negocio.Id);
 			Cargo? otroMismoNombre = existentes.FirstOrDefault(c => c.Id != idCargo && c.Nombre.Equals(nombre, StringComparison.OrdinalIgnoreCase));
@@ -56,7 +56,7 @@ namespace TanatosAPI.UseCases {
 					transaction = await connection.BeginTransactionAsync();
 				}
 
-				Cargo? existente = await cargoBcp.ObtenerPorId(idCargo, transaction!.NpgsqlTransaction());
+				Cargo? existente = await cargoBcp.Obtener(idCargo, transaction!.NpgsqlTransaction());
 				if (existente != null && !cargoBcp.PerteneceAlUsuario(existente, sub)) {
 					throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El cargo no pertenece al usuario", "El cargo es inválido.");
 				}

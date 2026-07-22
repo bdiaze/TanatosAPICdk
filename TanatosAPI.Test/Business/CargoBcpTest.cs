@@ -72,7 +72,7 @@ namespace TanatosAPI.Test.Business {
 			cargoDao.Obtener(2).Returns(CargoDummy(id: 2));
 			cargoDao.Obtener(3).Returns((Cargo?)null);
 
-			Cargo? cargo = await cargoBcp.ObtenerPorId(idCargo);
+			Cargo? cargo = await cargoBcp.Obtener(idCargo);
 			Assert.Equal(expectedIdResult, cargo?.Id);
 			await cargoDao.Received(1).Obtener(idCargo);
 		}
@@ -81,7 +81,7 @@ namespace TanatosAPI.Test.Business {
 		public async Task ObtenerPorIdValidandoTest_Valido() {
 			cargoDao.Obtener(1).Returns(CargoDummy(id: 1, sub: "sub-test-123", vigencia: true));
 
-			Cargo cargo = await cargoBcp.ObtenerPorIdValidandoVigenciaYPertenencia(1, "sub-test-123");
+			Cargo cargo = await cargoBcp.ObtenerValidandoVigenciaYPertenencia(1, "sub-test-123");
 			Assert.Equal(1, cargo.Id);
 			Assert.Equal("sub-test-123", cargo.Sub);
 			Assert.True(cargo.Vigencia);
@@ -92,7 +92,7 @@ namespace TanatosAPI.Test.Business {
 		public async Task ObtenerPorIdValidandoTest_NoVigente() {
 			cargoDao.Obtener(1).Returns(CargoDummy(id: 1, sub: "sub-test-123", vigencia: false));
 
-			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoBcp.ObtenerPorIdValidandoVigenciaYPertenencia(1, "sub-test-123"));
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoBcp.ObtenerValidandoVigenciaYPertenencia(1, "sub-test-123"));
 			Assert.Equal(TipoErrorValidacion.NoVigente, ex.TipoErrorValidacion);
 		}
 
@@ -100,7 +100,7 @@ namespace TanatosAPI.Test.Business {
 		public async Task ObtenerPorIdValidandoTest_NoPertenece() {
 			cargoDao.Obtener(1).Returns(CargoDummy(id: 1, sub: "sub-test-123", vigencia: true));
 
-			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoBcp.ObtenerPorIdValidandoVigenciaYPertenencia(1, "otro-sub-test"));
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoBcp.ObtenerValidandoVigenciaYPertenencia(1, "otro-sub-test"));
 			Assert.Equal(TipoErrorValidacion.NoPertenece, ex.TipoErrorValidacion);
 		}
 
