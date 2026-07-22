@@ -9,7 +9,7 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
 	public class HistorialNormaSuscritaUseCase(IDateTimeProvider dateTimeProvider, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp, INormaSuscritaBcp normaSuscritaBcp, ITemplateNormaBcp templateNormaBcp, ITipoPeriodicidadBcp tipoPeriodicidadBcp) {
-		public async Task EliminarPorNormaSuscrita(long idNormaSuscrita, bool ignorarVencidos = false, NpgsqlTransaction? transaction = null) {
+		public async Task EliminarPorNormaSuscrita(long idNormaSuscrita, bool ignorarVencidos, NpgsqlTransaction transaction) {
 			List<HistorialNormaSuscrita> historialesVigentes = await historialNormaSuscritaBcp.ObtenerVigentesPorNormaSuscritaNoCompletadas(idNormaSuscrita, transaction);
 
 			if (ignorarVencidos) {
@@ -22,58 +22,89 @@ namespace TanatosAPI.UseCases {
 			}
 		}
 
-		public async Task CompletarHistorialNormaSuscrita(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			if (historialNormaSuscrita.FechaCompletitud == null) {
-				await historialNormaSuscritaBcp.Completar(historialNormaSuscrita, transaction);
+		public async Task<DateTime> CompletarHistorialNormaSuscrita(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction transaction) {
+            DateTime? fechaCompletitud = historialNormaSuscrita.FechaCompletitud;
+            if (fechaCompletitud == null) {
+                fechaCompletitud = await historialNormaSuscritaBcp.Completar(historialNormaSuscrita, transaction);
 				await ProgramarSiguienteVencimiento(historialNormaSuscrita, transaction);
 			}
+            return fechaCompletitud.Value;
 		}
 
 		public async Task ProgramarSiguienteVencimiento(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			// Solo se programa el siguiente vencimiento si no existe otro vencimiento futuro, no completado, distinto a la referencia...
-			List<HistorialNormaSuscrita> historialesFuturos = [..
-				(await historialNormaSuscritaBcp.ObtenerVigentesPorNormaSuscritaNoCompletadas(historialNormaSuscrita.IdNormaSuscrita, transaction))
-					.Where(hns => hns.Id != historialNormaSuscrita.Id && hns.FechaVencimiento > dateTimeProvider.UtcNow)
-			];
-			if (historialesFuturos.Count > 0) {
-				return;
-			}
+			bool yaTieneVencimiento = await historialNormaSuscritaBcp.TieneVencimientoFuturoNoCompletado(
+				historialNormaSuscrita.IdNormaSuscrita, 
+				[ historialNormaSuscrita.Id ], 
+				transaction
+			);
+            if (yaTieneVencimiento) return;
 
 			// Se obtiene norma suscrita y/o template...
 			NormaSuscrita normaSuscrita = await normaSuscritaBcp.ObtenerPorId(historialNormaSuscrita.IdNormaSuscrita, transaction) ?? throw new InvalidOperationException("ID norma suscrita inválida");
 			TemplateNorma? templateNorma = null;
 			if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null && normaSuscrita.IdTipoPeriodicidad == null) {
-				templateNorma = (await templateNormaBcp.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
+				templateNorma = await templateNormaBcp.ObtenerPorTemplateNorma(normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma.Value, transaction);
 			}
 
-			long idTipoPeriodicidad = (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
-			TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadBcp.ObtenerPorId(idTipoPeriodicidad, transaction) ?? throw new InvalidOperationException("Tipo periodicidad inválido");
-			if (!tipoPeriodicidad.Vigencia) throw new InvalidOperationException("Tipo periodicidad inválido");
+			TipoPeriodicidad tipoPeriodicidad = await tipoPeriodicidadBcp.ObtenerValidandoVigencia(
+                normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad,
+				transaction
+            );
 
-			// Nos aseguramos de que la fecha esté en UTC...
-			DateTime vencimientoActual = DateTime.SpecifyKind(historialNormaSuscrita.FechaVencimiento, DateTimeKind.Utc);
+			DateTime proximoVencimiento = CalcularSiguienteVencimiento(historialNormaSuscrita.FechaVencimiento, tipoPeriodicidad);
 
-			// Se transforma la fecha de vencimiento actual a zona horaria de Chile...
-			DateTime proximoVencimiento = DateTimeHelper.TransformarFechaUTCATimezone(vencimientoActual);
-
-			// Se añaden los deltas de la periodicidad...
-			if (tipoPeriodicidad.DeltaDias != null) {
-				proximoVencimiento = proximoVencimiento.AddDays(tipoPeriodicidad.DeltaDias.Value);
-			}
-			if (tipoPeriodicidad.DeltaMeses != null) {
-				proximoVencimiento = proximoVencimiento.AddMonths(tipoPeriodicidad.DeltaMeses.Value);
-			}
-			if (tipoPeriodicidad.DeltaAnnos != null) {
-				proximoVencimiento = proximoVencimiento.AddYears(tipoPeriodicidad.DeltaAnnos.Value);
-			}
-
-			// Se convierte próximo vencimiento calculado a UTC...
-			proximoVencimiento = DateTimeHelper.TransformarFechaTimezoneAUTC(proximoVencimiento);
-
-			if (vencimientoActual != proximoVencimiento) {
+			if (historialNormaSuscrita.FechaVencimiento != proximoVencimiento) {
 				// Se crea el próximo vencimiento...
 				_ = await historialNormaSuscritaBcp.Crear(historialNormaSuscrita.IdNormaSuscrita, proximoVencimiento, transaction);
 			}
 		}
-	}
+
+        public DateTime CalcularSiguienteVencimiento(DateTime vencimientoActual, TipoPeriodicidad tipoPeriodicidad, bool fechasChilenas = false) {
+			tipoPeriodicidadBcp.ValidarDeltas(tipoPeriodicidad);
+
+            DateTime proximoVencimiento = !fechasChilenas ? DateTimeHelper.TransformarFechaUTCATimezone(vencimientoActual) : vencimientoActual;
+
+            // Se añaden los deltas de la periodicidad...
+            if (tipoPeriodicidad.DeltaDias != null) {
+                proximoVencimiento = proximoVencimiento.AddDays(tipoPeriodicidad.DeltaDias.Value);
+            } else if (tipoPeriodicidad.DeltaMeses != null) {
+                proximoVencimiento = proximoVencimiento.AddMonths(tipoPeriodicidad.DeltaMeses.Value);
+            } else if (tipoPeriodicidad.DeltaAnnos != null) {
+                proximoVencimiento = proximoVencimiento.AddYears(tipoPeriodicidad.DeltaAnnos.Value);
+            }
+
+            // Se convierte próximo vencimiento calculado a UTC...
+            return !fechasChilenas ? DateTimeHelper.TransformarFechaTimezoneAUTC(proximoVencimiento) : proximoVencimiento;
+        }
+
+        public DateTime CalcularVencimientoFuturo(DateTime fechaReferenciaUTC, TipoPeriodicidad tipoPeriodicidad) {
+            // Si la fecha de refencia ya es futura, se devuelve esa misma...
+            DateTime nowUtc = dateTimeProvider.UtcNow;
+            if (fechaReferenciaUTC > nowUtc) return fechaReferenciaUTC;
+
+            tipoPeriodicidadBcp.ValidarDeltas(tipoPeriodicidad);
+
+            DateTime fechaReferenciaChile = DateTimeHelper.TransformarFechaUTCATimezone(fechaReferenciaUTC);
+            DateTime fechaActualChile = DateTimeHelper.TransformarFechaUTCATimezone(nowUtc);
+
+            if (tipoPeriodicidad.DeltaAnnos != null) {
+                int fraccion = (int)Math.Floor((double)(fechaActualChile.Year - fechaReferenciaChile.Year) / tipoPeriodicidad.DeltaAnnos.Value);
+                fechaReferenciaChile = fechaReferenciaChile.AddYears(tipoPeriodicidad.DeltaAnnos.Value * fraccion);
+            } else if (tipoPeriodicidad.DeltaMeses != null) {
+                int diffMeses = ((fechaActualChile.Year - fechaReferenciaChile.Year) * 12) + (fechaActualChile.Month - fechaReferenciaChile.Month);
+                int fraccion = (int)Math.Floor((double)diffMeses / tipoPeriodicidad.DeltaMeses.Value);
+                fechaReferenciaChile = fechaReferenciaChile.AddMonths(tipoPeriodicidad.DeltaMeses.Value * fraccion);
+            } else if (tipoPeriodicidad.DeltaDias != null) {
+                int fraccion = (int)Math.Floor((fechaActualChile - fechaReferenciaChile).TotalDays / tipoPeriodicidad.DeltaDias.Value);
+                fechaReferenciaChile = fechaReferenciaChile.AddDays(tipoPeriodicidad.DeltaDias.Value * fraccion);
+            }
+
+            while (fechaReferenciaChile <= fechaActualChile) {
+                fechaReferenciaChile = CalcularSiguienteVencimiento(fechaReferenciaChile, tipoPeriodicidad, true);
+            }
+
+            return DateTimeHelper.TransformarFechaTimezoneAUTC(fechaReferenciaChile);
+        }
+    }
 }
