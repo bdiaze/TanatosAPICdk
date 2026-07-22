@@ -8,6 +8,7 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.DocumentoAdjunto;
 using TanatosAPI.Entities.Others.Kairos;
 using TanatosAPI.Entities.Others.NormaSuscrita;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
@@ -113,9 +114,14 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de las normas suscritas vigentes - Cant. Registros: {retorno.Count}.");
-
 					return Results.Ok(retorno);
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[GET] - [NormaSuscrita] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener las normas suscritas vigentes. " +
@@ -274,9 +280,14 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerPorId] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de la norma suscrita por ID: {idNormaSuscrita}.");
-
 					return Results.Ok(retorno);
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[GET] - [NormaSuscrita] - [ObtenerPorId] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerPorId] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener la norma suscrita por ID: {idNormaSuscrita}. " +
@@ -371,9 +382,14 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de las normas suscritas con vencimiento por ID Negocio: {idNegocio} - Cant. Registros: {retorno.Count}.");
-
 					return Results.Ok(retorno);
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[GET] - [NormaSuscrita] - [ObtenerConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener las normas suscritas con vencimiento por ID Negocio: {idNegocio}. " +
@@ -527,9 +543,14 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerPorIdConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de la norma suscrita por ID {idNormaSuscrita} con vencimiento.");
-
 					return Results.Ok(retorno);
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[GET] - [NormaSuscrita] - [ObtenerPorIdConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerPorIdConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener la norma suscrita por ID {idNormaSuscrita} con vencimiento. " +
@@ -542,248 +563,67 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntNormaSuscritaCrear entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, ISuscripcionBcp suscripcionBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, NormaSuscritaUseCase normaSuscritaUseCase, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IHistorialNotificacionDao historialNotificacionDao, ICargoDao cargoDao, IDestinatarioNotificacionDao destinatarioNotificacionDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICategoriaNormaDao categoriaNormaDao, INegocioDao negocioDao, ITipoFiscalizadorDao tipoFiscalizadorDao, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp) => {
+			routes.MapPost("/", async (EntNormaSuscritaCrear entrada, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaUseCase normaSuscritaUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					entrada.Nombre = entrada.Nombre.Trim();
-					entrada.Descripcion = string.IsNullOrWhiteSpace(entrada.Descripcion) ? null : entrada.Descripcion?.Trim();
-					entrada.Multa = string.IsNullOrWhiteSpace(entrada.Multa) ? null : entrada.Multa?.Trim();
-
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+                    
+					(NormaSuscrita obligacion, TipoPeriodicidad? periodicidad, CategoriaNorma? categoriaNorma, Cargo? cargo, List<FiscalizadorNormaSuscrita> fiscalizadores, List<NotificacionNormaSuscrita> antelaciones, HistorialNormaSuscrita? proximoVencimiento)  = await normaSuscritaUseCase.CrearNormaSuscrita(
+						sub,
+						entrada.IdNegocio,
+						entrada.Nombre,
+						entrada.Descripcion,
+						entrada.Multa,
+						entrada.IdTipoPeriodicidad,
+						entrada.IdCategoriaNorma,
+						entrada.IdCargo,
+						entrada.Activado,
+						entrada.ProximoVencimiento,
+						(entrada.Fiscalizadores ?? []).Select(f => f.IdTipoFiscalizador).ToHashSet(),
+						(entrada.Notificaciones ?? []).Select(n => (n.IdTipoUnidadTiempoAntelacion, n.CantAntelacion)).ToHashSet()
+					);
 
-					// Se valida que el usuario no tenga otra norma igual...
-					List<NormaSuscrita> normasVigentes = await normaSuscritaDao.ObtenerPorSub(sub, entrada.IdNegocio, true);
-					if (normasVigentes.Any(d => d.Sub == sub && d.IdNegocio == entrada.IdNegocio && d.Nombre == entrada.Nombre)) {
-						LambdaLogger.Log(
-							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"Ya tienes registrado una norma con el mismo nombre.");
-
-						return Results.BadRequest($"Ya tienes registrado una norma con el mismo nombre.");
-					}
-
-					// Se valida que el tipo de periodicidad sea válido...
-					TipoPeriodicidad? tipoPeriodicidad = null;
-                    if (entrada.IdTipoPeriodicidad != null) {
-						tipoPeriodicidad = await tipoPeriodicidadBcp.ObtenerPorId(entrada.IdTipoPeriodicidad.Value);
-						if (tipoPeriodicidad == null || !tipoPeriodicidad.Vigencia) {
-							LambdaLogger.Log(
-								$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-								$"La periodicidad es inválida.");
-
-							return Results.BadRequest($"La periodicidad es inválida.");
-						}
-					}
-
-					CategoriaNorma? categoria = null;
-					// Se valida que la categoría sea válida...
-					if (entrada.IdCategoriaNorma != null) {
-						categoria = await categoriaNormaDao.ObtenerPorId(entrada.IdCategoriaNorma.Value);
-						if (categoria == null || !categoria.Vigencia) {
-							LambdaLogger.Log(
-								$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-								$"La categoría es inválida.");
-
-							return Results.BadRequest($"La categoría es inválida.");
-						}
-					}
-									
-					// Se valida que el negocio sea válido...
-					Negocio? negocio = (await negocioDao.ObtenerPorSub(sub)).FirstOrDefault(n => n.Id == entrada.IdNegocio);
-					if (negocio == null || !negocio.Vigencia) {
-						LambdaLogger.Log(
-							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El negocio es inválido.");
-
-						return Results.BadRequest($"El negocio es inválido.");
-					}
-
-					// Se valida que si no tiene plan empresa, no se incluya un cargo...
-					bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(sub);
-					if (!tienePlanEmpresa && entrada.IdCargo != null) {
-						LambdaLogger.Log(
-							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"Tu plan no permite asignar un cargo responsable a la obligación.");
-
-						return Results.BadRequest($"Tu plan no permite asignar un cargo responsable a la obligación.");
-					}
-
-					// Se valida que el cargo sea válido...
-					Cargo? cargo = null;
-                    if (entrada.IdCargo != null) {
-                        cargo = (await cargoDao.ObtenerPorSub(sub, entrada.IdNegocio, true)).FirstOrDefault(c => c.Id == entrada.IdCargo);
-						if (cargo == null || !cargo.Vigencia) {
-							LambdaLogger.Log(
-							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El cargo es inválido.");
-
-							return Results.BadRequest($"El cargo es inválido.");
-						}
-                    }
-
-                    List<TipoFiscalizador> tiposFiscalizadores = [];
-					// Se valida que los fiscalizadores sean válidos...
-					if (entrada.Fiscalizadores != null && entrada.Fiscalizadores.Count > 0) {
-						if (entrada.Fiscalizadores.GroupBy(n => n.IdTipoFiscalizador).Any(g => g.Count() > 1)) {
-							LambdaLogger.Log(
-								$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-								$"Los fiscalizadores incluyen duplicados.");
-
-							return Results.BadRequest($"Los fiscalizadores incluyen duplicados.");
-						}
-
-						tiposFiscalizadores = await tipoFiscalizadorDao.ObtenerPorVigencia(true);
-						foreach (EntFiscalizadorNormaSuscritaCrear fiscalizador in entrada.Fiscalizadores) {
-							if (!tiposFiscalizadores.Any(tf => tf.Id == fiscalizador.IdTipoFiscalizador)) {
-								LambdaLogger.Log(
-									$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-									$"Un fiscalizador es inválido.");
-
-								return Results.BadRequest($"Un fiscalizador es inválido.");
-							}
-						}
-					}
-
-					List<TipoUnidadTiempo> tiposUnidadesTiempo = [];
-					// Se valida que las notificaciones sean válidas...
-					if (entrada.Notificaciones != null && entrada.Notificaciones.Count > 0) {
-						if (entrada.Notificaciones.Any(n => n.CantAntelacion <= 0)) {
-							LambdaLogger.Log(
-								$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-								$"Una notificación con cantidad antelación inválido.");
-
-							return Results.BadRequest($"Una notificación con cantidad antelación inválido.");
-						}
-
-						if (entrada.Notificaciones.GroupBy(n => new { n.IdTipoUnidadTiempoAntelacion, n.CantAntelacion}).Any(g => g.Count() > 1)) {
-							LambdaLogger.Log(
-								$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-								$"Las notificaciones incluyen duplicados.");
-
-							return Results.BadRequest($"Las notificaciones incluyen duplicados.");
-						}
-
-						tiposUnidadesTiempo = await tipoUnidadTiempoBcp.ObtenerPorVigencia(true);
-						foreach (EntNotificacionNormaSuscritaCrear notificacion in entrada.Notificaciones) {
-							if (!tiposUnidadesTiempo.Any(tut => tut.Id == notificacion.IdTipoUnidadTiempoAntelacion)) {
-								LambdaLogger.Log(
-									$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-									$"Una notificación es inválida.");
-
-								return Results.BadRequest($"Una notificación es inválida.");
-							}
-						}
-					}
-
-					// Se valida que si la norma suscrita está activa, incluya una fecha de próximo vencimiento...
-					if (entrada.Activado && entrada.ProximoVencimiento == null) {
-						LambdaLogger.Log(
-							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"Debe incluir la fecha de próximo vencimiento.");
-
-						return Results.BadRequest($"Debe incluir la fecha de próximo vencimiento.");
-					}
-
-					// Se valida que el próximo vencimiento sea una fecha futura...
-					if (entrada.Activado && entrada.ProximoVencimiento != null && entrada.ProximoVencimiento <= dateTimeProvider.UtcNow) {
-						LambdaLogger.Log(
-							$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El próximo vencimiento debe ser una fecha futura.");
-
-						return Results.BadRequest($"El próximo vencimiento debe ser una fecha futura.");
-					}
-
-					NormaSuscrita nuevo = new() {
-						Id = 0,
-						Sub = sub,
-						IdNegocio = entrada.IdNegocio,
-						IdTemplate = null,
-						IdNorma = null,
-						Nombre = entrada.Nombre,
-						Descripcion = entrada.Descripcion,
-						IdTipoPeriodicidad = entrada.IdTipoPeriodicidad,
-						Multa = entrada.Multa,
-						IdCategoriaNorma = entrada.IdCategoriaNorma,
-						IdCargo = entrada.IdCargo,
-						OrdenVisual = null,
-						Editable = true,
-						FechaActivacion = entrada.Activado ? dateTimeProvider.UtcNow : null,
-						FechaDesactivacion = null,
-						Activado = entrada.Activado,
-						FechaCreacion = dateTimeProvider.UtcNow,
-						FechaEliminacion = null,
-						Vigencia = true
-					};
-
-					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
-
-					try {
-						nuevo.Id = await normaSuscritaDao.Insertar(nuevo, transaction);
-
-						await fiscalizadorNormaSuscritaBcp.ActualizarPorNormaSuscrita(nuevo.Id, entrada.Fiscalizadores?.Select(f => f.IdTipoFiscalizador).ToHashSet() ?? [], transaction);
-
-						await notificacionNormaSuscritaBcp.ActualizarPorNormaSuscrita(nuevo.Id, entrada.Notificaciones?.Select(n => (
-							n.IdTipoUnidadTiempoAntelacion,
-							n.CantAntelacion
-						)).ToHashSet() ?? [], transaction);
-
-						if (entrada.Activado) {
-							_ = await historialNormaSuscritaBcp.Crear(nuevo.Id, entrada.ProximoVencimiento!.Value, transaction);	
-						}
-
-						await normaSuscritaUseCase.ActualizarProgramacionProcesosNormaSuscrita(nuevo.Id, transaction);
-
-						await transaction.CommitAsync();
-					} catch {
-						await transaction.RollbackAsync();
-						throw;
-					}
-
-					List<FiscalizadorNormaSuscrita>? fiscalizadoresExistentes = await fiscalizadorNormaSuscritaBcp.ObtenerVigentesPorNormaSuscrita(nuevo.Id);
-					if (fiscalizadoresExistentes.Count == 0) {
-						fiscalizadoresExistentes = null;
-					}
-					List<NotificacionNormaSuscrita>? notificacionesExistentes = await notificacionNormaSuscritaBcp.ObtenerVigentesPorNormaSuscrita(nuevo.Id);
-					if (notificacionesExistentes.Count == 0) {
-						notificacionesExistentes = null;
-					}
-
-					SalNormaSuscrita retorno = new() {
-						Id = nuevo.Id,
-						Nombre = nuevo.Nombre,
-						Descripcion = nuevo.Descripcion,
-						IdTipoPeriodicidad = nuevo.IdTipoPeriodicidad,
-						NombreTipoPeriodicidad = tipoPeriodicidad?.Nombre,
-						Multa = nuevo.Multa,
-						IdCategoriaNorma = nuevo.IdCategoriaNorma,
-						NombreCategoriaNorma = categoria?.Nombre,
-						IdCargo = cargo?.Id,
-						NombreCargo = cargo?.Nombre,
-						OrdenVisual = nuevo.OrdenVisual,
-						Editable = true,
-						Activado = nuevo.Activado,
-						TemplateNorma = null,
-						Fiscalizadores = fiscalizadoresExistentes == null ? null : [.. fiscalizadoresExistentes.Select(fns => new SalFiscalizadorNormaSuscrita { 
-							Id = fns.Id,
-							IdTipoFiscalizador = fns.IdTipoFiscalizador,
-							NombreTipoFiscalizador = tiposFiscalizadores.FirstOrDefault(tp => tp.Id == fns.IdTipoFiscalizador)?.Nombre
-						})],
-						Notificaciones = notificacionesExistentes == null ? null : [.. notificacionesExistentes.Select(nns => new SalNotificacionNormaSuscrita {
-							Id = nns.Id,
-							IdTipoUnidadTiempoAntelacion = nns.IdTipoUnidadTiempoAntelacion,
-							NombreTipoUnidadTiempoAntelacion = tiposUnidadesTiempo.FirstOrDefault(tut => tut.Id == nns.IdTipoUnidadTiempoAntelacion)?.Nombre,
-							CantAntelacion = nns.CantAntelacion
-						})],
-						ProximoVencimiento = entrada.Activado ? entrada.ProximoVencimiento : null
-					};
+                    SalNormaSuscrita retorno = new() {
+                        Id = obligacion.Id,
+                        Nombre = obligacion.Nombre,
+                        Descripcion = obligacion.Descripcion,
+                        Multa = obligacion.Multa,
+                        IdTipoPeriodicidad = periodicidad?.Id,
+                        NombreTipoPeriodicidad = periodicidad?.Nombre,
+                        IdCategoriaNorma = categoriaNorma?.Id,
+                        NombreCategoriaNorma = categoriaNorma?.Nombre,
+                        IdCargo = cargo?.Id,
+                        NombreCargo = cargo?.Nombre,
+                        OrdenVisual = obligacion.OrdenVisual,
+                        Editable = obligacion.Editable,
+                        Activado = obligacion.Activado,
+                        TemplateNorma = null,
+                        Fiscalizadores = [.. fiscalizadores.Select(fns => new SalFiscalizadorNormaSuscrita {
+                            Id = fns.Id,
+                            IdTipoFiscalizador = fns.IdTipoFiscalizador,
+                            NombreTipoFiscalizador = fns.TipoFiscalizador?.Nombre
+                        })],
+                        Notificaciones = [.. antelaciones.Select(nns => new SalNotificacionNormaSuscrita {
+                            Id = nns.Id,
+                            IdTipoUnidadTiempoAntelacion = nns.IdTipoUnidadTiempoAntelacion,
+                            NombreTipoUnidadTiempoAntelacion = nns.TipoUnidadTiempo?.Nombre,
+                            CantAntelacion = nns.CantAntelacion
+                        })],
+                        ProximoVencimiento = proximoVencimiento?.FechaVencimiento
+                    };
 
 					LambdaLogger.Log(
 						$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Creación exitosa de la norma - ID: {retorno.Id}.");
-
 					return Results.Ok(retorno);
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [NormaSuscrita] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error en la creación de la norma. " +
@@ -956,7 +796,7 @@ namespace TanatosAPI.Endpoints {
 					// Se modifica próximo vencimiento si es una fecha pasada y según periodicidad es posible calcular un próximo vencimiento...
 					if (entrada.Activado && entrada.ProximoVencimiento <= dateTimeProvider.UtcNow && tipoPeriodicidad != null && 
 					   (tipoPeriodicidad.DeltaDias != null || tipoPeriodicidad.DeltaMeses != null || tipoPeriodicidad.DeltaAnnos != null)) {
-						entrada.ProximoVencimiento = historialNormaSuscritaBcp.CalcularVencimientoFuturo(
+						entrada.ProximoVencimiento = historialNormaSuscritaUseCase.CalcularVencimientoFuturo(
 							DateTime.SpecifyKind(entrada.ProximoVencimiento!.Value, DateTimeKind.Utc),
 							tipoPeriodicidad
 						);
@@ -1099,9 +939,14 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Actualización exitosa de la norma suscrita - ID: {entrada.Id}.");
-
 					return Results.Ok(retorno);
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[PUT] - [NormaSuscrita] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error en la actualización de la norma suscrita - ID: {entrada.Id}. " +
@@ -1114,60 +959,30 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCompletarNormaEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/CompletarNorma", async (EntNormaSuscritaCompletarNorma entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, HistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao) => {
+			routes.MapPut("/CompletarNorma", async (EntNormaSuscritaCompletarNorma entrada, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaUseCase normaSuscritaUseCase) => {
 
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-					NormaSuscrita? existente = await normaSuscritaDao.ObtenerPorId(entrada.IdNormaSuscrita);
-					if (existente == null || !existente.Vigencia || existente.Sub != sub) {
-						LambdaLogger.Log(
-							$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El ID de norma suscrita es inválido.");
+                    (long idObligacion, long idVencimiento, DateTime fechaCompletitud) = await normaSuscritaUseCase.CompletarNormaValidandoPertenencia(sub, entrada.IdNormaSuscrita, entrada.IdHistorialNormaSuscrita);
 
-						return Results.BadRequest($"El ID de norma suscrita es inválido.");
-					}
-
-					HistorialNormaSuscrita? historialExistente = await historialNormaSuscritaDao.ObtenerPorId(entrada.IdHistorialNormaSuscrita);
-					if (historialExistente == null || !historialExistente.Vigencia || historialExistente.IdNormaSuscrita != entrada.IdNormaSuscrita) {
-						LambdaLogger.Log(
-							$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El ID de norma suscrita es inválido.");
-
-						return Results.BadRequest($"El ID de norma suscrita es inválido.");
-					}
-
-					if (historialExistente.FechaCompletitud != null) {
-						LambdaLogger.Log(
-							$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"La norma suscrita ya se encuentra completada.");
-
-						return Results.BadRequest($"La norma suscrita ya se encuentra completada.");
-					}
-
-					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
-
-					SalNormaSuscritaCompletarNorma retorno = new();
-
-					try {
-						await historialNormaSuscritaUseCase.CompletarHistorialNormaSuscrita(historialExistente, transaction);
-						retorno.FechaCompletitud = historialExistente.FechaCompletitud;
-
-						await transaction.CommitAsync();
-					} catch {
-						await transaction.RollbackAsync();
-						throw;
-					}
+					SalNormaSuscritaCompletarNorma retorno = new() {
+						FechaCompletitud = fechaCompletitud
+                    };
 
 					LambdaLogger.Log(
 						$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Se da por completada exitosamente la norma suscrita - ID Norma Suscrita: {entrada.IdNormaSuscrita} - ID Historial Norma Suscrita: {entrada.IdHistorialNormaSuscrita}.");
-
 					return Results.Ok(retorno);
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al dar por completada la norma suscrita - ID Norma Suscrita: {entrada.IdNormaSuscrita} - ID Historial Norma Suscrita: {entrada.IdHistorialNormaSuscrita}. " +
@@ -1180,49 +995,25 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, INormaSuscritaDao normaSuscritaDao, NormaSuscritaUseCase normaSuscritaUseCase) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaUseCase normaSuscritaUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-					NormaSuscrita? existente = (await normaSuscritaDao.ObtenerPorSub(sub)).FirstOrDefault(d => d.Id == id);
-
-					if (existente == null) {
-						LambdaLogger.Log(
-							$"[DELETE] - [NormaSuscrita] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El usuario no posee una norma con ID {id}.");
-
-						return Results.BadRequest($"El usuario no posee una norma con ID {id}.");
-					}
-
-					// Se valida que la norma suscrita puede ser eliminada según marca de editable (no se deben eliminar normas suscritas generadas desde inscripción a templates)...
-					if (!existente.Editable) {
-						LambdaLogger.Log(
-							$"[DELETE] - [NormaSuscrita] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"La norma suscrita no es eliminable.");
-
-						return Results.BadRequest($"La norma suscrita no es eliminable.");
-					}
-
-					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
-
-					try { 
-						await normaSuscritaUseCase.EliminarNormaSuscrita(existente, transaction);
-
-						await transaction.CommitAsync();
-					} catch {
-						await transaction.RollbackAsync();
-						throw;
-					}
+					await normaSuscritaUseCase.EliminarNormaValidandoPertenencia(sub, id);
 
 					LambdaLogger.Log(
 						$"[DELETE] - [NormaSuscrita] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Eliminación exitosa de la norma - ID: {id}.");
-
 					return Results.Ok();
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[DELETE] - [NormaSuscrita] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[DELETE] - [NormaSuscrita] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error en la eliminación de la norma - ID: {id}. " +
@@ -1254,8 +1045,13 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
                         $"[POST] - [NormaSuscrita] - [ProcesarNotificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
                         $"Se procesó exitosamente la notificación - ID Norma Suscrita: {entrada.IdNormaSuscrita} - Cron: {entrada.Cron} - ID Tipo Unidad Tiempo Antelacion: {entrada.IdTipoUnidadTiempoAntelacion} - Cant. Antelación: {entrada.CantAntelacion} - Programar Siguiente Ejecución: {entrada.ProgramarSiguienteEjecucion}.");
-
                     return Results.Ok();
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[POST] - [NormaSuscrita] - [ProcesarNotificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
                 } catch (Exception ex) {
                     LambdaLogger.Log(
                         $"[POST] - [NormaSuscrita] - [ProcesarNotificacion] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
@@ -1427,9 +1223,14 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerPorCodigoAccesoConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de la norma suscrita por código de acceso con vencimiento.");
-
 					return Results.Ok(retorno);
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[GET] - [NormaSuscrita] - [ObtenerPorCodigoAccesoConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerPorCodigoAccesoConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener la norma suscrita por código de acceso con vencimiento. " +
@@ -1442,67 +1243,27 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCompletarNormaPorCodigoAccesoEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/CompletarNormaPorCodigoAcceso", async (EntNormaSuscritaCompletarNormaPorCodigoAcceso entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, HistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, IHistorialNotificacionDao historialNotificacionDao) => {
+			routes.MapPut("/CompletarNormaPorCodigoAcceso", async (EntNormaSuscritaCompletarNormaPorCodigoAcceso entrada, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaUseCase normaSuscritaUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					// Se valida que el código de acceso exista, esté vigente y no haya caducado...
-					HistorialNotificacion? historialNotificacion = await historialNotificacionDao.ObtenerPorCodigoAcceso(CryptoHelper.HashSHA256(entrada.CodigoAcceso), true);
-					if (historialNotificacion == null || !historialNotificacion.Vigencia || historialNotificacion.FechaCaducidadCodigoAcceso < dateTimeProvider.UtcNow) {
-						LambdaLogger.Log(
-							$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El código de acceso es inválido.");
+					(long idObligacion, long idVencimiento, DateTime fechaCompletitud) = await normaSuscritaUseCase.CompletarNormaPorCodigoAcceso(entrada.CodigoAcceso);
 
-						return Results.BadRequest($"El código de acceso es inválido.");
-					}
-
-					HistorialNormaSuscrita? historialExistente = await historialNormaSuscritaDao.ObtenerPorId(historialNotificacion.IdHistorialNormaSuscrita);
-					if (historialExistente == null || !historialExistente.Vigencia) {
-						LambdaLogger.Log(
-							$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"La obligación no puede darse por completada.");
-
-						return Results.BadRequest($"La obligación no puede darse por completada.");
-					}
-
-					if (historialExistente.FechaCompletitud != null) {
-						LambdaLogger.Log(
-							$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"La obligación ya se encuentra completada.");
-
-						return Results.BadRequest($"La obligación ya se encuentra completada.");
-					}
-
-					NormaSuscrita? existente = await normaSuscritaDao.ObtenerPorId(historialExistente.IdNormaSuscrita);
-					if (existente == null || !existente.Vigencia) {
-						LambdaLogger.Log(
-							$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"La obligación no puede darse por completada.");
-
-						return Results.BadRequest($"La obligación no puede darse por completada.");
-					}
-
-					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
-
-					SalNormaSuscritaCompletarNorma retorno = new();
-
-					try {
-						await historialNormaSuscritaUseCase.CompletarHistorialNormaSuscrita(historialExistente, transaction);
-						retorno.FechaCompletitud = historialExistente.FechaCompletitud;
-
-						await transaction.CommitAsync();
-					} catch {
-						await transaction.RollbackAsync();
-						throw;
-					}
+                    SalNormaSuscritaCompletarNorma retorno = new() {
+						FechaCompletitud = fechaCompletitud
+                    };
 
 					LambdaLogger.Log(
 						$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Se da por completada exitosamente la norma suscrita por código de acceso - ID Norma Suscrita: {historialExistente.IdNormaSuscrita} - ID Historial Norma Suscrita: {historialExistente.Id}.");
-
+						$"Se da por completada exitosamente la norma suscrita por código de acceso - ID Norma Suscrita: {idObligacion} - ID Historial Norma Suscrita: {idVencimiento}.");
 					return Results.Ok(retorno);
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al dar por completada la norma suscrita por código de acceso. " +
