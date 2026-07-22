@@ -10,8 +10,8 @@ namespace TanatosAPI.Business {
 		public async Task<List<FiscalizadorNormaSuscrita>> ObtenerVigentesPorNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			return await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(idNormaSuscrita, true, transaction);
 		}
-		
-		public async Task Eliminar(FiscalizadorNormaSuscrita fiscalizadorNormaSuscrita, NpgsqlTransaction? transaction = null) {
+
+        public async Task Eliminar(FiscalizadorNormaSuscrita fiscalizadorNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			if (fiscalizadorNormaSuscrita.Vigencia) {
 				fiscalizadorNormaSuscrita.FechaEliminacion = dateTimeProvider.UtcNow;
 				fiscalizadorNormaSuscrita.Vigencia = false;
@@ -39,23 +39,28 @@ namespace TanatosAPI.Business {
 			return nuevo;
 		}
 
-		public async Task ActualizarPorNormaSuscrita(long idNormaSuscrita, HashSet<long> idTiposFiscalizadores, NpgsqlTransaction? transaction = null) {
+		public async Task<List<FiscalizadorNormaSuscrita>> ActualizarPorNormaSuscrita(long idNormaSuscrita, HashSet<long> idTiposFiscalizadores, NpgsqlTransaction? transaction = null) {
 			List<FiscalizadorNormaSuscrita> fiscalizadoresExistentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(idNormaSuscrita, true, transaction);
-			HashSet<long> existentes = [.. fiscalizadoresExistentes.Select(n => n.IdTipoFiscalizador)];
+			HashSet<long> idExistentes = [.. fiscalizadoresExistentes.Select(n => n.IdTipoFiscalizador)];
 
 			// Se eliminan los fiscalizadores existentes que no se incluyen en la entrada...
-			foreach (FiscalizadorNormaSuscrita fiscalizadorExistente in fiscalizadoresExistentes) {
+			foreach (FiscalizadorNormaSuscrita fiscalizadorExistente in fiscalizadoresExistentes.ToList()) {
 				if (!idTiposFiscalizadores.Contains(fiscalizadorExistente.IdTipoFiscalizador)) {
 					await Eliminar(fiscalizadorExistente, transaction);
-				}
+                    fiscalizadoresExistentes.Remove(fiscalizadorExistente);
+                }
 			}
 
 			// Se agregan los nuevos fiscalizadores...
 			foreach (long idTipoFiscalizadorNuevo in idTiposFiscalizadores) {
-				if (!existentes.Contains(idTipoFiscalizadorNuevo)) {
-					await Insertar(idNormaSuscrita, idTipoFiscalizadorNuevo, transaction);
-				}
+				if (!idExistentes.Contains(idTipoFiscalizadorNuevo)) {
+                    FiscalizadorNormaSuscrita nuevo = await Insertar(idNormaSuscrita, idTipoFiscalizadorNuevo, transaction);
+					fiscalizadoresExistentes.Add(nuevo);
+
+                }
 			}
+
+			return fiscalizadoresExistentes;
 		}
 	}
 }
