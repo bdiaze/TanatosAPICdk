@@ -48,23 +48,28 @@ namespace TanatosAPI.Business {
 			return nuevo;
 		}
 
-		public async Task ActualizarPorNormaSuscrita(long idNormaSuscrita, HashSet<(long IdTipoUnidadTiempoAntelacion, int CantAntelacion)> notificacionesNormaSuscrita, NpgsqlTransaction? transaction = null) {
+		public async Task<List<NotificacionNormaSuscrita>> ActualizarPorNormaSuscrita(long idNormaSuscrita, HashSet<(long IdTipoUnidadTiempoAntelacion, int CantAntelacion)> notificacionesNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			List<NotificacionNormaSuscrita> notificacionesExistentes = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(idNormaSuscrita, true, transaction);
 			HashSet<(long IdTipoUnidadTiempoAntelacion, int CantAntelacion)> existentes = [.. notificacionesExistentes.Select(n => (n.IdTipoUnidadTiempoAntelacion, n.CantAntelacion))];
 
 			// Se eliminan las notificaciones normas existentes que no se incluyen en la entrada...
-			foreach (NotificacionNormaSuscrita notificacionExistente in notificacionesExistentes) {
+			foreach (NotificacionNormaSuscrita notificacionExistente in notificacionesExistentes.ToList()) {
 				if (!notificacionesNormaSuscrita.Contains((notificacionExistente.IdTipoUnidadTiempoAntelacion, notificacionExistente.CantAntelacion))) {
 					await Eliminar(notificacionExistente, transaction);
+					notificacionesExistentes.Remove(notificacionExistente);
 				}
 			}
 
 			// Se agregan las nuevas notificaciones normas...
 			foreach ((long IdTipoUnidadTiempoAntelacion, int CantAntelacion) notificacionNueva in notificacionesNormaSuscrita) {
 				if (!existentes.Contains(notificacionNueva)) {
-					await Insertar(idNormaSuscrita, notificacionNueva.IdTipoUnidadTiempoAntelacion, notificacionNueva.CantAntelacion, transaction);
-				}
+                    NotificacionNormaSuscrita nuevo = await Insertar(idNormaSuscrita, notificacionNueva.IdTipoUnidadTiempoAntelacion, notificacionNueva.CantAntelacion, transaction);
+					notificacionesExistentes.Add(nuevo);
+
+                }
 			}
-		}
+
+			return notificacionesExistentes;
+        }
 	}
 }
