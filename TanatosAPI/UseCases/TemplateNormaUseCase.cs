@@ -7,7 +7,7 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
 	public class TemplateNormaUseCase(NormaSuscritaUseCase normaSuscritaUseCase, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, ITemplateNormaDao templateNormaDao, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, INormaSuscritaDao normaSuscritaDao) {
-		public async Task Eliminar(long idTemplate, long? idNorma, NpgsqlTransaction? transaction = null) {
+		public async Task Eliminar(long idTemplate, long? idNorma, NpgsqlTransaction transaction) {
 			Dictionary<long, TemplateNorma> templateNormas = (await templateNormaDao.ObtenerPorTemplate(idTemplate, transaction)).ToDictionary(tn => tn.IdNorma, tn => tn);
 			Dictionary<long, HashSet<(long IdTipoUnidadTiempoAntelacion, int CantAntelacion)>> templateNormasNotificaciones =
 				(await templateNormaNotificacionBcp.ObtenerPorTemplateNorma(idTemplate, idNorma, transaction))
