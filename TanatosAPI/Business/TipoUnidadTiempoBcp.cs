@@ -6,7 +6,24 @@ using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Business {
 	public class TipoUnidadTiempoBcp(ITipoUnidadTiempoDao tipoUnidadTiempoDao) : ITipoUnidadTiempoBcp {
-		public async Task<TipoUnidadTiempo?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
+        public bool EstaVigente(TipoUnidadTiempo? tipoUnidadTiempo) {
+            return tipoUnidadTiempo != null && tipoUnidadTiempo.Vigencia;
+        }
+
+        public async Task<List<TipoUnidadTiempo>> ValidarTodosVigentes(HashSet<long> ids, NpgsqlTransaction? transaction = null) {
+            if (ids.Count == 0) return [];
+
+            List<TipoUnidadTiempo> vigentes = await ObtenerVigentes(transaction);
+
+            HashSet<long> idsVigentes = [.. vigentes.Select(f => f.Id)];
+            foreach (long id in ids) {
+                if (!idsVigentes.Contains(id)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, $"La unidad de tiempo con ID {id} no está vigente", "Tipo de unidad de tiempo inválida.");
+            }
+
+            return [.. vigentes.Where(f => ids.Contains(f.Id))];
+        }
+
+        public async Task<TipoUnidadTiempo?> Obtener(long id, NpgsqlTransaction? transaction = null) {
 			return await tipoUnidadTiempoDao.ObtenerPorId(id, transaction);
 		}
 
@@ -19,7 +36,7 @@ namespace TanatosAPI.Business {
 		}
 
 		public async Task<TipoUnidadTiempo> Insertar(long id, string nombre, string? nombrePlural, long cantSegundos, long? cantMinutos, long? cantHoras, long? cantDias, bool vigencia, NpgsqlTransaction? transaction = null) {
-			TipoUnidadTiempo? existente = await ObtenerPorId(id, transaction);
+			TipoUnidadTiempo? existente = await Obtener(id, transaction);
 			if (existente != null) throw new ErrorValidacion(TipoErrorValidacion.YaExiste, $"Ya existe una unidad de tiempo con ID {id}.");
 			if (nombrePlural == null) throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, $"La unidad de tiempo debe tener un nombre plural.");
 			if (cantDias != null && cantHoras == null) throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, $"La unidad de tiempo requiere definir una cantidad de horas que la representan.");
@@ -40,7 +57,7 @@ namespace TanatosAPI.Business {
 		}
 
 		public async Task<TipoUnidadTiempo> Actualizar(long id, string nombre, string? nombrePlural, long cantSegundos, long? cantMinutos, long? cantHoras, long? cantDias, bool vigencia, NpgsqlTransaction? transaction = null) {
-			TipoUnidadTiempo? existente = await ObtenerPorId(id, transaction);
+			TipoUnidadTiempo? existente = await Obtener(id, transaction);
 			if (existente == null) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, $"No existe una unidad de tiempo con ID {id}.");
 			if (nombrePlural == null) throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, $"La unidad de tiempo debe tener un nombre plural.");
 			if (cantDias != null && cantHoras == null) throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, $"La unidad de tiempo requiere definir una cantidad de horas que la representan.");
@@ -65,7 +82,7 @@ namespace TanatosAPI.Business {
 		}
 
 		public async Task Eliminar(long idTipoUnidadTiempo, NpgsqlTransaction? transaction = null) {
-            TipoUnidadTiempo? existente = await ObtenerPorId(idTipoUnidadTiempo, transaction);
+            TipoUnidadTiempo? existente = await Obtener(idTipoUnidadTiempo, transaction);
 			if (existente != null) {
 				await tipoUnidadTiempoDao.Eliminar(idTipoUnidadTiempo, transaction);
 			}
