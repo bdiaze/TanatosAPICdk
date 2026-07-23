@@ -43,8 +43,23 @@ namespace TanatosAPI.Business {
             return vencimiento!;
         }
 
+		public async Task<List<HistorialNormaSuscrita>> ObtenerVigentesPorNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			return await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(idNormaSuscrita, true, transaction);
+		}
+
+		public async Task<HistorialNormaSuscrita?> ObtenerUltimoVigentePorNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			List<HistorialNormaSuscrita> vigentes = await ObtenerVigentesPorNormaSuscrita(idNormaSuscrita, transaction);
+			return vigentes.OrderByDescending(hns => hns.FechaVencimiento).FirstOrDefault();
+		}
+
         public async Task<List<HistorialNormaSuscrita>> ObtenerVigentesPorNormaSuscritaNoCompletadas(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			return await historialNormaSuscritaDao.ObtenerPorNormaSuscritaYFechaCompletitud(idNormaSuscrita, null, true, transaction);
+			List<HistorialNormaSuscrita> vigentes = await ObtenerVigentesPorNormaSuscrita(idNormaSuscrita, transaction);
+			return [.. vigentes.Where(v => v.FechaCompletitud == null)];
+		}
+
+		public async Task<List<HistorialNormaSuscrita>> ObtenerVigentesPorNormaSuscritaCompletadas(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
+			List<HistorialNormaSuscrita> vigentes = await ObtenerVigentesPorNormaSuscrita(idNormaSuscrita, transaction);
+			return [.. vigentes.Where(v => v.FechaCompletitud != null)];
 		}
 
 		public async Task<DateTime> ObtenerProximoVencimiento(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
