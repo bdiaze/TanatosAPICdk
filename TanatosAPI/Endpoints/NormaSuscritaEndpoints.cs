@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using System.Diagnostics;
 using System.Security.Claims;
-using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.DocumentoAdjunto;
 using TanatosAPI.Entities.Others.Kairos;
@@ -13,7 +12,6 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
-using TanatosAPI.Repositories;
 using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
@@ -38,74 +36,39 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, INormaSuscritaDao normaSuscritaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, ICategoriaNormaDao categoriaNormaDao, ICargoDao cargoDao, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao) => {
+			routes.MapGet("/Vigentes/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaUseCase normaSuscritaUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-					List<NormaSuscrita> normas = await normaSuscritaDao.ObtenerPorSub(sub, idNegocio, true);
-
-					Dictionary<long, TipoPeriodicidad> periodicidades = [];
-					Dictionary<long, CategoriaNorma> categorias = [];
-					Dictionary<long, Cargo> cargos = [];
-					if (normas.Count > 0) {
-						periodicidades = (await tipoPeriodicidadBcp.ObtenerPorVigencia(true)).ToDictionary(p => p.Id, p => p);
-						categorias = (await categoriaNormaDao.ObtenerPorVigencia(true)).ToDictionary(c => c.Id, c => c);
-						cargos = (await cargoDao.ObtenerPorSub(sub, idNegocio, true)).ToDictionary(c => c.Id, c => c);
-					}
-
-					Dictionary<(long IdTemplate, long IdNorma), TemplateNorma> templateNormas = [];
-					foreach (long? idTemplate in normas.Where(n => n.IdTemplate != null).Select(n => n.IdTemplate).Distinct()) {
-						if (idTemplate != null) {
-							foreach (TemplateNorma templateNorma in await templateNormaDao.ObtenerPorTemplate(idTemplate.Value)) {
-								templateNormas[(templateNorma.IdTemplate, templateNorma.IdNorma)] = templateNorma;
-							}
-						}
-					}
-
-					Dictionary<long, Template> templates = [];
-					if (normas.Any(n => n.IdTemplate != null)) {
-						templates = (await templateDao.ObtenerPorVigencia(true)).ToDictionary(p => p.Id, p => p);
-					}
+					List<NormaSuscrita> normas = await normaSuscritaUseCase.ObtenerVigentesPorSubConTemplatesYTipos(sub, idNegocio);
 
 					List<SalNormaSuscrita> retorno = [.. normas.Select(n => {
-							TemplateNorma? templateNorma = null;
-							if (n.IdTemplate != null && n.IdNorma != null) {
-								templateNormas.TryGetValue((n.IdTemplate.Value, n.IdNorma.Value), out templateNorma);
-							}
-
-							TipoPeriodicidad? periodicidad = (n.IdTipoPeriodicidad != null && periodicidades.TryGetValue(n.IdTipoPeriodicidad.Value, out TipoPeriodicidad? p)) ? p : null;
-							CategoriaNorma? categoria = (n.IdCategoriaNorma != null && categorias.TryGetValue(n.IdCategoriaNorma.Value, out CategoriaNorma? cat)) ? cat : null;
-							Cargo? cargo = (n.IdCargo != null && cargos.TryGetValue(n.IdCargo.Value, out Cargo? c)) ? c : null;
-
-							TipoPeriodicidad? periodicidadTemplateNorma = (templateNorma?.IdTipoPeriodicidad != null && periodicidades.TryGetValue(templateNorma.IdTipoPeriodicidad.Value, out TipoPeriodicidad? ptn)) ? ptn : null;
-							CategoriaNorma? categoriaTemplateNorma = (templateNorma?.IdCategoriaNorma != null && categorias.TryGetValue(templateNorma.IdCategoriaNorma, out CategoriaNorma? ctn)) ? ctn : null;
-
 							return new SalNormaSuscrita() {
 								Id = n.Id,
 								Nombre = n.Nombre,
 								Descripcion = n.Descripcion,
-								IdTipoPeriodicidad = periodicidad?.Id,
-								NombreTipoPeriodicidad = periodicidad?.Nombre,
 								Multa = n.Multa,
-								IdCategoriaNorma = categoria?.Id,
-								NombreCategoriaNorma = categoria?.Nombre,
-								IdCargo = cargo?.Id,
-								NombreCargo = cargo?.Nombre,
+								IdTipoPeriodicidad = n.TipoPeriodicidad?.Id,
+								NombreTipoPeriodicidad = n.TipoPeriodicidad?.Nombre,
+								IdCategoriaNorma = n.CategoriaNorma?.Id,
+								NombreCategoriaNorma = n.CategoriaNorma?.Nombre,
+								IdCargo = n.Cargo?.Id,
+								NombreCargo = n.Cargo?.Nombre,
 								OrdenVisual = n.OrdenVisual,
 								Editable = n.Editable,
 								Activado = n.Activado,
-								TemplateNorma = (templateNorma == null) ? null : new SalTemplateNorma() {
-									IdTemplate = templateNorma.IdTemplate,
-									NombreTemplate = templates[templateNorma.IdTemplate].Nombre,
-									Nombre = templateNorma.Nombre,
-									Descripcion = templateNorma.Descripcion,
-									IdTipoPeriodicidad = periodicidadTemplateNorma?.Id,
-									NombreTipoPeriodicidad = periodicidadTemplateNorma?.Nombre,
-									Multa = templateNorma.Multa,
-									IdCategoriaNorma = categoriaTemplateNorma?.Id,
-									NombreCategoriaNorma = categoriaTemplateNorma?.Nombre
+								TemplateNorma = (n.TemplateNorma == null) ? null : new SalTemplateNorma() {
+									IdTemplate = n.TemplateNorma!.Template!.Id,
+									NombreTemplate = n.TemplateNorma!.Template!.Nombre,
+									Nombre = n.TemplateNorma!.Nombre,
+									Descripcion = n.TemplateNorma!.Descripcion,
+									Multa = n.TemplateNorma!.Multa,
+									IdTipoPeriodicidad = n.TemplateNorma!.TipoPeriodicidad?.Id,
+									NombreTipoPeriodicidad = n.TemplateNorma!.TipoPeriodicidad?.Nombre,
+									IdCategoriaNorma = n.TemplateNorma!.CategoriaNorma?.Id,
+									NombreCategoriaNorma = n.TemplateNorma!.CategoriaNorma?.Nombre
 								}
 							};
 						})
@@ -134,147 +97,74 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorId(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/ObtenerPorId/{idNormaSuscrita}", async (long idNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INormaSuscritaDao normaSuscritaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICategoriaNormaDao categoriaNormaDao, ICargoDao cargoDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, ITipoFiscalizadorDao tipoFiscalizadorDao, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp) => {
+			routes.MapGet("/ObtenerPorId/{idNormaSuscrita}", async (long idNormaSuscrita, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaUseCase normaSuscritaUseCase) => {
 
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-					NormaSuscrita? existente = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita);
+					NormaSuscrita obligacion = await normaSuscritaUseCase.ObtenerConTemplateTiposFiscalizadoresNotificacionesYVencimientoValidandoVigenciaYPertenencia(
+						idNormaSuscrita, 
+						sub
+					);
 
-					if (existente == null || !existente.Vigencia || existente.Sub != sub) {
-						LambdaLogger.Log(
-							$"[GET] - [NormaSuscrita] - [ObtenerPorId] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"El ID de norma suscrita es inválido.");
-
-						return Results.BadRequest($"El ID de norma suscrita es inválido.");
-					}
-
-					Dictionary<long, TipoPeriodicidad> periodicidades = (await tipoPeriodicidadBcp.ObtenerPorVigencia(true)).ToDictionary(p => p.Id, p => p);
-                    Dictionary<long, CategoriaNorma> categorias = (await categoriaNormaDao.ObtenerPorVigencia(true)).ToDictionary(c => c.Id, c => c);
-
-					List<FiscalizadorNormaSuscrita> fiscalizadoresNormaSuscrita = await fiscalizadorNormaSuscritaBcp.ObtenerVigentesPorNormaSuscrita(existente.Id);
-
-					Dictionary<long, TipoFiscalizador> fiscalizadores = [];
-					if (fiscalizadoresNormaSuscrita.Count > 0) {
-						fiscalizadores = (await tipoFiscalizadorDao.ObtenerPorVigencia(true)).ToDictionary(f => f.Id, f => f);
-					}
-
-					List<NotificacionNormaSuscrita> notificacionesNormaSuscrita = await notificacionNormaSuscritaBcp.ObtenerVigentesPorNormaSuscrita(existente.Id);
-
-					Dictionary<long, TipoUnidadTiempo> unidadesTiempo = [];
-					if (notificacionesNormaSuscrita.Count > 0) {
-						unidadesTiempo = (await tipoUnidadTiempoBcp.ObtenerPorVigencia(true)).ToDictionary(ut => ut.Id, ut => ut);
-					}
-
-					Template? template = null;
-					TemplateNorma? templateNorma = null;
-					List<TemplateNormaFiscalizador> templateNormaFiscalizadores = [];
-					List<TemplateNormaNotificacion> templateNormaNotificaciones = [];
-					if (existente.IdTemplate != null && existente.IdNorma != null) {
-						template = await templateDao.ObtenerPorId(existente.IdTemplate.Value);
-
-						// Obtengo la información del template norma...
-						templateNorma = (await templateNormaDao.ObtenerPorTemplate(existente.IdTemplate!.Value)).FirstOrDefault(tn => tn.IdNorma == existente.IdNorma);
-
-						// Obtengo la información de los fiscalizadores del template norma...
-						templateNormaFiscalizadores = await templateNormaFiscalizadorDao.ObtenerPorTemplateNorma(templateNorma!.IdTemplate, templateNorma!.IdNorma);
-						if (templateNormaFiscalizadores.Count > 0 && (fiscalizadores == null || fiscalizadores.Count == 0)) {
-							fiscalizadores = (await tipoFiscalizadorDao.ObtenerPorVigencia(true)).ToDictionary(f => f.Id, f => f);
-						}
-
-						// Obtengo la información de las notificaciones del template norma...
-						templateNormaNotificaciones = await templateNormaNotificacionBcp.ObtenerPorTemplateNorma(templateNorma!.IdTemplate, templateNorma!.IdNorma);
-						if (templateNormaNotificaciones.Count > 0 && (unidadesTiempo == null || unidadesTiempo.Count == 0)) {
-							unidadesTiempo = (await tipoUnidadTiempoBcp.ObtenerPorVigencia(true)).ToDictionary(ut => ut.Id, ut => ut);
-						}
-					}
-
-					List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(existente.Id, true);
-					HistorialNormaSuscrita? historialNormaSuscrita = vencimientos
-							.OrderByDescending(hns => hns.FechaVencimiento)
-							.FirstOrDefault();
-
-                    Dictionary<long, Cargo> cargos = (await cargoDao.ObtenerPorSub(sub, existente.IdNegocio, true)).ToDictionary(c => c.Id, c => c);
-
-                    TipoPeriodicidad? periodicidad = (existente.IdTipoPeriodicidad != null && periodicidades.TryGetValue(existente.IdTipoPeriodicidad.Value, out TipoPeriodicidad? pns)) ? pns : null;
-                    CategoriaNorma? categoria = (existente.IdCategoriaNorma != null && categorias.TryGetValue(existente.IdCategoriaNorma.Value, out CategoriaNorma? cn)) ? cn : null;
-                    Cargo? cargo = (existente.IdCargo != null && cargos.TryGetValue(existente.IdCargo.Value, out Cargo? c)) ? c : null;
-
-                    TipoPeriodicidad? periodicidadTemplateNorma = (templateNorma?.IdTipoPeriodicidad != null && periodicidades.TryGetValue(templateNorma.IdTipoPeriodicidad.Value, out TipoPeriodicidad? ptn)) ? ptn : null;
-                    CategoriaNorma? categoriaTemplateNorma = (templateNorma?.IdCategoriaNorma != null && categorias.TryGetValue(templateNorma.IdCategoriaNorma, out CategoriaNorma? ctn)) ? ctn : null;
-
-                    SalNormaSuscrita retorno = new() {
-						Id = existente.Id,
-						Nombre = existente.Nombre,
-						Descripcion = existente.Descripcion,
-						IdTipoPeriodicidad = periodicidad?.Id,
-						NombreTipoPeriodicidad = periodicidad?.Nombre,
-						Multa = existente.Multa,
-						IdCategoriaNorma = categoria?.Id,
-						NombreCategoriaNorma = categoria?.Nombre,
-						IdCargo = cargo?.Id,
-						NombreCargo = cargo?.Nombre,
-						OrdenVisual = existente.OrdenVisual,
-						Editable = existente.Editable,
-						Activado = existente.Activado,
-						TemplateNorma = (template == null || templateNorma == null) ? null : new SalTemplateNorma() {
-							IdTemplate = template.Id,
-							NombreTemplate = template.Nombre,
-							Nombre = templateNorma.Nombre,
-							Descripcion = templateNorma.Descripcion,
-							IdTipoPeriodicidad = periodicidadTemplateNorma?.Id,
-							NombreTipoPeriodicidad = periodicidadTemplateNorma?.Nombre,
-							Multa = templateNorma.Multa,
-							IdCategoriaNorma = categoriaTemplateNorma?.Id,
-							NombreCategoriaNorma = categoriaTemplateNorma?.Nombre,
-							Fiscalizadores = [.. templateNormaFiscalizadores.Select(fns => {
-								TipoFiscalizador? fiscalizador = fiscalizadores.TryGetValue(fns.IdTipoFiscalizador, out TipoFiscalizador? ftn) ? ftn : null;
-								if (fiscalizador == null) return null;
-
+					SalNormaSuscrita retorno = new() {
+						Id = obligacion.Id,
+						Nombre = obligacion.Nombre,
+						Descripcion = obligacion.Descripcion,
+						Multa = obligacion.Multa,
+						IdTipoPeriodicidad = obligacion.TipoPeriodicidad?.Id,
+						NombreTipoPeriodicidad = obligacion.TipoPeriodicidad?.Nombre,
+						IdCategoriaNorma = obligacion.CategoriaNorma?.Id,
+						NombreCategoriaNorma = obligacion.CategoriaNorma?.Nombre,
+						IdCargo = obligacion.Cargo?.Id,
+						NombreCargo = obligacion.Cargo?.Nombre,
+						OrdenVisual = obligacion.OrdenVisual,
+						Editable = obligacion.Editable,
+						Activado = obligacion.Activado,
+						Fiscalizadores = [.. (obligacion.FiscalizadoresNormaSuscrita ?? []).Select(fns => {
+							return new SalFiscalizadorNormaSuscrita() {
+								Id = fns.Id,
+								IdTipoFiscalizador = fns.TipoFiscalizador!.Id,
+								NombreTipoFiscalizador = fns.TipoFiscalizador!.Nombre
+							};
+						})],
+						Notificaciones = [.. (obligacion.NotificacionesNormaSuscrita ?? []).Select(nns => {
+							return new SalNotificacionNormaSuscrita() {
+								Id = nns.Id,
+								IdTipoUnidadTiempoAntelacion = nns.TipoUnidadTiempo!.Id,
+								NombreTipoUnidadTiempoAntelacion = nns.TipoUnidadTiempo!.Nombre,
+								CantAntelacion = nns.CantAntelacion
+							};
+						})],
+						ProximoVencimiento = obligacion.HistorialesNormaSuscrita?.FirstOrDefault()?.FechaVencimiento,
+						TemplateNorma = (obligacion.TemplateNorma == null) ? null : new SalTemplateNorma() {
+							IdTemplate = obligacion.TemplateNorma!.Template!.Id,
+							NombreTemplate = obligacion.TemplateNorma!.Template!.Nombre,
+							Nombre = obligacion.TemplateNorma!.Nombre,
+							Descripcion = obligacion.TemplateNorma!.Descripcion,
+							Multa = obligacion.TemplateNorma!.Multa,
+							IdTipoPeriodicidad = obligacion.TemplateNorma!.TipoPeriodicidad?.Id,
+							NombreTipoPeriodicidad = obligacion.TemplateNorma!.TipoPeriodicidad?.Nombre,
+							IdCategoriaNorma = obligacion.TemplateNorma!.CategoriaNorma?.Id,
+							NombreCategoriaNorma = obligacion.TemplateNorma!.CategoriaNorma?.Nombre,
+							Fiscalizadores = [.. (obligacion.TemplateNorma!.TemplateNormaFiscalizadores ?? []).Select(fns => {
 								return new SalFiscalizadorNormaSuscrita() {
 									Id = 0,
-									IdTipoFiscalizador = fiscalizador.Id,
-									NombreTipoFiscalizador = fiscalizador.Nombre
+									IdTipoFiscalizador = fns.TipoFiscalizador!.Id,
+									NombreTipoFiscalizador = fns.TipoFiscalizador!.Nombre
 								};
-							}).Where(fns => fns != null).Select(fns => fns!)],
-							Notificaciones = [.. templateNormaNotificaciones.Select(nns => {
-								TipoUnidadTiempo? unidadTiempo = unidadesTiempo.TryGetValue(nns.IdTipoUnidadTiempoAntelacion, out TipoUnidadTiempo? tut) ? tut : null;
-								if (unidadTiempo == null) return null;
-
+							})],
+							Notificaciones = [.. (obligacion.TemplateNorma!.TemplateNormaNotificaciones ?? []).Select(nns => {
 								return new SalNotificacionNormaSuscrita() {
 									Id = 0,
-									IdTipoUnidadTiempoAntelacion = unidadTiempo.Id,
-									NombreTipoUnidadTiempoAntelacion = unidadTiempo.Nombre,
+									IdTipoUnidadTiempoAntelacion = nns.TipoUnidadTiempoAntelacion!.Id,
+									NombreTipoUnidadTiempoAntelacion = nns.TipoUnidadTiempoAntelacion!.Nombre,
 									CantAntelacion = nns.CantAntelacion
 								};
-							}).Where(nns => nns != null).Select(nns => nns!)],
+							})],
 						},
-						Fiscalizadores = [.. fiscalizadoresNormaSuscrita
-							.Where(fns => fiscalizadores.ContainsKey(fns.IdTipoFiscalizador))
-							.Select(fns => {
-								TipoFiscalizador fiscalizador = fiscalizadores[fns.IdTipoFiscalizador];
-								return new SalFiscalizadorNormaSuscrita() {
-									Id = fns.Id,
-									IdTipoFiscalizador = fiscalizador.Id,
-									NombreTipoFiscalizador = fiscalizador.Nombre
-								};
-							})
-						],
-						Notificaciones = [.. notificacionesNormaSuscrita
-							.Where(nns => unidadesTiempo.ContainsKey(nns.IdTipoUnidadTiempoAntelacion))
-							.Select(nns => {
-								TipoUnidadTiempo unidadTiempo = unidadesTiempo[nns.IdTipoUnidadTiempoAntelacion];
-								return new SalNotificacionNormaSuscrita() {
-									Id = nns.Id,
-									IdTipoUnidadTiempoAntelacion = unidadTiempo.Id,
-									NombreTipoUnidadTiempoAntelacion = unidadTiempo.Nombre,
-									CantAntelacion = nns.CantAntelacion
-								};
-							})
-						],
-						ProximoVencimiento = historialNormaSuscrita?.FechaVencimiento,
 					};
 
 					LambdaLogger.Log(
@@ -300,84 +190,35 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerConVencimiento(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/ObtenerConVencimiento/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, INormaSuscritaDao normaSuscritaDao, IHistorialNormaSuscritaDao historialNormaSuscritaDao, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICategoriaNormaDao categoriaNormaDao, ICargoDao cargoDao) => {
+			routes.MapGet("/ObtenerConVencimiento/{idNegocio}", async (long idNegocio, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaUseCase normaSuscritaUseCase) => {
 
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-					List<NormaSuscrita> normas = [.. await normaSuscritaDao.ObtenerPorSub(sub, idNegocio, null)];
+					List<NormaSuscrita> normas = await normaSuscritaUseCase.ObtenerVigentesPorSubConTemplatesTiposEHistorialVencimientos(sub, idNegocio);
 
-					Dictionary<long, TipoPeriodicidad> periodicidades = [];
-                    Dictionary<long, CategoriaNorma> categorias = [];
-					if (normas.Count > 0) {
-						periodicidades = (await tipoPeriodicidadBcp.ObtenerPorVigencia(true)).ToDictionary(p => p.Id, p => p);
-						categorias = (await categoriaNormaDao.ObtenerPorVigencia(true)).ToDictionary(c => c.Id, c => c);
-					}
+					List<SalNormaSuscritaObtenerConVencimiento> retorno = [.. normas.SelectMany(normaSuscrita => {
+						TipoPeriodicidad? periodicidad = normaSuscrita.TipoPeriodicidad ?? normaSuscrita.TemplateNorma?.TipoPeriodicidad;
+						CategoriaNorma? categoriaNorma = normaSuscrita.CategoriaNorma ?? normaSuscrita.TemplateNorma?.CategoriaNorma;
 
-					Dictionary<long, Template>? templates =  null;
-					Dictionary<(long idTemplate, long idNorma), TemplateNorma> templateNormas = [];
-					foreach (long? idTemplate in normas.Where(n => n.IdTemplate != null).Select(n => n.IdTemplate).Distinct()) {
-						if (idTemplate != null) {
-							templates ??= (await templateDao.ObtenerPorVigencia(true)).ToDictionary(t => t.Id, t => t);
-							Template? template = templates.TryGetValue(idTemplate.Value, out Template? t) ? t : null;
-
-							if (template == null) {
-								continue;
-							}
-
-							foreach (TemplateNorma templateNorma in await templateNormaDao.ObtenerPorTemplate(idTemplate.Value)) {
-								templateNormas[(templateNorma.IdTemplate, templateNorma.IdNorma)] = templateNorma;
-							}
-						}
-					}
-
-					Dictionary<long, Cargo> cargos = (await cargoDao.ObtenerPorSub(sub, idNegocio, true)).ToDictionary(c => c.Id, c => c);
-
-					List<SalNormaSuscritaObtenerConVencimiento> retorno = [];
-					foreach (NormaSuscrita normaSuscrita in normas) {
-						TemplateNorma? templateNorma = null;
-						if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null && templateNormas.TryGetValue((normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma.Value), out TemplateNorma? templateNormaAux)) {
-							templateNorma = templateNormaAux;
-						}
-
-						long? idCategoriaNorma = (normaSuscrita.IdCategoriaNorma ?? templateNorma?.IdCategoriaNorma);
-						long? idTipoPeriodicidad = (normaSuscrita.IdTipoPeriodicidad ?? templateNorma?.IdTipoPeriodicidad);
-
-						CategoriaNorma? categoriaNorma = idCategoriaNorma != null && categorias.TryGetValue(idCategoriaNorma!.Value, out CategoriaNorma? c) ? c : null;
-						TipoPeriodicidad? tipoPeriodicidad = idTipoPeriodicidad != null && periodicidades.TryGetValue(idTipoPeriodicidad!.Value, out TipoPeriodicidad? p) ? p : null;
-						Cargo? cargo = (normaSuscrita.IdCargo != null && cargos.TryGetValue(normaSuscrita.IdCargo.Value, out Cargo? car)) ? car : null;
-
-						List<HistorialNormaSuscrita> historialesNormaSuscrita = await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(normaSuscrita.Id, true);
-
-						// Solo se consideran en la salida las normas vigentes y activas, o los vencimientos ya completados
-						if ((normaSuscrita.Vigencia && normaSuscrita.Activado) || historialesNormaSuscrita.Any(h => h.FechaCompletitud != null)) {
-
-							// Si la norma no esta vigente o activa, se filtran los vencimientos para mostrar solo los ya completados...
-							if (!normaSuscrita.Vigencia || !normaSuscrita.Activado) {
-								historialesNormaSuscrita = [.. historialesNormaSuscrita.Where(h => h.FechaCompletitud != null)];
-							}
-
-							foreach (HistorialNormaSuscrita historialNormaSuscrita in historialesNormaSuscrita) {
-								retorno.Add(new SalNormaSuscritaObtenerConVencimiento {
-									FechaVencimiento = historialNormaSuscrita.FechaVencimiento,
-									FechaCompletitud = historialNormaSuscrita.FechaCompletitud,
-									IdNormaSuscrita = normaSuscrita.Id,
-									IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
-									NombreNorma = normaSuscrita.Nombre ?? templateNorma?.Nombre,
-									DescripcionNorma = normaSuscrita.Descripcion ?? templateNorma?.Descripcion,
-									MultaNorma = normaSuscrita.Multa ?? templateNorma?.Multa,
-									IdCategoriaNorma = categoriaNorma?.Id,
-									NombreCategoriaNorma = categoriaNorma?.NombreCorto ?? categoriaNorma?.Nombre,
-									IdTipoPeriodicidad = tipoPeriodicidad?.Id,
-									NombreTipoPeriodicidad = tipoPeriodicidad?.Nombre,
-									IdCargo = cargo?.Id,
-									NombreCargo = cargo?.Nombre,
-								});
-							}
-						}
-					}
+						return (normaSuscrita.HistorialesNormaSuscrita ?? []).Select(historialNormaSuscrita => new SalNormaSuscritaObtenerConVencimiento {
+							FechaVencimiento = historialNormaSuscrita.FechaVencimiento,
+							FechaCompletitud = historialNormaSuscrita.FechaCompletitud,
+							IdNormaSuscrita = normaSuscrita.Id,
+							IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
+							NombreNorma = normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre,
+							DescripcionNorma = normaSuscrita.Descripcion ?? normaSuscrita.TemplateNorma?.Descripcion,
+							MultaNorma = normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
+							IdTipoPeriodicidad = periodicidad?.Id,
+							NombreTipoPeriodicidad = periodicidad?.Nombre,
+							IdCategoriaNorma = categoriaNorma?.Id,
+							NombreCategoriaNorma = categoriaNorma?.NombreCorto ?? categoriaNorma?.Nombre,
+							IdCargo = normaSuscrita.Cargo?.Id,
+							NombreCargo = normaSuscrita.Cargo?.Nombre,
+						});
+					})];
 
 					LambdaLogger.Log(
 						$"[GET] - [NormaSuscrita] - [ObtenerConVencimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
@@ -569,7 +410,7 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
                     
-					(NormaSuscrita obligacion, TipoPeriodicidad? periodicidad, CategoriaNorma? categoriaNorma, Cargo? cargo, List<FiscalizadorNormaSuscrita> fiscalizadores, List<NotificacionNormaSuscrita> antelaciones, HistorialNormaSuscrita? proximoVencimiento)  = await normaSuscritaUseCase.CrearNormaSuscrita(
+					NormaSuscrita obligacion = await normaSuscritaUseCase.CrearNormaSuscrita(
 						sub,
 						entrada.IdNegocio,
 						entrada.Nombre,
@@ -580,8 +421,8 @@ namespace TanatosAPI.Endpoints {
 						entrada.IdCargo,
 						entrada.Activado,
 						entrada.ProximoVencimiento,
-						(entrada.Fiscalizadores ?? []).Select(f => f.IdTipoFiscalizador).ToHashSet(),
-						(entrada.Notificaciones ?? []).Select(n => (n.IdTipoUnidadTiempoAntelacion, n.CantAntelacion)).ToHashSet()
+						[.. (entrada.Fiscalizadores ?? []).Select(f => f.IdTipoFiscalizador)],
+						[.. (entrada.Notificaciones ?? []).Select(n => (n.IdTipoUnidadTiempoAntelacion, n.CantAntelacion))]
 					);
 
                     SalNormaSuscrita retorno = new() {
@@ -589,28 +430,28 @@ namespace TanatosAPI.Endpoints {
                         Nombre = obligacion.Nombre,
                         Descripcion = obligacion.Descripcion,
                         Multa = obligacion.Multa,
-                        IdTipoPeriodicidad = periodicidad?.Id,
-                        NombreTipoPeriodicidad = periodicidad?.Nombre,
-                        IdCategoriaNorma = categoriaNorma?.Id,
-                        NombreCategoriaNorma = categoriaNorma?.Nombre,
-                        IdCargo = cargo?.Id,
-                        NombreCargo = cargo?.Nombre,
+                        IdTipoPeriodicidad = obligacion.TipoPeriodicidad?.Id,
+                        NombreTipoPeriodicidad = obligacion.TipoPeriodicidad?.Nombre,
+                        IdCategoriaNorma = obligacion.CategoriaNorma?.Id,
+                        NombreCategoriaNorma = obligacion.CategoriaNorma?.Nombre,
+                        IdCargo = obligacion.Cargo?.Id,
+                        NombreCargo = obligacion.Cargo?.Nombre,
                         OrdenVisual = obligacion.OrdenVisual,
                         Editable = obligacion.Editable,
                         Activado = obligacion.Activado,
                         TemplateNorma = null,
-                        Fiscalizadores = [.. fiscalizadores.Select(fns => new SalFiscalizadorNormaSuscrita {
+                        Fiscalizadores = [.. obligacion.FiscalizadoresNormaSuscrita?.Select(fns => new SalFiscalizadorNormaSuscrita {
                             Id = fns.Id,
                             IdTipoFiscalizador = fns.IdTipoFiscalizador,
                             NombreTipoFiscalizador = fns.TipoFiscalizador?.Nombre
-                        })],
-                        Notificaciones = [.. antelaciones.Select(nns => new SalNotificacionNormaSuscrita {
+                        }) ?? []],
+                        Notificaciones = [.. obligacion.NotificacionesNormaSuscrita?.Select(nns => new SalNotificacionNormaSuscrita {
                             Id = nns.Id,
                             IdTipoUnidadTiempoAntelacion = nns.IdTipoUnidadTiempoAntelacion,
                             NombreTipoUnidadTiempoAntelacion = nns.TipoUnidadTiempo?.Nombre,
                             CantAntelacion = nns.CantAntelacion
-                        })],
-                        ProximoVencimiento = proximoVencimiento?.FechaVencimiento
+                        }) ?? []],
+                        ProximoVencimiento = obligacion.HistorialesNormaSuscrita?.FirstOrDefault()?.FechaVencimiento
                     };
 
 					LambdaLogger.Log(
@@ -966,15 +807,15 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-                    (long idObligacion, long idVencimiento, DateTime fechaCompletitud) = await normaSuscritaUseCase.CompletarNormaValidandoPertenencia(sub, entrada.IdNormaSuscrita, entrada.IdHistorialNormaSuscrita);
+                    HistorialNormaSuscrita vencimiento = await normaSuscritaUseCase.CompletarNormaValidandoPertenencia(sub, entrada.IdNormaSuscrita, entrada.IdHistorialNormaSuscrita);
 
 					SalNormaSuscritaCompletarNorma retorno = new() {
-						FechaCompletitud = fechaCompletitud
-                    };
+						FechaCompletitud = vencimiento.FechaCompletitud
+					};
 
 					LambdaLogger.Log(
 						$"[PUT] - [NormaSuscrita] - [CompletarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Se da por completada exitosamente la norma suscrita - ID Norma Suscrita: {entrada.IdNormaSuscrita} - ID Historial Norma Suscrita: {entrada.IdHistorialNormaSuscrita}.");
+						$"Se da por completada exitosamente la norma suscrita - ID Norma Suscrita: {vencimiento.IdNormaSuscrita} - ID Historial Norma Suscrita: {vencimiento.Id}.");
 					return Results.Ok(retorno);
                 } catch (ErrorValidacion ex) {
                     LambdaLogger.Log(
@@ -1247,15 +1088,15 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					(long idObligacion, long idVencimiento, DateTime fechaCompletitud) = await normaSuscritaUseCase.CompletarNormaPorCodigoAcceso(entrada.CodigoAcceso);
+					HistorialNormaSuscrita vencimiento = await normaSuscritaUseCase.CompletarNormaPorCodigoAcceso(entrada.CodigoAcceso);
 
                     SalNormaSuscritaCompletarNorma retorno = new() {
-						FechaCompletitud = fechaCompletitud
-                    };
+						FechaCompletitud = vencimiento.FechaCompletitud
+					};
 
 					LambdaLogger.Log(
 						$"[PUT] - [NormaSuscrita] - [CompletarNormaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Se da por completada exitosamente la norma suscrita por código de acceso - ID Norma Suscrita: {idObligacion} - ID Historial Norma Suscrita: {idVencimiento}.");
+						$"Se da por completada exitosamente la norma suscrita por código de acceso - ID Norma Suscrita: {vencimiento.IdNormaSuscrita} - ID Historial Norma Suscrita: {vencimiento.Id}.");
 					return Results.Ok(retorno);
                 } catch (ErrorValidacion ex) {
                     LambdaLogger.Log(
