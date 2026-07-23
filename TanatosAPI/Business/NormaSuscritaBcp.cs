@@ -24,6 +24,10 @@ namespace TanatosAPI.Business {
 			return normaSuscrita.Sub == sub;
 		}
 
+		public bool EstaActiva(NormaSuscrita normaSuscrita) {
+			return EstaVigente(normaSuscrita) && normaSuscrita.Activado;
+		}
+
         public bool EsEditable(NormaSuscrita normaSuscrita) {
             return normaSuscrita.Editable;
         }

@@ -7,6 +7,7 @@ namespace TanatosAPI.Interfaces.Business {
 	public interface INormaSuscritaBcp {
 		public bool EstaVigente(NormaSuscrita? normaSuscrita);
 		public bool Pertenece(NormaSuscrita normaSuscrita, string sub);
+		public bool EstaActiva(NormaSuscrita normaSuscrita);
 		public bool EsEditable(NormaSuscrita normaSuscrita);
 		public Task<List<NormaSuscrita>> ObtenerVigentesPorSubYNegocio(string sub, long idNegocio, NpgsqlTransaction? transaction = null);
         public Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita, NpgsqlTransaction? transaction = null);
