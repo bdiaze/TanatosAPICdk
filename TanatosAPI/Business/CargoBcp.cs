@@ -25,6 +25,12 @@ namespace TanatosAPI.Business {
 			return await cargoDao.Obtener(idCargo, transaction);
 		}
 
+		public async Task<Cargo?> ObtenerSoloVigente(long idCargo, NpgsqlTransaction? transaction = null) {
+			Cargo? existente = await Obtener(idCargo, transaction);
+			if (EstaVigente(existente)) return existente;
+			return null;
+		}
+
 		public async Task<Cargo> ObtenerValidandoVigencia(long idCargo, NpgsqlTransaction? transaction = null) {
             Cargo? existente = await Obtener(idCargo, transaction);
             if (!EstaVigente(existente)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El cargo no existe o no está vigente", "El cargo es inválido.");
@@ -43,11 +49,11 @@ namespace TanatosAPI.Business {
             return existente!;
         }
 
-		public async Task<List<Cargo>> ObtenerVigentes(string sub, long? idNegocio) {
-			return await cargoDao.ObtenerPorSub(sub, idNegocio, true);
+		public async Task<List<Cargo>> ObtenerVigentes(string sub, long? idNegocio, NpgsqlTransaction? transaction = null) {
+			return await cargoDao.ObtenerPorSub(sub, idNegocio, true, transaction);
 		}
 
-		public async Task<Cargo> Crear(string sub, string nombre, long idNegocio) {
+		public async Task<Cargo> Crear(string sub, string nombre, long idNegocio, NpgsqlTransaction? transaction = null) {
 			Cargo nuevo = new() {
 				Id = 0,
 				Sub = sub,
@@ -57,12 +63,12 @@ namespace TanatosAPI.Business {
 				FechaEliminacion = null,
 				Vigencia = true
 			};
-			nuevo.Id = await cargoDao.Insertar(nuevo);
+			nuevo.Id = await cargoDao.Insertar(nuevo, transaction);
 			return nuevo;
 		}
 
-		public async Task Actualizar(Cargo cargo) {
-			await cargoDao.Actualizar(cargo);
+		public async Task Actualizar(Cargo cargo, NpgsqlTransaction? transaction = null) {
+			await cargoDao.Actualizar(cargo, transaction);
 		}
 
 		public async Task Eliminar(Cargo cargo, NpgsqlTransaction? transaction = null) {
