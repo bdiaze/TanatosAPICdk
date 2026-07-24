@@ -24,6 +24,10 @@ namespace TanatosAPI.Business {
 			return normaSuscrita.Sub == sub;
 		}
 
+		public bool PerteneceNegocio(NormaSuscrita normaSuscrita, long idNegocio) {
+			return normaSuscrita.IdNegocio == idNegocio;
+		}
+
 		public bool EstaActiva(NormaSuscrita normaSuscrita) {
 			return EstaVigente(normaSuscrita) && normaSuscrita.Activado;
 		}
@@ -32,45 +36,35 @@ namespace TanatosAPI.Business {
             return normaSuscrita.Editable;
         }
 
+		public List<NormaSuscrita> FiltrarVigentes(List<NormaSuscrita> normasSuscritas) {
+			return [.. normasSuscritas.Where(ns => EstaVigente(ns))];
+		}
+
+		public async Task<NormaSuscrita?> Obtener(long idNormaSuscrita, bool filtrarVigente = false, bool validarVigencia = false, string? validarSub = null, long? validarIdNegocio = null, bool validarEditable = false, NpgsqlTransaction? transaction = null) {
+			NormaSuscrita? normaSuscrita = await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction);
+			// Se aplican todas las validaciones...
+			if (validarVigencia && !EstaVigente(normaSuscrita)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "La obligación no existe o no está vigente", "La obligación es inválida.");
+			if (normaSuscrita != null) {
+				if (validarSub != null && !Pertenece(normaSuscrita, validarSub)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "La obligación no pertenece al usuario", "La obligación es inválida.");
+				if (validarIdNegocio != null && !PerteneceNegocio(normaSuscrita, validarIdNegocio.Value)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "La obligación no pertenece al negocio", "La obligación es inválida.");
+				if (validarEditable && !EsEditable(normaSuscrita)) throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La obligación no es editable por el usuario", "La obligación es inválida.");
+			}
+
+			// Se aplican los filtros...
+			if (filtrarVigente && !EstaVigente(normaSuscrita)) return null;
+
+			return normaSuscrita;
+		}
+
+		public async Task<List<NormaSuscrita>> ObtenerPorSubYNegocio(string sub, long idNegocio, bool filtrarVigentes = false, NpgsqlTransaction? transaction = null) {
+			List<NormaSuscrita> normasSuscritas = await normaSuscritaDao.ObtenerPorSub(sub, idNegocio, null, transaction);
+			if (filtrarVigentes) normasSuscritas = FiltrarVigentes(normasSuscritas);
+			return normasSuscritas;
+		}
+
 		public async Task<List<NormaSuscrita>> ObtenerVigentesPorSubYNegocio(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {
-			return await normaSuscritaDao.ObtenerPorSub(sub, idNegocio, true, transaction);
+			return await ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigentes: true, transaction: transaction);
 		}
-
-        public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-            return await normaSuscritaDao.ObtenerPorId(idNormaSuscrita, transaction);
-        }
-
-        public async Task<NormaSuscrita> ObtenerValidandoVigencia(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			NormaSuscrita? obligacion = await ObtenerPorId(idNormaSuscrita, transaction);
-			if (!EstaVigente(obligacion)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "La obligación no está vigente.");
-            return obligacion!;
-        }
-
-		public async Task<NormaSuscrita?> ObtenerSiVigente(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-            NormaSuscrita? obligacion = await ObtenerPorId(idNormaSuscrita, transaction);
-			if (EstaVigente(obligacion)) return obligacion;
-			return null;
-        }
-
-		public async Task<NormaSuscrita?> ObtenerSiVigenteValidandoPertenencia(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null) {
-			NormaSuscrita? obligacion = await ObtenerSiVigente(idNormaSuscrita, transaction);
-			if (obligacion == null) return null; 
-            if (!Pertenece(obligacion!, sub)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "La obligación no pertenece al usuario", "La obligación no está vigente.");
-			return obligacion;
-		}
-
-		public async Task<NormaSuscrita?> ObtenerSiVigenteValidandoPertenenciaYEditable(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null) {
-			NormaSuscrita? obligacion = await ObtenerSiVigenteValidandoPertenencia(idNormaSuscrita, sub, transaction);
-			if (obligacion == null) return null;
-			if (!EsEditable(obligacion)) throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La obligación no es editable por el usuario", "La obligación no está vigente.");
-			return obligacion;
-		}
-
-        public async Task<NormaSuscrita> ObtenerValidandoVigenciaYPertenencia(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null) {
-            NormaSuscrita obligacion = await ObtenerValidandoVigencia(idNormaSuscrita, transaction);
-			if (!Pertenece(obligacion, sub)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "La obligación no pertenece al usuario", "La obligación no está vigente.");
-			return obligacion!;
-        }
 
 		public async Task<NormaSuscrita> CrearObligacionUsuario(string sub, long idNegocio, string nombre, string? descripcion, string? multa, long? idTipoPeriodicidad, long? idCategoriaNorma, long? idCargo, bool activado, NpgsqlTransaction? transaction = null) {
             nombre = nombre.Trim();
@@ -78,7 +72,7 @@ namespace TanatosAPI.Business {
             multa = string.IsNullOrWhiteSpace(multa) ? null : multa.Trim();
 
 			// Se valida que no exista otra obligación con el mismo nombre...
-			List<NormaSuscrita> vigentes = await ObtenerVigentesPorSubYNegocio(sub, idNegocio);
+			List<NormaSuscrita> vigentes = await ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigentes: true);
 			if (vigentes.Any(o => o.Nombre == nombre)) throw new ErrorValidacion(TipoErrorValidacion.YaExiste, "Ya existe una obligación con dicho nombre."); 
 
             DateTime now = dateTimeProvider.UtcNow;
@@ -107,8 +101,18 @@ namespace TanatosAPI.Business {
 			return nuevo;
         }
 
-        public async Task Actualizar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+		public async Task Actualizar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
 			await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
+		}
+
+		public async Task Activar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			if (!normaSuscrita.Activado) {
+				normaSuscrita.FechaActivacion = dateTimeProvider.UtcNow;
+				normaSuscrita.FechaDesactivacion = null;
+				normaSuscrita.Activado = true;
+
+				await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
+			}
 		}
 
 		public async Task Desactivar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
