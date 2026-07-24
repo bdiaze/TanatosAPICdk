@@ -10,12 +10,12 @@ using TanatosAPI.Repositories;
 namespace TanatosAPI.UseCases {
     public class DocumentoAdjuntoUseCase(ISuscripcionBcp suscripcionBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp, INormaSuscritaBcp normaSuscritaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionBcp historialNotificacionBcp) {
         public async Task<List<DocumentoAdjunto>> ObtenerVigentes(string sub, long idHistorialNormaSuscrita) {
-            HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.ObtenerPorId(idHistorialNormaSuscrita);
-            if (!historialNormaSuscritaBcp.VigenteOCompletada(historialNormaSuscrita)) {
-                throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El vencimiento no está vigente ni completado", "El vencimiento es inválido.");
+            HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.Obtener(idHistorialNormaSuscrita);
+            if (!historialNormaSuscritaBcp.EstaVigente(historialNormaSuscrita)) {
+                throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El vencimiento no está vigente", "El vencimiento es inválido.");
             }
 
-            NormaSuscrita? normaSuscrita = await normaSuscritaBcp.ObtenerPorId(historialNormaSuscrita!.IdNormaSuscrita);
+            NormaSuscrita? normaSuscrita = await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita);
             if (!normaSuscritaBcp.EstaVigente(normaSuscrita) && !historialNormaSuscritaBcp.EstaCompletada(historialNormaSuscrita)) {
                 throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La obligación no está vigente ni el vencimiento completado", "El vencimiento es inválido.");
             }
@@ -24,7 +24,7 @@ namespace TanatosAPI.UseCases {
                 throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "La obligación no pertenece al usuario", "El vencimiento es inválido.");
             }
 
-            return [.. (await documentoAdjuntoBcp.ObtenerVigentesPorHistorialNormaSuscrita(historialNormaSuscrita!.Id)).Where(da => da.EstadoSubida == 1 /* Documento recepcionado */)];
+            return await documentoAdjuntoBcp.ObtenerPorVencimiento(historialNormaSuscrita!.Id, filtrarVigentes: true, filtrarRecepcionados: true);
         }
         
         public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string? sub, long idHistorialNormaSuscrita, string nombreArchivo, string mime, long tamanno) {
@@ -39,7 +39,7 @@ namespace TanatosAPI.UseCases {
                 throw new ErrorValidacion(TipoErrorValidacion.TipoNoValido, $"El MIME del archivo es inválido.");
             }
 
-            HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.ObtenerPorId(idHistorialNormaSuscrita);
+            HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.Obtener(idHistorialNormaSuscrita);
             if (!historialNormaSuscritaBcp.EstaVigente(historialNormaSuscrita)) {
                 throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El vencimiento no existe o no está vigente", "El vencimiento es inválido.");
             }
@@ -48,7 +48,7 @@ namespace TanatosAPI.UseCases {
                 throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "El vencimiento ya está completado", "El vencimiento es inválido.");
             }
 
-            NormaSuscrita? normaSuscrita = await normaSuscritaBcp.ObtenerPorId(historialNormaSuscrita!.IdNormaSuscrita);
+            NormaSuscrita? normaSuscrita = await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita);
             if (!normaSuscritaBcp.EstaVigente(normaSuscrita)) {
                 throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "La obligación no existe o no está vigente", "El vencimiento es inválido.");
             }
@@ -83,17 +83,17 @@ namespace TanatosAPI.UseCases {
         }
 
         public async Task ConfirmarSubida(string? sub, long idDocumentoAdjunto, long? idHistorialNormaSuscrita = null) {
-            DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoBcp.ObtenerPorId(idDocumentoAdjunto);
+            DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoBcp.Obtener(idDocumentoAdjunto);
             if (!documentoAdjuntoBcp.EstaVigente(documentoAdjunto)) {
                 throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El documento adjunto no existe o no está vigente", "El documento adjunto es inválido.");
             }
 
             // Si se incluye un ID de vencimiento, se valida que el documento pertenezca a dicho vencimiento...
-            if (idHistorialNormaSuscrita != null && !documentoAdjuntoBcp.PerteneceAVencimiento(documentoAdjunto!, idHistorialNormaSuscrita.Value)) {
+            if (idHistorialNormaSuscrita != null && !documentoAdjuntoBcp.Pertenece(documentoAdjunto!, idHistorialNormaSuscrita.Value)) {
                 throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El documento adjunto no pertenece al vencimiento indicado", "El documento adjunto es inválido.");
             }
 
-            HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.ObtenerPorId(documentoAdjunto!.IdHistorialNormaSuscrita);
+            HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.Obtener(documentoAdjunto!.IdHistorialNormaSuscrita);
             if (!historialNormaSuscritaBcp.EstaVigente(historialNormaSuscrita)) {
                 throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El vencimiento no existe o no está vigente", "El vencimiento es inválido.");
             }
@@ -102,7 +102,7 @@ namespace TanatosAPI.UseCases {
                 throw new ErrorValidacion(TipoErrorValidacion.TipoNoValido, "El vencimiento ya se encuentra completado", "El vencimiento es inválido.");
             }
 
-            NormaSuscrita? normaSuscrita = await normaSuscritaBcp.ObtenerPorId(historialNormaSuscrita!.IdNormaSuscrita);
+            NormaSuscrita? normaSuscrita = await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita);
             if (!normaSuscritaBcp.EstaVigente(normaSuscrita)) {
                 throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "La obligación no está vigente", "La obligación no está vigente.");
             }
@@ -121,22 +121,22 @@ namespace TanatosAPI.UseCases {
         }
 
         public async Task<string> GenerarUrlBajada(string? sub, long idDocumentoAdjunto, long? idHistorialNormaSuscrita = null) {
-            DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoBcp.ObtenerPorId(idDocumentoAdjunto);
+            DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoBcp.Obtener(idDocumentoAdjunto);
             if (!documentoAdjuntoBcp.EstaVigente(documentoAdjunto)) {
                 throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El documento adjunto no existe o no está vigente", "El documento adjunto es inválido.");
             }
 
             // Si se incluye un ID de vencimiento, se valida que el documento pertenezca a dicho vencimiento...
-            if (idHistorialNormaSuscrita != null && !documentoAdjuntoBcp.PerteneceAVencimiento(documentoAdjunto!, idHistorialNormaSuscrita.Value)) {
+            if (idHistorialNormaSuscrita != null && !documentoAdjuntoBcp.Pertenece(documentoAdjunto!, idHistorialNormaSuscrita.Value)) {
                 throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El documento adjunto no pertenece al vencimiento indicado", "El documento adjunto es inválido.");
             }
 
-            HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.ObtenerPorId(documentoAdjunto!.IdHistorialNormaSuscrita);
-            if (!historialNormaSuscritaBcp.VigenteOCompletada(historialNormaSuscrita)) {
-                throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "El documento adjunto no está vigente ni completado", "El documento adjunto es inválido.");
+            HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.Obtener(documentoAdjunto!.IdHistorialNormaSuscrita);
+            if (!historialNormaSuscritaBcp.EstaVigente(historialNormaSuscrita)) {
+                throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "El vencimiento no está vigente", "El documento adjunto es inválido.");
             }
 
-            NormaSuscrita? normaSuscrita = await normaSuscritaBcp.ObtenerPorId(historialNormaSuscrita!.IdNormaSuscrita);
+            NormaSuscrita? normaSuscrita = await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita);
             if (!normaSuscritaBcp.EstaVigente(normaSuscrita) && !historialNormaSuscritaBcp.EstaCompletada(historialNormaSuscrita!)) {
                 throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La obligación no está vigente ni el vencimiento completado", "El documento adjunto es inválido.");
             }
@@ -155,7 +155,7 @@ namespace TanatosAPI.UseCases {
         }
 
         public async Task Eliminar(string? sub, long idDocumentoAdjunto, long? idHistorialNormaSuscrita = null) {
-            DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoBcp.ObtenerPorId(idDocumentoAdjunto);
+            DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoBcp.Obtener(idDocumentoAdjunto);
             
             // Si el documento no está vigente, se asume que ya fue eliminado...
             if (!documentoAdjuntoBcp.EstaVigente(documentoAdjunto)) {
@@ -163,11 +163,11 @@ namespace TanatosAPI.UseCases {
             }
 
             // Si se incluye un ID de vencimiento, se valida que el documento pertenezca a dicho vencimiento...
-            if (idHistorialNormaSuscrita != null && !documentoAdjuntoBcp.PerteneceAVencimiento(documentoAdjunto!, idHistorialNormaSuscrita.Value)) {
+            if (idHistorialNormaSuscrita != null && !documentoAdjuntoBcp.Pertenece(documentoAdjunto!, idHistorialNormaSuscrita.Value)) {
                 throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El documento adjunto no pertenece al vencimiento indicado", "El documento adjunto es inválido.");
             }
 
-            HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.ObtenerPorId(documentoAdjunto!.IdHistorialNormaSuscrita);
+            HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.Obtener(documentoAdjunto!.IdHistorialNormaSuscrita);
             if (!historialNormaSuscritaBcp.EstaVigente(historialNormaSuscrita)) {
                 throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El vencimiento no está vigente", "El documento adjunto es inválido.");
             }
@@ -176,7 +176,7 @@ namespace TanatosAPI.UseCases {
                 throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "El vencimiento ya está completado", "El documento adjunto es inválido.");
             }
 
-            NormaSuscrita? normaSuscrita = await normaSuscritaBcp.ObtenerPorId(historialNormaSuscrita!.IdNormaSuscrita);
+            NormaSuscrita? normaSuscrita = await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita);
             if (!normaSuscritaBcp.EstaVigente(normaSuscrita)) {
                 throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La obligación no está vigente", "El documento adjunto es inválido.");
             }
