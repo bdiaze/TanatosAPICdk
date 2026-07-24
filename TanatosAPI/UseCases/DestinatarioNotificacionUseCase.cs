@@ -34,7 +34,7 @@ namespace TanatosAPI.UseCases {
 
                 if (!destinatarioNotificacion.Validado) {
                     if (destinatarioNotificacion.IdTipoReceptor == 1 /* Correo electrónico */) {
-                        Negocio negocio = await negocioBcp.ObtenerVigentePorSubYNegocio(destinatarioNotificacion.Sub, destinatarioNotificacion.IdNegocio, transaction) ?? throw new InvalidOperationException("ID de negocio no válido");
+                        Negocio negocio = await negocioBcp.Obtener(destinatarioNotificacion.IdNegocio, filtrarVigente: true, validarSub: destinatarioNotificacion.Sub, transaction: transaction) ?? throw new InvalidOperationException("ID de negocio no válido");
                         Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(destinatarioNotificacion.Sub, transaction);
 
                         string idMensaje = await destinatarioNotificacionBcp.EnviarCorreoValidacionDestinatario(
@@ -47,7 +47,7 @@ namespace TanatosAPI.UseCases {
                         await destinatarioNotificacionBcp.RegistrarHermesIdMensaje(destinatarioNotificacion, idMensaje, transaction);
 
                     } else if (destinatarioNotificacion.IdTipoReceptor == 2 /* Whatsapp */) {
-                        Negocio negocio = await negocioBcp.ObtenerVigentePorSubYNegocio(destinatarioNotificacion.Sub, destinatarioNotificacion.IdNegocio, transaction) ?? throw new InvalidOperationException("ID de negocio no válido");
+                        Negocio negocio = await negocioBcp.Obtener(destinatarioNotificacion.IdNegocio, filtrarVigente: true, validarSub: destinatarioNotificacion.Sub, transaction: transaction) ?? throw new InvalidOperationException("ID de negocio no válido");
                         Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(destinatarioNotificacion.Sub, transaction);
 
                         string idMensaje = await destinatarioNotificacionBcp.EnviarWhatsappValidacionDestinatario(
