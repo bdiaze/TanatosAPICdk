@@ -5,15 +5,13 @@ namespace TanatosAPI.Interfaces.Business {
 	public interface IHistorialNormaSuscritaBcp {
 		public bool EstaVigente(HistorialNormaSuscrita? historialNormaSuscrita);
 		public bool EstaCompletada(HistorialNormaSuscrita historialNormaSuscrita);
-		public bool VigenteOCompletada(HistorialNormaSuscrita? historialNormaSuscrita);
 		public bool Pertenece(HistorialNormaSuscrita historialNormaSuscrita, long idNormaSuscrita);
-        public Task<HistorialNormaSuscrita?> ObtenerPorId(long idHistorialNormaSuscrita, NpgsqlTransaction? transaction = null);
-		public Task<HistorialNormaSuscrita> ObtenerValidandoVigencia(long idHistorialNormaSuscrita, NpgsqlTransaction? transaction = null);
-		public Task<HistorialNormaSuscrita> ObtenerValidandoVigenciaYPertenencia(long idHistorialNormaSuscrita, long idNormaSuscrita, NpgsqlTransaction? transaction = null);
-		public Task<List<HistorialNormaSuscrita>> ObtenerVigentesPorNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null);
-		public Task<HistorialNormaSuscrita?> ObtenerUltimoVigentePorNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null);
-		public Task<List<HistorialNormaSuscrita>> ObtenerVigentesPorNormaSuscritaNoCompletadas(long idNormaSuscrita, NpgsqlTransaction? transaction = null);
-		public Task<List<HistorialNormaSuscrita>> ObtenerVigentesPorNormaSuscritaCompletadas(long idNormaSuscrita, NpgsqlTransaction? transaction = null);
+		public List<HistorialNormaSuscrita> FiltrarVigentes(List<HistorialNormaSuscrita> vencimientos);
+		public List<HistorialNormaSuscrita> FiltrarNoCompletadas(List<HistorialNormaSuscrita> vencimientos);
+		public List<HistorialNormaSuscrita> FiltrarCompletadas(List<HistorialNormaSuscrita> vencimientos);
+		public HistorialNormaSuscrita? FiltrarUltimoVencimiento(List<HistorialNormaSuscrita> vencimientos);
+		public Task<HistorialNormaSuscrita?> Obtener(long idHistorialNormaSuscrita, bool validarVigencia = false, long? validarIdNormaSuscrita = null, NpgsqlTransaction? transaction = null);
+		public Task<List<HistorialNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, bool filtrarVigente = false, bool filtrarNoCompletadas = false, bool filtrarCompletadas = false, NpgsqlTransaction? transaction = null);
 		public Task<DateTime> ObtenerProximoVencimiento(long idNormaSuscrita, NpgsqlTransaction? transaction = null);
 		public Task<bool> TieneVencimientoFuturoNoCompletado(long idNormaSuscrita, List<long>? idVencimientoIgnorar = null, NpgsqlTransaction? transaction = null);
         public Task<HistorialNormaSuscrita> Crear(long idNormaSuscrita, DateTime fechaVencimiento, NpgsqlTransaction? transaction = null);

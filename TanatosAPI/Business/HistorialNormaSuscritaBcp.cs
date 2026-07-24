@@ -19,47 +19,45 @@ namespace TanatosAPI.Business {
 			return historialNormaSuscrita.FechaCompletitud != null;
         }
 
-		public bool VigenteOCompletada(HistorialNormaSuscrita? historialNormaSuscrita) {
-			return EstaVigente(historialNormaSuscrita) || (historialNormaSuscrita != null && EstaCompletada(historialNormaSuscrita));
-		}
-
         public bool Pertenece(HistorialNormaSuscrita historialNormaSuscrita, long idNormaSuscrita) {
             return historialNormaSuscrita.IdNormaSuscrita == idNormaSuscrita;
         }
 
-        public async Task<HistorialNormaSuscrita?> ObtenerPorId(long idHistorialNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			return await historialNormaSuscritaDao.ObtenerPorId(idHistorialNormaSuscrita, transaction);
+		public List<HistorialNormaSuscrita> FiltrarVigentes(List<HistorialNormaSuscrita> vencimientos) {
+			return [.. vencimientos.Where(v => EstaVigente(v))];
 		}
 
-        public async Task<HistorialNormaSuscrita> ObtenerValidandoVigencia(long idHistorialNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			HistorialNormaSuscrita? vencimiento = await ObtenerPorId(idHistorialNormaSuscrita, transaction);
-			if (!EstaVigente(vencimiento)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El vencimiento no está vigente.");
-            return vencimiento!;
-        }
-
-		public async Task<HistorialNormaSuscrita> ObtenerValidandoVigenciaYPertenencia(long idHistorialNormaSuscrita, long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			HistorialNormaSuscrita vencimiento = await ObtenerValidandoVigencia(idHistorialNormaSuscrita, transaction);
-            if (!Pertenece(vencimiento, idNormaSuscrita)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El vencimiento no pertenece a la obligación", "El vencimiento no está vigente.");
-            return vencimiento!;
-        }
-
-		public async Task<List<HistorialNormaSuscrita>> ObtenerVigentesPorNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			return await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(idNormaSuscrita, true, transaction);
+		public List<HistorialNormaSuscrita> FiltrarNoCompletadas(List<HistorialNormaSuscrita> vencimientos) {
+			return [.. vencimientos.Where(v => !EstaCompletada(v))];
 		}
 
-		public async Task<HistorialNormaSuscrita?> ObtenerUltimoVigentePorNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			List<HistorialNormaSuscrita> vigentes = await ObtenerVigentesPorNormaSuscrita(idNormaSuscrita, transaction);
-			return vigentes.OrderByDescending(hns => hns.FechaVencimiento).FirstOrDefault();
+		public List<HistorialNormaSuscrita> FiltrarCompletadas(List<HistorialNormaSuscrita> vencimientos) {
+			return [.. vencimientos.Where(v => EstaCompletada(v))];
 		}
 
-        public async Task<List<HistorialNormaSuscrita>> ObtenerVigentesPorNormaSuscritaNoCompletadas(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			List<HistorialNormaSuscrita> vigentes = await ObtenerVigentesPorNormaSuscrita(idNormaSuscrita, transaction);
-			return [.. vigentes.Where(v => v.FechaCompletitud == null)];
+		public HistorialNormaSuscrita? FiltrarUltimoVencimiento(List<HistorialNormaSuscrita> vencimientos) {
+			return vencimientos.OrderByDescending(hns => hns.FechaVencimiento).FirstOrDefault();
 		}
 
-		public async Task<List<HistorialNormaSuscrita>> ObtenerVigentesPorNormaSuscritaCompletadas(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			List<HistorialNormaSuscrita> vigentes = await ObtenerVigentesPorNormaSuscrita(idNormaSuscrita, transaction);
-			return [.. vigentes.Where(v => v.FechaCompletitud != null)];
+		public async Task<HistorialNormaSuscrita?> Obtener(long idHistorialNormaSuscrita, bool validarVigencia = false, long? validarIdNormaSuscrita = null, NpgsqlTransaction? transaction = null) {
+			HistorialNormaSuscrita? vencimiento = await historialNormaSuscritaDao.ObtenerPorId(idHistorialNormaSuscrita, transaction);
+			// Se aplican todas las validaciones...
+			if (validarVigencia && !EstaVigente(vencimiento)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El vencimiento no está vigente.");
+			if (vencimiento != null) {
+				if (validarIdNormaSuscrita != null && !Pertenece(vencimiento, validarIdNormaSuscrita.Value)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El vencimiento no pertenece a la obligación", "El vencimiento no está vigente.");
+			}
+
+			return vencimiento;
+		}
+
+		public async Task<List<HistorialNormaSuscrita>> ObtenerPorNormaSuscrita(long idNormaSuscrita, bool filtrarVigente = false, bool filtrarNoCompletadas = false, bool filtrarCompletadas = false, NpgsqlTransaction? transaction = null) {
+			if (filtrarCompletadas && filtrarNoCompletadas) throw new InvalidOperationException("No se puede filtrar por completadas y no completadas al mismo tiempo");
+			
+			List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaDao.ObtenerPorNormaSuscrita(idNormaSuscrita, null, transaction);
+			if (filtrarVigente) vencimientos = FiltrarVigentes(vencimientos);
+			if (filtrarNoCompletadas) vencimientos = FiltrarNoCompletadas(vencimientos);
+			if (filtrarCompletadas) vencimientos = FiltrarCompletadas(vencimientos);
+			return vencimientos;
 		}
 
 		public async Task<DateTime> ObtenerProximoVencimiento(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
@@ -71,7 +69,7 @@ namespace TanatosAPI.Business {
 
 		public async Task<bool> TieneVencimientoFuturoNoCompletado(long idNormaSuscrita, List<long>? idVencimientoIgnorar = null, NpgsqlTransaction? transaction = null) {
 			HashSet<long> idsIgnorar = [.. idVencimientoIgnorar ?? []];
-			List<HistorialNormaSuscrita> noCompletados = await ObtenerVigentesPorNormaSuscritaNoCompletadas(idNormaSuscrita, transaction);
+			List<HistorialNormaSuscrita> noCompletados = await ObtenerPorNormaSuscrita(idNormaSuscrita, filtrarVigente: true, filtrarNoCompletadas: true, transaction: transaction);
 			return noCompletados.Any(v => !idsIgnorar.Contains(v.Id) && v.FechaVencimiento > dateTimeProvider.UtcNow);
 		}
 
@@ -91,6 +89,8 @@ namespace TanatosAPI.Business {
 
 		public async Task Eliminar(HistorialNormaSuscrita historialNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			if (historialNormaSuscrita.Vigencia) {
+				if (historialNormaSuscrita.FechaCompletitud != null) throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "No se puede eliminar un vencimiento ya completado.");
+
 				historialNormaSuscrita.FechaEliminacion = dateTimeProvider.UtcNow;
 				historialNormaSuscrita.Vigencia = false;
 				await historialNormaSuscritaDao.Actualizar(historialNormaSuscrita, transaction);
