@@ -1,4 +1,6 @@
 ﻿using Npgsql;
+using System.Data.Common;
+using System.Transactions;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
@@ -9,14 +11,14 @@ using TanatosAPI.Interfaces.Helpers;
 namespace TanatosAPI.UseCases {
 	public class CargoUseCase(IDatabaseConnectionHelper connectionHelper, ICargoBcp cargoBcp, INegocioBcp negocioBcp, IEmpleadoBcp empleadoBcp) {
 		public async Task<List<Cargo>> ObtenerVigentes(string sub, long idNegocio) {
-			Negocio negocio = await negocioBcp.ObtenerValidandoVigenciaYPertenencia(idNegocio, sub);
+			Negocio negocio = (await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub))!;
 			return await cargoBcp.ObtenerVigentes(sub, negocio.Id);
 		}
 
 		public async Task<Cargo> Crear(string sub, string nombre, long idNegocio) {
 			nombre = nombre.Trim();
 
-			Negocio negocio = await negocioBcp.ObtenerValidandoVigenciaYPertenencia(idNegocio, sub);
+			Negocio negocio = (await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub))!;
 
 			List<Cargo> existentes = await cargoBcp.ObtenerVigentes(sub, negocio.Id);
 			Cargo? cargoExistente = existentes.FirstOrDefault(c => c.Nombre.Equals(nombre, StringComparison.OrdinalIgnoreCase));
@@ -31,7 +33,7 @@ namespace TanatosAPI.UseCases {
 			nombre = nombre.Trim();
 
 			Cargo existente = await cargoBcp.ObtenerValidandoVigenciaYPertenencia(idCargo, sub);
-			Negocio? negocio = await negocioBcp.ObtenerValidandoVigenciaYPertenencia(existente!.IdNegocio, sub);
+			Negocio negocio = (await negocioBcp.Obtener(existente.IdNegocio, validarVigencia: true, validarSub: sub))!;
 
 			List<Cargo> existentes = await cargoBcp.ObtenerVigentes(sub, negocio.Id);
 			Cargo? otroMismoNombre = existentes.FirstOrDefault(c => c.Id != idCargo && c.Nombre.Equals(nombre, StringComparison.OrdinalIgnoreCase));
