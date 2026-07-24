@@ -45,10 +45,10 @@ namespace TanatosAPI.Repositories {
 			}
 		}
 
-		public async Task<List<Negocio>> ObtenerPorSub(string sub, bool vigencia = true, NpgsqlTransaction? transaction = null) {
+		public async Task<List<Negocio>> ObtenerPorSub(string sub, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, SUB, NOMBRE, DIRECCION, ID_TIPO_ACTIVIDAD, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NEGOCIO " +
-				"WHERE SUB = @SUB AND VIGENCIA = @VIGENCIA";
+				"WHERE SUB = @SUB AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
 
 			bool disposeConnection = transaction?.Connection == null;
 			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
@@ -56,7 +56,7 @@ namespace TanatosAPI.Repositories {
 			try {
 				await using NpgsqlCommand command = new(query, connection, transaction);
 				command.Parameters.AddWithValue("SUB", sub);
-				command.Parameters.AddWithValue("VIGENCIA", vigencia);
+				command.Parameters.AddWithValue("VIGENCIA", (object?)vigencia ?? DBNull.Value);
 
 				await using DbDataReader reader = await command.ExecuteReaderAsync();
 
