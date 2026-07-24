@@ -24,6 +24,7 @@ namespace TanatosAPI.Business {
 		}
 
 		public async Task<List<Template>> ObtenerVariosSoloVigentes(HashSet<long> ids, NpgsqlTransaction? transaction = null) {
+			if (ids.Count == 0) return [];
 			List<Template> vigentes = await ObtenerVigentes(transaction);
 			return [.. vigentes.Where(t => ids.Contains(t.Id))];
 		}
