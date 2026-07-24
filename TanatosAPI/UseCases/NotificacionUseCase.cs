@@ -19,7 +19,7 @@ namespace TanatosAPI.UseCases {
 			esVencimiento ??= programarSiguienteEjecucion;
 
 			// Se obtiene norma suscrita y/o template...
-			NormaSuscrita normaSuscrita = await normaSuscritaBcp.ObtenerPorId(idNormaSuscrita, transaction) ?? throw new InvalidOperationException("ID norma suscrita inválida");
+			NormaSuscrita normaSuscrita = await normaSuscritaBcp.Obtener(idNormaSuscrita, transaction:transaction) ?? throw new InvalidOperationException("ID norma suscrita inválida");
 			TemplateNorma? templateNorma = null;
 			if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
 				templateNorma = (await templateNormaDao.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
@@ -100,14 +100,14 @@ namespace TanatosAPI.UseCases {
 				DateTime fechaVencimientoChile = NotificacionPreviaHelper.ObtenerFechaReferenciaChileSegunNotificacionPrevia(masCercanaChile, cantAntelacion.Value, unidadTiempo);
 				DateTime fechaVencimientoUTC = DateTimeHelper.TransformarFechaTimezoneAUTC(fechaVencimientoChile);
 
-				vencimiento = (await historialNormaSuscritaBcp.ObtenerVigentesPorNormaSuscritaNoCompletadas(idNormaSuscrita, transaction)).FirstOrDefault(v => v.FechaVencimiento == fechaVencimientoUTC);
+				vencimiento = (await historialNormaSuscritaBcp.ObtenerPorNormaSuscrita(idNormaSuscrita, filtrarVigente: true, filtrarNoCompletadas: true, transaction: transaction)).FirstOrDefault(v => v.FechaVencimiento == fechaVencimientoUTC);
 			} else if (!esVencimiento.Value) {
 				// Si no estamos en una fecha de vencimiento, pero tampoco tenemos información de la notificación previa, se asume último vencimiento...
-				vencimiento = (await historialNormaSuscritaBcp.ObtenerVigentesPorNormaSuscritaNoCompletadas(idNormaSuscrita, transaction)).OrderByDescending(v => v.FechaVencimiento).FirstOrDefault();
+				vencimiento = (await historialNormaSuscritaBcp.ObtenerPorNormaSuscrita(idNormaSuscrita, filtrarVigente: true, filtrarNoCompletadas: true, transaction: transaction)).OrderByDescending(v => v.FechaVencimiento).FirstOrDefault();
 
 			} else {
 				// Si estamos en una fecha de vencimiento, se busca el vencimiento que coincide con la fecha del cron...
-				vencimiento = (await historialNormaSuscritaBcp.ObtenerVigentesPorNormaSuscritaNoCompletadas(idNormaSuscrita, transaction)).FirstOrDefault(v => v.FechaVencimiento == masCercanaUTC);
+				vencimiento = (await historialNormaSuscritaBcp.ObtenerPorNormaSuscrita(idNormaSuscrita, filtrarVigente: true, filtrarNoCompletadas: true, transaction: transaction)).FirstOrDefault(v => v.FechaVencimiento == masCercanaUTC);
 			}
 
 			if (vencimiento != null) {
