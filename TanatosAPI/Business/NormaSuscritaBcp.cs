@@ -61,11 +61,7 @@ namespace TanatosAPI.Business {
 			if (filtrarVigentes) normasSuscritas = FiltrarVigentes(normasSuscritas);
 			return normasSuscritas;
 		}
-
-		public async Task<List<NormaSuscrita>> ObtenerVigentesPorSubYNegocio(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {
-			return await ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigentes: true, transaction: transaction);
-		}
-
+				
 		public async Task<NormaSuscrita> CrearObligacionUsuario(string sub, long idNegocio, string nombre, string? descripcion, string? multa, long? idTipoPeriodicidad, long? idCategoriaNorma, long? idCargo, bool activado, NpgsqlTransaction? transaction = null) {
             nombre = nombre.Trim();
             descripcion = string.IsNullOrWhiteSpace(descripcion) ? null : descripcion.Trim();
