@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using Microsoft.AspNetCore.SignalR;
+using Npgsql;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using System;
@@ -70,7 +71,7 @@ namespace TanatosAPI.Test.UseCases {
 
 		[Fact]
 		public async Task ObtenerVigentesTest_Valido() {
-			negocioBcp.ObtenerValidandoVigenciaYPertenencia(10, "sub-test-123").Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
+			negocioBcp.Obtener(10, validarVigencia: true, validarSub: "sub-test-123", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
 			cargoBcp.ObtenerVigentes("sub-test-123", 10).Returns([
 				CargoDummy(id:1, sub: "sub-test-123", idNegocio: 10, vigencia: true),
 				CargoDummy(id:2, sub: "sub-test-123", idNegocio: 10, vigencia: true)
@@ -80,13 +81,13 @@ namespace TanatosAPI.Test.UseCases {
 
 			Assert.Equal(2, cargos.Count);
 			Assert.All(cargos, (cargo) => Assert.True(cargo.Vigencia));
-			await negocioBcp.Received(1).ObtenerValidandoVigenciaYPertenencia(10, "sub-test-123");
+			await negocioBcp.Received(1).Obtener(10, validarVigencia: true, validarSub: "sub-test-123", transaction: Arg.Any<NpgsqlTransaction?>());
 			await cargoBcp.Received(1).ObtenerVigentes("sub-test-123", 10);
 		}
 
 		[Fact]
 		public async Task RegistrarCargoTest_Valido() {
-			negocioBcp.ObtenerValidandoVigenciaYPertenencia(10, "sub-test-123").Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
+			negocioBcp.Obtener(10, validarVigencia: true, validarSub: "sub-test-123", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
 			cargoBcp.ObtenerVigentes("sub-test-123", 10).Returns([]);
 			cargoBcp.Crear("sub-test-123", "nombre-cargo-test", 10).Returns(CargoDummy(id: 99, sub: "sub-test-123", nombre: "nombre-cargo-test", idNegocio: 10, vigencia: true));
 			
@@ -96,14 +97,14 @@ namespace TanatosAPI.Test.UseCases {
 			Assert.Equal("nombre-cargo-test", cargo.Nombre);
 			Assert.Equal(10, cargo.IdNegocio);
 			Assert.True(cargo.Vigencia);
-			await negocioBcp.Received(1).ObtenerValidandoVigenciaYPertenencia(10, "sub-test-123");
+			await negocioBcp.Received(1).Obtener(10, validarVigencia: true, validarSub: "sub-test-123", transaction: Arg.Any<NpgsqlTransaction?>());
 			await cargoBcp.Received(1).ObtenerVigentes("sub-test-123", 10);
 			await cargoBcp.Received(1).Crear("sub-test-123", "nombre-cargo-test", 10);
 		}
 
 		[Fact]
 		public async Task RegistrarCargoTest_Existente() {
-			negocioBcp.ObtenerValidandoVigenciaYPertenencia(10, "sub-test-123").Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
+			negocioBcp.Obtener(10, validarVigencia: true, validarSub: "sub-test-123", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
 			cargoBcp.ObtenerVigentes("sub-test-123", 10).Returns([
 				CargoDummy(id: 1, sub: "sub-test-123", nombre: "nombre-cargo-test", idNegocio: 10, vigencia: true)
 			]);
@@ -114,7 +115,7 @@ namespace TanatosAPI.Test.UseCases {
 			Assert.Equal("nombre-cargo-test", cargo.Nombre);
 			Assert.Equal(10, cargo.IdNegocio);
 			Assert.True(cargo.Vigencia);
-			await negocioBcp.Received(1).ObtenerValidandoVigenciaYPertenencia(10, "sub-test-123");
+			await negocioBcp.Received(1).Obtener(10, validarVigencia: true, validarSub: "sub-test-123", transaction: Arg.Any<NpgsqlTransaction?>());
 			await cargoBcp.Received(1).ObtenerVigentes("sub-test-123", 10);
 			await cargoBcp.DidNotReceive().Crear("sub-test-123", "nombre-cargo-test", 10);
 		}
@@ -122,7 +123,7 @@ namespace TanatosAPI.Test.UseCases {
 		[Fact]
 		public async Task ActualizarCargoTest_Valido() {
 			cargoBcp.ObtenerValidandoVigenciaYPertenencia(1, "sub-test-123").Returns(CargoDummy(id: 1, sub: "sub-test-123", nombre: "antiguo-nombre-cargo", idNegocio: 10, vigencia: true));
-			negocioBcp.ObtenerValidandoVigenciaYPertenencia(10, "sub-test-123").Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
+			negocioBcp.Obtener(10, validarVigencia: true, validarSub: "sub-test-123", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
 			cargoBcp.ObtenerVigentes("sub-test-123", 10).Returns([
 				CargoDummy(id: 1, sub: "sub-test-123", idNegocio: 10, vigencia: true)
 			]);
@@ -134,7 +135,7 @@ namespace TanatosAPI.Test.UseCases {
 			Assert.Equal(10, cargo.IdNegocio);
 			Assert.True(cargo.Vigencia);
 			await cargoBcp.Received(1).ObtenerValidandoVigenciaYPertenencia(1, "sub-test-123");
-			await negocioBcp.Received(1).ObtenerValidandoVigenciaYPertenencia(10, "sub-test-123");
+			await negocioBcp.Received(1).Obtener(10, validarVigencia: true, validarSub: "sub-test-123", transaction: Arg.Any<NpgsqlTransaction?>());
 			await cargoBcp.Received(1).ObtenerVigentes("sub-test-123", 10);
 			await cargoBcp.Received(1).Actualizar(Arg.Is<Cargo>(c => c.Id == 1 && c.Nombre == "nuevo-nombre-cargo" && c.Sub == "sub-test-123"));
 		}
@@ -142,7 +143,7 @@ namespace TanatosAPI.Test.UseCases {
 		[Fact]
 		public async Task ActualizarCargoTest_MismoNombreOtroExistente() {
 			cargoBcp.ObtenerValidandoVigenciaYPertenencia(1, "sub-test-123").Returns(CargoDummy(id: 1, sub: "sub-test-123", nombre: "antiguo-nombre-cargo", idNegocio: 10, vigencia: true));
-			negocioBcp.ObtenerValidandoVigenciaYPertenencia(10, "sub-test-123").Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
+			negocioBcp.Obtener(10, validarVigencia: true, validarSub: "sub-test-123", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
 			cargoBcp.ObtenerVigentes("sub-test-123", 10).Returns([
 				CargoDummy(id: 1, sub: "sub-test-123", idNegocio: 10, vigencia: true),
 				CargoDummy(id: 2, sub: "sub-test-123", nombre: "otro-con-mismo-nombre", idNegocio: 10, vigencia: true)
@@ -151,7 +152,7 @@ namespace TanatosAPI.Test.UseCases {
 			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoUseCase.Actualizar("sub-test-123", 1, nombre: "otro-con-mismo-nombre"));
 			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
 			await cargoBcp.Received(1).ObtenerValidandoVigenciaYPertenencia(1, "sub-test-123");
-			await negocioBcp.Received(1).ObtenerValidandoVigenciaYPertenencia(10, "sub-test-123");
+			await negocioBcp.Received(1).Obtener(10, validarVigencia: true, validarSub: "sub-test-123", transaction: Arg.Any<NpgsqlTransaction?>());
 			await cargoBcp.Received(1).ObtenerVigentes("sub-test-123", 10);
 			await cargoBcp.DidNotReceive().Actualizar(Arg.Any<Cargo>());
 		}
@@ -159,7 +160,7 @@ namespace TanatosAPI.Test.UseCases {
 		[Fact]
 		public async Task ActualizarCargoTest_MismoNombreExistente() {
 			cargoBcp.ObtenerValidandoVigenciaYPertenencia(1, "sub-test-123").Returns(CargoDummy(id: 1, sub: "sub-test-123", nombre: "antiguo-nombre-cargo", idNegocio: 10, vigencia: true));
-			negocioBcp.ObtenerValidandoVigenciaYPertenencia(10, "sub-test-123").Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
+			negocioBcp.Obtener(10, validarVigencia: true, validarSub: "sub-test-123", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(NegocioDummy(id: 10, sub: "sub-test-123", vigencia: true));
 			cargoBcp.ObtenerVigentes("sub-test-123", 10).Returns([
 				CargoDummy(id: 1, sub: "sub-test-123", nombre: "antiguo-nombre-cargo", idNegocio: 10, vigencia: true),
 			]);
@@ -171,7 +172,7 @@ namespace TanatosAPI.Test.UseCases {
 			Assert.Equal(10, cargo.IdNegocio);
 			Assert.True(cargo.Vigencia);
 			await cargoBcp.Received(1).ObtenerValidandoVigenciaYPertenencia(1, "sub-test-123");
-			await negocioBcp.Received(1).ObtenerValidandoVigenciaYPertenencia(10, "sub-test-123");
+			await negocioBcp.Received(1).Obtener(10, validarVigencia: true, validarSub: "sub-test-123", transaction: Arg.Any<NpgsqlTransaction?>());
 			await cargoBcp.Received(1).ObtenerVigentes("sub-test-123", 10);
 			await cargoBcp.DidNotReceive().Actualizar(Arg.Any<Cargo>());
 		}
