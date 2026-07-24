@@ -10,7 +10,7 @@ using TanatosAPI.Repositories;
 namespace TanatosAPI.UseCases {
 	public class HistorialNormaSuscritaUseCase(IDateTimeProvider dateTimeProvider, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp, INormaSuscritaBcp normaSuscritaBcp, ITemplateNormaBcp templateNormaBcp, ITipoPeriodicidadBcp tipoPeriodicidadBcp) {
 		public async Task EliminarPorNormaSuscrita(long idNormaSuscrita, bool ignorarVencidos, NpgsqlTransaction transaction) {
-			List<HistorialNormaSuscrita> historialesVigentes = await historialNormaSuscritaBcp.ObtenerVigentesPorNormaSuscritaNoCompletadas(idNormaSuscrita, transaction);
+			List<HistorialNormaSuscrita> historialesVigentes = await historialNormaSuscritaBcp.ObtenerPorNormaSuscrita(idNormaSuscrita, filtrarVigente: true, filtrarNoCompletadas: true, transaction: transaction);
 
 			if (ignorarVencidos) {
 				historialesVigentes = [.. historialesVigentes.Where(h => h.FechaVencimiento > dateTimeProvider.UtcNow)];
@@ -41,7 +41,7 @@ namespace TanatosAPI.UseCases {
             if (yaTieneVencimiento) return;
 
 			// Se obtiene norma suscrita y/o template...
-			NormaSuscrita normaSuscrita = await normaSuscritaBcp.ObtenerPorId(historialNormaSuscrita.IdNormaSuscrita, transaction) ?? throw new InvalidOperationException("ID norma suscrita inválida");
+			NormaSuscrita normaSuscrita = await normaSuscritaBcp.Obtener(historialNormaSuscrita.IdNormaSuscrita, transaction: transaction) ?? throw new InvalidOperationException("ID norma suscrita inválida");
 			TemplateNorma? templateNorma = null;
 			if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null && normaSuscrita.IdTipoPeriodicidad == null) {
 				templateNorma = await templateNormaBcp.ObtenerPorTemplateNorma(normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma.Value, transaction);
