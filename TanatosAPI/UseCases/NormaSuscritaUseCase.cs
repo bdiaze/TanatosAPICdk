@@ -1,5 +1,10 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Actions_Compile;
+using Amazon.S3.Model;
+using Microsoft.AspNetCore.SignalR;
 using Npgsql;
+using Org.BouncyCastle.Crypto.Digests;
+using System.Data.Common;
+using System.Transactions;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Interfaces.Business;
@@ -7,123 +12,14 @@ using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-	public class NormaSuscritaUseCase(IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, HistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, NotificacionNormaSuscritaUseCase notificacionNormaSuscritaUseCase, INormaSuscritaBcp normaSuscritaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionBcp historialNotificacionBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, ITemplateBcp templateBcp, ITemplateNormaBcp templateNormaBcp, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITemplateNormaFiscalizadorBcp templateNormaFiscalizadorBcp, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICategoriaNormaBcp categoriaNormaBcp, ITipoFiscalizadorBcp tipoFiscalizadorBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, ICargoBcp cargoBcp, INegocioBcp negocioBcp, ISuscripcionBcp suscripcionBcp) {
-		public async Task<NormaSuscrita?> ObtenerConTemplate(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			NormaSuscrita? normaSuscrita = await normaSuscritaBcp.ObtenerPorId(idNormaSuscrita, transaction);
-			if (normaSuscrita?.IdTemplate != null && normaSuscrita?.IdNorma != null) {
-                TemplateNorma? templateNorma = await templateNormaBcp.ObtenerPorTemplateNorma(normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma.Value, transaction);
-                Template? template = templateNorma == null ? null : await templateBcp.ObtenerSoloVigente(templateNorma.IdTemplate, transaction);
-                if (templateBcp.EstaVigente(template)) {
-                    templateNorma!.Template = template;
-					normaSuscrita.TemplateNorma = templateNorma;
-				}
-			}
-			return normaSuscrita;
-		}
-
-		public async Task<NormaSuscrita> ObtenerConTemplateValidandoVigenciaYPertenencia(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null) {
-			NormaSuscrita o = await normaSuscritaBcp.ObtenerValidandoVigenciaYPertenencia(idNormaSuscrita, sub, transaction);
-
-			if (o.IdTemplate != null && o.IdNorma != null) {
-				TemplateNorma? templateNorma = await templateNormaBcp.ObtenerPorTemplateNorma(o.IdTemplate.Value, o.IdNorma.Value, transaction);
-				Template? template = templateNorma == null ? null : await templateBcp.ObtenerSoloVigente(templateNorma.IdTemplate, transaction);
-				if (templateBcp.EstaVigente(template)) {
-					templateNorma!.Template = template;
-					o.TemplateNorma = templateNorma;
-				}
-			}
-			return o;
-		}
-
-		public async Task<NormaSuscrita> ObtenerConTemplateYTiposValidandoVigenciaYPertenencia(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null) {
-            NormaSuscrita o = await ObtenerConTemplateValidandoVigenciaYPertenencia(idNormaSuscrita, sub, transaction);
-
-            if ((o.IdTipoPeriodicidad ?? o.TemplateNorma?.IdTipoPeriodicidad) != null) {
-				Dictionary<long, TipoPeriodicidad> periodicidades = (await tipoPeriodicidadBcp.ObtenerVigentes(transaction)).ToDictionary(p => p.Id, p => p);
-                o.TipoPeriodicidad = o.IdTipoPeriodicidad != null && periodicidades.TryGetValue(o.IdTipoPeriodicidad.Value, out TipoPeriodicidad? tp) ? tp : null;
-                o.IdTipoPeriodicidad = o.TipoPeriodicidad?.Id;
-
-                if (o.TemplateNorma != null) {
-					o.TemplateNorma.TipoPeriodicidad = o.TemplateNorma.IdTipoPeriodicidad != null && periodicidades.TryGetValue(o.TemplateNorma.IdTipoPeriodicidad.Value, out TipoPeriodicidad? tpt) ? tpt : null;
-					o.TemplateNorma.IdTipoPeriodicidad = o.TemplateNorma.TipoPeriodicidad?.Id;
-				}
-			}
-
-            if ((o.IdCategoriaNorma ?? o.TemplateNorma?.IdCategoriaNorma) != null) {
-				Dictionary<long, CategoriaNorma> categorias = (await categoriaNormaBcp.ObtenerVigentes(transaction)).ToDictionary(p => p.Id, p => p);
-				o.CategoriaNorma = o.IdCategoriaNorma != null && categorias.TryGetValue(o.IdCategoriaNorma.Value, out CategoriaNorma? cn) ? cn : null;
-				o.IdCategoriaNorma = o.CategoriaNorma?.Id;
-
-                if (o.TemplateNorma != null) {
-					o.TemplateNorma.CategoriaNorma = categorias.TryGetValue(o.TemplateNorma.IdCategoriaNorma, out CategoriaNorma? cnt) ? cnt : null;
-					o.TemplateNorma.IdCategoriaNorma = o.TemplateNorma.CategoriaNorma?.Id ?? o.TemplateNorma.IdCategoriaNorma;
-				}
-			}
-
-            if (o.IdCargo != null) {
-                o.Cargo = await cargoBcp.ObtenerSoloVigente(o.IdCargo.Value, transaction);
-                o.IdCargo = o.Cargo?.Id;
-			}
-
-			return o;
+	public class NormaSuscritaUseCase(IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, HistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, NotificacionNormaSuscritaUseCase notificacionNormaSuscritaUseCase, INormaSuscritaBcp normaSuscritaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionBcp historialNotificacionBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, ITemplateBcp templateBcp, ITemplateNormaBcp templateNormaBcp, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITemplateNormaFiscalizadorBcp templateNormaFiscalizadorBcp, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICategoriaNormaBcp categoriaNormaBcp, ITipoFiscalizadorBcp tipoFiscalizadorBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, ICargoBcp cargoBcp, INegocioBcp negocioBcp, ISuscripcionBcp suscripcionBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp) {
+		public async Task IncluirTemplate(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			await IncluirTemplate([normaSuscrita], transaction);
         }
 
-        public async Task<NormaSuscrita> ObtenerConTemplateTiposFiscalizadoresYNotificacionesValidandoVigenciaYPertenencia(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null) {
-            NormaSuscrita o = await ObtenerConTemplateYTiposValidandoVigenciaYPertenencia(idNormaSuscrita, sub, transaction);
-
-            o.FiscalizadoresNormaSuscrita = await fiscalizadorNormaSuscritaBcp.ObtenerVigentesPorNormaSuscrita(o.Id, transaction);
-            o.NotificacionesNormaSuscrita = await notificacionNormaSuscritaBcp.ObtenerVigentesPorNormaSuscrita(o.Id, transaction);
-            if (o.TemplateNorma != null) {
-                o.TemplateNorma.TemplateNormaFiscalizadores = await templateNormaFiscalizadorBcp.ObtenerPorTemplateNorma(o.TemplateNorma.IdTemplate, o.TemplateNorma.IdNorma, transaction);
-                o.TemplateNorma.TemplateNormaNotificaciones = await templateNormaNotificacionBcp.ObtenerPorTemplateNorma(o.TemplateNorma.IdTemplate, o.TemplateNorma.IdNorma, transaction);
-            }
-
-            if (o.FiscalizadoresNormaSuscrita.Count > 0 || o.TemplateNorma?.TemplateNormaFiscalizadores?.Count > 0) {
-                Dictionary<long, TipoFiscalizador> fiscalizadores = (await tipoFiscalizadorBcp.ObtenerVigentes(transaction)).ToDictionary(p => p.Id, p => p);
-                
-                foreach (FiscalizadorNormaSuscrita f in o.FiscalizadoresNormaSuscrita.ToList()) {
-                    f.TipoFiscalizador = fiscalizadores.TryGetValue(f.IdTipoFiscalizador, out TipoFiscalizador? tf) ? tf : null;
-                    if (f.TipoFiscalizador == null) o.FiscalizadoresNormaSuscrita.Remove(f); 
-                }
-
-                foreach(TemplateNormaFiscalizador f in o.TemplateNorma?.TemplateNormaFiscalizadores?.ToList() ?? []) {
-                    f.TipoFiscalizador = fiscalizadores.TryGetValue(f.IdTipoFiscalizador, out TipoFiscalizador? tf) ? tf : null;
-					if (f.TipoFiscalizador == null) o.TemplateNorma!.TemplateNormaFiscalizadores!.Remove(f);
-				}
-            }
-
-			if (o.NotificacionesNormaSuscrita.Count > 0 || o.TemplateNorma?.TemplateNormaNotificaciones?.Count > 0) {
-				Dictionary<long, TipoUnidadTiempo> unidades = (await tipoUnidadTiempoBcp.ObtenerVigentes(transaction)).ToDictionary(p => p.Id, p => p);
-
-				foreach (NotificacionNormaSuscrita f in o.NotificacionesNormaSuscrita.ToList()) {
-					f.TipoUnidadTiempo = unidades.TryGetValue(f.IdTipoUnidadTiempoAntelacion, out TipoUnidadTiempo? ut) ? ut : null;
-					if (f.TipoUnidadTiempo == null) o.NotificacionesNormaSuscrita.Remove(f);
-				}
-
-				foreach (TemplateNormaNotificacion f in o.TemplateNorma?.TemplateNormaNotificaciones?.ToList() ?? []) {
-					f.TipoUnidadTiempoAntelacion = unidades.TryGetValue(f.IdTipoUnidadTiempoAntelacion, out TipoUnidadTiempo? ut) ? ut : null;
-					if (f.TipoUnidadTiempoAntelacion == null) o.TemplateNorma!.TemplateNormaNotificaciones!.Remove(f);
-				}
-			}
-
-			return o;
-        }
-
-		public async Task<NormaSuscrita> ObtenerConTemplateTiposFiscalizadoresNotificacionesYVencimientoValidandoVigenciaYPertenencia(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null) {
-            NormaSuscrita o = await ObtenerConTemplateTiposFiscalizadoresYNotificacionesValidandoVigenciaYPertenencia(idNormaSuscrita, sub, transaction);
-
-			o.HistorialesNormaSuscrita = [];
-			HistorialNormaSuscrita? ultimoVencimientoVigente = await historialNormaSuscritaBcp.ObtenerUltimoVigentePorNormaSuscrita(o.Id, transaction);
-            if (ultimoVencimientoVigente != null) o.HistorialesNormaSuscrita.Add(ultimoVencimientoVigente);
-
-            return o;
-		}
-
-		public async Task<List<NormaSuscrita>> ObtenerVigentesPorSubConTemplates(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {
-			List<NormaSuscrita> obligaciones = await normaSuscritaBcp.ObtenerVigentesPorSubYNegocio(sub, idNegocio, transaction);
-
-			if (obligaciones.Count > 0) {
-				List<Template> templates = await templateBcp.ObtenerVariosSoloVigentes([.. obligaciones.Where(o => o.IdTemplate != null).Select(o => o.IdTemplate!.Value)], transaction);
+		public async Task IncluirTemplate(List<NormaSuscrita> normasSuscritas, NpgsqlTransaction? transaction = null) {
+			if (normasSuscritas.Count > 0) {
+				List<Template> templates = await templateBcp.ObtenerVariosSoloVigentes([.. normasSuscritas.Where(o => o.IdTemplate != null).Select(o => o.IdTemplate!.Value)], transaction);
 
 				if (templates.Count > 0) {
 					Dictionary<(long idTemplate, long idNorma), TemplateNorma> templatesNormas = [];
@@ -134,74 +30,210 @@ namespace TanatosAPI.UseCases {
 						}
 					}
 
-					obligaciones = [.. obligaciones.Select(o => {
-						o.TemplateNorma = o.IdTemplate != null && o.IdNorma != null && templatesNormas.TryGetValue((o.IdTemplate.Value, o.IdNorma.Value), out TemplateNorma? tn) ? tn : null;
-						o.IdTemplate = o.TemplateNorma?.IdTemplate;
-						o.IdNorma = o.TemplateNorma?.IdNorma;
-
-						return o;
-					})];
+					foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
+						normaSuscrita.TemplateNorma = normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null && templatesNormas.TryGetValue((normaSuscrita.IdTemplate.Value, normaSuscrita.IdNorma.Value), out TemplateNorma? tn) ? tn : null;
+						normaSuscrita.IdTemplate = normaSuscrita.TemplateNorma?.IdTemplate;
+						normaSuscrita.IdNorma = normaSuscrita.TemplateNorma?.IdNorma;
+					}
 				}
 			}
-
-            return obligaciones;
 		}
 
-        public async Task<List<NormaSuscrita>> ObtenerVigentesPorSubConTemplatesYTipos(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {
-			List<NormaSuscrita> obligaciones = await ObtenerVigentesPorSubConTemplates(sub, idNegocio, transaction);
-                        
-            if (obligaciones.Count > 0) {
-                Dictionary<long, TipoPeriodicidad> periodicidades = (await tipoPeriodicidadBcp.ObtenerVigentes(transaction)).ToDictionary(p => p.Id, p => p);
-                Dictionary<long, CategoriaNorma> categorias = (await categoriaNormaBcp.ObtenerVigentes(transaction)).ToDictionary(p => p.Id, p => p);
-				Dictionary<long, Cargo> cargos = (await cargoBcp.ObtenerVigentes(sub, idNegocio, transaction)).ToDictionary(p => p.Id, p => p);
+        public async Task IncluirTipoPeriodicidad(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			await IncluirTipoPeriodicidad([normaSuscrita], transaction);
+		}
 
-				obligaciones = [.. obligaciones.Select(o => {
-					o.TipoPeriodicidad = o.IdTipoPeriodicidad != null && periodicidades.TryGetValue(o.IdTipoPeriodicidad.Value, out TipoPeriodicidad? tp) ? tp : null;
-					o.IdTipoPeriodicidad = o.TipoPeriodicidad?.Id;
+		public async Task IncluirTipoPeriodicidad(List<NormaSuscrita> normasSuscritas, NpgsqlTransaction? transaction = null) {
+			if (normasSuscritas.Count > 0) {
+				Dictionary<long, TipoPeriodicidad> periodicidades = (await tipoPeriodicidadBcp.ObtenerVigentes(transaction)).ToDictionary(p => p.Id, p => p);
 
-					o.CategoriaNorma = o.IdCategoriaNorma != null && categorias.TryGetValue(o.IdCategoriaNorma.Value, out CategoriaNorma? cn) ? cn : null;
-					o.IdCategoriaNorma = o.CategoriaNorma?.Id;
+				foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
+					normaSuscrita.TipoPeriodicidad = normaSuscrita.IdTipoPeriodicidad != null && periodicidades.TryGetValue(normaSuscrita.IdTipoPeriodicidad.Value, out TipoPeriodicidad? tp) ? tp : null;
+					normaSuscrita.IdTipoPeriodicidad = normaSuscrita.TipoPeriodicidad?.Id;
 
-					o.Cargo = o.IdCargo != null && cargos.TryGetValue(o.IdCargo.Value, out Cargo? c) ? c : null;
-					o.IdCargo = o.Cargo?.Id;
-
-					if (o.TemplateNorma != null) {
-						o.TemplateNorma.TipoPeriodicidad = o.TemplateNorma.IdTipoPeriodicidad != null && periodicidades.TryGetValue(o.TemplateNorma.IdTipoPeriodicidad.Value, out TipoPeriodicidad? tpt) ? tpt : null;
-						o.TemplateNorma.IdTipoPeriodicidad = o.TemplateNorma.TipoPeriodicidad?.Id;
-
-						o.TemplateNorma.CategoriaNorma = categorias.TryGetValue(o.TemplateNorma.IdCategoriaNorma, out CategoriaNorma? cnt) ? cnt : null;
-					    o.TemplateNorma.IdCategoriaNorma = o.TemplateNorma.CategoriaNorma?.Id ?? o.TemplateNorma.IdCategoriaNorma;
+					if (normaSuscrita.TemplateNorma != null) {
+						normaSuscrita.TemplateNorma.TipoPeriodicidad = normaSuscrita.TemplateNorma.IdTipoPeriodicidad != null && periodicidades.TryGetValue(normaSuscrita.TemplateNorma.IdTipoPeriodicidad.Value, out TipoPeriodicidad? tpt) ? tpt : null;
+						normaSuscrita.TemplateNorma.IdTipoPeriodicidad = normaSuscrita.TemplateNorma.TipoPeriodicidad?.Id;
 					}
-
-					return o;
-				})];
-            }
-
-            return obligaciones;
+				}
+			}
 		}
-				
-        public async Task<List<NormaSuscrita>> ObtenerVigentesPorSubConTemplatesTiposEHistorialVencimientos(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {
-            List<NormaSuscrita> obligaciones = await ObtenerVigentesPorSubConTemplatesYTipos(sub, idNegocio, transaction);
 
-            obligaciones = [.. await Task.WhenAll(
-                obligaciones.Select(async o => {
-                    if (normaSuscritaBcp.EstaActiva(o)) {
-                        o.HistorialesNormaSuscrita = await historialNormaSuscritaBcp.ObtenerVigentesPorNormaSuscrita(o.Id, transaction);
-                    } else {
-                        o.HistorialesNormaSuscrita = await historialNormaSuscritaBcp.ObtenerVigentesPorNormaSuscritaCompletadas(o.Id, transaction);
-                    }
-                    return o;
-                })
-            )];
+		public async Task IncluirCategoriaNorma(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			await IncluirCategoriaNorma([normaSuscrita], transaction);
+		}
 
-            return obligaciones;
+		public async Task IncluirCategoriaNorma(List<NormaSuscrita> normasSuscritas, NpgsqlTransaction? transaction = null) {
+			if (normasSuscritas.Count > 0) {
+				Dictionary<long, CategoriaNorma> categorias = (await categoriaNormaBcp.ObtenerVigentes(transaction)).ToDictionary(p => p.Id, p => p);
+
+				foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
+					normaSuscrita.CategoriaNorma = normaSuscrita.IdCategoriaNorma != null && categorias.TryGetValue(normaSuscrita.IdCategoriaNorma.Value, out CategoriaNorma? cn) ? cn : null;
+					normaSuscrita.IdCategoriaNorma = normaSuscrita.CategoriaNorma?.Id;
+
+					if (normaSuscrita.TemplateNorma != null) {
+						normaSuscrita.TemplateNorma.CategoriaNorma = categorias.TryGetValue(normaSuscrita.TemplateNorma.IdCategoriaNorma, out CategoriaNorma? cnt) ? cnt : null;
+						normaSuscrita.TemplateNorma.IdCategoriaNorma = normaSuscrita.TemplateNorma.CategoriaNorma?.Id ?? normaSuscrita.TemplateNorma.IdCategoriaNorma;
+					}
+				}
+			}
+		}
+
+		public async Task IncluirCargo(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			await IncluirCargo([normaSuscrita], transaction);
+		}
+
+		public async Task IncluirCargo(List<NormaSuscrita> normasSuscritas, NpgsqlTransaction? transaction = null) {
+			if (normasSuscritas.Count > 0) {
+				Dictionary<(string sub, long idNegocio), Dictionary<long, Cargo>> cargos = [];
+				foreach ((string sub, long idNegocio) in normasSuscritas.Select(ns => (ns.Sub, ns.IdNegocio)).ToHashSet()) {
+					cargos[(sub, idNegocio)] = (await cargoBcp.ObtenerVigentes(sub, idNegocio, transaction)).ToDictionary(p => p.Id, p => p);
+				}
+
+				foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
+					normaSuscrita.Cargo = normaSuscrita.IdCargo != null && cargos[(normaSuscrita.Sub, normaSuscrita.IdNegocio)].TryGetValue(normaSuscrita.IdCargo.Value, out Cargo? c) ? c : null;
+					normaSuscrita.IdCargo = normaSuscrita.Cargo?.Id;
+				}
+			}
+		}
+
+		public async Task IncluirFiscalizadores(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			normaSuscrita.FiscalizadoresNormaSuscrita = await fiscalizadorNormaSuscritaBcp.ObtenerVigentesPorNormaSuscrita(normaSuscrita.Id, transaction);
+			if (normaSuscrita.TemplateNorma != null) {
+				normaSuscrita.TemplateNorma.TemplateNormaFiscalizadores = await templateNormaFiscalizadorBcp.ObtenerPorTemplateNorma(normaSuscrita.TemplateNorma.IdTemplate, normaSuscrita.TemplateNorma.IdNorma, transaction);
+			}
+
+			if (normaSuscrita.FiscalizadoresNormaSuscrita.Count > 0 || normaSuscrita.TemplateNorma?.TemplateNormaFiscalizadores?.Count > 0) {
+				Dictionary<long, TipoFiscalizador> fiscalizadores = (await tipoFiscalizadorBcp.ObtenerVigentes(transaction)).ToDictionary(p => p.Id, p => p);
+
+				foreach (FiscalizadorNormaSuscrita f in normaSuscrita.FiscalizadoresNormaSuscrita.ToList()) {
+					f.TipoFiscalizador = fiscalizadores.TryGetValue(f.IdTipoFiscalizador, out TipoFiscalizador? tf) ? tf : null;
+					if (f.TipoFiscalizador == null) normaSuscrita.FiscalizadoresNormaSuscrita.Remove(f);
+				}
+
+				foreach (TemplateNormaFiscalizador f in normaSuscrita.TemplateNorma?.TemplateNormaFiscalizadores?.ToList() ?? []) {
+					f.TipoFiscalizador = fiscalizadores.TryGetValue(f.IdTipoFiscalizador, out TipoFiscalizador? tf) ? tf : null;
+					if (f.TipoFiscalizador == null) normaSuscrita.TemplateNorma!.TemplateNormaFiscalizadores!.Remove(f);
+				}
+			}
+		}
+
+		public async Task IncluirNotificaciones(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			normaSuscrita.NotificacionesNormaSuscrita = await notificacionNormaSuscritaBcp.ObtenerVigentesPorNormaSuscrita(normaSuscrita.Id, transaction);
+			if (normaSuscrita.TemplateNorma != null) {
+				normaSuscrita.TemplateNorma.TemplateNormaNotificaciones = await templateNormaNotificacionBcp.ObtenerPorTemplateNorma(normaSuscrita.TemplateNorma.IdTemplate, normaSuscrita.TemplateNorma.IdNorma, transaction);
+			}
+
+			if (normaSuscrita.NotificacionesNormaSuscrita.Count > 0 || normaSuscrita.TemplateNorma?.TemplateNormaNotificaciones?.Count > 0) {
+				Dictionary<long, TipoUnidadTiempo> unidades = (await tipoUnidadTiempoBcp.ObtenerVigentes(transaction)).ToDictionary(p => p.Id, p => p);
+
+				foreach (NotificacionNormaSuscrita f in normaSuscrita.NotificacionesNormaSuscrita.ToList()) {
+					f.TipoUnidadTiempo = unidades.TryGetValue(f.IdTipoUnidadTiempoAntelacion, out TipoUnidadTiempo? ut) ? ut : null;
+					if (f.TipoUnidadTiempo == null) normaSuscrita.NotificacionesNormaSuscrita.Remove(f);
+				}
+
+				foreach (TemplateNormaNotificacion f in normaSuscrita.TemplateNorma?.TemplateNormaNotificaciones?.ToList() ?? []) {
+					f.TipoUnidadTiempoAntelacion = unidades.TryGetValue(f.IdTipoUnidadTiempoAntelacion, out TipoUnidadTiempo? ut) ? ut : null;
+					if (f.TipoUnidadTiempoAntelacion == null) normaSuscrita.TemplateNorma!.TemplateNormaNotificaciones!.Remove(f);
+				}
+			}
+		}
+
+		public async Task IncluirHistorialVencimientos(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			await IncluirHistorialVencimientos([normaSuscrita], transaction);
+		}
+
+		public async Task IncluirHistorialVencimientos(List<NormaSuscrita> normasSuscritas, NpgsqlTransaction? transaction = null) {
+			await Task.WhenAll(
+				normasSuscritas.Select(async o => {
+					if (normaSuscritaBcp.EstaActiva(o)) {
+						o.HistorialesNormaSuscrita = await historialNormaSuscritaBcp.ObtenerPorNormaSuscrita(o.Id, filtrarVigente: true, transaction: transaction);
+					} else {
+						o.HistorialesNormaSuscrita = await historialNormaSuscritaBcp.ObtenerPorNormaSuscrita(o.Id, filtrarVigente: true, filtrarCompletadas: true, transaction: transaction);
+					}
+				})
+			);
+		}
+
+		public async Task<NormaSuscrita?> Obtener(long idNormaSuscrita, bool validarVigencia = false, string? validarSub = null, long? validarIdNegocio = null, bool incluirTemplate = false, bool incluirPeriodicidad = false, bool incluirCategoria = false, bool incluirCargo = false, bool incluirFiscalizadores = false, bool incluirNotificaciones = false, bool incluirHistorialVencimientos = false, NpgsqlTransaction? transaction = null) {
+			NormaSuscrita? normaSuscrita = await normaSuscritaBcp.Obtener(idNormaSuscrita, validarVigencia: validarVigencia, validarSub: validarSub, validarIdNegocio: validarIdNegocio, transaction: transaction);
+            if (normaSuscrita != null) {
+                if (incluirTemplate) await IncluirTemplate(normaSuscrita, transaction);
+                if (incluirPeriodicidad) await IncluirTipoPeriodicidad(normaSuscrita, transaction);
+                if (incluirCategoria) await IncluirCategoriaNorma(normaSuscrita, transaction);
+                if (incluirCargo) await IncluirCargo(normaSuscrita, transaction);
+                if (incluirFiscalizadores) await IncluirFiscalizadores(normaSuscrita, transaction);
+                if (incluirNotificaciones) await IncluirNotificaciones(normaSuscrita, transaction);
+				if (incluirHistorialVencimientos) await IncluirHistorialVencimientos(normaSuscrita, transaction);
+			}
+            return normaSuscrita;
+		}
+
+		public async Task<List<NormaSuscrita>> ObtenerPorSubYNegocio(string sub, long idNegocio, bool filtrarVigentes = false, bool incluirTemplates = false, bool incluirPeriodicidades = false, bool incluirCategorias = false, bool incluirCargos = false, bool incluirHistorialVencimientos = false, NpgsqlTransaction? transaction = null) {
+			List<NormaSuscrita> normasSuscritas = await normaSuscritaBcp.ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigentes: filtrarVigentes, transaction);
+			if (incluirTemplates) await IncluirTemplate(normasSuscritas, transaction);
+			if (incluirPeriodicidades) await IncluirTipoPeriodicidad(normasSuscritas, transaction);
+			if (incluirCategorias) await IncluirCategoriaNorma(normasSuscritas, transaction);
+			if (incluirCargos) await IncluirCargo(normasSuscritas, transaction);
+			if (incluirHistorialVencimientos) await IncluirHistorialVencimientos(normasSuscritas, transaction);
+			return normasSuscritas;
+		}
+
+		public async Task<NormaSuscrita> ObtenerIncluyendoProximoVencimiento(long idNormaSuscrita, string sub, NpgsqlTransaction? transaction = null) {
+			NormaSuscrita obligacion = (await Obtener(
+				idNormaSuscrita,
+				validarVigencia: true,
+				validarSub: sub,
+				incluirTemplate: true,
+				incluirPeriodicidad: true,
+				incluirCategoria: true,
+				incluirCargo: true,
+				incluirFiscalizadores: true,
+				incluirNotificaciones: true,
+				incluirHistorialVencimientos: true
+			))!;
+
+			HistorialNormaSuscrita? proximoVencimiento = historialNormaSuscritaBcp.FiltrarUltimoVencimiento(obligacion.HistorialesNormaSuscrita ?? []);
+
+			obligacion.HistorialesNormaSuscrita = [];
+			if (proximoVencimiento != null) obligacion.HistorialesNormaSuscrita.Add(proximoVencimiento);
+			
+			return obligacion;
+		}
+		
+        public async Task<(HistorialNormaSuscrita, bool tienePlanEmpresa)> ObtenerVencimientoConDocumentosYPlan(long? idNormaSuscrita, long idHistorialNormaSuscrita, string? sub, NpgsqlTransaction? transaction = null) {
+			HistorialNormaSuscrita vencimiento = (await historialNormaSuscritaBcp.Obtener(idHistorialNormaSuscrita, validarVigencia: true, validarIdNormaSuscrita: idNormaSuscrita, transaction: transaction))!;
+
+			vencimiento.NormaSuscrita = await Obtener(
+				vencimiento.IdNormaSuscrita, 
+				validarSub: sub, 
+				incluirTemplate: true, 
+				incluirPeriodicidad: true, 
+				incluirCategoria: true, 
+				incluirFiscalizadores: true, 
+				incluirCargo: true,
+				transaction: transaction
+			) ?? throw new ErrorValidacion(TipoErrorValidacion.NoExiste, "La obligación no existe", "La obligación es inválida.");
+			
+			if (!historialNormaSuscritaBcp.EstaCompletada(vencimiento) && !normaSuscritaBcp.EstaVigente(vencimiento.NormaSuscrita)) {
+				throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La obligación no está vigente y el vencimiento no está completado", "La obligación es inválida.");
+			}
+
+			vencimiento.NormaSuscrita.Negocio = await negocioBcp.Obtener(vencimiento.NormaSuscrita.IdNegocio, validarVigencia: true, validarSub: sub, transaction: transaction);
+			vencimiento.DocumentosAdjuntos = await documentoAdjuntoBcp.ObtenerPorVencimiento(vencimiento.Id, filtrarVigentes: true, filtrarRecepcionados: true, transaction: transaction);
+			return (vencimiento, await suscripcionBcp.ConsultaTienePlanEmpresa(vencimiento.NormaSuscrita.Sub, transaction));
+        }
+		 
+		public async Task<(HistorialNormaSuscrita, bool tienePlanEmpresa)> ObtenerVencimientoConDocumentosYPlan(string codigoAcceso, NpgsqlTransaction? transaction = null) {
+			HistorialNotificacion historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAccesoValidandoVigencia(codigoAcceso, transaction);
+			return await ObtenerVencimientoConDocumentosYPlan(null, historialNotificacion.IdHistorialNormaSuscrita, null, transaction);
 		}
 
 		public async Task ActualizarProgramacionProcesosNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			List<ProcesoNotificacion> procesosProgramados = [];
 			List<ProcesoNotificacion> procesosDesprogramados = [];
 			try {
-				NormaSuscrita? normaSuscrita = await ObtenerConTemplate(idNormaSuscrita, transaction) ?? throw new InvalidOperationException("Norma suscrita inválida");
+				NormaSuscrita? normaSuscrita = await Obtener(idNormaSuscrita, incluirTemplate: true, transaction: transaction) ?? throw new InvalidOperationException("Norma suscrita inválida");
 				List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> cronsDeseados = [];
 				List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> frecuenciasDiasDeseadas = [];
 
@@ -267,7 +299,7 @@ namespace TanatosAPI.UseCases {
                     transaction = await connection.BeginTransactionAsync();
                 }
 
-                NormaSuscrita? obligacion = await normaSuscritaBcp.ObtenerSiVigenteValidandoPertenenciaYEditable(idNormaSuscrita, sub, transaction!.NpgsqlTransaction());
+				NormaSuscrita? obligacion = await normaSuscritaBcp.Obtener(idNormaSuscrita, filtrarVigente: true, validarSub: sub, validarEditable: true, transaction: transaction!.NpgsqlTransaction());
                 if (obligacion != null) {
                     await EliminarNormaSuscrita(obligacion, transaction!.NpgsqlTransaction());
                 }
@@ -300,15 +332,15 @@ namespace TanatosAPI.UseCases {
                 bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(sub, transaction!.NpgsqlTransaction());
                 if (!tienePlanEmpresa && idCargo != null) throw new ErrorValidacion(TipoErrorValidacion.RestringidoPorPlan, "Tu plan no permite asignar un cargo responsable a la obligación.");
 
-                Dictionary<long, TipoFiscalizador> tiposFiscalizadores = (await tipoFiscalizadorBcp.ValidarTodosVigentes(idFiscalizadores)).ToDictionary(f => f.Id, f => f);
-                Dictionary<long, TipoUnidadTiempo> tiposUnidadesTiempo = (await tipoUnidadTiempoBcp.ValidarTodosVigentes([.. antelaciones.Select(a => a.IdTipoUnidadTiempo)])).ToDictionary(u => u.Id, u => u);
+                Dictionary<long, TipoFiscalizador> tiposFiscalizadores = (await tipoFiscalizadorBcp.ValidarTodosVigentes(idFiscalizadores, transaction!.NpgsqlTransaction())).ToDictionary(f => f.Id, f => f);
+                Dictionary<long, TipoUnidadTiempo> tiposUnidadesTiempo = (await tipoUnidadTiempoBcp.ValidarTodosVigentes([.. antelaciones.Select(a => a.IdTipoUnidadTiempo)], transaction!.NpgsqlTransaction())).ToDictionary(u => u.Id, u => u);
                 if (antelaciones.Any(a => a.CantAntelacion <= 0)) throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "Una notificación con cantidad antelación inválido.");
                 if (activado) {
                     if (proximoVencimiento == null) throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "Debe incluir la fecha de próximo vencimiento.");
                     if (proximoVencimiento!.Value <= dateTimeProvider.UtcNow) throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "El próximo vencimiento debe ser una fecha futura.");
                 }
 
-                Negocio _ = await negocioBcp.ObtenerValidandoVigenciaYPertenencia(idNegocio, sub, transaction!.NpgsqlTransaction());
+				_ = await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub, transaction: transaction!.NpgsqlTransaction())!;
 
                 TipoPeriodicidad? periodicidad = null;
                 if (idTipoPeriodicidad != null) periodicidad = await tipoPeriodicidadBcp.ObtenerValidandoVigencia(idTipoPeriodicidad, transaction!.NpgsqlTransaction());
@@ -358,6 +390,148 @@ namespace TanatosAPI.UseCases {
             }
         }
 
+		public async Task<NormaSuscrita> ActualizarNormaSuscrita(string sub, long id, long idNegocio, string? nombre, string? descripcion, string? multa, long? idTipoPeriodicidad, long? idCategoriaNorma, long? idCargo, bool activado, DateTime? proximoVencimiento, HashSet<long> idFiscalizadores, HashSet<(long IdTipoUnidadTiempo, int CantAntelacion)> antelaciones, IDatabaseTransaction? transaction = null) {
+			bool ownsTransaction = transaction == null;
+			IDatabaseConnection? connection = null;
+			try {
+				if (ownsTransaction) {
+					connection = await connectionHelper.ObtenerConexionWrapper();
+					transaction = await connection.BeginTransactionAsync();
+				}
+
+				NormaSuscrita obligacion = (await Obtener(
+					id, 
+					validarVigencia: true, 
+					validarSub: sub, 
+					validarIdNegocio: idNegocio, 
+					incluirTemplate: true, 
+					incluirFiscalizadores: true, 
+					incluirNotificaciones: true, 
+					transaction: transaction!.NpgsqlTransaction()
+				))!;
+
+				nombre = string.IsNullOrWhiteSpace(nombre) ? null : nombre?.Trim();
+				descripcion = string.IsNullOrWhiteSpace(descripcion) ? null : descripcion?.Trim();
+				multa = string.IsNullOrWhiteSpace(multa) ? null : multa?.Trim();
+
+				// Se setean en null atributos que sean igual a template norma...
+				if (obligacion.TemplateNorma != null) {
+					if (obligacion.TemplateNorma.Nombre == nombre) nombre = null;
+					if (obligacion.TemplateNorma.Descripcion == descripcion) descripcion = null;
+					if (obligacion.TemplateNorma.Multa == multa) multa = null;
+					if (obligacion.TemplateNorma.IdTipoPeriodicidad == idTipoPeriodicidad) idTipoPeriodicidad = null;
+					if (obligacion.TemplateNorma.IdCategoriaNorma == idCategoriaNorma) idCategoriaNorma = null;
+					if ((obligacion.TemplateNorma.TemplateNormaFiscalizadores ?? []).Select(f => f.IdTipoFiscalizador).ToHashSet().SetEquals(idFiscalizadores)) idFiscalizadores = [];
+					if ((obligacion.TemplateNorma.TemplateNormaNotificaciones ?? []).Select(n => (n.IdTipoUnidadTiempoAntelacion, n.CantAntelacion)).ToHashSet().SetEquals(antelaciones)) antelaciones = [];
+				}
+
+				bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(sub, transaction!.NpgsqlTransaction());
+				if (!tienePlanEmpresa && idCargo != null) throw new ErrorValidacion(TipoErrorValidacion.RestringidoPorPlan, "Tu plan no permite asignar un cargo responsable a la obligación.");
+
+				Dictionary<long, TipoFiscalizador> tiposFiscalizadores = (await tipoFiscalizadorBcp.ValidarTodosVigentes(idFiscalizadores, transaction!.NpgsqlTransaction())).ToDictionary(f => f.Id, f => f);
+				Dictionary<long, TipoUnidadTiempo> tiposUnidadesTiempo = (await tipoUnidadTiempoBcp.ValidarTodosVigentes([.. antelaciones.Select(a => a.IdTipoUnidadTiempo)], transaction!.NpgsqlTransaction())).ToDictionary(u => u.Id, u => u);
+				if (antelaciones.Any(a => a.CantAntelacion <= 0)) throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "Una notificación con cantidad antelación inválido.");
+
+				List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaBcp.ObtenerPorNormaSuscrita(obligacion.Id, filtrarVigente: true, transaction: transaction!.NpgsqlTransaction());
+				HistorialNormaSuscrita? proximoVencimientoExistente = historialNormaSuscritaBcp.FiltrarUltimoVencimiento(vencimientos);
+
+				TipoPeriodicidad? periodicidad = null;
+				if (idTipoPeriodicidad != null) periodicidad = await tipoPeriodicidadBcp.ObtenerValidandoVigencia(idTipoPeriodicidad, transaction!.NpgsqlTransaction());
+
+				CategoriaNorma? categoriaNorma = null;
+				if (idCategoriaNorma != null) categoriaNorma = await categoriaNormaBcp.ObtenerValidandoVigencia(idCategoriaNorma, transaction!.NpgsqlTransaction());
+
+				Cargo? cargo = null;
+				if (idCargo != null) cargo = await cargoBcp.ObtenerValidandoVigenciaPertenenciaNegocio(idCargo.Value, idNegocio, sub, transaction!.NpgsqlTransaction());
+
+				if (activado) {
+					if (proximoVencimiento == null) throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "Debe incluir la fecha de próximo vencimiento.");
+
+					// Se modifica próximo vencimiento si es una fecha pasada y según periodicidad es posible calcular un próximo vencimiento...
+					if (proximoVencimiento.Value <= dateTimeProvider.UtcNow) {
+						if (periodicidad != null && (periodicidad.DeltaDias != null || periodicidad.DeltaMeses != null || periodicidad.DeltaAnnos != null)) {
+							proximoVencimiento = historialNormaSuscritaUseCase.CalcularVencimientoFuturo(proximoVencimiento.Value, periodicidad);
+						}
+					} 
+
+					if (proximoVencimientoExistente?.FechaVencimiento != proximoVencimiento && proximoVencimiento!.Value <= dateTimeProvider.UtcNow) throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "El próximo vencimiento debe ser una fecha futura.");
+				}
+
+				_ = await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub, transaction: transaction!.NpgsqlTransaction())!;
+
+				//string sub, long id, long idNegocio, DateTime? proximoVencimiento, HashSet<long> idFiscalizadores, HashSet<(long IdTipoUnidadTiempo, int CantAntelacion)> antelaciones, IDatabaseTransaction? transaction = null
+
+				if (obligacion.Nombre != nombre || obligacion.Descripcion != descripcion || obligacion.Multa != multa ||
+					obligacion.IdTipoPeriodicidad != idTipoPeriodicidad || obligacion.IdCategoriaNorma != idCategoriaNorma ||
+					obligacion.IdCargo != idCargo) {
+
+					obligacion.Nombre = nombre;
+					obligacion.Descripcion = descripcion;
+					obligacion.Multa = multa;
+					obligacion.IdTipoPeriodicidad = idTipoPeriodicidad;
+					obligacion.IdCategoriaNorma = idCategoriaNorma;
+					obligacion.IdCargo = idCargo;
+
+					await normaSuscritaBcp.Actualizar(obligacion, transaction!.NpgsqlTransaction());
+				}
+
+				obligacion.TipoPeriodicidad = periodicidad;
+				obligacion.CategoriaNorma = categoriaNorma;
+				obligacion.Cargo = cargo;
+
+				if (obligacion.Activado != activado) {
+					if (activado) {
+						await normaSuscritaBcp.Activar(obligacion, transaction!.NpgsqlTransaction());
+					} else {
+						await normaSuscritaBcp.Desactivar(obligacion, transaction!.NpgsqlTransaction());
+					}
+				}
+
+				obligacion.FiscalizadoresNormaSuscrita = await fiscalizadorNormaSuscritaBcp.ActualizarPorNormaSuscrita(obligacion.Id, idFiscalizadores, transaction!.NpgsqlTransaction());
+				obligacion.FiscalizadoresNormaSuscrita = [.. obligacion.FiscalizadoresNormaSuscrita.Select(f => {
+					f.TipoFiscalizador = tiposFiscalizadores[f.IdTipoFiscalizador];
+					return f;
+				})];
+
+				obligacion.NotificacionesNormaSuscrita = await notificacionNormaSuscritaBcp.ActualizarPorNormaSuscrita(obligacion.Id, antelaciones, transaction!.NpgsqlTransaction());
+				obligacion.NotificacionesNormaSuscrita = [.. obligacion.NotificacionesNormaSuscrita.Select(f => {
+					f.TipoUnidadTiempo = tiposUnidadesTiempo[f.IdTipoUnidadTiempoAntelacion];
+					return f;
+				})];
+
+				obligacion.HistorialesNormaSuscrita = [];
+				if (activado) {
+					if (proximoVencimientoExistente?.FechaVencimiento != proximoVencimiento) {
+						await historialNormaSuscritaUseCase.EliminarPorNormaSuscrita(obligacion.Id, true, transaction!.NpgsqlTransaction());
+						obligacion.HistorialesNormaSuscrita.Add(await historialNormaSuscritaBcp.Crear(obligacion.Id, proximoVencimiento!.Value, transaction!.NpgsqlTransaction()));
+					} else {
+						obligacion.HistorialesNormaSuscrita.Add(proximoVencimientoExistente!);
+					}
+				} else {
+					await historialNormaSuscritaUseCase.EliminarPorNormaSuscrita(obligacion.Id, false, transaction!.NpgsqlTransaction());
+				}
+
+				if (activado && proximoVencimiento != null) obligacion.HistorialesNormaSuscrita.Add(await historialNormaSuscritaBcp.Crear(obligacion.Id, proximoVencimiento.Value, transaction!.NpgsqlTransaction()));
+				await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction!.NpgsqlTransaction());
+
+				if (ownsTransaction) {
+					await transaction!.CommitAsync();
+				}
+
+				return obligacion;
+			} catch {
+				if (ownsTransaction && transaction != null) {
+					await transaction.RollbackAsync();
+				}
+				throw;
+			} finally {
+				if (ownsTransaction) {
+					if (transaction != null) await transaction.DisposeAsync();
+					if (connection != null) await connection.DisposeAsync();
+				}
+			}
+		}
+
 		public async Task<HistorialNormaSuscrita> CompletarNormaValidandoPertenencia(string sub, long idNormaSuscrita, long idHistorialNormaSuscrita, IDatabaseTransaction? transaction = null) {
             bool ownsTransaction = transaction == null;
             IDatabaseConnection? connection = null;
@@ -367,8 +541,8 @@ namespace TanatosAPI.UseCases {
                     transaction = await connection.BeginTransactionAsync();
                 }
 
-                NormaSuscrita obligacion = await normaSuscritaBcp.ObtenerValidandoVigenciaYPertenencia(idNormaSuscrita, sub, transaction!.NpgsqlTransaction());
-                HistorialNormaSuscrita vencimiento = await historialNormaSuscritaBcp.ObtenerValidandoVigenciaYPertenencia(idHistorialNormaSuscrita, idNormaSuscrita, transaction!.NpgsqlTransaction());
+				NormaSuscrita obligacion = (await normaSuscritaBcp.Obtener(idNormaSuscrita, validarVigencia: true, validarSub: sub, transaction: transaction!.NpgsqlTransaction()))!;
+				HistorialNormaSuscrita vencimiento = (await historialNormaSuscritaBcp.Obtener(idHistorialNormaSuscrita, validarVigencia: true, validarIdNormaSuscrita: idNormaSuscrita, transaction: transaction!.NpgsqlTransaction()))!;
 
 				vencimiento.FechaCompletitud = await historialNormaSuscritaUseCase.CompletarHistorialNormaSuscrita(vencimiento, transaction!.NpgsqlTransaction());
 
@@ -400,8 +574,8 @@ namespace TanatosAPI.UseCases {
                 }
 
                 HistorialNotificacion historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAccesoValidandoVigencia(codigoAcceso, transaction!.NpgsqlTransaction());
-				HistorialNormaSuscrita vencimiento = await historialNormaSuscritaBcp.ObtenerValidandoVigencia(historialNotificacion.IdHistorialNormaSuscrita, transaction!.NpgsqlTransaction());
-				NormaSuscrita obligacion = await normaSuscritaBcp.ObtenerValidandoVigencia(vencimiento.IdNormaSuscrita, transaction!.NpgsqlTransaction());
+				HistorialNormaSuscrita vencimiento = (await historialNormaSuscritaBcp.Obtener(historialNotificacion.IdHistorialNormaSuscrita, validarVigencia: true, transaction: transaction!.NpgsqlTransaction()))!;
+				NormaSuscrita obligacion = (await normaSuscritaBcp.Obtener(vencimiento.IdNormaSuscrita, validarVigencia: true, transaction: transaction!.NpgsqlTransaction()))!;
 
 				vencimiento.FechaCompletitud = await historialNormaSuscritaUseCase.CompletarHistorialNormaSuscrita(vencimiento, transaction!.NpgsqlTransaction());
 
