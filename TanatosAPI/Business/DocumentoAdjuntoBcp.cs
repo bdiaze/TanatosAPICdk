@@ -23,17 +23,34 @@ namespace TanatosAPI.Business {
         public bool EstaVigente(DocumentoAdjunto? documentoAdjunto) {
             return documentoAdjunto != null && documentoAdjunto.Vigencia;
         }
-        public bool PerteneceAVencimiento(DocumentoAdjunto documentoAdjunto, long idHistorialNormaSuscrita) {
+
+        public bool FueRecepcionado(DocumentoAdjunto documentoAdjunto) {
+            return documentoAdjunto.EstadoSubida == 1 /* Documento recepcionado */;
+        }
+
+        public bool Pertenece(DocumentoAdjunto documentoAdjunto, long idHistorialNormaSuscrita) {
             return documentoAdjunto.IdHistorialNormaSuscrita == idHistorialNormaSuscrita;
         }
 
-        public async Task<DocumentoAdjunto?> ObtenerPorId(long idDocumentoAdjunto) {
-            return await documentoAdjuntoDao.ObtenerPorId(idDocumentoAdjunto);
+		public List<DocumentoAdjunto> FiltrarVigentes(List<DocumentoAdjunto> documentos) {
+			return [.. documentos.Where(d => EstaVigente(d))];
+		}
+
+		public List<DocumentoAdjunto> FiltrarRecepcionados(List<DocumentoAdjunto> documentos) {
+			return [.. documentos.Where(FueRecepcionado)];
+		}
+
+		public async Task<DocumentoAdjunto?> Obtener(long idDocumentoAdjunto, NpgsqlTransaction? transaction = null) {
+            return await documentoAdjuntoDao.ObtenerPorId(idDocumentoAdjunto, transaction);
         }
 
-        public async Task<List<DocumentoAdjunto>> ObtenerVigentesPorHistorialNormaSuscrita(long idHistorialNormaSuscrita) {
-            return await documentoAdjuntoDao.ObtenerPorHistorial(idHistorialNormaSuscrita, true);
-        }
+        public async Task<List<DocumentoAdjunto>> ObtenerPorVencimiento(long idHistorialNormaSuscrita, bool filtrarVigentes = false, bool filtrarRecepcionados = false, NpgsqlTransaction? transaction = null) {
+			List<DocumentoAdjunto> documentos = await documentoAdjuntoDao.ObtenerPorHistorial(idHistorialNormaSuscrita, null, transaction);
+            if (filtrarVigentes) documentos = FiltrarVigentes(documentos);
+            if (filtrarRecepcionados) documentos = FiltrarRecepcionados(documentos);
+
+			return documentos;
+		}
 
         public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string sub, long idNegocio, long idNormaSuscrita, long idHistorialNormaSuscrita, string nombreArchivo, string mimeArchivo, long tamannoArchivo) {
             (string bucketName, string bucketKey, string preSignedUrl, Dictionary<string, string> fields) presignedPost = await documentoAdjuntoHelper.ObtenerPostPreSignedUrl(
