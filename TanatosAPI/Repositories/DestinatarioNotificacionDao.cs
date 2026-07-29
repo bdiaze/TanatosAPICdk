@@ -9,26 +9,24 @@ using TanatosAPI.Interfaces.Repositories;
 namespace TanatosAPI.Repositories {
     [ExcludeFromCodeCoverage]
     public class DestinatarioNotificacionDao(IDatabaseConnectionHelper connectionHelper) : IDestinatarioNotificacionDao  {
-		public async Task<List<DestinatarioNotificacion>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
+		public async Task<DestinatarioNotificacion?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, SUB, ID_NEGOCIO, ID_EMPLEADO, ID_TIPO_RECEPTOR, ALIAS, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, " +
 				"FECHA_VALIDACION, VALIDADO, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION " +
-				"WHERE SUB = @SUB AND (ID_NEGOCIO = @IDNEGOCIO OR @IDNEGOCIO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
+				"WHERE ID = @ID";
 
 			bool disposeConnection = transaction?.Connection == null;
 			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
 
 			try {
 				await using NpgsqlCommand command = new(query, connection, transaction);
-				command.Parameters.AddWithValue("SUB", sub);
-				command.Parameters.AddWithValue("IDNEGOCIO", (object?)idNegocio ?? DBNull.Value);
-				command.Parameters.AddWithValue("VIGENCIA", (object?)vigencia ?? DBNull.Value);
+				command.Parameters.AddWithValue("ID", id);
 
 				await using DbDataReader reader = await command.ExecuteReaderAsync();
 
-				List<DestinatarioNotificacion> retorno = [];
-				while (await reader.ReadAsync()) {
-					retorno.Add(new DestinatarioNotificacion {
+				DestinatarioNotificacion? retorno = null;
+				if (await reader.ReadAsync()) {
+					retorno = new DestinatarioNotificacion {
 						Id = reader.GetInt64(0),
 						Sub = reader.GetString(1),
 						IdNegocio = reader.GetInt64(2),
@@ -44,7 +42,7 @@ namespace TanatosAPI.Repositories {
 						FechaCreacion = reader.GetDateTime(12),
 						FechaEliminacion = await reader.IsDBNullAsync(13) ? null : reader.GetDateTime(13),
 						Vigencia = reader.GetBoolean(14)
-					});
+					};
 				}
 				return retorno;
 			} finally {
@@ -88,6 +86,51 @@ namespace TanatosAPI.Repositories {
 						FechaEliminacion = await reader.IsDBNullAsync(13) ? null : reader.GetDateTime(13),
 						Vigencia = reader.GetBoolean(14)
 					};
+				}
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
+		}
+
+		public async Task<List<DestinatarioNotificacion>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
+			string query =
+				"SELECT ID, SUB, ID_NEGOCIO, ID_EMPLEADO, ID_TIPO_RECEPTOR, ALIAS, DESTINO, CODIGO_VALIDACION, FECHA_CADUCIDAD_CODIGO_VALIDACION, " +
+				"FECHA_VALIDACION, VALIDADO, HERMES_ID_MENSAJE, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DESTINATARIO_NOTIFICACION " +
+				"WHERE SUB = @SUB AND (ID_NEGOCIO = @IDNEGOCIO OR @IDNEGOCIO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+				command.Parameters.AddWithValue("SUB", sub);
+				command.Parameters.AddWithValue("IDNEGOCIO", (object?)idNegocio ?? DBNull.Value);
+				command.Parameters.AddWithValue("VIGENCIA", (object?)vigencia ?? DBNull.Value);
+
+				await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+				List<DestinatarioNotificacion> retorno = [];
+				while (await reader.ReadAsync()) {
+					retorno.Add(new DestinatarioNotificacion {
+						Id = reader.GetInt64(0),
+						Sub = reader.GetString(1),
+						IdNegocio = reader.GetInt64(2),
+						IdEmpleado = await reader.IsDBNullAsync(3) ? null : reader.GetInt64(3),
+						IdTipoReceptor = reader.GetInt64(4),
+						Alias = await reader.IsDBNullAsync(5) ? null : reader.GetString(5),
+						Destino = reader.GetString(6),
+						CodigoValidacion = reader.GetString(7),
+						FechaCaducidadCodigoValidacion = reader.GetDateTime(8),
+						FechaValidacion = await reader.IsDBNullAsync(9) ? null : reader.GetDateTime(9),
+						Validado = reader.GetBoolean(10),
+						HermesIdMensaje = await reader.IsDBNullAsync(11) ? null : reader.GetString(11),
+						FechaCreacion = reader.GetDateTime(12),
+						FechaEliminacion = await reader.IsDBNullAsync(13) ? null : reader.GetDateTime(13),
+						Vigencia = reader.GetBoolean(14)
+					});
 				}
 				return retorno;
 			} finally {
