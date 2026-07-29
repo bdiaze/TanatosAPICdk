@@ -560,7 +560,7 @@ namespace TanatosAPI.Endpoints {
                     await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
                     try {
-                        await notificacionUseCase.ProcesarNotificacion(entrada.IdNormaSuscrita, entrada.Cron, entrada.IdTipoUnidadTiempoAntelacion, entrada.CantAntelacion, entrada.EsVencimiento, entrada.ProgramarSiguienteEjecucion, transaction);
+                        await notificacionUseCase.ProcesarNotificacion(entrada.IdNormaSuscrita, entrada.Cron, entrada.FrecuenciaDias, entrada.InicioEjecucionUtc, entrada.IdTipoUnidadTiempoAntelacion, entrada.CantAntelacion, entrada.EsVencimiento, entrada.ProgramarSiguienteEjecucion, transaction);
 						
 						await transaction.CommitAsync();
 					} catch {

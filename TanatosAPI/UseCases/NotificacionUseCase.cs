@@ -12,50 +12,28 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-	public class NotificacionUseCase(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, HistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, IHtmlRenderer renderer, IHermesHelper hermesHelper, IUsuarioBcp usuarioBcp, IDestinatarioNotificacionBcp destinatarioNotificacionBcp, ISuscripcionBcp suscripcionBcp, INormaSuscritaBcp normaSuscritaBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionDao historialNotificacionDao, ITemplateNormaDao templateNormaDao, IDestinatarioNotificacionDao destinatarioNotificacionDao, ICargoDao cargoDao, IEmpleadoDao empleadoDao) {
+	public class NotificacionUseCase(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, NormaSuscritaUseCase normaSuscritaUseCase, HistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, IHtmlRenderer renderer, IHermesHelper hermesHelper, ISuscripcionBcp suscripcionBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionDao historialNotificacionDao, ICargoBcp cargoBcp, IEmpleadoDao empleadoDao) {
 		private const int DIAS_CADUCIDAD_CODIGO_ACCESO = 30;
 
-		public async Task ProcesarNotificacion(long idNormaSuscrita, string cron, long? idTipoUnidadTiempoAntelacion, int? cantAntelacion, bool? esVencimiento, bool programarSiguienteEjecucion, NpgsqlTransaction? transaction = null) {
+		public async Task ProcesarNotificacion(long idNormaSuscrita, string? cron, int? frecuenciaDias, DateTime? inicioEjecucionUtc, long? idTipoUnidadTiempoAntelacion, int? cantAntelacion, bool? esVencimiento, bool programarSiguienteEjecucion, NpgsqlTransaction? transaction = null) {
 			esVencimiento ??= programarSiguienteEjecucion;
 
 			// Se obtiene norma suscrita y/o template...
-			NormaSuscrita normaSuscrita = await normaSuscritaBcp.Obtener(idNormaSuscrita, transaction:transaction) ?? throw new InvalidOperationException("ID norma suscrita inválida");
-			TemplateNorma? templateNorma = null;
-			if (normaSuscrita.IdTemplate != null && normaSuscrita.IdNorma != null) {
-				templateNorma = (await templateNormaDao.ObtenerPorTemplate(normaSuscrita.IdTemplate.Value, transaction)).FirstOrDefault(n => n.IdNorma == normaSuscrita.IdNorma);
-			}
+			NormaSuscrita normaSuscrita = (await normaSuscritaUseCase.Obtener(idNormaSuscrita, validarVigencia: true, incluirTemplate: true, transaction: transaction))!;
 
 			// Se obtienen destinatarios vigentes...
-			List<DestinatarioNotificacion> destinatariosVigentes = await destinatarioNotificacionDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction);
-			List<DestinatarioNotificacion> destinatariosValidados = [.. destinatariosVigentes.Where(dn => dn.Validado)];
-
-			// Se valida que exista un destinatario correspondiente a la cuenta del usuario...
-			Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(normaSuscrita.Sub, transaction);
-			if (usuario.CorreoElectronico != null && !destinatariosValidados.Any(d => d.IdEmpleado == null && d.IdTipoReceptor == 1 /* Correo electrónico */ && d.Destino == usuario.CorreoElectronico)) {
-				(DestinatarioNotificacion nuevoDestinatario, _) = await destinatarioNotificacionBcp.Insertar(
-					normaSuscrita.Sub,
-					normaSuscrita.IdNegocio,
-					null,
-					1, // Correo electrónico
-					"Mi correo electrónico",
-					usuario.CorreoElectronico,
-					true,
-					transaction
-				);
-				destinatariosValidados.Add(nuevoDestinatario);
-			}
+			List<DestinatarioNotificacion> destinatariosValidados = await destinatarioNotificacionUseCase.ObtenerPorSubYNegocio(normaSuscrita.Sub, normaSuscrita.IdNegocio, filtrarVigente: true, filtrarValidado: true, crearDestinoUsuario: true, transaction: transaction);
 
 			// Se sobreescribe el cargo responsable si el usuario no tiene plan empresa o si el cargo no está vigente...
 			long? idCargoResponsable = normaSuscrita.IdCargo;
-
-			bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita.Sub, transaction);
-			if (!tienePlanEmpresa) idCargoResponsable = null;
+			if (idCargoResponsable != null) {
+				bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita.Sub, transaction);
+				if (!tienePlanEmpresa) idCargoResponsable = null;
+			}
 
 			if (idCargoResponsable != null) {
-				Cargo? cargo = (await cargoDao.ObtenerPorSub(normaSuscrita.Sub, normaSuscrita.IdNegocio, true, transaction)).FirstOrDefault(c => c.Id == idCargoResponsable);
-				if (cargo == null || !cargo.Vigencia) {
-					idCargoResponsable = null;
-				}
+				Cargo? cargo = await cargoBcp.Obtener(idCargoResponsable.Value, filtrarVigente: true, filtrarSub: normaSuscrita.Sub, filtrarIdNegocio: normaSuscrita.IdNegocio, transaction: transaction);
+				if (cargo == null) idCargoResponsable = null;
 			}
 
 			// Se filtra lista de destinatario habilitados según cargo responsable de la obligación...
@@ -187,8 +165,8 @@ namespace TanatosAPI.UseCases {
 						if (!esVencimiento.Value) {
 							asunto = $"¡Tu obligación vence en {tiempoFaltante ?? ""}!";
 							cuerpoCorreo = await renderer.GenerarHtml("NotificacionPrevia.html", new ScriptObject() {
-								["NOMBRE_NORMA"] = WebUtility.HtmlEncode(normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado"),
-								["MULTA_NORMA"] = WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"),
+								["NOMBRE_NORMA"] = WebUtility.HtmlEncode(normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre ?? "Sin nombre registrado"),
+								["MULTA_NORMA"] = WebUtility.HtmlEncode(normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa ?? "Sin multa registrada"),
 								["CODIGO_ACCESO"] = Uri.EscapeDataString(codigoAcceso),
 								["TIEMPO_FALTANTE"] = WebUtility.HtmlEncode(tiempoFaltante ?? ""),
 								["DE_LOS_PROXIMOS"] = WebUtility.HtmlEncode(deLosProximos ?? ""),
@@ -196,8 +174,8 @@ namespace TanatosAPI.UseCases {
 						} else {
 							asunto = "¡Tu obligación venció!";
 							cuerpoCorreo = await renderer.GenerarHtml("NormaVencida.html", new ScriptObject() {
-								["NOMBRE_NORMA"] = WebUtility.HtmlEncode(normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado"),
-								["MULTA_NORMA"] = WebUtility.HtmlEncode(normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"),
+								["NOMBRE_NORMA"] = WebUtility.HtmlEncode(normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre ?? "Sin nombre registrado"),
+								["MULTA_NORMA"] = WebUtility.HtmlEncode(normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa ?? "Sin multa registrada"),
 								["CODIGO_ACCESO"] = Uri.EscapeDataString(codigoAcceso),
 							});
 						}
@@ -234,16 +212,16 @@ namespace TanatosAPI.UseCases {
 								tiempoFaltante!
 							];
 							parametrosCuerpo = [
-								normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado",
+								normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre ?? "Sin nombre registrado",
 								deLosProximos!,
-								normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"
+								normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa ?? "Sin multa registrada"
 							];
 						} else {
 							nombreTemplate = "norma_vencida";
 							parametrosTitulo = null;
 							parametrosCuerpo = [
-								normaSuscrita.Nombre ?? templateNorma?.Nombre ?? "Sin nombre registrado",
-								normaSuscrita.Multa ?? templateNorma?.Multa ?? "Sin multa registrada"
+								normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre ?? "Sin nombre registrado",
+								normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa ?? "Sin multa registrada"
 							];
 						}
 

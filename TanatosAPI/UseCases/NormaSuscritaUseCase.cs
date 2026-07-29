@@ -87,7 +87,7 @@ namespace TanatosAPI.UseCases {
 			if (normasSuscritas.Count > 0) {
 				Dictionary<(string sub, long idNegocio), Dictionary<long, Cargo>> cargos = [];
 				foreach ((string sub, long idNegocio) in normasSuscritas.Select(ns => (ns.Sub, ns.IdNegocio)).ToHashSet()) {
-					cargos[(sub, idNegocio)] = (await cargoBcp.ObtenerVigentes(sub, idNegocio, transaction)).ToDictionary(p => p.Id, p => p);
+					cargos[(sub, idNegocio)] = (await cargoBcp.ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigente: true, transaction: transaction)).ToDictionary(p => p.Id, p => p);
 				}
 
 				foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
@@ -349,7 +349,7 @@ namespace TanatosAPI.UseCases {
                 if (idCategoriaNorma != null) categoriaNorma = await categoriaNormaBcp.ObtenerValidandoVigencia(idCategoriaNorma, transaction!.NpgsqlTransaction());
 
                 Cargo? cargo = null;
-                if (idCargo != null) cargo = await cargoBcp.ObtenerValidandoVigenciaPertenenciaNegocio(idCargo.Value, idNegocio, sub, transaction!.NpgsqlTransaction());
+                if (idCargo != null) cargo = await cargoBcp.Obtener(idCargo.Value, validarVigencia: true, validarSub: sub, validarIdNegocio: idNegocio, transaction: transaction!.NpgsqlTransaction());
 
                 NormaSuscrita obligacion = await normaSuscritaBcp.CrearObligacionUsuario(sub, idNegocio, nombre, descripcion, multa, idTipoPeriodicidad, idCategoriaNorma, idCargo, activado, transaction!.NpgsqlTransaction());
                 obligacion.TipoPeriodicidad = periodicidad;
@@ -442,7 +442,7 @@ namespace TanatosAPI.UseCases {
 				if (idCategoriaNorma != null) categoriaNorma = await categoriaNormaBcp.ObtenerValidandoVigencia(idCategoriaNorma, transaction!.NpgsqlTransaction());
 
 				Cargo? cargo = null;
-				if (idCargo != null) cargo = await cargoBcp.ObtenerValidandoVigenciaPertenenciaNegocio(idCargo.Value, idNegocio, sub, transaction!.NpgsqlTransaction());
+				if (idCargo != null) cargo = await cargoBcp.Obtener(idCargo.Value, validarVigencia: true, validarSub: sub, validarIdNegocio: idNegocio, transaction: transaction!.NpgsqlTransaction());
 
 				if (activado) {
 					if (proximoVencimiento == null) throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "Debe incluir la fecha de próximo vencimiento.");
