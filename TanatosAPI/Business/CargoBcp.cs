@@ -21,36 +21,34 @@ namespace TanatosAPI.Business {
 			return cargo.Sub == sub;
 		}
 
-		public async Task<Cargo?> Obtener(long idCargo, NpgsqlTransaction? transaction = null) {
-			return await cargoDao.Obtener(idCargo, transaction);
+		public List<Cargo> FiltrarVigentes(List<Cargo> cargos) {
+			return [.. cargos.Where(c => EstaVigente(c))];
 		}
 
-		public async Task<Cargo?> ObtenerSoloVigente(long idCargo, NpgsqlTransaction? transaction = null) {
-			Cargo? existente = await Obtener(idCargo, transaction);
-			if (EstaVigente(existente)) return existente;
-			return null;
+		public async Task<Cargo?> Obtener(long idCargo, bool filtrarVigente = false, string? filtrarSub = null, long? filtrarIdNegocio = null, bool validarVigencia = false, string? validarSub = null, long? validarIdNegocio = null, NpgsqlTransaction? transaction = null) {
+			Cargo? cargo = await cargoDao.Obtener(idCargo, transaction);
+			
+			// Se aplican todas las validaciones...
+			if (validarVigencia && !EstaVigente(cargo)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El cargo no existe o no está vigente", "El cargo es inválido.");
+			if (cargo != null) {
+				if (validarSub != null && !PerteneceAlUsuario(cargo, validarSub)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El cargo no pertenece al usuario", "El cargo es inválido.");
+				if (validarIdNegocio != null && !PerteneceAlNegocio(cargo, validarIdNegocio.Value)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El cargo no pertenece al negocio", "El cargo es inválido.");
+			}
+
+			// Se aplican los filtros...
+			if (filtrarVigente && !EstaVigente(cargo)) return null;
+			if (cargo != null) {
+				if (filtrarSub != null && !PerteneceAlUsuario(cargo, filtrarSub)) return null;
+				if (filtrarIdNegocio != null && !PerteneceAlNegocio(cargo, filtrarIdNegocio.Value)) return null;
+			}
+
+			return cargo;
 		}
 
-		public async Task<Cargo> ObtenerValidandoVigencia(long idCargo, NpgsqlTransaction? transaction = null) {
-            Cargo? existente = await Obtener(idCargo, transaction);
-            if (!EstaVigente(existente)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El cargo no existe o no está vigente", "El cargo es inválido.");
-			return existente!;
-        }
-
-		public async Task<Cargo> ObtenerValidandoVigenciaYPertenencia(long idCargo, string sub, NpgsqlTransaction? transaction = null) {
-			Cargo existente = await ObtenerValidandoVigencia(idCargo, transaction);
-            if (!PerteneceAlUsuario(existente, sub)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El cargo no pertenece al usuario", "El cargo es inválido.");
-			return existente!;
-		}
-
-		public async Task<Cargo> ObtenerValidandoVigenciaPertenenciaNegocio(long idCargo, long idNegocio, string sub, NpgsqlTransaction? transaction = null) {
-			Cargo existente = await ObtenerValidandoVigenciaYPertenencia(idCargo, sub, transaction);
-			if (!PerteneceAlNegocio(existente, idNegocio)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El cargo no pertenece al negocio", "El cargo es inválido.");
-            return existente!;
-        }
-
-		public async Task<List<Cargo>> ObtenerVigentes(string sub, long? idNegocio, NpgsqlTransaction? transaction = null) {
-			return await cargoDao.ObtenerPorSub(sub, idNegocio, true, transaction);
+		public async Task<List<Cargo>> ObtenerPorSubYNegocio(string sub, long? idNegocio, bool filtrarVigente = false, NpgsqlTransaction? transaction = null) {
+			List<Cargo> cargos = await cargoDao.ObtenerPorSub(sub, idNegocio, null, transaction);
+			if (filtrarVigente) cargos = FiltrarVigentes(cargos);
+			return cargos;
 		}
 
 		public async Task<Cargo> Crear(string sub, string nombre, long idNegocio, NpgsqlTransaction? transaction = null) {
