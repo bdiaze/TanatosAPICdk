@@ -113,19 +113,19 @@ namespace TanatosAPI.Test.Business {
 		[InlineData("sub-test-1", 3L, 0L)]
 		[InlineData("sub-test-2", 1L, 0L)]
 		public async Task ObtenerVigentes(string sub, long idNegocio, long? expectedCount) {
-			cargoDao.ObtenerPorSub(Arg.Any<string>(), Arg.Any<long>(), true).Returns([]);
-			cargoDao.ObtenerPorSub("sub-test-1", 1, true).Returns([
+			cargoDao.ObtenerPorSub(Arg.Any<string>(), Arg.Any<long>(), null).Returns([]);
+			cargoDao.ObtenerPorSub("sub-test-1", 1, null).Returns([
 				CargoDummy(sub: "sub-test-1", idNegocio: 1, id: 1),
 				CargoDummy(sub: "sub-test-1", idNegocio: 1, id: 2),
 			]);
-			cargoDao.ObtenerPorSub("sub-test-1", 2, true).Returns([
+			cargoDao.ObtenerPorSub("sub-test-1", 2, null).Returns([
 				CargoDummy(sub: "sub-test-1", idNegocio: 2, id: 3),
 			]);
 
 			List<Cargo> cargos = await cargoBcp.ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigente: true);
 			Assert.Equal(expectedCount, cargos.Count);
 			Assert.All(cargos, (cargo) => Assert.True(cargo.Vigencia));
-			await cargoDao.Received(1).ObtenerPorSub(sub, idNegocio, true);
+			await cargoDao.Received(1).ObtenerPorSub(sub, idNegocio, null);
 		}
 
 		[Fact]
