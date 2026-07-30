@@ -11,7 +11,7 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-    public class DestinatarioNotificacionUseCase(IDatabaseConnectionHelper connectionHelper, NegocioUseCase negocioUseCase, IDestinatarioNotificacionBcp destinatarioNotificacionBcp, INegocioBcp negocioBcp, IUsuarioBcp usuarioBcp, ISuscripcionBcp suscripcionBcp, ICargoBcp cargoBcp, ITipoReceptorNotificacionDao tipoReceptorNotificacionDao) {
+    public class DestinatarioNotificacionUseCase(IDatabaseConnectionHelper connectionHelper, NegocioUseCase negocioUseCase, IDestinatarioNotificacionBcp destinatarioNotificacionBcp, INegocioBcp negocioBcp, IUsuarioBcp usuarioBcp, ISuscripcionBcp suscripcionBcp, ICargoBcp cargoBcp, IEmpleadoBcp empleadoBcp, ITipoReceptorNotificacionDao tipoReceptorNotificacionDao) {
         public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
         public async Task<List<DestinatarioNotificacion>> ObtenerPorSubYNegocio(string sub, long idNegocio, bool filtrarVigente = false, bool filtrarValidado = false, bool crearDestinoUsuario = false, NpgsqlTransaction? transaction = null) {
@@ -40,29 +40,39 @@ namespace TanatosAPI.UseCases {
             return destinatarios;
 		}
 
-        /*
         public async Task<List<DestinatarioNotificacion>> ObtenerDestinatariosNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
             List<DestinatarioNotificacion> destinatariosValidados = await ObtenerPorSubYNegocio(normaSuscrita.Sub, normaSuscrita.IdNegocio, filtrarVigente: true, filtrarValidado: true, crearDestinoUsuario: true, transaction: transaction);
 
-			// Se sobreescribe el cargo responsable si el usuario no tiene plan empresa o si el cargo no está vigente...
+			// No se usa el cargo responsable si el usuario no tiene plan empresa...
 			long? idCargoResponsable = normaSuscrita.IdCargo;
             if (idCargoResponsable != null) {
                 bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita.Sub, transaction);
                 if (!tienePlanEmpresa) idCargoResponsable = null;
             }
 
+            // No se usa el cargo responsable si dicho cargo no está vigente, o no pertenece al usuario y negocio de la obligación...
             if (idCargoResponsable != null) {
                 Cargo? cargo = await cargoBcp.Obtener(idCargoResponsable.Value, filtrarVigente: true, filtrarSub: normaSuscrita.Sub, filtrarIdNegocio: normaSuscrita.IdNegocio, transaction: transaction);
                 idCargoResponsable = cargo?.Id;
             }
 
             if (idCargoResponsable == null) {
-
+                // Si no tiene un cargo responsable, solo se dejan los destinatarios que no son de un empleado...
+                return destinatarioNotificacionBcp.FiltrarPorEmpleado(destinatariosValidados, (long?)null);
+            } else {
+                // Si tiene un cargo responsable, solo se dejan los destinatarios que posean dicho cargo...
+                HashSet<long?> idsEmpleados = [.. (await empleadoBcp.ObtenerPorSubYNegocio(normaSuscrita.Sub, normaSuscrita.IdNegocio, filtrarVigente: true, filtrarIdCargo: idCargoResponsable, transaction: transaction)).Select(e => e.Id)];
+                List<DestinatarioNotificacion> destinatariosEmpleadosResponsables = destinatarioNotificacionBcp.FiltrarPorEmpleado(destinatariosValidados, idsEmpleados);
+                if (destinatariosEmpleadosResponsables.Count == 0) {
+                    // Si no tengo empleados responsables, se dejan los destinatarios que no son de un empleado...
+                    return destinatarioNotificacionBcp.FiltrarPorEmpleado(destinatariosValidados, (long?)null);
+                } else {
+                    return destinatariosEmpleadosResponsables;
+                }
             }
         }
-        */
-
-		public async Task<DestinatarioNotificacion> RegistrarDestinatario(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null) {
+    	
+        public async Task<DestinatarioNotificacion> RegistrarDestinatario(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null) {
             bool ownsTransaction = transaction == null;
             NpgsqlConnection? connection = null;
             try {
