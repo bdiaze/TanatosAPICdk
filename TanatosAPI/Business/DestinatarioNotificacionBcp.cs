@@ -32,6 +32,14 @@ namespace TanatosAPI.Business {
 			return destinatarioNotificacion.IdNegocio == idNegocio;
 		}
 
+		public bool PerteneceEmpleado(DestinatarioNotificacion destinatarioNotificacion, long? idEmpleado) {
+			return destinatarioNotificacion.IdEmpleado == idEmpleado;
+		}
+
+        public bool PerteneceEmpleado(DestinatarioNotificacion destinatarioNotificacion, HashSet<long?> idsEmpleados) {
+            return idsEmpleados.Contains(destinatarioNotificacion.IdEmpleado);
+        }
+
         public bool CodigoValidacionVigente(DestinatarioNotificacion destinatarioNotificacion) {
             return destinatarioNotificacion.FechaCaducidadCodigoValidacion >= dateTimeProvider.UtcNow;
         }
@@ -44,7 +52,15 @@ namespace TanatosAPI.Business {
 			return [.. destinatarios.Where(d => EstaValidado(d))];
 		}
 
-		public async Task<string> GenerarCodigoValidacion(NpgsqlTransaction? transaction = null) {
+        public List<DestinatarioNotificacion> FiltrarPorEmpleado(List<DestinatarioNotificacion> destinatarios, long? idEmpleado) {
+            return [.. destinatarios.Where(d => PerteneceEmpleado(d, idEmpleado))];
+        }
+
+        public List<DestinatarioNotificacion> FiltrarPorEmpleado(List<DestinatarioNotificacion> destinatarios, HashSet<long?> idsEmpleados) {
+            return [.. destinatarios.Where(d => PerteneceEmpleado(d, idsEmpleados))];
+        }
+
+        public async Task<string> GenerarCodigoValidacion(NpgsqlTransaction? transaction = null) {
             string codigoValidacion = CryptoHelper.GenerarToken();
             DestinatarioNotificacion? mismoCodigo = await ObtenerPorCodigoValidacion(codigoValidacion, transaction: transaction);
             while (mismoCodigo != null) {

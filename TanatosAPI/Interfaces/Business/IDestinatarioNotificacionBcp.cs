@@ -7,10 +7,14 @@ namespace TanatosAPI.Interfaces.Business {
         public bool EstaValidado(DestinatarioNotificacion destinatarioNotificacion);
         public bool Pertenece(DestinatarioNotificacion destinatarioNotificacion, string sub);
         public bool PerteneceNegocio(DestinatarioNotificacion destinatarioNotificacion, long idNegocio);
-		public bool CodigoValidacionVigente(DestinatarioNotificacion destinatarioNotificacion);
+        public bool PerteneceEmpleado(DestinatarioNotificacion destinatarioNotificacion, long? idEmpleado);
+        public bool PerteneceEmpleado(DestinatarioNotificacion destinatarioNotificacion, HashSet<long?> idsEmpleados);
+        public bool CodigoValidacionVigente(DestinatarioNotificacion destinatarioNotificacion);
         public List<DestinatarioNotificacion> FiltrarVigentes(List<DestinatarioNotificacion> destinatarios);
         public List<DestinatarioNotificacion> FiltrarValidados(List<DestinatarioNotificacion> destinatarios);
-		public Task<string> GenerarCodigoValidacion(NpgsqlTransaction? transaction = null);
+        public List<DestinatarioNotificacion> FiltrarPorEmpleado(List<DestinatarioNotificacion> destinatarios, long? idEmpleado);
+        public List<DestinatarioNotificacion> FiltrarPorEmpleado(List<DestinatarioNotificacion> destinatarios, HashSet<long?> idsEmpleados);
+        public Task<string> GenerarCodigoValidacion(NpgsqlTransaction? transaction = null);
         public Task<DestinatarioNotificacion?> Obtener(long idDestinatarioNotificacion, bool filtrarVigente = false, bool filtrarValidado = false, string? filtrarSub = null, long? filtrarIdNegocio = null, NpgsqlTransaction? transaction = null);
         public Task<DestinatarioNotificacion?> ObtenerPorCodigoValidacion(string codigoValidacion, bool validarVigencia = false, bool validarCodigoValidacionVigente = false, NpgsqlTransaction? transaction = null);
 		public Task<List<DestinatarioNotificacion>> ObtenerPorSubYNegocio(string sub, long idNegocio, bool filtrarVigente = false, bool filtrarValidado = false, NpgsqlTransaction? transaction = null);
