@@ -5,10 +5,11 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
+using TanatosAPI.Interfaces.UseCases;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-	public class HistorialNormaSuscritaUseCase(IDateTimeProvider dateTimeProvider, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp, INormaSuscritaBcp normaSuscritaBcp, ITemplateNormaBcp templateNormaBcp, ITipoPeriodicidadBcp tipoPeriodicidadBcp) {
+	public class HistorialNormaSuscritaUseCase(IDateTimeProvider dateTimeProvider, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp, INormaSuscritaBcp normaSuscritaBcp, ITemplateNormaBcp templateNormaBcp, ITipoPeriodicidadBcp tipoPeriodicidadBcp) : IHistorialNormaSuscritaUseCase {
 		public async Task EliminarPorNormaSuscrita(long idNormaSuscrita, bool ignorarVencidos, NpgsqlTransaction transaction) {
 			List<HistorialNormaSuscrita> historialesVigentes = await historialNormaSuscritaBcp.ObtenerPorNormaSuscrita(idNormaSuscrita, filtrarVigente: true, filtrarNoCompletadas: true, transaction: transaction);
 
