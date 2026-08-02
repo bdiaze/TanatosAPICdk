@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Text;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Exceptions;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -32,6 +34,17 @@ namespace TanatosAPI.Test.Business {
 			Vigencia = vigencia
 		};
 
+		public static TheoryData<CategoriaNorma?, bool> EstaVigenteCases => new() {
+			{ CategoriaNormaDummy(vigencia: true), true },
+			{ CategoriaNormaDummy(vigencia: false), false },
+			{ null, false },
+		};
+		[Theory]
+		[MemberData(nameof(EstaVigenteCases))]
+		public void EstaVigenteTest(CategoriaNorma? item, bool expectedResult) {
+			Assert.Equal(expectedResult, categoriaNormaBcp.EstaVigente(item));
+		}
+
 		[Theory]
 		[InlineData(1L, 1L)]
 		[InlineData(2L, 2L)]
@@ -43,6 +56,31 @@ namespace TanatosAPI.Test.Business {
 
 			CategoriaNorma? elemento = await categoriaNormaBcp.ObtenerPorId(id);
 			Assert.Equal(expectedIdResult, elemento?.Id);
+		}
+
+		[Fact]
+		public async Task ObtenerValidandoVigenciaTest_Valido() {
+			categoriaNormaDao.ObtenerPorId(1).Returns(CategoriaNormaDummy(id: 1));
+
+			CategoriaNorma retorno = await categoriaNormaBcp.ObtenerValidandoVigencia(1);
+			Assert.Equal(1, retorno.Id);
+			await categoriaNormaDao.Received(1).ObtenerPorId(1);
+		}
+
+		[Fact]
+		public async Task ObtenerValidandoVigenciaTest_ParametroNulo() {
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => categoriaNormaBcp.ObtenerValidandoVigencia(null));
+			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
+			await categoriaNormaDao.DidNotReceive().ObtenerPorId(1);
+		}
+
+		[Fact]
+		public async Task ObtenerValidandoVigenciaTest_NoVigente() {
+			categoriaNormaDao.ObtenerPorId(1).Returns(CategoriaNormaDummy(id: 1, vigencia: false));
+
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => categoriaNormaBcp.ObtenerValidandoVigencia(1));
+			Assert.Equal(TipoErrorValidacion.NoVigente, ex.TipoErrorValidacion);
+			await categoriaNormaDao.Received(1).ObtenerPorId(1);
 		}
 
 		[Fact]
@@ -86,7 +124,7 @@ namespace TanatosAPI.Test.Business {
 		[InlineData(1, "Nombre1", "NombreCorto1", "Descripcion1", true)]
 		[InlineData(2, "Nombre2", "NombreCorto2", "Descripcion2", false)]
 		public async Task RegistrarCategoriaTest(long id, string nombre, string? nombreCorto, string? descripcion, bool vigencia) {
-			CategoriaNorma categoria = await categoriaNormaBcp.RegistrarCategoria(id, nombre, nombreCorto, descripcion, vigencia);
+			CategoriaNorma categoria = await categoriaNormaBcp.Crear(id, nombre, nombreCorto, descripcion, vigencia);
 			
 			Assert.Equal(id, categoria.Id);
 			Assert.Equal(nombre, categoria.Nombre);
@@ -105,7 +143,7 @@ namespace TanatosAPI.Test.Business {
 		[Fact]
 		public async Task ActualizarCategoriaTest() {
 			CategoriaNorma categoria = CategoriaNormaDummy();
-			await categoriaNormaBcp.ActualizarCategoria(categoria);
+			await categoriaNormaBcp.Actualizar(categoria);
 			await categoriaNormaDao.Received(1).Actualizar(Arg.Is<CategoriaNorma>(c =>
 				c.Id == categoria.Id &&
 				c.Nombre == categoria.Nombre &&
@@ -117,7 +155,7 @@ namespace TanatosAPI.Test.Business {
 
 		[Fact]
 		public async Task EliminarCategoriaTest() {
-			await categoriaNormaBcp.EliminarCategoria(1);
+			await categoriaNormaBcp.Eliminar(1);
 			await categoriaNormaDao.Received(1).Eliminar(Arg.Is<long>(c => c == 1));
 		}
 	}

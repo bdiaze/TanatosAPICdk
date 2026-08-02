@@ -1,8 +1,12 @@
 ﻿using Amazon.Lambda.Core;
 using System.Diagnostics;
+using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Exceptions;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
+using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
 	public static class TipoUnidadTiempoEndpoints {
@@ -18,18 +22,23 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ITipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapGet("/Vigentes", async (IHostEnvironment environment, TipoUnidadTiempoUseCase tipoUnidadTiempoUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					List<TipoUnidadTiempo> retorno = await tipoUnidadTiempoDao.ObtenerPorVigencia(true);
+					List<TipoUnidadTiempo> retorno = await tipoUnidadTiempoUseCase.ObtenerVigentes();
 
 					LambdaLogger.Log(
 						$"[GET] - [TipoUnidadTiempo] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de los tipos de unidad de tiempo vigentes - Cant. Registros: {retorno.Count}.");
-
 					return Results.Ok(retorno);
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[GET] - [TipoUnidadTiempo] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [TipoUnidadTiempo] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener los tipos de unidad de tiempo vigentes. " +
@@ -42,7 +51,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtenerPorVigencia(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, ITipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapGet("/PorVigencia/{vigencia?}", async (string? vigencia, IHostEnvironment environment, TipoUnidadTiempoUseCase tipoUnidadTiempoUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -52,14 +61,19 @@ namespace TanatosAPI.Endpoints {
 						_ => null
 					};
 
-					List<TipoUnidadTiempo> retorno = await tipoUnidadTiempoDao.ObtenerPorVigencia(vig);
+					List<TipoUnidadTiempo> retorno = await tipoUnidadTiempoUseCase.ObtenerPorVigencia(vig);
 
 					LambdaLogger.Log(
 						$"[GET] - [TipoUnidadTiempo] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de los tipos de unidad de tiempo por vigencia - Vigencia: {vigencia} - Cant. Registros: {retorno.Count}.");
-
 					return Results.Ok(retorno);
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[GET] - [TipoUnidadTiempo] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [TipoUnidadTiempo] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener los tipos de unidad de tiempo por vigencia - Vigencia: {vigencia}. " +
@@ -72,29 +86,32 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (TipoUnidadTiempo entrada, IHostEnvironment environment, ITipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapPost("/", async (TipoUnidadTiempo entrada, IHostEnvironment environment, TipoUnidadTiempoUseCase tipoUnidadTiempoUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					TipoUnidadTiempo? existente = await tipoUnidadTiempoDao.ObtenerPorId(entrada.Id);
-
-					if (existente != null) {
-						LambdaLogger.Log(
-							$"[POST] - [TipoUnidadTiempo] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"Ya existe un tipo de unidad de tiempo con ID {entrada.Id}.");
-
-						return Results.BadRequest($"Ya existe un tipo de unidad de tiempo con ID {entrada.Id}.");
-					}
-
-					await tipoUnidadTiempoDao.Insertar(entrada);
-					existente = entrada;
+					TipoUnidadTiempo nuevo = await tipoUnidadTiempoUseCase.Insertar(
+                        entrada.Id,
+                        entrada.Nombre,
+                        entrada.NombrePlural,
+                        entrada.CantSegundos,
+                        entrada.CantMinutos,
+                        entrada.CantHoras,
+                        entrada.CantDias,
+                        entrada.Vigencia
+                    );
 
 					LambdaLogger.Log(
 						$"[POST] - [TipoUnidadTiempo] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Creación exitosa del tipo de unidad de tiempo - ID: {entrada.Id}.");
-
-					return Results.Ok(existente);
-				} catch (Exception ex) {
+					return Results.Ok(nuevo);
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[POST] - [TipoUnidadTiempo] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[POST] - [TipoUnidadTiempo] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error en la creación del tipo de unidad de tiempo - ID: {entrada.Id}. " +
@@ -107,29 +124,32 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (TipoUnidadTiempo entrada, IHostEnvironment environment, ITipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapPut("/", async (TipoUnidadTiempo entrada, IHostEnvironment environment, TipoUnidadTiempoUseCase tipoUnidadTiempoUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					TipoUnidadTiempo? existente = await tipoUnidadTiempoDao.ObtenerPorId(entrada.Id);
-
-					if (existente == null) {
-						LambdaLogger.Log(
-							$"[PUT] - [TipoUnidadTiempo] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"No existe el tipo de unidad de tiempo con ID {entrada.Id}.");
-
-						return Results.BadRequest($"No existe el tipo de unidad de tiempo con ID {entrada.Id}.");
-					}
-
-					await tipoUnidadTiempoDao.Actualizar(entrada);
-					existente = entrada;
+                    TipoUnidadTiempo existente = await tipoUnidadTiempoUseCase.Actualizar(
+						entrada.Id, 
+						entrada.Nombre, 
+						entrada.NombrePlural, 
+						entrada.CantSegundos, 
+						entrada.CantMinutos,
+						entrada.CantHoras,
+						entrada.CantDias,
+						entrada.Vigencia
+					);
 
 					LambdaLogger.Log(
 						$"[PUT] - [TipoUnidadTiempo] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Actualización exitosa del tipo de unidad de tiempo - ID: {entrada.Id}.");
-
 					return Results.Ok(existente);
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[PUT] - [TipoUnidadTiempo] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[PUT] - [TipoUnidadTiempo] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error en la actualización del tipo de unidad de tiempo - ID: {entrada.Id}. " +
@@ -142,28 +162,23 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ITipoUnidadTiempoDao tipoUnidadTiempoDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, TipoUnidadTiempoUseCase tipoUnidadTiempoUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					TipoUnidadTiempo? existente = await tipoUnidadTiempoDao.ObtenerPorId(id);
-
-					if (existente == null) {
-						LambdaLogger.Log(
-							$"[DELETE] - [TipoUnidadTiempo] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-							$"No existe el tipo de unidad de tiempo con ID {id}.");
-
-						return Results.BadRequest($"No existe el tipo de unidad de tiempo con ID {id}.");
-					}
-
-					await tipoUnidadTiempoDao.Eliminar(id);
+					await tipoUnidadTiempoUseCase.Eliminar(id);
 
 					LambdaLogger.Log(
 						$"[DELETE] - [TipoUnidadTiempo] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Eliminación exitosa del tipo de unidad de tiempo - ID: {id}.");
-
 					return Results.Ok();
-				} catch (Exception ex) {
+                } catch (ErrorValidacion ex) {
+                    LambdaLogger.Log(
+                        $"[DELETE] - [TipoUnidadTiempo] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+                        $"Ocurrió un error de validación. " +
+                        $"{ex}");
+                    return Results.BadRequest(ex.MensajeGenerico);
+                } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[DELETE] - [TipoUnidadTiempo] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error en la eliminación del tipo de unidad de tiempo - ID: {id}. " +

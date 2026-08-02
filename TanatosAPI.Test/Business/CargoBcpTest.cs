@@ -1,7 +1,9 @@
-﻿using NSubstitute;
+﻿using Microsoft.AspNetCore.SignalR;
+using NSubstitute;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Transactions;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
@@ -53,6 +55,16 @@ namespace TanatosAPI.Test.Business {
 			Assert.Equal(expectedResult, cargoBcp.EstaVigente(cargo));
 		}
 
+		public static TheoryData<Cargo, long, bool> PerteneceAlNegocioCases => new() {
+			{ CargoDummy(idNegocio: 100), 100, true },
+			{ CargoDummy(idNegocio: 200), 100, false },
+		};
+		[Theory]
+		[MemberData(nameof(PerteneceAlNegocioCases))]
+		public void PerteneceAlNegocioTest(Cargo cargo, long idNegocio, bool expectedResult) {
+			Assert.Equal(expectedResult, cargoBcp.PerteneceAlNegocio(cargo, idNegocio));
+		}
+
 		public static TheoryData<Cargo, bool> PerteneceAlUsuarioCases => new() {
 			{ CargoDummy(sub: "sub-test-123"), true },
 			{ CargoDummy(sub: "otro-sub-test-123"), false }
@@ -67,70 +79,78 @@ namespace TanatosAPI.Test.Business {
 		[InlineData(1L, 1L)]
 		[InlineData(2L, 2L)]
 		[InlineData(3L, null)]
-		public async Task ObtenerPorIdTest(long idCargo, long? expectedIdResult) {
+		public async Task ObtenerTest_SinParametros(long idCargo, long? expectedIdResult) {
 			cargoDao.Obtener(1).Returns(CargoDummy(id: 1));
 			cargoDao.Obtener(2).Returns(CargoDummy(id: 2));
 			cargoDao.Obtener(3).Returns((Cargo?)null);
 
-			Cargo? cargo = await cargoBcp.ObtenerPorId(idCargo);
+			Cargo? cargo = await cargoBcp.Obtener(idCargo);
 			Assert.Equal(expectedIdResult, cargo?.Id);
 			await cargoDao.Received(1).Obtener(idCargo);
 		}
 
 		[Fact]
-		public async Task ObtenerPorIdValidandoTest_Valido() {
-			cargoDao.Obtener(1).Returns(CargoDummy(id: 1, sub: "sub-test-123", vigencia: true));
+		public async Task ObtenerTest_TodosLosParametros() {
+			cargoDao.Obtener(1).Returns(CargoDummy(id: 1, sub: "sub-test-123", idNegocio: 100, vigencia: true));
 
-			Cargo cargo = await cargoBcp.ObtenerPorIdValidandoVigenciaYPertenencia(1, "sub-test-123");
+			Cargo cargo = (await cargoBcp.Obtener(1, validarVigencia: true, validarSub: "sub-test-123", validarIdNegocio: 100, filtrarVigente: true, filtrarSub: "sub-test-123", filtrarIdNegocio: 100))!;
 			Assert.Equal(1, cargo.Id);
 			Assert.Equal("sub-test-123", cargo.Sub);
+			Assert.Equal(100, cargo.IdNegocio);
 			Assert.True(cargo.Vigencia);
 			await cargoDao.Received(1).Obtener(1);
 		}
 
 		[Fact]
-		public async Task ObtenerPorIdValidandoTest_NoVigente() {
-			cargoDao.Obtener(1).Returns(CargoDummy(id: 1, sub: "sub-test-123", vigencia: false));
+		public async Task ObtenerTest_ValidandoVigenciaNoVigente() {
+			cargoDao.Obtener(1).Returns(CargoDummy(id: 1, vigencia: false));
 
-			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoBcp.ObtenerPorIdValidandoVigenciaYPertenencia(1, "sub-test-123"));
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoBcp.Obtener(1, validarVigencia: true));
 			Assert.Equal(TipoErrorValidacion.NoVigente, ex.TipoErrorValidacion);
 		}
 
 		[Fact]
-		public async Task ObtenerPorIdValidandoTest_NoPertenece() {
-			cargoDao.Obtener(1).Returns(CargoDummy(id: 1, sub: "sub-test-123", vigencia: true));
+		public async Task ObtenerTest_ValidandoSubNoPertenece() {
+			cargoDao.Obtener(1).Returns(CargoDummy(id: 1, sub: "sub-test-123"));
 
-			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoBcp.ObtenerPorIdValidandoVigenciaYPertenencia(1, "otro-sub-test"));
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoBcp.Obtener(1, validarSub: "otro-sub-test"));
 			Assert.Equal(TipoErrorValidacion.NoPertenece, ex.TipoErrorValidacion);
 		}
 
-		
+		[Fact]
+		public async Task ObtenerTest_ValidandoIdNegocioNoPertenece() {
+			cargoDao.Obtener(1).Returns(CargoDummy(id: 1, idNegocio: 100));
+
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => cargoBcp.Obtener(1, validarIdNegocio: 200));
+			Assert.Equal(TipoErrorValidacion.NoPertenece, ex.TipoErrorValidacion);
+		}
+
 		[Theory]
 		[InlineData("sub-test-1", 1L, 2L)]
 		[InlineData("sub-test-1", 2L, 1L)]
 		[InlineData("sub-test-1", 3L, 0L)]
 		[InlineData("sub-test-2", 1L, 0L)]
 		public async Task ObtenerVigentes(string sub, long idNegocio, long? expectedCount) {
-			cargoDao.ObtenerPorSub(Arg.Any<string>(), Arg.Any<long>(), true).Returns([]);
-			cargoDao.ObtenerPorSub("sub-test-1", 1, true).Returns([
+			cargoDao.ObtenerPorSub(Arg.Any<string>(), Arg.Any<long>(), null).Returns([]);
+			cargoDao.ObtenerPorSub("sub-test-1", 1, null).Returns([
 				CargoDummy(sub: "sub-test-1", idNegocio: 1, id: 1),
 				CargoDummy(sub: "sub-test-1", idNegocio: 1, id: 2),
 			]);
-			cargoDao.ObtenerPorSub("sub-test-1", 2, true).Returns([
+			cargoDao.ObtenerPorSub("sub-test-1", 2, null).Returns([
 				CargoDummy(sub: "sub-test-1", idNegocio: 2, id: 3),
 			]);
 
-			List<Cargo> cargos = await cargoBcp.ObtenerVigentes(sub, idNegocio);
+			List<Cargo> cargos = await cargoBcp.ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigente: true);
 			Assert.Equal(expectedCount, cargos.Count);
 			Assert.All(cargos, (cargo) => Assert.True(cargo.Vigencia));
-			await cargoDao.Received(1).ObtenerPorSub(sub, idNegocio, true);
+			await cargoDao.Received(1).ObtenerPorSub(sub, idNegocio, null);
 		}
 
 		[Fact]
 		public async Task RegistrarCargoTest() {
 			cargoDao.Insertar(Arg.Any<Cargo>()).Returns(99);
 
-			Cargo cargo = await cargoBcp.Insertar("sub-test-1", "nombre-cargo-1", 10);
+			Cargo cargo = await cargoBcp.Crear("sub-test-1", "nombre-cargo-1", 10);
 
 			Assert.Equal(99, cargo.Id);
 			Assert.Equal("sub-test-1", cargo.Sub);
@@ -144,7 +164,7 @@ namespace TanatosAPI.Test.Business {
 		[Fact]
 		public async Task ModificarCargoTest() {
 			Cargo cargo = CargoDummy();
-			await cargoBcp.Modificar(cargo);
+			await cargoBcp.Actualizar(cargo);
 			await cargoDao.Received(1).Actualizar(Arg.Any<Cargo>());
 		}
 

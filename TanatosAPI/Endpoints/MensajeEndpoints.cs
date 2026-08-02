@@ -7,6 +7,7 @@ using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.Mensaje;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
 
@@ -56,7 +57,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapIngresarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntMensajeIngresar entrada, IHostEnvironment environment, ClaimsPrincipal user, IVariableEntornoHelper variableEntorno, IGoogleRecaptchaHelper googleRecaptchaHelper, MensajeBcp mensajeBcp) => {
+			routes.MapPost("/", async (EntMensajeIngresar entrada, IHostEnvironment environment, ClaimsPrincipal user, IVariableEntornoHelper variableEntorno, IGoogleRecaptchaHelper googleRecaptchaHelper, IMensajeBcp mensajeBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -124,7 +125,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapIngresarAnonimoEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (EntMensajeIngresar entrada, IHostEnvironment environment, IGoogleRecaptchaHelper googleRecaptchaHelper, MensajeBcp mensajeBcp) => {
+			routes.MapPost("/", async (EntMensajeIngresar entrada, IHostEnvironment environment, IGoogleRecaptchaHelper googleRecaptchaHelper, IMensajeBcp mensajeBcp) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {

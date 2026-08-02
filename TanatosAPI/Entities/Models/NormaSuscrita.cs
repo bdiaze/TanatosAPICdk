@@ -64,7 +64,7 @@ namespace TanatosAPI.Entities.Models {
 		public required bool Activado { get; set; }
 
 		[Column("procesos_notificaciones", TypeName = "jsonb")]
-		public List<Dictionary<string, JsonElement>>? ProcesosNotificaciones { get; set; }
+		public List<ProcesoNotificacion> ProcesosNotificaciones { get; set; } = [];
 
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
 		public DateTime? FechaCreacion { get; set; }
@@ -104,4 +104,39 @@ namespace TanatosAPI.Entities.Models {
 		[JsonIgnore]
 		public List<HistorialNormaSuscrita>? HistorialesNormaSuscrita { get; set; }
 	}
+
+	public class ProcesoNotificacion {
+        [JsonPropertyName("IdProceso")]
+        public required string IdProceso { get; set; }
+        
+		[JsonPropertyName("IdCalendarizacion")]
+        public required string IdCalendarizacion { get; set; }
+        
+		[JsonPropertyName("Nombre")]
+        public required string Nombre { get; set; }
+        
+		[JsonPropertyName("ArnRol")]
+        public required string ArnRol { get; set; }
+        
+		[JsonPropertyName("ArnProceso")]
+        public required string ArnProceso { get; set; }
+        
+		[JsonPropertyName("Parametros")]
+        public required string Parametros { get; set; }
+        
+		[JsonPropertyName("Habilitado")]
+        public required bool Habilitado { get; set; }
+        
+		[JsonPropertyName("FechaCreacion")]
+        public required DateTime FechaCreacion { get; set; }
+        
+		[JsonPropertyName("Cron")]
+        public string? Cron { get; set; }
+        
+		[JsonPropertyName("FrecuenciaDias")]
+        public int? FrecuenciaDias { get; set; }
+        
+		[JsonPropertyName("InicioEjecucionUtc")]
+        public DateTime? InicioEjecucionUtc { get; set; }
+    }
 }

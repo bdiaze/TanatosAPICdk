@@ -29,7 +29,6 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [CategoriaNorma] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de las categorías de normas vigentes - Cant. Registros: {retorno.Count}.");
-
 					return Results.Ok(retorno);
 				} catch (ErrorValidacion ex) {
 					LambdaLogger.Log(
@@ -63,7 +62,6 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [CategoriaNorma] - [ObtenerPorVigencia] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de las categorías de normas por vigencia - Vigencia: {vigencia} - Cant. Registros: {retorno.Count}.");
-
 					return Results.Ok(retorno);
 				} catch (ErrorValidacion ex) {
 					LambdaLogger.Log(
@@ -86,7 +84,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					CategoriaNorma nuevo = await categoriaNormaUseCase.RegistrarCategoria(
+					CategoriaNorma nuevo = await categoriaNormaUseCase.Crear(
 						entrada.Id,
 						entrada.Nombre,
 						entrada.NombreCorto,
@@ -97,7 +95,6 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[POST] - [CategoriaNorma] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Creación exitosa de la categoría de norma - ID: {entrada.Id}.");
-
 					return Results.Ok(nuevo);
 				} catch (ErrorValidacion ex) {
 					LambdaLogger.Log(
@@ -120,7 +117,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					CategoriaNorma existente = await categoriaNormaUseCase.ActualizarCategoria(
+					CategoriaNorma existente = await categoriaNormaUseCase.Actualizar(
 						entrada.Id,
 						entrada.Nombre,
 						entrada.NombreCorto,
@@ -131,7 +128,6 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[PUT] - [CategoriaNorma] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Actualización exitosa de la categoría de norma - ID: {entrada.Id}.");
-
 					return Results.Ok(existente);
 				} catch (ErrorValidacion ex) {
 					LambdaLogger.Log(
@@ -154,12 +150,11 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					await categoriaNormaUseCase.EliminarCategoria(id);
+					await categoriaNormaUseCase.Eliminar(id);
 
 					LambdaLogger.Log(
 						$"[DELETE] - [CategoriaNorma] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Eliminación exitosa de la categoría de norma - ID: {id}.");
-
 					return Results.Ok();
 				} catch (ErrorValidacion ex) {
 					LambdaLogger.Log(

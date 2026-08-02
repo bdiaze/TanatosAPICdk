@@ -48,7 +48,7 @@ namespace TanatosAPI.Repositories {
 						FechaActivacion = await reader.IsDBNullAsync(13) ? null : reader.GetDateTime(13),
 						FechaDesactivacion = await reader.IsDBNullAsync(14) ? null : reader.GetDateTime(14),
 						Activado = reader.GetBoolean(15),
-						ProcesosNotificaciones = await reader.IsDBNullAsync(16) ? null : JsonSerializer.Deserialize(reader.GetString(16), AppJsonSerializerContext.Default.ListDictionaryStringJsonElement),
+						ProcesosNotificaciones = await reader.IsDBNullAsync(16) ? [] : JsonSerializer.Deserialize(reader.GetString(16), AppJsonSerializerContext.Default.ListProcesoNotificacion)!,
 						FechaCreacion = await reader.IsDBNullAsync(17) ? null : reader.GetDateTime(17),
 						FechaEliminacion = await reader.IsDBNullAsync(18) ? null : reader.GetDateTime(18),
 						Vigencia = reader.GetBoolean(19)
@@ -99,7 +99,7 @@ namespace TanatosAPI.Repositories {
 						FechaActivacion = await reader.IsDBNullAsync(13) ? null : reader.GetDateTime(13),
 						FechaDesactivacion = await reader.IsDBNullAsync(14) ? null : reader.GetDateTime(14),
 						Activado = reader.GetBoolean(15),
-						ProcesosNotificaciones = await reader.IsDBNullAsync(16) ? null : JsonSerializer.Deserialize(reader.GetString(16), AppJsonSerializerContext.Default.ListDictionaryStringJsonElement),
+						ProcesosNotificaciones = await reader.IsDBNullAsync(16) ? [] : JsonSerializer.Deserialize(reader.GetString(16), AppJsonSerializerContext.Default.ListProcesoNotificacion)!,
 						FechaCreacion = await reader.IsDBNullAsync(17) ? null : reader.GetDateTime(17),
 						FechaEliminacion = await reader.IsDBNullAsync(18) ? null : reader.GetDateTime(18),
 						Vigencia = reader.GetBoolean(19)
@@ -152,7 +152,7 @@ namespace TanatosAPI.Repositories {
                         FechaActivacion = await reader.IsDBNullAsync(13) ? null : reader.GetDateTime(13),
                         FechaDesactivacion = await reader.IsDBNullAsync(14) ? null : reader.GetDateTime(14),
                         Activado = reader.GetBoolean(15),
-                        ProcesosNotificaciones = await reader.IsDBNullAsync(16) ? null : JsonSerializer.Deserialize(reader.GetString(16), AppJsonSerializerContext.Default.ListDictionaryStringJsonElement),
+                        ProcesosNotificaciones = await reader.IsDBNullAsync(16) ? [] : JsonSerializer.Deserialize(reader.GetString(16), AppJsonSerializerContext.Default.ListProcesoNotificacion)!,
                         FechaCreacion = await reader.IsDBNullAsync(17) ? null : reader.GetDateTime(17),
                         FechaEliminacion = await reader.IsDBNullAsync(18) ? null : reader.GetDateTime(18),
                         Vigencia = reader.GetBoolean(19)
@@ -193,7 +193,7 @@ namespace TanatosAPI.Repositories {
                 command.Parameters.AddWithValue("FECHAACTIVACION", (object?)item.FechaActivacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("FECHADESACTIVACION", (object?)item.FechaDesactivacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("ACTIVADO", item.Activado);
-                command.Parameters.AddWithValue("PROCESOSNOTIFICACIONES", item.ProcesosNotificaciones == null ? DBNull.Value : JsonSerializer.Serialize(item.ProcesosNotificaciones, AppJsonSerializerContext.Default.ListDictionaryStringJsonElement));
+                command.Parameters.AddWithValue("PROCESOSNOTIFICACIONES", JsonSerializer.Serialize(item.ProcesosNotificaciones, AppJsonSerializerContext.Default.ListProcesoNotificacion));
                 command.Parameters.AddWithValue("FECHACREACION", (object?)item.FechaCreacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
@@ -236,7 +236,7 @@ namespace TanatosAPI.Repositories {
                 command.Parameters.AddWithValue("FECHAACTIVACION", (object?)item.FechaActivacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("FECHADESACTIVACION", (object?)item.FechaDesactivacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("ACTIVADO", item.Activado);
-                command.Parameters.AddWithValue("PROCESOSNOTIFICACIONES", item.ProcesosNotificaciones == null ? DBNull.Value : JsonSerializer.Serialize(item.ProcesosNotificaciones, AppJsonSerializerContext.Default.ListDictionaryStringJsonElement));
+                command.Parameters.AddWithValue("PROCESOSNOTIFICACIONES", JsonSerializer.Serialize(item.ProcesosNotificaciones, AppJsonSerializerContext.Default.ListProcesoNotificacion));
                 command.Parameters.AddWithValue("FECHACREACION", (object?)item.FechaCreacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);

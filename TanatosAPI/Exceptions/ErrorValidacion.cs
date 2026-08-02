@@ -10,7 +10,8 @@ namespace TanatosAPI.Exceptions {
         NoPertenece,
         RestringidoPorPlan,
         ValorNoValido,
-        YaExiste
+        YaExiste,
+        NoExiste
     }
 
 	[ExcludeFromCodeCoverage]

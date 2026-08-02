@@ -1,22 +1,35 @@
-﻿using TanatosAPI.Entities.Models;
+﻿using Npgsql;
+using TanatosAPI.Entities.Models;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Business {
 	public class CategoriaNormaBcp(ICategoriaNormaDao categoriaNormaDao) : ICategoriaNormaBcp {
-		public async Task<CategoriaNorma?> ObtenerPorId(long id) {
-			return await categoriaNormaDao.ObtenerPorId(id);
+		public bool EstaVigente(CategoriaNorma? categoria) {
+			return categoria != null && categoria.Vigencia;
 		}
 
-		public async Task<List<CategoriaNorma>> ObtenerVigentes() {
-			return await categoriaNormaDao.ObtenerPorVigencia(true);
+        public async Task<CategoriaNorma?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
+			return await categoriaNormaDao.ObtenerPorId(id, transaction);
 		}
 
-		public async Task<List<CategoriaNorma>> ObtenerPorVigencia(bool? vigencia) {
-			return await categoriaNormaDao.ObtenerPorVigencia(vigencia);
+        public async Task<CategoriaNorma> ObtenerValidandoVigencia(long? id, NpgsqlTransaction? transaction = null) {
+            if (id == null) throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "ID de la categoría es inválido.");
+            CategoriaNorma? categoria = await ObtenerPorId(id.Value, transaction);
+            if (!EstaVigente(categoria)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "La categoría no está vigente.");
+            return categoria!;
+        }
+
+        public async Task<List<CategoriaNorma>> ObtenerVigentes(NpgsqlTransaction? transaction = null) {
+			return await categoriaNormaDao.ObtenerPorVigencia(true, transaction);
 		}
 
-		public async Task<CategoriaNorma> RegistrarCategoria(long id, string nombre, string? nombreCorto, string? descripcion, bool vigencia) {
+		public async Task<List<CategoriaNorma>> ObtenerPorVigencia(bool? vigencia, NpgsqlTransaction? transaction = null) {
+			return await categoriaNormaDao.ObtenerPorVigencia(vigencia, transaction);
+		}
+		
+        public async Task<CategoriaNorma> Crear(long id, string nombre, string? nombreCorto, string? descripcion, bool vigencia, NpgsqlTransaction? transaction = null) {
 			CategoriaNorma nuevo = new() { 
 				Id = id,
 				Nombre = nombre,
@@ -24,16 +37,16 @@ namespace TanatosAPI.Business {
 				Descripcion = descripcion,
 				Vigencia = vigencia
 			};
-			await categoriaNormaDao.Insertar(nuevo);
+			await categoriaNormaDao.Insertar(nuevo, transaction);
 			return nuevo;
 		}
 
-		public async Task ActualizarCategoria(CategoriaNorma categoriaNorma) {
-			await categoriaNormaDao.Actualizar(categoriaNorma);
+		public async Task Actualizar(CategoriaNorma categoriaNorma, NpgsqlTransaction? transaction = null) {
+			await categoriaNormaDao.Actualizar(categoriaNorma, transaction);
 		}
 
-		public async Task EliminarCategoria(long id) {
-			await categoriaNormaDao.Eliminar(id);
+		public async Task Eliminar(long id, NpgsqlTransaction? transaction = null) {
+			await categoriaNormaDao.Eliminar(id, transaction);
 		}
 	}
 }

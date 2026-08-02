@@ -89,26 +89,36 @@ namespace TanatosAPI.Test.Business {
             Assert.Equal(expectedResult, documentoAdjuntoBcp.EstaVigente(documentoAdjunto));
         }
 
-        public static TheoryData<(DocumentoAdjunto documentoAdjunto, long idHistorialNormaSuscrita), bool> PerteneceAVencimientoCases => new() {
+		public static TheoryData<DocumentoAdjunto, bool> FueRecepcionadoCases => new() {
+			{ DocumentoAdjuntoDummy(estadoSubida: 1), true },
+			{ DocumentoAdjuntoDummy(estadoSubida: 0), false }
+		};
+		[Theory]
+		[MemberData(nameof(FueRecepcionadoCases))]
+		public void FueRecepcionadoTest(DocumentoAdjunto documentoAdjunto, bool expectedResult) {
+			Assert.Equal(expectedResult, documentoAdjuntoBcp.FueRecepcionado(documentoAdjunto));
+		}
+
+		public static TheoryData<(DocumentoAdjunto documentoAdjunto, long idHistorialNormaSuscrita), bool> PerteneceAVencimientoCases => new() {
             { (DocumentoAdjuntoDummy(idHistorialNormaSuscrita: 1), 1), true },
             { (DocumentoAdjuntoDummy(idHistorialNormaSuscrita: 1), 2), false },
         };
         [Theory]
         [MemberData(nameof(PerteneceAVencimientoCases))]
         public void PerteneceAVencimientoTest((DocumentoAdjunto documentoAdjunto, long idHistorialNormaSuscrita) entrada, bool expectedResult) {
-            Assert.Equal(expectedResult, documentoAdjuntoBcp.PerteneceAVencimiento(entrada.documentoAdjunto, entrada.idHistorialNormaSuscrita));
+            Assert.Equal(expectedResult, documentoAdjuntoBcp.Pertenece(entrada.documentoAdjunto, entrada.idHistorialNormaSuscrita));
         }
 
         [Theory]
         [InlineData(1L, 1L)]
         [InlineData(2L, 2L)]
         [InlineData(3L, null)]
-        public async Task ObtenerPorIdTest(long idDocumentoAdjunto, long? expectedIdResult) {
+        public async Task ObtenerTest(long idDocumentoAdjunto, long? expectedIdResult) {
             documentoAdjuntoDao.ObtenerPorId(1).Returns(DocumentoAdjuntoDummy(id: 1));
             documentoAdjuntoDao.ObtenerPorId(2).Returns(DocumentoAdjuntoDummy(id: 2));
             documentoAdjuntoDao.ObtenerPorId(3).Returns((DocumentoAdjunto?)null);
 
-            DocumentoAdjunto? documento = await documentoAdjuntoBcp.ObtenerPorId(idDocumentoAdjunto);
+            DocumentoAdjunto? documento = await documentoAdjuntoBcp.Obtener(idDocumentoAdjunto);
             Assert.Equal(expectedIdResult, documento?.Id);
         }
 
@@ -116,19 +126,25 @@ namespace TanatosAPI.Test.Business {
         [InlineData(1L, 2)]
         [InlineData(2L, 1)]
         [InlineData(3L, 0)]
-        public async Task ObtenerVigentesPorHistorialNormaSuscritaTest(long idHistorialNormaSuscrita, int expectedCount) {
-            documentoAdjuntoDao.ObtenerPorHistorial(1).Returns([
-                DocumentoAdjuntoDummy(id: 1, idHistorialNormaSuscrita: 1),
-                DocumentoAdjuntoDummy(id: 2, idHistorialNormaSuscrita: 1)
-            ]);
-            documentoAdjuntoDao.ObtenerPorHistorial(2).Returns([
-                DocumentoAdjuntoDummy(id: 3, idHistorialNormaSuscrita: 2)
-            ]);
-            documentoAdjuntoDao.ObtenerPorHistorial(3).Returns([]);
+        public async Task ObtenerPorVencimientoTest(long idHistorialNormaSuscrita, int expectedCount) {
+            documentoAdjuntoDao.ObtenerPorHistorial(1, null).Returns([
+                DocumentoAdjuntoDummy(id: 1, idHistorialNormaSuscrita: 1, estadoSubida: 1),
+                DocumentoAdjuntoDummy(id: 2, idHistorialNormaSuscrita: 1, estadoSubida: 1),
+				DocumentoAdjuntoDummy(id: 20, idHistorialNormaSuscrita: 1, estadoSubida: 0)
+			]);
+            documentoAdjuntoDao.ObtenerPorHistorial(2, null).Returns([
+                DocumentoAdjuntoDummy(id: 3, idHistorialNormaSuscrita: 2, estadoSubida: 1),
+				DocumentoAdjuntoDummy(id: 30, idHistorialNormaSuscrita: 2, estadoSubida: 0),
+			]);
+            documentoAdjuntoDao.ObtenerPorHistorial(3, null).Returns([]);
 
-            List<DocumentoAdjunto> documentos = await documentoAdjuntoBcp.ObtenerVigentesPorHistorialNormaSuscrita(idHistorialNormaSuscrita);
-            Assert.All(documentos, documento => Assert.Equal(idHistorialNormaSuscrita, documento.IdHistorialNormaSuscrita));
-            Assert.Equal(expectedCount, documentos.Count);
+            List<DocumentoAdjunto> documentos = await documentoAdjuntoBcp.ObtenerPorVencimiento(idHistorialNormaSuscrita, filtrarVigentes: true, filtrarRecepcionados: true);
+			Assert.Equal(expectedCount, documentos.Count);
+			Assert.All(documentos, documento => {
+                Assert.Equal(idHistorialNormaSuscrita, documento.IdHistorialNormaSuscrita);
+                Assert.True(documento.Vigencia);
+                Assert.Equal(1, documento.EstadoSubida);
+            });
         }
 
         [Fact]

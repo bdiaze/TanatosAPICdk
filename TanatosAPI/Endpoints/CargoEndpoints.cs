@@ -65,11 +65,9 @@ namespace TanatosAPI.Endpoints {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 try {
-                    entrada.Nombre = entrada.Nombre.Trim();
-
                     string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-                    Cargo nuevo = await cargoUseCase.RegistrarCargo(sub, entrada.Nombre, entrada.IdNegocio);
+                    Cargo nuevo = await cargoUseCase.Crear(sub, entrada.Nombre, entrada.IdNegocio);
 
                     SalCargo retorno = new() { 
                         Id = nuevo.Id,
@@ -79,7 +77,6 @@ namespace TanatosAPI.Endpoints {
                     LambdaLogger.Log(
                         $"[POST] - [Cargo] - [Crear] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
                         $"Creación exitosa del cargo - ID: {retorno.Id}.");
-
                     return Results.Ok(retorno);
 				} catch (ErrorValidacion ex) {
 					LambdaLogger.Log(
@@ -104,7 +101,7 @@ namespace TanatosAPI.Endpoints {
                 try {
                     string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-                    Cargo cargo = await cargoUseCase.ActualizarCargo(sub, entrada.Id, entrada.Nombre);
+                    Cargo cargo = await cargoUseCase.Actualizar(sub, entrada.Id, entrada.Nombre);
 
                     SalCargo retorno = new() {
                         Id = cargo.Id,
@@ -114,7 +111,6 @@ namespace TanatosAPI.Endpoints {
                     LambdaLogger.Log(
                         $"[PUT] - [Cargo] - [Actualizar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
                         $"Actualización exitosa del cargo - ID: {entrada.Id}.");
-
                     return Results.Ok(retorno);
 				} catch (ErrorValidacion ex) {
 					LambdaLogger.Log(
@@ -139,12 +135,11 @@ namespace TanatosAPI.Endpoints {
                 try {
                     string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-                    await cargoUseCase.EliminarCargo(sub, id);
+                    await cargoUseCase.Eliminar(sub, id);
 
                     LambdaLogger.Log(
                         $"[DELETE] - [Cargo] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
                         $"Eliminación exitosa del cargo - ID: {id}.");
-
                     return Results.Ok();
 				} catch (ErrorValidacion ex) {
 					LambdaLogger.Log(

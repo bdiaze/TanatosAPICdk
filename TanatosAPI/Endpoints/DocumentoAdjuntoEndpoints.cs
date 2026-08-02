@@ -49,7 +49,6 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [DocumentoAdjunto] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Obtención exitosa de los tipos de unidad de tiempo vigentes - Cant. Registros: {retorno.Count}.");
-
 					return Results.Ok(retorno);
                 } catch (ErrorValidacion ex) {
                     LambdaLogger.Log(
@@ -72,9 +71,6 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					entrada.NombreArchivo = entrada.NombreArchivo.Trim();
-					entrada.Mime = entrada.Mime.Trim();
-
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto) = await documentoAdjuntoUseCase.GenerarUrlSubida(
@@ -85,15 +81,16 @@ namespace TanatosAPI.Endpoints {
 						entrada.Tamanno
 					);
 
-					LambdaLogger.Log(
-						$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Creación exitosa de URL prefirmada para subida de documento - ID: {documentoAdjunto.Id}.");
-
-					return Results.Ok(new SalDocumentoAdjuntoGenerarUrlSubida {
+                    SalDocumentoAdjuntoGenerarUrlSubida retorno = new() {
 						IdDocumentoAdjunto = documentoAdjunto.Id,
 						PreSignedUrl = preSignedUrl,
 						PreSignedFields = fields
-					});
+					};
+
+                    LambdaLogger.Log(
+						$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Creación exitosa de URL prefirmada para subida de documento - ID: {documentoAdjunto.Id}.");
+					return Results.Ok(retorno);
 				} catch (ErrorValidacion ex) {
                     LambdaLogger.Log(
                         $"[POST] - [DocumentoAdjunto] - [GenerarUrlSubida] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
@@ -149,13 +146,14 @@ namespace TanatosAPI.Endpoints {
 
 					string presignedUrl = await documentoAdjuntoUseCase.GenerarUrlBajada(sub, entrada.IdDocumentoAdjunto);
 
-					LambdaLogger.Log(
+                    SalDocumentoAdjuntoGenerarUrlBajada retorno = new() {
+						PreSignedUrl = presignedUrl
+					};
+
+                    LambdaLogger.Log(
 						$"[POST] - [DocumentoAdjunto] - [GenerarUrlBajada] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Generación exitosa de la URL prefirmada para bajada de documento - ID: {entrada.IdDocumentoAdjunto}.");
-
-					return Results.Ok(new SalDocumentoAdjuntoGenerarUrlBajada {
-						PreSignedUrl = presignedUrl
-					});
+					return Results.Ok(retorno);
                 } catch (ErrorValidacion ex) {
                     LambdaLogger.Log(
                         $"[POST] - [DocumentoAdjunto] - [GenerarUrlBajada] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
@@ -184,7 +182,6 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[DELETE] - [DocumentoAdjunto] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Eliminación exitosa del documento adjunto - ID: {id}.");
-
 					return Results.Ok();
                 } catch (ErrorValidacion ex) {
                     LambdaLogger.Log(
@@ -207,9 +204,6 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					entrada.NombreArchivo = entrada.NombreArchivo.Trim();
-					entrada.Mime = entrada.Mime.Trim();
-
                     (string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto) = await documentoAdjuntoUseCase.GenerarUrlSubidaPorCodigoAcceso(
                         entrada.CodigoAcceso,
                         entrada.NombreArchivo,
@@ -217,15 +211,16 @@ namespace TanatosAPI.Endpoints {
                         entrada.Tamanno
                     );
 
-					LambdaLogger.Log(
-						$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubidaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Creación exitosa de URL prefirmada para subida de documento - ID: {documentoAdjunto.Id}.");
-
-					return Results.Ok(new SalDocumentoAdjuntoGenerarUrlSubida {
+                    SalDocumentoAdjuntoGenerarUrlSubida retorno = new() {
 						IdDocumentoAdjunto = documentoAdjunto.Id,
 						PreSignedUrl = preSignedUrl,
 						PreSignedFields = fields
-					});
+					};
+
+                    LambdaLogger.Log(
+						$"[POST] - [DocumentoAdjunto] - [GenerarUrlSubidaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Creación exitosa de URL prefirmada para subida de documento - ID: {documentoAdjunto.Id}.");
+					return Results.Ok(retorno);
                 } catch (ErrorValidacion ex) {
                     LambdaLogger.Log(
                         $"[POST] - [DocumentoAdjunto] - [GenerarUrlSubidaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
@@ -252,7 +247,6 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[POST] - [DocumentoAdjunto] - [ConfirmarSubidaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Confirmación exitosa de la subida del documento - ID: {entrada.IdDocumentoAdjunto}.");
-
 					return Results.Ok();
                 } catch (ErrorValidacion ex) {
                     LambdaLogger.Log(
@@ -277,13 +271,14 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string presignedUrl = await documentoAdjuntoUseCase.GenerarUrlBajadaPorCodigoAcceso(entrada.CodigoAcceso, entrada.IdDocumentoAdjunto);
 
-					LambdaLogger.Log(
+                    SalDocumentoAdjuntoGenerarUrlBajada retorno = new() {
+						PreSignedUrl = presignedUrl
+					};
+
+                    LambdaLogger.Log(
 						$"[POST] - [DocumentoAdjunto] - [GenerarUrlBajadaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Generación exitosa de la URL prefirmada para bajada de documento - ID: {entrada.IdDocumentoAdjunto}.");
-
-					return Results.Ok(new SalDocumentoAdjuntoGenerarUrlBajada {
-						PreSignedUrl = presignedUrl
-					});
+					return Results.Ok(retorno);
                 } catch (ErrorValidacion ex) {
                     LambdaLogger.Log(
                         $"[POST] - [DocumentoAdjunto] - [GenerarUrlBajadaPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
@@ -310,7 +305,6 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[DELETE] - [DocumentoAdjunto] - [EliminarPorCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
 						$"Eliminación exitosa del documento adjunto - ID: {id}.");
-
 					return Results.Ok();
                 } catch (ErrorValidacion ex) {
                     LambdaLogger.Log(

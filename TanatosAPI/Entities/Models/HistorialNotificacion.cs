@@ -35,7 +35,8 @@ namespace TanatosAPI.Entities.Models {
 		public DateTime? FechaEjecucion { get; set; }
 
 		[Column("estado")]
-		public short? Estado { get; set; }
+        // Estado de la notificación - 0: Pendiente - 1: Enviado - 2: Omitido.
+        public short? Estado { get; set; }
 
 		[Column("observacion")]
 		public string? Observacion { get; set; }

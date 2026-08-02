@@ -11,7 +11,7 @@ namespace TanatosAPI.UseCases {
 	public class NegocioUseCase(IDateTimeProvider dateTimeProvider, INegocioBcp negocioBcp, ISuscripcionBcp suscripcionBcp, INegocioDao negocioDao, INormaSuscritaDao normaSuscritaDao, NormaSuscritaUseCase normaSuscritaUseCase) {
 		public async Task<bool> NegocioAccesible(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {
 			// Se valida que el negocio sea del usuario...
-			List<Negocio> negocios = await negocioBcp.ObtenerVigentesPorSub(sub, transaction);
+			List<Negocio> negocios = await negocioBcp.ObtenerPorSub(sub, filtrarVigentes: true, transaction: transaction);
 			Negocio? negocioSeleccionado = negocios.FirstOrDefault(n => n.Id == idNegocio);
 			if (negocioSeleccionado == null) return false;
 
@@ -25,7 +25,7 @@ namespace TanatosAPI.UseCases {
 			else return true;
 		}
 
-		public async Task EliminarNegocio(Negocio negocio, NpgsqlTransaction? transaction = null) {
+		public async Task EliminarNegocio(Negocio negocio, NpgsqlTransaction transaction) {
 			if (negocio.Vigencia) {
 				negocio.FechaEliminacion = dateTimeProvider.UtcNow;
 				negocio.Vigencia = false;

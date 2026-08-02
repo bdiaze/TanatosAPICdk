@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using Cronos;
+using System.Text.RegularExpressions;
 
 namespace TanatosAPI.Helpers {
 	public static class CronHelper {
@@ -71,5 +72,19 @@ namespace TanatosAPI.Helpers {
 			string[] campos = awsCron.Split(' ');
 			return string.Join(' ', campos[..5].Select(f => f.Replace("?", "*")));
 		}
+
+		public static (DateTime? anteriorUtc, DateTime? siguienteUtc, DateTime masCercanaUtc) ObtenerOcurrenciasCronAWS(string awsCron, DateTime fechaReferenciaUtc) {
+            TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
+            CronExpression cronExpression = CronExpression.Parse(TransformarCronAWSAStandard(awsCron));
+            DateTime? siguienteUTC = cronExpression.GetNextOccurrence(fechaReferenciaUtc, timeZoneInfo);
+            DateTime? anteriorUTC = cronExpression.GetPreviousOccurrence(fechaReferenciaUtc, timeZoneInfo, true);
+            DateTime masCercanaUTC = (siguienteUTC, anteriorUTC) switch {
+                (null, null) => throw new InvalidOperationException($"El cron '{awsCron}' no tiene ocurrencias válidas."),
+                (null, _) => anteriorUTC!.Value,
+                (_, null) => siguienteUTC!.Value,
+                _ => (siguienteUTC!.Value - fechaReferenciaUtc) <= (fechaReferenciaUtc - anteriorUTC!.Value) ? siguienteUTC!.Value : anteriorUTC!.Value
+            };
+			return (anteriorUTC, siguienteUTC, masCercanaUTC);
+        }
 	}
 }

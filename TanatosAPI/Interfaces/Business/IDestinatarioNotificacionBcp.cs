@@ -1,0 +1,28 @@
+﻿using Npgsql;
+using TanatosAPI.Entities.Models;
+
+namespace TanatosAPI.Interfaces.Business {
+    public interface IDestinatarioNotificacionBcp {
+        public bool EstaVigente(DestinatarioNotificacion? destinatarioNotificacion);
+        public bool EstaValidado(DestinatarioNotificacion destinatarioNotificacion);
+        public bool Pertenece(DestinatarioNotificacion destinatarioNotificacion, string sub);
+        public bool PerteneceNegocio(DestinatarioNotificacion destinatarioNotificacion, long idNegocio);
+        public bool PerteneceEmpleado(DestinatarioNotificacion destinatarioNotificacion, long? idEmpleado);
+        public bool PerteneceEmpleado(DestinatarioNotificacion destinatarioNotificacion, HashSet<long?> idsEmpleados);
+        public bool CodigoValidacionVigente(DestinatarioNotificacion destinatarioNotificacion);
+        public List<DestinatarioNotificacion> FiltrarVigentes(List<DestinatarioNotificacion> destinatarios);
+        public List<DestinatarioNotificacion> FiltrarValidados(List<DestinatarioNotificacion> destinatarios);
+        public List<DestinatarioNotificacion> FiltrarPorEmpleado(List<DestinatarioNotificacion> destinatarios, long? idEmpleado);
+        public List<DestinatarioNotificacion> FiltrarPorEmpleado(List<DestinatarioNotificacion> destinatarios, HashSet<long?> idsEmpleados);
+        public Task<string> GenerarCodigoValidacion(NpgsqlTransaction? transaction = null);
+        public Task<DestinatarioNotificacion?> Obtener(long idDestinatarioNotificacion, bool filtrarVigente = false, bool filtrarValidado = false, string? filtrarSub = null, long? filtrarIdNegocio = null, NpgsqlTransaction? transaction = null);
+        public Task<DestinatarioNotificacion?> ObtenerPorCodigoValidacion(string codigoValidacion, bool validarVigencia = false, bool validarCodigoValidacionVigente = false, NpgsqlTransaction? transaction = null);
+		public Task<List<DestinatarioNotificacion>> ObtenerPorSubYNegocio(string sub, long idNegocio, bool filtrarVigente = false, bool filtrarValidado = false, NpgsqlTransaction? transaction = null);
+        public Task<(DestinatarioNotificacion nuevoDestinatario, string codigoValidacion)> Insertar(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null);
+        public Task<string> EnviarCorreoValidacionDestinatario(string correoDestino, string nombreUsuario, string nombreNegocio, string codigoValidacion);
+        public Task<string> EnviarWhatsappValidacionDestinatario(string whatsappDestino, string nombreUsuario, string nombreNegocio, string codigoValidacion);
+		public Task RegistrarHermesIdMensaje(DestinatarioNotificacion destinatarioNotificacion, string hermesIdMensaje, NpgsqlTransaction? transaction = null);
+		public Task Validar(DestinatarioNotificacion destinatarioNotificacion, NpgsqlTransaction? transaction = null);
+        public Task Eliminar(DestinatarioNotificacion destinatarioNotificacion, NpgsqlTransaction? transaction = null);
+    }
+}

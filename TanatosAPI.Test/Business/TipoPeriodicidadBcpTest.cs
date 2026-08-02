@@ -10,6 +10,7 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
+using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Test.Business {
 	public class TipoPeriodicidadBcpTest {
@@ -42,12 +43,66 @@ namespace TanatosAPI.Test.Business {
 			Vigencia = vigencia
 		};
 
+		public static TheoryData<TipoPeriodicidad?, bool> EstaVigenteCases => new() {
+			{ TipoPeriodicidadDummy(vigencia: true), true },
+			{ TipoPeriodicidadDummy(vigencia: false), false },
+			{ null, false },
+		};
+		[Theory]
+		[MemberData(nameof(EstaVigenteCases))]
+		public void EstaVigenteTest(TipoPeriodicidad? item, bool expectedResult) {
+			Assert.Equal(expectedResult, tipoPeriodicidadBcp.EstaVigente(item));
+		}
+
+		public static TheoryData<TipoPeriodicidad, bool> ValidarDeltasCases => new() {
+			{ TipoPeriodicidadDummy(deltaAnnos: 1, deltaMeses: 12, deltaDias: 365), true },
+			{ TipoPeriodicidadDummy(deltaAnnos: null, deltaMeses: null, deltaDias: null), true },
+			{ TipoPeriodicidadDummy(deltaAnnos: -1, deltaMeses: null, deltaDias: null), true },
+			{ TipoPeriodicidadDummy(deltaAnnos: null, deltaMeses: -1, deltaDias: null), true },
+			{ TipoPeriodicidadDummy(deltaAnnos: null, deltaMeses: null, deltaDias: -1), true },
+			{ TipoPeriodicidadDummy(), false },
+		};
+		[Theory]
+		[MemberData(nameof(ValidarDeltasCases))]
+		public void ValidarDeltasTest(TipoPeriodicidad item, bool exceptionExpected) {
+			if (exceptionExpected) {
+				Assert.Throws<InvalidOperationException>(() => tipoPeriodicidadBcp.ValidarDeltas(item));
+			} else {
+				tipoPeriodicidadBcp.ValidarDeltas(item);
+			}
+		}
+
 		[Fact]
 		public async Task ObtenerPorIdTest() {
 			tipoPeriodicidadDao.ObtenerPorId(10).Returns(TipoPeriodicidadDummy(id: 10));
 			TipoPeriodicidad? retorno = await tipoPeriodicidadBcp.ObtenerPorId(10);
 			Assert.NotNull(retorno);
 			Assert.Equal(10, retorno.Id);
+			await tipoPeriodicidadDao.Received(1).ObtenerPorId(10);
+		}
+
+		[Fact]
+		public async Task ObtenerValidandoVigencia_Valido() {
+			tipoPeriodicidadDao.ObtenerPorId(10).Returns(TipoPeriodicidadDummy(id: 10));
+			TipoPeriodicidad? retorno = await tipoPeriodicidadBcp.ObtenerValidandoVigencia(10);
+			Assert.NotNull(retorno);
+			Assert.Equal(10, retorno.Id);
+			await tipoPeriodicidadDao.Received(1).ObtenerPorId(10);
+		}
+
+		[Fact]
+		public async Task ObtenerValidandoVigencia_EntradaNula() {
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => tipoPeriodicidadBcp.ObtenerValidandoVigencia(null));
+			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
+			await tipoPeriodicidadDao.DidNotReceive().ObtenerPorId(10);
+		}
+
+		[Fact]
+		public async Task ObtenerValidandoVigencia_NoVigente() {
+			tipoPeriodicidadDao.ObtenerPorId(10).Returns(TipoPeriodicidadDummy(id: 10, vigencia: false));
+		
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => tipoPeriodicidadBcp.ObtenerValidandoVigencia(10));
+			Assert.Equal(TipoErrorValidacion.NoVigente, ex.TipoErrorValidacion);
 			await tipoPeriodicidadDao.Received(1).ObtenerPorId(10);
 		}
 
@@ -70,7 +125,7 @@ namespace TanatosAPI.Test.Business {
 		[InlineData(true, 2)]
 		[InlineData(false, 1)]
 		[InlineData(null, 3)]
-		public async Task EstaVigenteTest(bool? vigencia, int expectedCount) {
+		public async Task ObtenerPorVigenciaTest(bool? vigencia, int expectedCount) {
 			tipoPeriodicidadDao.ObtenerPorVigencia(true, Arg.Any<NpgsqlTransaction?>()).Returns([
 				TipoPeriodicidadDummy(id: 1, vigencia: true),
 				TipoPeriodicidadDummy(id: 2, vigencia: true)

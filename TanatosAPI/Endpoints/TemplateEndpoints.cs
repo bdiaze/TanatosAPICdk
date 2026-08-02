@@ -5,9 +5,11 @@ using System.Diagnostics;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
+using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
 	public static class TemplateEndpoints {
@@ -26,7 +28,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapObtener(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/{id}", async (long id, IHostEnvironment environment, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
+			routes.MapGet("/{id}", async (long id, IHostEnvironment environment, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -41,7 +43,7 @@ namespace TanatosAPI.Endpoints {
 
 					retorno.TemplateNormas = await templateNormaDao.ObtenerPorTemplate(retorno.Id);
 					List<TemplateNormaFiscalizador> fiscalizadores = await templateNormaFiscalizadorDao.ObtenerPorTemplateNorma(retorno.Id);
-					List<TemplateNormaNotificacion> notificaciones = await templateNormaNotificacionDao.ObtenerPorTemplateNorma(retorno.Id);
+					List<TemplateNormaNotificacion> notificaciones = await templateNormaNotificacionBcp.ObtenerPorTemplateNorma(retorno.Id);
 					foreach (TemplateNorma norma in retorno.TemplateNormas) {
 						norma.TemplateNormaFiscalizadores = [.. fiscalizadores.Where(f => f.IdTemplate == norma.IdTemplate && f.IdNorma == norma.IdNorma)];
 						norma.TemplateNormaNotificaciones = [.. notificaciones.Where(n => n.IdTemplate == norma.IdTemplate && n.IdNorma == norma.IdNorma)];	
@@ -180,7 +182,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapCrearEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
+			routes.MapPost("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -293,7 +295,13 @@ namespace TanatosAPI.Endpoints {
 
 							foreach (TemplateNormaNotificacion templateNormaNotificacion in templateNorma.TemplateNormaNotificaciones ?? []) {
 								// Se graba cada notificación de la norma...
-								await templateNormaNotificacionDao.Insertar(templateNormaNotificacion, transaction);
+								await templateNormaNotificacionBcp.Insertar(
+									templateNormaNotificacion.IdTemplate, 
+									templateNormaNotificacion.IdNorma, 
+									templateNormaNotificacion.IdTipoUnidadTiempoAntelacion,
+									templateNormaNotificacion.CantAntelacion, 
+									transaction
+								);
 							}
 						}
 
@@ -328,7 +336,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaBcp templateNormaBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
+			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaUseCase templateNormaUseCase, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -440,7 +448,7 @@ namespace TanatosAPI.Endpoints {
 					try {
 						// Se eliminan las normas que ya no existen...
 						foreach(TemplateNorma normaEliminar in existente.TemplateNormas.Where(tne => (!entrada.TemplateNormas?.Any(tni => tni.IdTemplate == tne.IdTemplate && tni.IdNorma == tne.IdNorma)) ?? true)) {
-							await templateNormaBcp.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, transaction);
+							await templateNormaUseCase.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, transaction);
 						}
 
 						
@@ -528,7 +536,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaBcp templateNormaBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaUseCase templateNormaUseCase, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -546,7 +554,7 @@ namespace TanatosAPI.Endpoints {
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
 					try {
-						await templateNormaBcp.Eliminar(id, null, transaction);
+						await templateNormaUseCase.Eliminar(id, null, transaction);
                         await templateActividadDao.Eliminar(id, null, transaction);
 						await templateDao.Eliminar(id, transaction);
 
