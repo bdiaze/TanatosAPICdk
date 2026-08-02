@@ -60,7 +60,7 @@ namespace TanatosAPI.Helpers {
                 context.Response.Headers["X-RateLimit-Reset"] = result.RetryAfter.ToUnixTimeSeconds().ToString();
                 context.Response.StatusCode = 429;
                 context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync("\"Has realizado demasiadas peticiones. Inténtalo de nuevo más tarde.\"");
+                await context.Response.WriteAsync("\"Has realizado demasiadas peticiones. Inténtalo de nuevo más tarde.\"", context.RequestAborted);
 
                 LambdaLogger.Log(
                     $"[RateLimitMiddleware] - [{stopwatch.ElapsedMilliseconds} ms] - [Not Allowed] - " +
