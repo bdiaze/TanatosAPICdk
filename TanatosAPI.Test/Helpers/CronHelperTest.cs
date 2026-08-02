@@ -1,6 +1,7 @@
 ﻿using Microsoft.IdentityModel.Logging;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
@@ -68,6 +69,29 @@ namespace TanatosAPI.Test.Helpers {
 		[Fact]
 		public async Task DayOfWeekToCronValueTest_DiaInvalido() {
 			Assert.Throws<ArgumentException>(() => CronHelper.DayOfWeekToCronValue((DayOfWeek) 7));
+		}
+
+		private static readonly DateTime FECHA_DUMMY = new(2026, 1, 15, 14, 0, 0, DateTimeKind.Utc); // Chile: 15-01-2026 11:00 - Jueves
+		
+		// Los cron están en hora Chile
+		public static TheoryData<string, DateTime, DateTime?, DateTime?, DateTime> OcurrenciasCronAws => new() {
+			{ "0 11 15 1 ? 2026", FECHA_DUMMY.AddSeconds(45), FECHA_DUMMY, FECHA_DUMMY.AddYears(1), FECHA_DUMMY }, // Sin periodicidad
+			{ "0 11 * * ? *", FECHA_DUMMY.AddSeconds(45), FECHA_DUMMY, FECHA_DUMMY.AddDays(1), FECHA_DUMMY }, // Diario
+			{ "0 11 ? * THU *", FECHA_DUMMY.AddSeconds(45), FECHA_DUMMY, FECHA_DUMMY.AddDays(7), FECHA_DUMMY }, // Semanal
+			{ "0 11 15 * ? *", FECHA_DUMMY.AddSeconds(45), FECHA_DUMMY, FECHA_DUMMY.AddMonths(1), FECHA_DUMMY }, // Mensual
+			{ "0 11 15 1,3,5,7,9,11 ? *", FECHA_DUMMY.AddSeconds(45), FECHA_DUMMY, FECHA_DUMMY.AddMonths(2), FECHA_DUMMY }, // Bimensual
+			{ "0 11 15 1,4,7,10 ? *", FECHA_DUMMY.AddSeconds(45), FECHA_DUMMY, FECHA_DUMMY.AddMonths(3).AddHours(1), FECHA_DUMMY }, // Trimestral - Con ajuste por horario de verano
+			{ "0 11 15 1,7 ? *", FECHA_DUMMY.AddSeconds(45), FECHA_DUMMY, FECHA_DUMMY.AddMonths(6).AddHours(1), FECHA_DUMMY }, // Semestral - Con ajuste por horario de verano
+			{ "0 11 15 1 ? *", FECHA_DUMMY.AddSeconds(45), FECHA_DUMMY, FECHA_DUMMY.AddYears(1), FECHA_DUMMY }, // Anual
+			{ "0 11 * * ? *", FECHA_DUMMY.AddSeconds(-45), FECHA_DUMMY.AddDays(-1), FECHA_DUMMY, FECHA_DUMMY }, // Diario Adelantado
+		};
+		[Theory]
+		[MemberData(nameof(OcurrenciasCronAws))]
+		public async Task ObtenerOcurrenciasCronAWSTest(string awsCron, DateTime fechaReferenciaUtc, DateTime? expectedAnterior, DateTime? expectedSiguiente, DateTime expectedMasCercana) {
+			(DateTime? Anterior, DateTime? Siguiente, DateTime MasCercana) retorno = CronHelper.ObtenerOcurrenciasCronAWS(awsCron, fechaReferenciaUtc);
+			Assert.Equal(expectedAnterior, retorno.Anterior);
+			Assert.Equal(expectedSiguiente, retorno.Siguiente);
+			Assert.Equal(expectedMasCercana, retorno.MasCercana);
 		}
 	}
 }
