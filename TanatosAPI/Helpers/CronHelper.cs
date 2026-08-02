@@ -82,7 +82,7 @@ namespace TanatosAPI.Helpers {
                 (null, null) => throw new InvalidOperationException($"El cron '{awsCron}' no tiene ocurrencias válidas."),
                 (null, _) => anteriorUTC!.Value,
                 (_, null) => siguienteUTC!.Value,
-                _ => (siguienteUTC!.Value - fechaReferenciaUtc) <= (fechaReferenciaUtc - anteriorUTC!.Value) ? siguienteUTC!.Value : anteriorUTC!.Value
+                _ => (siguienteUTC!.Value - fechaReferenciaUtc) < (fechaReferenciaUtc - anteriorUTC!.Value) ? siguienteUTC!.Value : anteriorUTC!.Value
             };
 			return (anteriorUTC, siguienteUTC, masCercanaUTC);
         }

@@ -15,29 +15,34 @@ using TanatosAPI.Repositories;
 namespace TanatosAPI.UseCases {
 	public class NotificacionUseCase(IDateTimeProvider dateTimeProvider, NormaSuscritaUseCase normaSuscritaUseCase, IHistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionBcp historialNotificacionBcp) {
 		public async Task<(HistorialNormaSuscrita?, DateTime fechaProgramacionNotificacion)> DeterminarVencimientoAsociadoNotificacion(long idNormaSuscrita, TipoUnidadTiempo? unidadAntelacion, int? cantAntelacion, bool esVencimiento, string? cron, int? frecuenciaDias, DateTime? inicioEjecucionUtc, NpgsqlTransaction? transaction = null) {
+			DateTime masCercanaUTC;
 			if (cron != null) {
-                (DateTime? anteriorUTC, DateTime? siguienteUTC, DateTime masCercanaUTC) = CronHelper.ObtenerOcurrenciasCronAWS(cron, dateTimeProvider.UtcNow);
-				List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaBcp.ObtenerPorNormaSuscrita(idNormaSuscrita, filtrarVigente: true, filtrarNoCompletadas: true, transaction: transaction);
+				(_, _, masCercanaUTC) = CronHelper.ObtenerOcurrenciasCronAWS(cron, dateTimeProvider.UtcNow);
+			} else if (frecuenciaDias != null && inicioEjecucionUtc != null) {
+				(_, _, masCercanaUTC) = FrecuenciaDiasHelper.ObtenerOcurrenciasFrecuenciaDias(frecuenciaDias.Value, inicioEjecucionUtc.Value, dateTimeProvider.UtcNow);
+			} else {
+				throw new InvalidOperationException("No se incluyen configuración de cron ni de frecuencia en días.");
+			};
+			
+			List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaBcp.ObtenerPorNormaSuscrita(idNormaSuscrita, filtrarVigente: true, filtrarNoCompletadas: true, transaction: transaction);
+			HistorialNormaSuscrita? vencimiento;
+			if (cantAntelacion != null && unidadAntelacion != null) {
+				// Si tenemos información de la notificación previa, se calculca la fecha de vencimiento...
+				DateTime fechaVencimientoChile = NotificacionPreviaHelper.ObtenerFechaReferenciaChileSegunNotificacionPrevia(
+					DateTimeHelper.TransformarFechaUTCATimezone(masCercanaUTC), 
+					cantAntelacion.Value, 
+					unidadAntelacion
+				);
+				vencimiento = vencimientos.FirstOrDefault(v => v.FechaVencimiento == DateTimeHelper.TransformarFechaTimezoneAUTC(fechaVencimientoChile));
+			} else if (!esVencimiento) {
+				// Si no estamos en una fecha de vencimiento, pero tampoco tenemos información de la notificación previa, se asume último vencimiento...
+				vencimiento = vencimientos.OrderByDescending(v => v.FechaVencimiento).FirstOrDefault();
+			} else {
+				// Si estamos en una fecha de vencimiento, se busca el vencimiento que coincide con la fecha de programación...
+				vencimiento = vencimientos.FirstOrDefault(v => v.FechaVencimiento == masCercanaUTC);
+			}
 
-                HistorialNormaSuscrita? vencimiento;
-                if (cantAntelacion != null && unidadAntelacion != null) {
-                    // Si tenemos información de la notificación previa, se calculca la fecha de vencimiento...
-                    DateTime masCercanaChile = DateTimeHelper.TransformarFechaUTCATimezone(masCercanaUTC);
-                    DateTime fechaVencimientoChile = NotificacionPreviaHelper.ObtenerFechaReferenciaChileSegunNotificacionPrevia(masCercanaChile, cantAntelacion.Value, unidadAntelacion);
-                    DateTime fechaVencimientoUTC = DateTimeHelper.TransformarFechaTimezoneAUTC(fechaVencimientoChile);
-					vencimiento = vencimientos.FirstOrDefault(v => v.FechaVencimiento == fechaVencimientoUTC);
-                } else if (!esVencimiento) {
-					// Si no estamos en una fecha de vencimiento, pero tampoco tenemos información de la notificación previa, se asume último vencimiento...
-					vencimiento = vencimientos.OrderByDescending(v => v.FechaVencimiento).FirstOrDefault();
-                } else {
-					// Si estamos en una fecha de vencimiento, se busca el vencimiento que coincide con la fecha del cron...
-					vencimiento = vencimientos.FirstOrDefault(v => v.FechaVencimiento == masCercanaUTC);
-                }
-
-                return (vencimiento, masCercanaUTC);
-            } else if (frecuenciaDias != null && inicioEjecucionUtc != null) {
-				throw new NotImplementedException("No se ha implementado las notificaciones para frecuencias en días.");
-			} else throw new InvalidOperationException("No se incluyen configuración de cron ni de frecuencia en días.");
+			return (vencimiento, masCercanaUTC);
 		}
 
         public async Task ProcesarNotificacion(long idNormaSuscrita, string? cron, int? frecuenciaDias, DateTime? inicioEjecucionUtc, long? idTipoUnidadTiempoAntelacion, int? cantAntelacion, bool? esVencimiento, bool programarSiguienteEjecucion, NpgsqlTransaction? transaction = null) {
