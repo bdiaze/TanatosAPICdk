@@ -281,7 +281,7 @@ namespace TanatosAPI.UseCases {
 
 		public async Task EliminarNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction transaction) {
 			if (normaSuscrita.Vigencia) {
-				await normaSuscritaBcp.Eliminar(normaSuscrita);
+				await normaSuscritaBcp.Eliminar(normaSuscrita, transaction);
 
 				await ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
 
