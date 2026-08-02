@@ -2,9 +2,10 @@
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
+using TanatosAPI.Interfaces.UseCases;
 
 namespace TanatosAPI.UseCases {
-	public class NotificacionNormaSuscritaUseCase(INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp) {
+	public class NotificacionNormaSuscritaUseCase(INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp) : INotificacionNormaSuscritaUseCase {
 		public async Task<List<(TipoUnidadTiempo UnidadTiempoAntelacion, int CantAntelacion)>> ObtenerAntelacionesConsiderandoTemplate(long idNormaSuscrita, long? idTemplate, long? idNormaTemplate, NpgsqlTransaction? transaction = null) {
 			List<NotificacionNormaSuscrita> notificacionesNormaSuscrita = await notificacionNormaSuscritaBcp.ObtenerVigentesPorNormaSuscrita(idNormaSuscrita, transaction);
 			List<TemplateNormaNotificacion> templateNormaNotificacion = [];
