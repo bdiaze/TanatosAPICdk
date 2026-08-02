@@ -19,6 +19,7 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
+using TanatosAPI.Interfaces.UseCases;
 using TanatosAPI.Repositories;
 using TanatosAPI.UseCases;
 
@@ -249,8 +250,8 @@ builder.Services.AddScoped<NotificacionUseCase>();
 builder.Services.AddScoped<EvaluacionUseCase>();
 builder.Services.AddScoped<TipoPeriodicidadUseCase>();
 builder.Services.AddScoped<TemplateNormaUseCase>();
-builder.Services.AddScoped<NotificacionNormaSuscritaUseCase>();
-builder.Services.AddScoped<HistorialNormaSuscritaUseCase>();
+builder.Services.AddScoped<INotificacionNormaSuscritaUseCase, NotificacionNormaSuscritaUseCase>();
+builder.Services.AddScoped<IHistorialNormaSuscritaUseCase, HistorialNormaSuscritaUseCase>();
 builder.Services.AddScoped<TipoUnidadTiempoUseCase>();
 #endregion
 

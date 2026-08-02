@@ -9,10 +9,11 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
+using TanatosAPI.Interfaces.UseCases;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-	public class NotificacionUseCase(IDateTimeProvider dateTimeProvider, NormaSuscritaUseCase normaSuscritaUseCase, HistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionBcp historialNotificacionBcp) {
+	public class NotificacionUseCase(IDateTimeProvider dateTimeProvider, NormaSuscritaUseCase normaSuscritaUseCase, IHistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, DestinatarioNotificacionUseCase destinatarioNotificacionUseCase, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionBcp historialNotificacionBcp) {
 		public async Task<(HistorialNormaSuscrita?, DateTime fechaProgramacionNotificacion)> DeterminarVencimientoAsociadoNotificacion(long idNormaSuscrita, TipoUnidadTiempo? unidadAntelacion, int? cantAntelacion, bool esVencimiento, string? cron, int? frecuenciaDias, DateTime? inicioEjecucionUtc, NpgsqlTransaction? transaction = null) {
 			if (cron != null) {
                 (DateTime? anteriorUTC, DateTime? siguienteUTC, DateTime masCercanaUTC) = CronHelper.ObtenerOcurrenciasCronAWS(cron, dateTimeProvider.UtcNow);
