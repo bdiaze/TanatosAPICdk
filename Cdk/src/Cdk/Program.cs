@@ -12,7 +12,7 @@ namespace Cdk {
             string appName = System.Environment.GetEnvironmentVariable("APP_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno APP_NAME");
             string accountAws = System.Environment.GetEnvironmentVariable("ACCOUNT_AWS") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ACCOUNT_AWS");
             string regionAws = System.Environment.GetEnvironmentVariable("REGION_AWS") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno REGION_AWS");
-			string globalServicesRegionAws = System.Environment.GetEnvironmentVariable("GLOBAL_SERVICES_REGION_AWS") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GLOBAL_SERVICES_REGION_AWS"); ;
+			string globalServicesRegionAws = System.Environment.GetEnvironmentVariable("GLOBAL_SERVICES_REGION_AWS") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GLOBAL_SERVICES_REGION_AWS");
 
 
 			var app = new App();

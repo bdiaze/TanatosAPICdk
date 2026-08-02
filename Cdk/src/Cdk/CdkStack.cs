@@ -84,7 +84,7 @@ namespace Cdk
             string vpcId = System.Environment.GetEnvironmentVariable("VPC_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno VPC_ID");
             string privateWithInternetId1 = System.Environment.GetEnvironmentVariable("PRIVATE_WITH_INTERNET_ID_1") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno PRIVATE_WITH_INTERNET_ID_1");
             string privateWithInternetId2 = System.Environment.GetEnvironmentVariable("PRIVATE_WITH_INTERNET_ID_2") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno PRIVATE_WITH_INTERNET_ID_2");
-            string rdsSecurityGroupId = System.Environment.GetEnvironmentVariable("RDS_SECURITY_GROUP_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno RDS_SECURITY_GROUP_ID")!;
+            string rdsSecurityGroupId = System.Environment.GetEnvironmentVariable("RDS_SECURITY_GROUP_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno RDS_SECURITY_GROUP_ID");
 
             // Variables de entorno de la lambda...
             string secretArnConnectionString = System.Environment.GetEnvironmentVariable(CONST_SECRET_ARN) ?? throw new InvalidOperationException($"No se ha configurado la variable de entorno {CONST_SECRET_ARN}");
@@ -156,7 +156,7 @@ namespace Cdk
 			});
 
 			// Se crea email identity para envío de correos...
-			EmailIdentity emailIdentity = new(this, $"{appName}EmailIdentity", new EmailIdentityProps {
+			_ = new EmailIdentity(this, $"{appName}EmailIdentity", new EmailIdentityProps {
 				Identity = Identity.PublicHostedZone(publicHostedZone),
 				MailFromDomain = mailFromDomain,
 				MailFromBehaviorOnMxFailure = MailFromBehaviorOnMxFailure.USE_DEFAULT_VALUE,
