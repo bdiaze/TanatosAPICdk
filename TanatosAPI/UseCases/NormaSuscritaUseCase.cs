@@ -266,11 +266,11 @@ namespace TanatosAPI.UseCases {
 					}
 				}
 
-                (List<ProcesoNotificacion> cronsProgramados, List<ProcesoNotificacion> cronsDesprogramados) = await normaSuscritaBcp.ActualizarProcesosCronProgramados(normaSuscrita, cronsDeseados);
+                (List<ProcesoNotificacion> cronsProgramados, List<ProcesoNotificacion> cronsDesprogramados) = await normaSuscritaBcp.ActualizarProcesosCronProgramados(normaSuscrita, cronsDeseados, transaction);
                 procesosProgramados.AddRange(cronsProgramados);
                 procesosDesprogramados.AddRange(cronsDesprogramados);
 
-				(List<ProcesoNotificacion> frecuenciasDiasProgramados, List<ProcesoNotificacion> frecuenciasDiasDesprogramadas) = await normaSuscritaBcp.ActualizarProcesosFrecuenciaDiasProgramados(normaSuscrita, frecuenciasDiasDeseadas);
+				(List<ProcesoNotificacion> frecuenciasDiasProgramados, List<ProcesoNotificacion> frecuenciasDiasDesprogramadas) = await normaSuscritaBcp.ActualizarProcesosFrecuenciaDiasProgramados(normaSuscrita, frecuenciasDiasDeseadas, transaction);
                 procesosProgramados.AddRange(frecuenciasDiasProgramados);
                 procesosDesprogramados.AddRange(frecuenciasDiasDesprogramadas);
 			} catch {
