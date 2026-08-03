@@ -27,8 +27,9 @@ namespace TanatosAPI.Test.Business {
         private readonly NormaSuscritaBcp normaSuscritaBcp;
 
         private static readonly DateTime FECHA_DUMMY = new(2026, 1, 15, 14, 0, 0, DateTimeKind.Utc);
+		private static readonly DateTime FECHA_DUMMY_CHILE = new(2026, 1, 15, 11, 0, 0, DateTimeKind.Unspecified);
 
-        public NormaSuscritaBcpTest() {
+		public NormaSuscritaBcpTest() {
             dateTimeProvider.UtcNow.Returns(FECHA_DUMMY);
 
             normaSuscritaBcp = new(dateTimeProvider, variableEntorno, kairosHelper, normaSuscritaDao);
@@ -791,7 +792,7 @@ namespace TanatosAPI.Test.Business {
 			await kairosHelper.Received(1).IngresarProceso(Arg.Is<EntKairosIngresarProceso>(p =>
 				p.Nombre.StartsWith("app-name-test - ") &&
 				p.Nombre.Contains($"- NormaSuscrita {normaSuscrita.Id} - ") &&
-				p.Nombre.Contains($"- Inicio {FECHA_DUMMY.AddHours(-2):dd-MM-yyyy HH:mm} -") &&
+				p.Nombre.Contains($"- Inicio {FECHA_DUMMY_CHILE.AddHours(-2):dd-MM-yyyy HH:mm} -") &&
 				p.Nombre.EndsWith($"Frecuencia 14 Días") &&
 				p.FrecuenciaDias == 14 &&
 				p.InicioEjecucionUtc == FECHA_DUMMY.AddHours(-2) &&
