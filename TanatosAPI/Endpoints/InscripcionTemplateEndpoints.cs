@@ -110,6 +110,8 @@ namespace TanatosAPI.Endpoints {
 					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
 					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
+					List<ProcesoNotificacion> procesosProgramados = [];
+					List<ProcesoNotificacion> procesosDesprogramados = [];
 					try {
 						foreach(Template templateAInscribir in templatesAInscribir) {
 							InscripcionTemplate? inscripcionExistente = inscripcionesExistentes.FirstOrDefault(it => it.IdTemplate == templateAInscribir.Id);
@@ -175,13 +177,14 @@ namespace TanatosAPI.Endpoints {
 									await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
 								}
 
-								await normaSuscritaUseCase.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
+								(procesosProgramados, procesosDesprogramados) = await normaSuscritaUseCase.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
 							}
 						}
 
 						await transaction.CommitAsync();
 					} catch {
 						await transaction.RollbackAsync();
+						await normaSuscritaUseCase.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
 						throw;
 					}
 
@@ -219,26 +222,39 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"La inscripción al template no se encuentra activa.");
 					}
 
-					if (inscripcionExistente.Vigencia) {
-						await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-						await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+					IDatabaseConnection? connection = null;
+					IDatabaseTransaction? transaction = null;
 
-						try {
+					List<ProcesoNotificacion> procesosProgramados = [];
+					List<ProcesoNotificacion> procesosDesprogramados = [];
+					try {
+						connection = await connectionHelper.ObtenerConexionWrapper();
+						transaction = await connection.BeginTransactionAsync();
+
+						if (inscripcionExistente.Vigencia) {
 							inscripcionExistente.FechaDesactivacion = dateTimeProvider.UtcNow;
 							inscripcionExistente.Vigencia = false;
-							await inscripcionTemplateDao.Actualizar(inscripcionExistente, transaction);
+							await inscripcionTemplateDao.Actualizar(inscripcionExistente, transaction!.NpgsqlTransaction());
 
 							// Se actualizan las normas suscritas correspondientes al template...
-							List<NormaSuscrita> normasSuscritas = [.. (await normaSuscritaDao.ObtenerPorSub(sub, entrada.IdNegocio, true, transaction)).Where(ns => ns.IdTemplate == entrada.IdTemplate)];
+							List<NormaSuscrita> normasSuscritas = [.. (await normaSuscritaDao.ObtenerPorSub(sub, entrada.IdNegocio, true, transaction!.NpgsqlTransaction())).Where(ns => ns.IdTemplate == entrada.IdTemplate)];
 							foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
-								await normaSuscritaUseCase.EliminarNormaSuscrita(normaSuscrita, transaction);
+								(List<ProcesoNotificacion> programadosParciales, List<ProcesoNotificacion> desprogramadosParciales) = await normaSuscritaUseCase.EliminarNormaSuscrita(normaSuscrita, transaction);
+								procesosProgramados.AddRange(programadosParciales);
+								procesosDesprogramados.AddRange(desprogramadosParciales);
 							}
-
-							await transaction.CommitAsync();
-						} catch {
-							await transaction.RollbackAsync();
-							throw;
 						}
+
+						await transaction!.CommitAsync();
+					} catch {
+						if (transaction != null) {
+							await transaction.RollbackAsync();
+							await normaSuscritaUseCase.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
+						}
+						throw;
+					} finally {
+						if (transaction != null) await transaction.DisposeAsync();
+						if (connection != null) await connection.DisposeAsync();
 					}
 
 					LambdaLogger.Log(

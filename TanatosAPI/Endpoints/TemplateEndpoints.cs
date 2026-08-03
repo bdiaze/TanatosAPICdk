@@ -336,7 +336,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaUseCase templateNormaUseCase, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
+			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaUseCase templateNormaUseCase, INormaSuscritaBcp normaSuscritaBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -442,78 +442,90 @@ namespace TanatosAPI.Endpoints {
 
 					existente.TemplateActividades = await templateActividadDao.ObtenerPorTemplate(existente.Id);
 
-					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+					IDatabaseConnection? connection = null;
+					IDatabaseTransaction? transaction = null;
 
+					List<ProcesoNotificacion> procesosProgramados = [];
+					List<ProcesoNotificacion> procesosDesprogramados = [];
 					try {
+						connection = await connectionHelper.ObtenerConexionWrapper();
+						transaction = await connection.BeginTransactionAsync();
+
 						// Se eliminan las normas que ya no existen...
-						foreach(TemplateNorma normaEliminar in existente.TemplateNormas.Where(tne => (!entrada.TemplateNormas?.Any(tni => tni.IdTemplate == tne.IdTemplate && tni.IdNorma == tne.IdNorma)) ?? true)) {
-							await templateNormaUseCase.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, transaction);
+						foreach (TemplateNorma normaEliminar in existente.TemplateNormas.Where(tne => (!entrada.TemplateNormas?.Any(tni => tni.IdTemplate == tne.IdTemplate && tni.IdNorma == tne.IdNorma)) ?? true)) {
+							(List<ProcesoNotificacion> programadosParcial, List<ProcesoNotificacion> desprogramadosParcial) = await templateNormaUseCase.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, transaction);
+							procesosProgramados.AddRange(programadosParcial);
+							procesosDesprogramados.AddRange(desprogramadosParcial);
 						}
 
-						
-						foreach(TemplateNorma normaEntrada in entrada.TemplateNormas ?? []) {
+						foreach (TemplateNorma normaEntrada in entrada.TemplateNormas ?? []) {
 							TemplateNorma? normaExistente = existente.TemplateNormas.FirstOrDefault(tn => tn.IdTemplate == normaEntrada.IdTemplate && tn.IdNorma == normaEntrada.IdNorma);
 
 							if (normaExistente != null) {
 								// Se eliminan los fiscalizadores que ya no existen...
 								foreach (TemplateNormaFiscalizador fiscalizadorEliminar in normaExistente.TemplateNormaFiscalizadores?.Except(normaEntrada.TemplateNormaFiscalizadores ?? []) ?? []) {
-									await templateNormaFiscalizadorDao.Eliminar(fiscalizadorEliminar.IdTemplate, fiscalizadorEliminar.IdNorma, fiscalizadorEliminar.IdTipoFiscalizador, transaction);
+									await templateNormaFiscalizadorDao.Eliminar(fiscalizadorEliminar.IdTemplate, fiscalizadorEliminar.IdNorma, fiscalizadorEliminar.IdTipoFiscalizador, transaction!.NpgsqlTransaction());
 								}
 
 								// Se eliminan las notificaciones que ya no existen...
 								foreach (TemplateNormaNotificacion notificacionEliminar in normaExistente.TemplateNormaNotificaciones?.Except(normaEntrada.TemplateNormaNotificaciones ?? []) ?? []) {
-									await templateNormaNotificacionDao.Eliminar(notificacionEliminar.IdTemplate, notificacionEliminar.IdNorma, notificacionEliminar.IdTipoUnidadTiempoAntelacion, notificacionEliminar.CantAntelacion, transaction);
+									await templateNormaNotificacionDao.Eliminar(notificacionEliminar.IdTemplate, notificacionEliminar.IdNorma, notificacionEliminar.IdTipoUnidadTiempoAntelacion, notificacionEliminar.CantAntelacion, transaction!.NpgsqlTransaction());
 								}
 
 								// Se agregan los fiscalizadores faltantes...
 								foreach (TemplateNormaFiscalizador fiscalizadorCrear in normaEntrada.TemplateNormaFiscalizadores?.Except(normaExistente.TemplateNormaFiscalizadores ?? []) ?? []) {
-									await templateNormaFiscalizadorDao.Insertar(fiscalizadorCrear, transaction);
+									await templateNormaFiscalizadorDao.Insertar(fiscalizadorCrear, transaction!.NpgsqlTransaction());
 								}
 
 								// Se agregan las notificaciones faltantes...
 								foreach (TemplateNormaNotificacion notificacionCrear in normaEntrada.TemplateNormaNotificaciones?.Except(normaExistente.TemplateNormaNotificaciones ?? []) ?? []) {
-									await templateNormaNotificacionDao.Insertar(notificacionCrear, transaction);
+									await templateNormaNotificacionDao.Insertar(notificacionCrear, transaction!.NpgsqlTransaction());
 								}
 
 								// Si existen diferencias entre la norma existente y la de entrada, se actualiza...
 								if (!normaEntrada.Equals(normaExistente)) {
-									await templateNormaDao.Actualizar(normaEntrada, transaction);
+									await templateNormaDao.Actualizar(normaEntrada, transaction!.NpgsqlTransaction());
 								}
 							} else {
 								// Se crea la norma que no existía...
-								await templateNormaDao.Insertar(normaEntrada, transaction);
+								await templateNormaDao.Insertar(normaEntrada, transaction!.NpgsqlTransaction());
 
 								foreach (TemplateNormaFiscalizador templateNormaFiscalizador in normaEntrada.TemplateNormaFiscalizadores ?? []) {
 									// Se graba cada fiscalizador de la norma...
-									await templateNormaFiscalizadorDao.Insertar(templateNormaFiscalizador, transaction);
+									await templateNormaFiscalizadorDao.Insertar(templateNormaFiscalizador, transaction!.NpgsqlTransaction());
 								}
 								foreach (TemplateNormaNotificacion templateNormaNotificacion in normaEntrada.TemplateNormaNotificaciones ?? []) {
 									// Se graba cada notificación de la norma...
-									await templateNormaNotificacionDao.Insertar(templateNormaNotificacion, transaction);
+									await templateNormaNotificacionDao.Insertar(templateNormaNotificacion, transaction!.NpgsqlTransaction());
 								}
 							}
 						}
 
 						// Se eliminan las actividades que ya no existen...
 						foreach (TemplateActividad actividadEliminar in existente.TemplateActividades.Where(ta => (!entrada.TemplateActividades?.Any(ea => ea.IdTemplate == ta.IdTemplate && ea.IdTipoActividad == ta.IdTipoActividad)) ?? true)) {
-							await templateActividadDao.Eliminar(actividadEliminar.IdTemplate, actividadEliminar.IdTipoActividad, transaction);
+							await templateActividadDao.Eliminar(actividadEliminar.IdTemplate, actividadEliminar.IdTipoActividad, transaction!.NpgsqlTransaction());
 						}
 
 						// Se crean las nuevas actividades que no existen...
 						foreach (TemplateActividad actividadCrear in entrada.TemplateActividades?.Where(ea => !existente.TemplateActividades.Any(ta => ta.IdTemplate == ea.IdTemplate && ta.IdTipoActividad == ea.IdTipoActividad)) ?? []) {
-							await templateActividadDao.Insertar(actividadCrear, transaction);
+							await templateActividadDao.Insertar(actividadCrear, transaction!.NpgsqlTransaction());
 						}
 
 						// Se actualiza el template si existen diferencias...
 						if (!entrada.Equals(existente)) {
-							await templateDao.Actualizar(entrada, transaction);
+							await templateDao.Actualizar(entrada, transaction!.NpgsqlTransaction());
 						}
 
-						await transaction.CommitAsync();
+						await transaction!.CommitAsync();
 					} catch {
-						await transaction.RollbackAsync();
+						if (transaction != null) {
+							await transaction.RollbackAsync();
+							await normaSuscritaBcp.ReversarProcesos(procesosProgramados, procesosDesprogramados);
+						}
 						throw;
+					} finally {
+						if (transaction != null) await transaction.DisposeAsync();
+						if (connection != null) await connection.DisposeAsync();
 					}
 
 					existente = entrada;
@@ -536,7 +548,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaUseCase templateNormaUseCase, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaUseCase templateNormaUseCase, INormaSuscritaBcp normaSuscritaBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -550,18 +562,29 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"No existe el template con ID {id}.");
 					}
 
-					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+					IDatabaseConnection? connection = null;
+					IDatabaseTransaction? transaction = null;
 
+					List<ProcesoNotificacion> procesosProgramados = [];
+					List<ProcesoNotificacion> procesosDesprogramados = [];
 					try {
-						await templateNormaUseCase.Eliminar(id, null, transaction);
-                        await templateActividadDao.Eliminar(id, null, transaction);
-						await templateDao.Eliminar(id, transaction);
+						connection = await connectionHelper.ObtenerConexionWrapper();
+						transaction = await connection.BeginTransactionAsync();
 
-						await transaction.CommitAsync();
+						(procesosProgramados, procesosDesprogramados) = await templateNormaUseCase.Eliminar(id, null, transaction);
+						await templateActividadDao.Eliminar(id, null, transaction!.NpgsqlTransaction());
+						await templateDao.Eliminar(id, transaction!.NpgsqlTransaction());
+
+						await transaction!.CommitAsync();
 					} catch {
-						await transaction.RollbackAsync();
+						if (transaction != null) {
+							await transaction.RollbackAsync();
+							await normaSuscritaBcp.ReversarProcesos(procesosProgramados, procesosDesprogramados);
+						}
 						throw;
+					} finally {
+						if (transaction != null) await transaction.DisposeAsync();
+						if (connection != null) await connection.DisposeAsync();
 					}
 
 					LambdaLogger.Log(

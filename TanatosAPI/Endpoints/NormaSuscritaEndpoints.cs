@@ -322,7 +322,7 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
                     
-					NormaSuscrita obligacion = await normaSuscritaUseCase.CrearNormaSuscrita(
+					(NormaSuscrita obligacion, _, _) = await normaSuscritaUseCase.CrearNormaSuscrita(
 						sub,
 						entrada.IdNegocio,
 						entrada.Nombre,
@@ -396,7 +396,7 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-					NormaSuscrita obligacion = await normaSuscritaUseCase.ActualizarNormaSuscrita(
+					(NormaSuscrita obligacion, _, _) = await normaSuscritaUseCase.ActualizarNormaSuscrita(
 						sub, 
 						entrada.Id, 
 						entrada.IdNegocio, 

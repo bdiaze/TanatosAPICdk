@@ -2,6 +2,7 @@
 using Npgsql;
 using System.Diagnostics;
 using System.Security.Claims;
+using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.Negocio;
 using TanatosAPI.Helpers;
@@ -261,7 +262,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, NegocioUseCase negocioUseCase, INegocioDao negocioDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, NegocioUseCase negocioUseCase, INormaSuscritaBcp normaSuscritaBcp, INegocioDao negocioDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -278,15 +279,27 @@ namespace TanatosAPI.Endpoints {
 						return Results.BadRequest($"El usuario no posee un negocio con ID {id}.");
 					}
 
-					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
-					try {
-						await negocioUseCase.EliminarNegocio(existente, transaction);
+					IDatabaseConnection? connection = null;
+					IDatabaseTransaction? transaction = null;
 
-						await transaction.CommitAsync();
+					List<ProcesoNotificacion> procesosProgramados = [];
+					List<ProcesoNotificacion> procesosDesprogramados = [];
+					try {
+						connection = await connectionHelper.ObtenerConexionWrapper();
+						transaction = await connection.BeginTransactionAsync();
+
+						(procesosProgramados, procesosDesprogramados) = await negocioUseCase.EliminarNegocio(existente, transaction);
+
+						await transaction!.CommitAsync();
 					} catch {
-						await transaction.RollbackAsync();
+						if (transaction != null) {
+							await transaction.RollbackAsync();
+							await normaSuscritaBcp.ReversarProcesos(procesosProgramados, procesosDesprogramados);
+						}
 						throw;
+					} finally {
+						if (transaction != null) await transaction.DisposeAsync();
+						if (connection != null) await connection.DisposeAsync();
 					}
 
 					LambdaLogger.Log(
