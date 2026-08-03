@@ -200,8 +200,11 @@ namespace TanatosAPI.Endpoints {
 						return (normaSuscrita.HistorialesNormaSuscrita ?? []).Select(historialNormaSuscrita => new SalNormaSuscritaObtenerConVencimiento {
 							FechaVencimiento = historialNormaSuscrita.FechaVencimiento,
 							FechaCompletitud = historialNormaSuscrita.FechaCompletitud,
+							IdTemplate = normaSuscrita.TemplateNorma?.IdTemplate,
+							IdNorma = normaSuscrita.TemplateNorma?.IdNorma,
 							IdNormaSuscrita = normaSuscrita.Id,
 							IdHistorialNormaSuscrita = historialNormaSuscrita.Id,
+							NombreTemplate = normaSuscrita.TemplateNorma?.Template?.Nombre,
 							NombreNorma = normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre,
 							DescripcionNorma = normaSuscrita.Descripcion ?? normaSuscrita.TemplateNorma?.Descripcion,
 							MultaNorma = normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
