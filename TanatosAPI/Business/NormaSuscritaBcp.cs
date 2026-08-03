@@ -309,8 +309,10 @@ namespace TanatosAPI.Business {
                         ProgramarSiguienteEjecucion = crear.EsVencimiento
                     };
 
+
+					DateTime inicioEjecucionChile = DateTimeHelper.TransformarFechaUTCATimezone(crear.InicioEjecucionUtc);
                     SalKairosIngresarProceso retorno = await kairosHelper.IngresarProceso(new EntKairosIngresarProceso {
-						Nombre = $"{variableEntornoHelper.Obtener("APP_NAME")} - NormaSuscrita {normaSuscrita.Id} - Inicio {crear.InicioEjecucionUtc:dd-MM-yyyy HH:mm} - Frecuencia {crear.FrecuenciaDias} Días",
+						Nombre = $"{variableEntornoHelper.Obtener("APP_NAME")} - NormaSuscrita {normaSuscrita.Id} - Inicio {inicioEjecucionChile:dd-MM-yyyy HH:mm} - Frecuencia {crear.FrecuenciaDias} Días",
 						FrecuenciaDias = crear.FrecuenciaDias,
 						InicioEjecucionUtc = crear.InicioEjecucionUtc,
                         Parametros = JsonSerializer.Serialize(parametros, AppJsonSerializerContext.Default.EntKairosParametrosProceso),
