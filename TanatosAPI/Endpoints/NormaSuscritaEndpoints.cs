@@ -197,6 +197,27 @@ namespace TanatosAPI.Endpoints {
 						TipoPeriodicidad? periodicidad = normaSuscrita.TipoPeriodicidad ?? normaSuscrita.TemplateNorma?.TipoPeriodicidad;
 						CategoriaNorma? categoriaNorma = normaSuscrita.CategoriaNorma ?? normaSuscrita.TemplateNorma?.CategoriaNorma;
 
+						if (normaSuscrita.HistorialesNormaSuscrita == null || normaSuscrita.HistorialesNormaSuscrita.Count == 0) {
+							return [ new SalNormaSuscritaObtenerConVencimiento {
+								FechaVencimiento = null,
+								FechaCompletitud = null,
+								IdTemplate = normaSuscrita.TemplateNorma?.IdTemplate,
+								IdNorma = normaSuscrita.TemplateNorma?.IdNorma,
+								IdNormaSuscrita = normaSuscrita.Id,
+								IdHistorialNormaSuscrita = null,
+								NombreTemplate = normaSuscrita.TemplateNorma?.Template?.Nombre,
+								NombreNorma = normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre,
+								DescripcionNorma = normaSuscrita.Descripcion ?? normaSuscrita.TemplateNorma?.Descripcion,
+								MultaNorma = normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
+								IdTipoPeriodicidad = periodicidad?.Id,
+								NombreTipoPeriodicidad = periodicidad?.Nombre,
+								IdCategoriaNorma = categoriaNorma?.Id,
+								NombreCategoriaNorma = categoriaNorma?.NombreCorto ?? categoriaNorma?.Nombre,
+								IdCargo = normaSuscrita.Cargo?.Id,
+								NombreCargo = normaSuscrita.Cargo?.Nombre,
+							}];
+						}
+
 						return (normaSuscrita.HistorialesNormaSuscrita ?? []).Select(historialNormaSuscrita => new SalNormaSuscritaObtenerConVencimiento {
 							FechaVencimiento = historialNormaSuscrita.FechaVencimiento,
 							FechaCompletitud = historialNormaSuscrita.FechaCompletitud,
