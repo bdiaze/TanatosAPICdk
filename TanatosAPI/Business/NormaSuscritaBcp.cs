@@ -246,7 +246,7 @@ namespace TanatosAPI.Business {
 
 				await Actualizar(normaSuscrita, transaction);
 			} catch {
-                await ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
+                if (transaction == null) await ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
                 throw;
             }
             return (procesosProgramados, procesosDesprogramados);
@@ -338,7 +338,7 @@ namespace TanatosAPI.Business {
 
                 await Actualizar(normaSuscrita, transaction);
             } catch {
-                await ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
+				if (transaction == null) await ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
                 throw;
             }
             return (procesosProgramados, procesosDesprogramados);
