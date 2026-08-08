@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestPlatform.Common.Utilities;
 using Npgsql;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Org.BouncyCastle.Crypto.Digests;
 using System;
 using System.Collections.Generic;
@@ -661,6 +662,14 @@ namespace TanatosAPI.Test.Business {
 		}
 
 		[Fact]
+		public async Task ActualizarProcesosCronProgramadosTest_Rollback() {
+			normaSuscritaDao.Actualizar(Arg.Any<NormaSuscrita>(), Arg.Any<NpgsqlTransaction?>()).ThrowsAsync<Exception>();
+
+			await Assert.ThrowsAsync<Exception>(() => normaSuscritaBcp.ActualizarProcesosCronProgramados(NormaSuscritaDummy(), []));
+			await normaSuscritaDao.Received(1).Actualizar(Arg.Any<NormaSuscrita>(), Arg.Any<NpgsqlTransaction?>());
+		}
+
+		[Fact]
 		public async Task ExtraerFrecuenciasDiasAEliminarTest() {
 			NormaSuscrita normaSuscrita = NormaSuscritaDummy();
 			normaSuscrita.ProcesosNotificaciones = [
@@ -809,6 +818,14 @@ namespace TanatosAPI.Test.Business {
 				),
 				Arg.Any<NpgsqlTransaction?>()
 			);
+		}
+
+		[Fact]
+		public async Task ActualizarProcesosFrecuenciaDiasProgramadosTest_Rollback() {
+			normaSuscritaDao.Actualizar(Arg.Any<NormaSuscrita>(), Arg.Any<NpgsqlTransaction?>()).ThrowsAsync<Exception>();
+
+			await Assert.ThrowsAsync<Exception>(() => normaSuscritaBcp.ActualizarProcesosFrecuenciaDiasProgramados(NormaSuscritaDummy(), []));
+			await normaSuscritaDao.Received(1).Actualizar(Arg.Any<NormaSuscrita>(), Arg.Any<NpgsqlTransaction?>());
 		}
 	}
 }
