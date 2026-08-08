@@ -283,7 +283,7 @@ namespace TanatosAPI.UseCases {
 		}
 
 		public async Task ReversarProcesosProgramadosDesprogramados(List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados) {
-			await normaSuscritaBcp.ReversarProcesos(procesosProgramados, procesosDesprogramados);
+			await normaSuscritaBcp.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
 		}
 
 		public async Task<(List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados)> EliminarNormaSuscrita(NormaSuscrita normaSuscrita, IDatabaseTransaction transaction) {

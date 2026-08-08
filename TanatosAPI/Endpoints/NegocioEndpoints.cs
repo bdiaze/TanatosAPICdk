@@ -294,7 +294,7 @@ namespace TanatosAPI.Endpoints {
 					} catch {
 						if (transaction != null) {
 							await transaction.RollbackAsync();
-							await normaSuscritaBcp.ReversarProcesos(procesosProgramados, procesosDesprogramados);
+							await normaSuscritaBcp.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
 						}
 						throw;
 					} finally {

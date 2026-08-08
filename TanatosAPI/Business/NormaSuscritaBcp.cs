@@ -151,7 +151,7 @@ namespace TanatosAPI.Business {
 			}
 		}
 		
-		public async Task ReversarProcesos(List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados) {
+		public async Task ReversarProcesosProgramadosDesprogramados(List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados) {
             await ProgramarVariosProcesosNotificacion([.. procesosDesprogramados.Select(p => new EntKairosIngresarProceso() {
 				Nombre = p.Nombre,
 				Cron = p.Cron,
@@ -246,7 +246,7 @@ namespace TanatosAPI.Business {
 
 				await Actualizar(normaSuscrita, transaction);
 			} catch {
-                await ReversarProcesos(procesosProgramados, procesosDesprogramados);
+                await ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
                 throw;
             }
             return (procesosProgramados, procesosDesprogramados);
@@ -338,7 +338,7 @@ namespace TanatosAPI.Business {
 
                 await Actualizar(normaSuscrita, transaction);
             } catch {
-                await ReversarProcesos(procesosProgramados, procesosDesprogramados);
+                await ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
                 throw;
             }
             return (procesosProgramados, procesosDesprogramados);
