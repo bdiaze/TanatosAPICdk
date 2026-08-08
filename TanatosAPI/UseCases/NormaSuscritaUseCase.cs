@@ -20,7 +20,7 @@ namespace TanatosAPI.UseCases {
         }
 
 		public async Task IncluirTemplate(List<NormaSuscrita> normasSuscritas, NpgsqlTransaction? transaction = null) {
-			if (normasSuscritas.Count > 0) {
+			if (normasSuscritas.Any(o => o.IdTemplate != null)) {
 				List<Template> templates = await templateBcp.ObtenerVariosSoloVigentes([.. normasSuscritas.Where(o => o.IdTemplate != null).Select(o => o.IdTemplate!.Value)], transaction);
 
 				if (templates.Count > 0) {
@@ -46,7 +46,7 @@ namespace TanatosAPI.UseCases {
 		}
 
 		public async Task IncluirTipoPeriodicidad(List<NormaSuscrita> normasSuscritas, NpgsqlTransaction? transaction = null) {
-			if (normasSuscritas.Count > 0) {
+			if (normasSuscritas.Any(o => o.IdTipoPeriodicidad != null || o.TemplateNorma?.IdTipoPeriodicidad != null)) {
 				Dictionary<long, TipoPeriodicidad> periodicidades = (await tipoPeriodicidadBcp.ObtenerVigentes(transaction)).ToDictionary(p => p.Id, p => p);
 
 				foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
@@ -66,7 +66,7 @@ namespace TanatosAPI.UseCases {
 		}
 
 		public async Task IncluirCategoriaNorma(List<NormaSuscrita> normasSuscritas, NpgsqlTransaction? transaction = null) {
-			if (normasSuscritas.Count > 0) {
+			if (normasSuscritas.Any(o => o.IdCategoriaNorma != null || o.TemplateNorma?.IdCategoriaNorma != null)) {
 				Dictionary<long, CategoriaNorma> categorias = (await categoriaNormaBcp.ObtenerVigentes(transaction)).ToDictionary(p => p.Id, p => p);
 
 				foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
@@ -86,7 +86,7 @@ namespace TanatosAPI.UseCases {
 		}
 
 		public async Task IncluirCargo(List<NormaSuscrita> normasSuscritas, NpgsqlTransaction? transaction = null) {
-			if (normasSuscritas.Count > 0) {
+			if (normasSuscritas.Any(o => o.IdCargo != null)) {
 				Dictionary<(string sub, long idNegocio), Dictionary<long, Cargo>> cargos = [];
 				foreach ((string sub, long idNegocio) in normasSuscritas.Select(ns => (ns.Sub, ns.IdNegocio)).ToHashSet()) {
 					cargos[(sub, idNegocio)] = (await cargoBcp.ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigente: true, transaction: transaction)).ToDictionary(p => p.Id, p => p);
