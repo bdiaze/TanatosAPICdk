@@ -484,7 +484,7 @@ namespace TanatosAPI.Test.Business {
 
         [Fact]
         public async Task ReversarProcesosTest() {
-            await normaSuscritaBcp.ReversarProcesos([
+            await normaSuscritaBcp.ReversarProcesosProgramadosDesprogramados([
                 new ProcesoNotificacion() {
                     IdProceso = "id-proceso-test-1",
                     IdCalendarizacion = "id-calendarizacion-test",
