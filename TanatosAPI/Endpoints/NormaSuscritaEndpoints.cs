@@ -24,6 +24,8 @@ namespace TanatosAPI.Endpoints {
 			group.MapActualizarEndpoint();
 			group.MapCompletarNormaEndpoint();
 			group.MapEliminarEndpoint();
+			group.MapActivarEndpoint();
+			group.MapDesactivarEndpoint();
 			group.MapProcesarNotificacionEndpoint();
 
 			RouteGroupBuilder publicGroup = routes.MapGroup("/public/NormaSuscrita");
@@ -567,6 +569,116 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[DELETE] - [NormaSuscrita] - [Eliminar] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error en la eliminación de la norma - ID: {id}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Obligaciones.Write.Self", "Vencimientos.Write.Self");
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapActivarEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPut("/ActivarNorma", async (EntNormaSuscritaActivarNorma entrada, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaUseCase normaSuscritaUseCase) => {
+
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+
+					(NormaSuscrita obligacion, _, _) = await normaSuscritaUseCase.ActivarNormaSuscrita(entrada.IdNormaSuscrita, sub, entrada.ProximoVencimiento);
+
+					SalNormaSuscrita retorno = new() {
+						Id = obligacion.Id,
+						Nombre = obligacion.Nombre,
+						Descripcion = obligacion.Descripcion,
+						Multa = obligacion.Multa,
+						IdTipoPeriodicidad = obligacion.IdTipoPeriodicidad,
+						IdCategoriaNorma = obligacion.IdCategoriaNorma,
+						IdCargo = obligacion.IdCargo,
+						OrdenVisual = obligacion.OrdenVisual,
+						Editable = obligacion.Editable,
+						Activado = obligacion.Activado,
+						TemplateNorma = (obligacion.TemplateNorma == null) ? null : new SalTemplateNorma() {
+							IdTemplate = obligacion.TemplateNorma!.Template!.Id,
+							NombreTemplate = obligacion.TemplateNorma!.Template!.Nombre,
+							Nombre = obligacion.TemplateNorma!.Nombre,
+							Descripcion = obligacion.TemplateNorma!.Descripcion,
+							Multa = obligacion.TemplateNorma!.Multa,
+							IdTipoPeriodicidad = obligacion.TemplateNorma!.IdTipoPeriodicidad,
+							IdCategoriaNorma = obligacion.TemplateNorma!.IdCategoriaNorma,
+						},
+						ProximoVencimiento = obligacion.HistorialesNormaSuscrita?.FirstOrDefault()?.FechaVencimiento
+					};
+
+					LambdaLogger.Log(
+						$"[PUT] - [NormaSuscrita] - [ActivarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Se activa exitosamente la norma suscrita - ID Norma Suscrita: {entrada.IdNormaSuscrita}.");
+					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [NormaSuscrita] - [ActivarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación al activar la norma suscrita - ID Norma Suscrita: {entrada.IdNormaSuscrita}. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [NormaSuscrita] - [ActivarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al activar la norma suscrita - ID Norma Suscrita: {entrada.IdNormaSuscrita}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Obligaciones.Write.Self", "Vencimientos.Write.Self");
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapDesactivarEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPut("/DesactivarNorma", async (EntNormaSuscritaDesactivarNorma entrada, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaUseCase normaSuscritaUseCase) => {
+
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+
+					(NormaSuscrita obligacion, _, _) = await normaSuscritaUseCase.DesactivarNormaSuscrita(entrada.IdNormaSuscrita, sub);
+
+					SalNormaSuscrita retorno = new() {
+						Id = obligacion.Id,
+						Nombre = obligacion.Nombre,
+						Descripcion = obligacion.Descripcion,
+						Multa = obligacion.Multa,
+						IdTipoPeriodicidad = obligacion.IdTipoPeriodicidad,
+						IdCategoriaNorma = obligacion.IdCategoriaNorma,
+						IdCargo = obligacion.IdCargo,
+						OrdenVisual = obligacion.OrdenVisual,
+						Editable = obligacion.Editable,
+						Activado = obligacion.Activado,
+						TemplateNorma = (obligacion.TemplateNorma == null) ? null : new SalTemplateNorma() {
+							IdTemplate = obligacion.TemplateNorma!.Template!.Id,
+							NombreTemplate = obligacion.TemplateNorma!.Template!.Nombre,
+							Nombre = obligacion.TemplateNorma!.Nombre,
+							Descripcion = obligacion.TemplateNorma!.Descripcion,
+							Multa = obligacion.TemplateNorma!.Multa,
+							IdTipoPeriodicidad = obligacion.TemplateNorma!.IdTipoPeriodicidad,
+							IdCategoriaNorma = obligacion.TemplateNorma!.IdCategoriaNorma,
+						},
+						ProximoVencimiento = obligacion.HistorialesNormaSuscrita?.FirstOrDefault()?.FechaVencimiento
+					};
+
+					LambdaLogger.Log(
+						$"[PUT] - [NormaSuscrita] - [DesactivarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Se desactiva exitosamente la norma suscrita - ID Norma Suscrita: {entrada.IdNormaSuscrita}.");
+					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [NormaSuscrita] - [DesactivarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación al desactivar la norma suscrita - ID Norma Suscrita: {entrada.IdNormaSuscrita}. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [NormaSuscrita] - [DesactivarNorma] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al desactivar la norma suscrita - ID Norma Suscrita: {entrada.IdNormaSuscrita}. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
