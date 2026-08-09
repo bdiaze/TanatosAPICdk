@@ -199,8 +199,8 @@ namespace TanatosAPI.Endpoints {
 						TipoPeriodicidad? periodicidad = normaSuscrita.TipoPeriodicidad ?? normaSuscrita.TemplateNorma?.TipoPeriodicidad;
 						CategoriaNorma? categoriaNorma = normaSuscrita.CategoriaNorma ?? normaSuscrita.TemplateNorma?.CategoriaNorma;
 
-						if (normaSuscrita.HistorialesNormaSuscrita == null || normaSuscrita.HistorialesNormaSuscrita.Count == 0) {
-							return [ new SalNormaSuscritaObtenerConVencimiento {
+						List<SalNormaSuscritaObtenerConVencimiento> vencimientos = [ 
+							new SalNormaSuscritaObtenerConVencimiento {
 								FechaVencimiento = null,
 								FechaCompletitud = null,
 								IdTemplate = normaSuscrita.TemplateNorma?.IdTemplate,
@@ -217,10 +217,11 @@ namespace TanatosAPI.Endpoints {
 								NombreCategoriaNorma = categoriaNorma?.NombreCorto ?? categoriaNorma?.Nombre,
 								IdCargo = normaSuscrita.Cargo?.Id,
 								NombreCargo = normaSuscrita.Cargo?.Nombre,
-							}];
-						}
+								Activado = normaSuscrita.Activado
+							}
+						];
 
-						return (normaSuscrita.HistorialesNormaSuscrita ?? []).Select(historialNormaSuscrita => new SalNormaSuscritaObtenerConVencimiento {
+						vencimientos.AddRange((normaSuscrita.HistorialesNormaSuscrita ?? []).Select(historialNormaSuscrita => new SalNormaSuscritaObtenerConVencimiento {
 							FechaVencimiento = historialNormaSuscrita.FechaVencimiento,
 							FechaCompletitud = historialNormaSuscrita.FechaCompletitud,
 							IdTemplate = normaSuscrita.TemplateNorma?.IdTemplate,
@@ -237,7 +238,10 @@ namespace TanatosAPI.Endpoints {
 							NombreCategoriaNorma = categoriaNorma?.NombreCorto ?? categoriaNorma?.Nombre,
 							IdCargo = normaSuscrita.Cargo?.Id,
 							NombreCargo = normaSuscrita.Cargo?.Nombre,
-						});
+							Activado = normaSuscrita.Activado
+						}));
+
+						return vencimientos;
 					})];
 
 					LambdaLogger.Log(

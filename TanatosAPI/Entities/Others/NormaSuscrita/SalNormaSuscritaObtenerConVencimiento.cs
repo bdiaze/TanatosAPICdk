@@ -19,5 +19,6 @@ namespace TanatosAPI.Entities.Others.NormaSuscrita {
 		public string? NombreTipoPeriodicidad { get; set; }
 		public long? IdCargo { get; set; }
 		public string? NombreCargo { get; set; }
+		public required bool Activado { get; set; }
 	}
 }
