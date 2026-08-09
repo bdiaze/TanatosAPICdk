@@ -621,5 +621,96 @@ namespace TanatosAPI.UseCases {
                 }
             }
         }
+
+		public async Task<(NormaSuscrita, List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados)> DesactivarNormaSuscrita(long id, string sub, IDatabaseTransaction? transaction = null) {
+			bool ownsTransaction = transaction == null;
+			IDatabaseConnection? connection = null;
+
+			List<ProcesoNotificacion> procesosProgramados = [];
+			List<ProcesoNotificacion> procesosDesprogramados = [];
+			try {
+				if (ownsTransaction) {
+					connection = await connectionHelper.ObtenerConexionWrapper();
+					transaction = await connection.BeginTransactionAsync();
+				}
+
+				NormaSuscrita obligacion = (await Obtener(id, validarVigencia: true, validarSub: sub, incluirTemplate: true, transaction: transaction!.NpgsqlTransaction()))!;
+				if (normaSuscritaBcp.EstaActiva(obligacion)) {
+					await normaSuscritaBcp.Desactivar(obligacion, transaction!.NpgsqlTransaction()); 
+					await historialNormaSuscritaUseCase.EliminarPorNormaSuscrita(obligacion.Id, false, transaction!.NpgsqlTransaction());
+					obligacion.HistorialesNormaSuscrita = [];
+					(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction!.NpgsqlTransaction());
+				}
+
+				if (ownsTransaction) {
+					await transaction!.CommitAsync();
+				}
+
+				return (obligacion, procesosProgramados, procesosDesprogramados);
+			} catch {
+				if (ownsTransaction && transaction != null) {
+					await transaction.RollbackAsync();
+					await ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
+				}
+				throw;
+			} finally {
+				if (ownsTransaction) {
+					if (transaction != null) await transaction.DisposeAsync();
+					if (connection != null) await connection.DisposeAsync();
+				}
+			}
+		}
+
+		public async Task<(NormaSuscrita, List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados)> ActivarNormaSuscrita(long id, string sub, DateTime proximoVencimiento, IDatabaseTransaction? transaction = null) {
+			bool ownsTransaction = transaction == null;
+			IDatabaseConnection? connection = null;
+
+			List<ProcesoNotificacion> procesosProgramados = [];
+			List<ProcesoNotificacion> procesosDesprogramados = [];
+			try {
+				if (ownsTransaction) {
+					connection = await connectionHelper.ObtenerConexionWrapper();
+					transaction = await connection.BeginTransactionAsync();
+				}
+
+				NormaSuscrita obligacion = (await Obtener(id, validarVigencia: true, validarSub: sub, incluirTemplate: true, transaction: transaction!.NpgsqlTransaction()))!;
+				if (!normaSuscritaBcp.EstaActiva(obligacion)) {
+					TipoPeriodicidad periodicidad = await tipoPeriodicidadBcp.ObtenerValidandoVigencia(obligacion.IdTipoPeriodicidad ?? obligacion.TemplateNorma?.IdTipoPeriodicidad, transaction!.NpgsqlTransaction());
+
+					// Se modifica próximo vencimiento si es una fecha pasada y según periodicidad es posible calcular un próximo vencimiento...
+					if (proximoVencimiento <= dateTimeProvider.UtcNow) {
+						if (periodicidad.DeltaDias != null || periodicidad.DeltaMeses != null || periodicidad.DeltaAnnos != null) {
+							proximoVencimiento = historialNormaSuscritaUseCase.CalcularVencimientoFuturo(proximoVencimiento, periodicidad);
+						}
+					}
+
+					if (proximoVencimiento <= dateTimeProvider.UtcNow) {
+						throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "El próximo vencimiento debe ser una fecha futura.");
+					}
+
+					await normaSuscritaBcp.Activar(obligacion, transaction!.NpgsqlTransaction());					
+					obligacion.HistorialesNormaSuscrita = [];
+					obligacion.HistorialesNormaSuscrita.Add(await historialNormaSuscritaBcp.Crear(obligacion.Id, proximoVencimiento, transaction!.NpgsqlTransaction()));
+					(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction!.NpgsqlTransaction());
+				}
+
+				if (ownsTransaction) {
+					await transaction!.CommitAsync();
+				}
+
+				return (obligacion, procesosProgramados, procesosDesprogramados);
+			} catch {
+				if (ownsTransaction && transaction != null) {
+					await transaction.RollbackAsync();
+					await ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
+				}
+				throw;
+			} finally {
+				if (ownsTransaction) {
+					if (transaction != null) await transaction.DisposeAsync();
+					if (connection != null) await connection.DisposeAsync();
+				}
+			}
+		}
 	}
 }

@@ -2018,6 +2018,162 @@ namespace TanatosAPI.Test.UseCases {
 			await transaction.Received(1).DisposeAsync();
 			await connection.Received(1).DisposeAsync();
 		}
+
+		[Fact]
+		public async Task DesactivarNormaSuscritaTest() {
+			normaSuscritaBcp.Obtener(999, validarVigencia: true, validarSub: "sub-test", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idTemplate: null, idNorma: null, activado: true)
+			);
+			normaSuscritaBcp.EstaActiva(Arg.Any<NormaSuscrita>()).Returns(true);
+
+			// Para ActualizarProgramacionProcesosNormaSuscrita
+			normaSuscritaBcp.Obtener(999, transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, sub: "sub-test", idTemplate: null, idNorma: null, activado: false)
+			);
+			normaSuscritaBcp.ActualizarProcesosCronProgramados(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>()).Returns(
+				([], [])
+			);
+			normaSuscritaBcp.ActualizarProcesosFrecuenciaDiasProgramados(Arg.Any<NormaSuscrita>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>()).Returns(
+				([], [])
+			);
+
+			(NormaSuscrita obligacion, List<ProcesoNotificacion> programados, List<ProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.DesactivarNormaSuscrita(999, "sub-test");
+			Assert.NotNull(retorno.obligacion.HistorialesNormaSuscrita);
+			Assert.Empty(retorno.obligacion.HistorialesNormaSuscrita);
+			await connectionHelper.Received(1).ObtenerConexionWrapper();
+			await connection.Received(1).BeginTransactionAsync();
+			await normaSuscritaBcp.Received(1).Desactivar(Arg.Any<NormaSuscrita>(), Arg.Any<NpgsqlTransaction?>());
+			await historialNormaSuscritaUseCase.Received(1).EliminarPorNormaSuscrita(999, false, Arg.Any<NpgsqlTransaction>());
+			await transaction.Received(1).CommitAsync();
+			await transaction.DidNotReceive().RollbackAsync();
+			await transaction.Received(1).DisposeAsync();
+			await connection.Received(1).DisposeAsync();
+		}
+
+		[Fact]
+		public async Task DesactivarNormaSuscritaTest_Rollback() {
+			normaSuscritaBcp.Obtener(999, validarVigencia: true, validarSub: "sub-test", transaction: Arg.Any<NpgsqlTransaction?>()).ThrowsAsync<Exception>();
+
+			await Assert.ThrowsAsync<Exception>(() => normaSuscritaUseCase.DesactivarNormaSuscrita(999, "sub-test"));
+
+			await connectionHelper.Received(1).ObtenerConexionWrapper();
+			await connection.Received(1).BeginTransactionAsync();
+			await transaction.DidNotReceive().CommitAsync();
+			await transaction.Received(1).RollbackAsync();
+			await transaction.Received(1).DisposeAsync();
+			await connection.Received(1).DisposeAsync();
+		}
+
+		[Fact]
+		public async Task ActivarNormaSuscritaTest() {
+			normaSuscritaBcp.Obtener(999, validarVigencia: true, validarSub: "sub-test", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idTemplate: null, idNorma: null, idTipoPeriodicidad: 1, activado: false)
+			);
+			normaSuscritaBcp.EstaActiva(Arg.Any<NormaSuscrita>()).Returns(false);
+			tipoPeriodicidadBcp.ObtenerValidandoVigencia(1, Arg.Any<NpgsqlTransaction?>()).Returns(
+				TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 1, deltaDias: 1)	
+			);
+			historialNormaSuscritaBcp.Crear(999, FECHA_DUMMY.AddDays(14), Arg.Any<NpgsqlTransaction?>()).Returns(
+				HistorialNormaSuscritaBcpTest.HistorialNormaSuscritaDummy(id: 10_000, idNormaSuscrita: 999, fechaVencimiento: FECHA_DUMMY.AddDays(14))	
+			);
+
+			// Para ActualizarProgramacionProcesosNormaSuscrita
+			normaSuscritaBcp.Obtener(999, transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, sub: "sub-test", idTemplate: null, idNorma: null, activado: true)
+			);
+			normaSuscritaBcp.ActualizarProcesosCronProgramados(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>()).Returns(
+				([], [])
+			);
+			normaSuscritaBcp.ActualizarProcesosFrecuenciaDiasProgramados(Arg.Any<NormaSuscrita>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>()).Returns(
+				([], [])
+			);
+
+			(NormaSuscrita obligacion, List<ProcesoNotificacion> programados, List<ProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActivarNormaSuscrita(999, "sub-test", FECHA_DUMMY.AddDays(14));
+			Assert.NotNull(retorno.obligacion.HistorialesNormaSuscrita);
+			Assert.Single(retorno.obligacion.HistorialesNormaSuscrita);
+			Assert.Equal(FECHA_DUMMY.AddDays(14), retorno.obligacion.HistorialesNormaSuscrita.FirstOrDefault()?.FechaVencimiento);
+			await connectionHelper.Received(1).ObtenerConexionWrapper();
+			await connection.Received(1).BeginTransactionAsync();
+			await normaSuscritaBcp.Received(1).Activar(Arg.Any<NormaSuscrita>(), Arg.Any<NpgsqlTransaction?>());
+			await historialNormaSuscritaBcp.Received(1).Crear(999, FECHA_DUMMY.AddDays(14), Arg.Any<NpgsqlTransaction>());
+			await transaction.Received(1).CommitAsync();
+			await transaction.DidNotReceive().RollbackAsync();
+			await transaction.Received(1).DisposeAsync();
+			await connection.Received(1).DisposeAsync();
+		}
+
+		[Fact]
+		public async Task ActivarNormaSuscritaTest_ProximoVencimientoPasado() {
+			normaSuscritaBcp.Obtener(999, validarVigencia: true, validarSub: "sub-test", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idTemplate: null, idNorma: null, idTipoPeriodicidad: 1, activado: false)
+			);
+			normaSuscritaBcp.EstaActiva(Arg.Any<NormaSuscrita>()).Returns(false);
+			tipoPeriodicidadBcp.ObtenerValidandoVigencia(1, Arg.Any<NpgsqlTransaction?>()).Returns(
+				TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 1, deltaDias: 1)
+			);
+			historialNormaSuscritaUseCase.CalcularVencimientoFuturo(FECHA_DUMMY.AddDays(-1), Arg.Any<TipoPeriodicidad>()).Returns(FECHA_DUMMY.AddDays(14));
+			historialNormaSuscritaBcp.Crear(999, FECHA_DUMMY.AddDays(14), Arg.Any<NpgsqlTransaction?>()).Returns(
+				HistorialNormaSuscritaBcpTest.HistorialNormaSuscritaDummy(id: 10_000, idNormaSuscrita: 999, fechaVencimiento: FECHA_DUMMY.AddDays(14))
+			);
+
+			// Para ActualizarProgramacionProcesosNormaSuscrita
+			normaSuscritaBcp.Obtener(999, transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, sub: "sub-test", idTemplate: null, idNorma: null, activado: true)
+			);
+			normaSuscritaBcp.ActualizarProcesosCronProgramados(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>()).Returns(
+				([], [])
+			);
+			normaSuscritaBcp.ActualizarProcesosFrecuenciaDiasProgramados(Arg.Any<NormaSuscrita>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>()).Returns(
+				([], [])
+			);
+
+			(NormaSuscrita obligacion, List<ProcesoNotificacion> programados, List<ProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActivarNormaSuscrita(999, "sub-test", FECHA_DUMMY.AddDays(-1));
+			Assert.NotNull(retorno.obligacion.HistorialesNormaSuscrita);
+			Assert.Single(retorno.obligacion.HistorialesNormaSuscrita);
+			Assert.Equal(FECHA_DUMMY.AddDays(14), retorno.obligacion.HistorialesNormaSuscrita.FirstOrDefault()?.FechaVencimiento);
+			await connectionHelper.Received(1).ObtenerConexionWrapper();
+			await connection.Received(1).BeginTransactionAsync();
+			await normaSuscritaBcp.Received(1).Activar(Arg.Any<NormaSuscrita>(), Arg.Any<NpgsqlTransaction?>());
+			await historialNormaSuscritaBcp.Received(1).Crear(999, FECHA_DUMMY.AddDays(14), Arg.Any<NpgsqlTransaction>());
+			await transaction.Received(1).CommitAsync();
+			await transaction.DidNotReceive().RollbackAsync();
+			await transaction.Received(1).DisposeAsync();
+			await connection.Received(1).DisposeAsync();
+		}
+
+		[Fact]
+		public async Task ActivarNormaSuscritaTest_Rollback() {
+			normaSuscritaBcp.Obtener(999, validarVigencia: true, validarSub: "sub-test", transaction: Arg.Any<NpgsqlTransaction?>()).ThrowsAsync<Exception>();
+
+			await Assert.ThrowsAsync<Exception>(() => normaSuscritaUseCase.ActivarNormaSuscrita(999, "sub-test", FECHA_DUMMY.AddDays(14)));
+			await connectionHelper.Received(1).ObtenerConexionWrapper();
+			await connection.Received(1).BeginTransactionAsync();
+			await transaction.DidNotReceive().CommitAsync();
+			await transaction.Received(1).RollbackAsync();
+			await transaction.Received(1).DisposeAsync();
+			await connection.Received(1).DisposeAsync();
+		}
+
+		[Fact]
+		public async Task ActivarNormaSuscritaTest_ProximoVencimientoPasadoSinDeltas() {
+			normaSuscritaBcp.Obtener(999, validarVigencia: true, validarSub: "sub-test", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idTemplate: null, idNorma: null, idTipoPeriodicidad: 1, activado: false)
+			);
+			normaSuscritaBcp.EstaActiva(Arg.Any<NormaSuscrita>()).Returns(false);
+			tipoPeriodicidadBcp.ObtenerValidandoVigencia(1, Arg.Any<NpgsqlTransaction?>()).Returns(
+				TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 1, deltaDias: null, deltaMeses: null, deltaAnnos: null)
+			);
+
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => normaSuscritaUseCase.ActivarNormaSuscrita(999, "sub-test", FECHA_DUMMY.AddDays(-1)));
+			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
+
+			await connectionHelper.Received(1).ObtenerConexionWrapper();
+			await connection.Received(1).BeginTransactionAsync();
+			await transaction.DidNotReceive().CommitAsync();
+			await transaction.Received(1).RollbackAsync();
+			await transaction.Received(1).DisposeAsync();
+			await connection.Received(1).DisposeAsync();
+		}
 	}
 }
 
