@@ -9,14 +9,10 @@ namespace TanatosAPI.Business {
 			return template != null && template.Vigencia;
 		}
 
-		public async Task<Template?> Obtener(long idTemplate, NpgsqlTransaction? transaction = null) {
-			return await templateDao.ObtenerPorId(idTemplate, transaction);
-		}
-
-		public async Task<Template?> ObtenerSoloVigente(long idTemplate, NpgsqlTransaction? transaction = null) {
-			Template? template = await Obtener(idTemplate, transaction);
-			if (EstaVigente(template)) return template;
-			return null;
+		public async Task<Template?> Obtener(long idTemplate, bool filtrarVigente = false, NpgsqlTransaction? transaction = null) {
+			Template? template = await templateDao.ObtenerPorId(idTemplate, transaction);			
+			if (filtrarVigente && !EstaVigente(template)) return null;			
+			return template;
 		}
 
 		public async Task<List<Template>> ObtenerVigentes(NpgsqlTransaction? transaction = null) {

@@ -10,7 +10,7 @@ namespace TanatosAPI.Business {
             return tipoUnidadTiempo != null && tipoUnidadTiempo.Vigencia;
         }
 
-        public async Task<List<TipoUnidadTiempo>> ValidarTodosVigentes(HashSet<long> ids, NpgsqlTransaction? transaction = null) {
+		public async Task<List<TipoUnidadTiempo>> ValidarTodosVigentes(HashSet<long> ids, NpgsqlTransaction? transaction = null) {
             if (ids.Count == 0) return [];
 
             List<TipoUnidadTiempo> vigentes = await ObtenerVigentes(transaction);
