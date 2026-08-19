@@ -123,13 +123,7 @@ namespace TanatosAPI.Entities.Models {
         
 		[JsonPropertyName("Parametros")]
         public required string Parametros { get; set; }
-        
-		[JsonPropertyName("Habilitado")]
-        public required bool Habilitado { get; set; }
-        
-		[JsonPropertyName("FechaCreacion")]
-        public required DateTime FechaCreacion { get; set; }
-        
+                
 		[JsonPropertyName("Cron")]
         public string? Cron { get; set; }
         

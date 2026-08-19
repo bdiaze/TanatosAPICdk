@@ -31,9 +31,7 @@ namespace TanatosAPI.Test.Helpers {
 						Nombre = "nombre-test",
 						ArnRol = "arn-rol-test",
 						ArnProceso = "arn-proceso-test",
-						Parametros = "parametros-test",
-						Habilitado = true,
-						FechaCreacion = FECHA_DUMMY,
+						Parametros = "parametros-test"
 					}),
 					Encoding.UTF8,
 					"application/json"
@@ -45,8 +43,7 @@ namespace TanatosAPI.Test.Helpers {
 				Cron = "cron-test",
 				ArnRol = "arn-rol-test",
 				ArnProceso = "arn-proceso-test",
-				Parametros = "parametros-test",
-				Habilitado = true
+				Parametros = "parametros-test"
 			});
 			Assert.Equal("id-proceso-test", retorno.IdProceso);
 			Assert.Equal("id-calendarizacion-test", retorno.IdCalendarizacion);
@@ -54,8 +51,6 @@ namespace TanatosAPI.Test.Helpers {
 			Assert.Equal("arn-rol-test", retorno.ArnRol);
 			Assert.Equal("arn-proceso-test", retorno.ArnProceso);
 			Assert.Equal("parametros-test", retorno.Parametros);
-			Assert.True(retorno.Habilitado);
-			Assert.Equal(FECHA_DUMMY, retorno.FechaCreacion);
 			await httpClient.Received(1).PostAsync("Procesos", Arg.Any<StringContent>());
 		}
 
@@ -70,8 +65,7 @@ namespace TanatosAPI.Test.Helpers {
 				Cron = "cron-test",
 				ArnRol = "arn-rol-test",
 				ArnProceso = "arn-proceso-test",
-				Parametros = "parametros-test",
-				Habilitado = true
+				Parametros = "parametros-test"
 			}));
 			await httpClient.Received(1).PostAsync("Procesos", Arg.Any<StringContent>());
 		}

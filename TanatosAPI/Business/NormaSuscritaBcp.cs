@@ -159,8 +159,7 @@ namespace TanatosAPI.Business {
 				InicioEjecucionUtc = p.InicioEjecucionUtc,
 				ArnRol = p.ArnRol,
 				ArnProceso = p.ArnProceso,
-				Parametros = p.Parametros,
-				Habilitado = p.Habilitado
+				Parametros = p.Parametros
 			})]);
             await DesprogramarVariosProcesosNotificacion([.. procesosProgramados.Select(p => p.IdProceso)]);
         }
@@ -226,8 +225,7 @@ namespace TanatosAPI.Business {
 						Cron = crear.Cron,
 						Parametros = JsonSerializer.Serialize(parametros, AppJsonSerializerContext.Default.EntKairosParametrosProceso),
 						ArnProceso = variableEntornoHelper.Obtener("NOTIFICACIONES_LAMBDA_ARN"),
-						ArnRol = variableEntornoHelper.Obtener("NOTIFICACIONES_EJECUCION_ROLE_ARN"),
-						Habilitado = true,
+						ArnRol = variableEntornoHelper.Obtener("NOTIFICACIONES_EJECUCION_ROLE_ARN")
 					});
 					ProcesoNotificacion proceso = new() { 
 						IdProceso = retorno.IdProceso,
@@ -236,8 +234,6 @@ namespace TanatosAPI.Business {
 						ArnRol = retorno.ArnRol,
 						ArnProceso = retorno.ArnProceso,
 						Parametros = retorno.Parametros,
-						Habilitado = retorno.Habilitado,
-						FechaCreacion = retorno.FechaCreacion,
 						Cron = crear.Cron
 					};
 					procesosProgramados.Add(proceso);
@@ -317,8 +313,7 @@ namespace TanatosAPI.Business {
 						InicioEjecucionUtc = crear.InicioEjecucionUtc,
                         Parametros = JsonSerializer.Serialize(parametros, AppJsonSerializerContext.Default.EntKairosParametrosProceso),
                         ArnProceso = variableEntornoHelper.Obtener("NOTIFICACIONES_LAMBDA_ARN"),
-                        ArnRol = variableEntornoHelper.Obtener("NOTIFICACIONES_EJECUCION_ROLE_ARN"),
-                        Habilitado = true,
+                        ArnRol = variableEntornoHelper.Obtener("NOTIFICACIONES_EJECUCION_ROLE_ARN")
                     });
                     ProcesoNotificacion proceso = new() {
                         IdProceso = retorno.IdProceso,
@@ -327,8 +322,6 @@ namespace TanatosAPI.Business {
                         ArnRol = retorno.ArnRol,
                         ArnProceso = retorno.ArnProceso,
                         Parametros = retorno.Parametros,
-                        Habilitado = retorno.Habilitado,
-                        FechaCreacion = retorno.FechaCreacion,
 						FrecuenciaDias = crear.FrecuenciaDias,
 						InicioEjecucionUtc = crear.InicioEjecucionUtc
                     };

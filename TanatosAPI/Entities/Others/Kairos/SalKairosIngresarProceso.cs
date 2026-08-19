@@ -9,7 +9,5 @@ namespace TanatosAPI.Entities.Others.Kairos {
 		public required string ArnRol { get; set; }
 		public required string ArnProceso { get; set; }
 		public required string Parametros { get; set; }
-		public required bool Habilitado { get; set; }
-		public required DateTime FechaCreacion { get; set; }
 	}
 }

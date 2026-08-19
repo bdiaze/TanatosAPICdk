@@ -99,8 +99,6 @@ namespace TanatosAPI.Test.Business {
 			ArnRol = arnRol,
 			ArnProceso = arnProceso,
 			Parametros = parametros == null ? "parametros-test-1" : JsonSerializer.Serialize(parametros),
-			Habilitado = habilitado,
-			FechaCreacion = fechaCreacion ?? FECHA_DUMMY,
 			Cron = cron,
 			FrecuenciaDias = frecuenciaDias,
 			InicioEjecucionUtc = inicioEjecucionUtc
@@ -424,16 +422,14 @@ namespace TanatosAPI.Test.Business {
 				Cron = "cron-test",
 				ArnRol = "arn-rol-test",
 				ArnProceso = "arn-proceso-test",
-				Parametros = "parametros-test",
-				Habilitado = true
+				Parametros = "parametros-test"
 			});
             await kairosHelper.Received(1).IngresarProceso(Arg.Is<EntKairosIngresarProceso>(p => 
                 p.Nombre == "nombre-test" &&
                 p.Cron == "cron-test" &&
                 p.ArnRol == "arn-rol-test" &&
                 p.ArnProceso == "arn-proceso-test" &&
-                p.Parametros == "parametros-test" &&
-                p.Habilitado == true
+                p.Parametros == "parametros-test"
 
             ));
         }
@@ -446,16 +442,14 @@ namespace TanatosAPI.Test.Business {
 				    Cron = "cron-test",
 				    ArnRol = "arn-rol-test",
 				    ArnProceso = "arn-proceso-test",
-				    Parametros = "parametros-test",
-				    Habilitado = true
+				    Parametros = "parametros-test"
 			    },
 				new EntKairosIngresarProceso {
 					Nombre = "nombre-test-2",
 					Cron = "cron-test",
 					ArnRol = "arn-rol-test",
 					ArnProceso = "arn-proceso-test",
-					Parametros = "parametros-test",
-					Habilitado = true
+					Parametros = "parametros-test"
 				},
 			]);
 			await kairosHelper.Received(2).IngresarProceso(Arg.Is<EntKairosIngresarProceso>(p =>
@@ -463,8 +457,7 @@ namespace TanatosAPI.Test.Business {
 				p.Cron == "cron-test" &&
 				p.ArnRol == "arn-rol-test" &&
 				p.ArnProceso == "arn-proceso-test" &&
-				p.Parametros == "parametros-test" &&
-				p.Habilitado == true
+				p.Parametros == "parametros-test"
 			));
 		}
 
@@ -493,8 +486,6 @@ namespace TanatosAPI.Test.Business {
                     ArnRol = "arn-rol-test",
                     ArnProceso = "arn-proceso-test",
                     Parametros = "parametros-test",
-                    Habilitado = true,
-                    FechaCreacion = FECHA_DUMMY,
                     Cron = "cron-test"
 				}
             ], [
@@ -505,8 +496,6 @@ namespace TanatosAPI.Test.Business {
 					ArnRol = "arn-rol-test",
 					ArnProceso = "arn-proceso-test",
 					Parametros = "parametros-test",
-					Habilitado = true,
-					FechaCreacion = FECHA_DUMMY,
 					Cron = "cron-test"
 				}
 			]);
@@ -515,8 +504,7 @@ namespace TanatosAPI.Test.Business {
 				p.Cron == "cron-test" &&
 				p.ArnRol == "arn-rol-test" &&
 				p.ArnProceso == "arn-proceso-test" &&
-				p.Parametros == "parametros-test" &&
-				p.Habilitado == true
+				p.Parametros == "parametros-test"
 			));
 			await kairosHelper.Received(1).EliminarProceso(Arg.Is<string>(s => s == "id-proceso-test-1"));
 		}
@@ -601,9 +589,7 @@ namespace TanatosAPI.Test.Business {
                     CantAntelacion = 2,
                     EsVencimiento = false,
                     ProgramarSiguienteEjecucion = false
-                }),
-                FechaCreacion = FECHA_DUMMY,
-                Habilitado = true
+                })
 			});
 
 			NormaSuscrita normaSuscrita = NormaSuscritaDummy(id: 100);
@@ -647,8 +633,7 @@ namespace TanatosAPI.Test.Business {
 				p.Nombre.EndsWith($"Cron 0 11 15 * ? *") &&
 				p.Cron == "0 11 15 * ? *" &&
 				p.ArnRol == "arn-rol-test" &&
-				p.ArnProceso == "arn-proceso-test" &&
-				p.Habilitado == true
+				p.ArnProceso == "arn-proceso-test"
 			));
 			await kairosHelper.Received(1).EliminarProceso(Arg.Any<string>());
 			await kairosHelper.Received(1).EliminarProceso(Arg.Is<string>(s => s == "id-proceso-test-2"));
@@ -755,9 +740,7 @@ namespace TanatosAPI.Test.Business {
 					CantAntelacion = 2,
 					EsVencimiento = false,
 					ProgramarSiguienteEjecucion = false
-				}),
-				FechaCreacion = FECHA_DUMMY,
-				Habilitado = true
+				})
 			});
 
 			NormaSuscrita normaSuscrita = NormaSuscritaDummy(id: 100);
@@ -806,8 +789,7 @@ namespace TanatosAPI.Test.Business {
 				p.FrecuenciaDias == 14 &&
 				p.InicioEjecucionUtc == FECHA_DUMMY.AddHours(-2) &&
 				p.ArnRol == "arn-rol-test" &&
-				p.ArnProceso == "arn-proceso-test" &&
-				p.Habilitado == true
+				p.ArnProceso == "arn-proceso-test"
 			));
 			await kairosHelper.Received(1).EliminarProceso(Arg.Any<string>());
 			await kairosHelper.Received(1).EliminarProceso(Arg.Is<string>(s => s == "id-proceso-test-2"));
