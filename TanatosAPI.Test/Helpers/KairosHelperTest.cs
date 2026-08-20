@@ -31,7 +31,10 @@ namespace TanatosAPI.Test.Helpers {
 						Nombre = "nombre-test",
 						ArnRol = "arn-rol-test",
 						ArnProceso = "arn-proceso-test",
-						Parametros = "parametros-test"
+						Parametros = "parametros-test",
+						Cron = "cron-test",
+						FrecuenciaDias = null,
+						InicioEjecucionUtc = null
 					}),
 					Encoding.UTF8,
 					"application/json"

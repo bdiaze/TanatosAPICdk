@@ -416,25 +416,6 @@ namespace TanatosAPI.Test.Business {
 		}
 
         [Fact]
-        public async Task ProgramarUnProcesoNotificacionTest() {
-            await normaSuscritaBcp.ProgramarUnProcesoNotificacion(new EntKairosIngresarProceso {
-				Nombre = "nombre-test",
-				Cron = "cron-test",
-				ArnRol = "arn-rol-test",
-				ArnProceso = "arn-proceso-test",
-				Parametros = "parametros-test"
-			});
-            await kairosHelper.Received(1).IngresarProceso(Arg.Is<EntKairosIngresarProceso>(p => 
-                p.Nombre == "nombre-test" &&
-                p.Cron == "cron-test" &&
-                p.ArnRol == "arn-rol-test" &&
-                p.ArnProceso == "arn-proceso-test" &&
-                p.Parametros == "parametros-test"
-
-            ));
-        }
-
-        [Fact]
         public async Task ProgramarVariosProcesosNotificacionTest() {
             await normaSuscritaBcp.ProgramarVariosProcesosNotificacion([
 				new EntKairosIngresarProceso {
@@ -452,20 +433,16 @@ namespace TanatosAPI.Test.Business {
 					Parametros = "parametros-test"
 				},
 			]);
-			await kairosHelper.Received(2).IngresarProceso(Arg.Is<EntKairosIngresarProceso>(p =>
-				(p.Nombre == "nombre-test" || p.Nombre == "nombre-test-2") &&
-				p.Cron == "cron-test" &&
-				p.ArnRol == "arn-rol-test" &&
-				p.ArnProceso == "arn-proceso-test" &&
-				p.Parametros == "parametros-test"
+			await kairosHelper.Received(1).IngresarVariosProcesos(Arg.Is<List<EntKairosIngresarProceso>>(p =>
+				p.Count == 2 &&
+				p.First().Nombre == "nombre-test" &&
+				p.Last().Nombre == "nombre-test-2" &&
+				p.First().Cron == "cron-test" &&
+				p.First().ArnRol == "arn-rol-test" &&
+				p.First().ArnProceso == "arn-proceso-test" &&
+				p.First().Parametros == "parametros-test"
 			));
 		}
-
-        [Fact]
-        public async Task DesprogramarUnProcesoNotificacion() {
-            await normaSuscritaBcp.DesprogramarUnProcesoNotificacion("id-proceso-test");
-            await kairosHelper.Received(1).EliminarProceso("id-proceso-test");
-        }
 
 		[Fact]
 		public async Task DesprogramarVariosProcesosNotificacion() {
@@ -473,7 +450,7 @@ namespace TanatosAPI.Test.Business {
 				"id-proceso-test",
 				"id-proceso-test-2"
 			]);
-			await kairosHelper.Received(2).EliminarProceso(Arg.Is<string>(s => s == "id-proceso-test" || s == "id-proceso-test-2"));
+			await kairosHelper.Received(1).EliminarVariosProcesos(Arg.Is<List<string>>(s => s.Count == 2 && s.First() == "id-proceso-test" && s.Last() == "id-proceso-test-2"));
 		}
 
         [Fact]
@@ -499,14 +476,15 @@ namespace TanatosAPI.Test.Business {
 					Cron = "cron-test"
 				}
 			]);
-			await kairosHelper.Received(1).IngresarProceso(Arg.Is<EntKairosIngresarProceso>(p =>
-				p.Nombre == "nombre-test-2" &&
-				p.Cron == "cron-test" &&
-				p.ArnRol == "arn-rol-test" &&
-				p.ArnProceso == "arn-proceso-test" &&
-				p.Parametros == "parametros-test"
+			await kairosHelper.Received(1).IngresarVariosProcesos(Arg.Is<List<EntKairosIngresarProceso>>(p =>
+				p.Count == 1 &&
+				p.First().Nombre == "nombre-test-2" &&
+				p.First().Cron == "cron-test" &&
+				p.First().ArnRol == "arn-rol-test" &&
+				p.First().ArnProceso == "arn-proceso-test" &&
+				p.First().Parametros == "parametros-test"
 			));
-			await kairosHelper.Received(1).EliminarProceso(Arg.Is<string>(s => s == "id-proceso-test-1"));
+			await kairosHelper.Received(1).EliminarVariosProcesos(Arg.Is<List<string>>(s => s.Count == 1 && s.First() == "id-proceso-test-1"));
 		}
 
         [Fact]
@@ -576,21 +554,26 @@ namespace TanatosAPI.Test.Business {
             variableEntorno.Obtener("APP_NAME").Returns("app-name-test");
 			variableEntorno.Obtener("NOTIFICACIONES_LAMBDA_ARN").Returns("arn-proceso-test");
 			variableEntorno.Obtener("NOTIFICACIONES_EJECUCION_ROLE_ARN").Returns("arn-rol-test");
-            kairosHelper.IngresarProceso(Arg.Any<EntKairosIngresarProceso>()).Returns(new SalKairosIngresarProceso() {
-                IdProceso = "id-proceso-test-3",
-                IdCalendarizacion = "id-calendarizacion-test-3",
-                Nombre = "nombre-test-3",
-                ArnProceso = "arn-proceso-test",
-                ArnRol = "arn-rol-test",
-                Parametros = JsonSerializer.Serialize(new EntKairosParametrosProceso {
-                    IdNormaSuscrita = 100,
-                    Cron = "0 11 15 * ? *",
-                    IdTipoUnidadTiempoAntelacion = 1,
-                    CantAntelacion = 2,
-                    EsVencimiento = false,
-                    ProgramarSiguienteEjecucion = false
-                })
-			});
+            kairosHelper.IngresarVariosProcesos(Arg.Any<List<EntKairosIngresarProceso>>()).Returns([
+				new SalKairosIngresarProceso() {
+					IdProceso = "id-proceso-test-3",
+					IdCalendarizacion = "id-calendarizacion-test-3",
+					Nombre = "nombre-test-3",
+					ArnProceso = "arn-proceso-test",
+					ArnRol = "arn-rol-test",
+					Parametros = JsonSerializer.Serialize(new EntKairosParametrosProceso {
+						IdNormaSuscrita = 100,
+						Cron = "0 11 15 * ? *",
+						IdTipoUnidadTiempoAntelacion = 1,
+						CantAntelacion = 2,
+						EsVencimiento = false,
+						ProgramarSiguienteEjecucion = false
+					}),
+					Cron = "0 11 15 * ? *",
+					FrecuenciaDias = null,
+					InicioEjecucionUtc = null
+				},
+			]);
 
 			NormaSuscrita normaSuscrita = NormaSuscritaDummy(id: 100);
 			normaSuscrita.ProcesosNotificaciones = [
@@ -626,17 +609,16 @@ namespace TanatosAPI.Test.Business {
                 Assert.True(p.IdProceso == "id-proceso-test-1" || p.IdProceso == "id-proceso-test-3");
 				Assert.NotEqual("id-proceso-test-2", p.IdProceso);
 			});
-            await kairosHelper.Received(1).IngresarProceso(Arg.Any<EntKairosIngresarProceso>());
-			await kairosHelper.Received(1).IngresarProceso(Arg.Is<EntKairosIngresarProceso>(p =>
-			    p.Nombre.StartsWith("app-name-test - ") &&
-				p.Nombre.Contains($"- NormaSuscrita {normaSuscrita.Id} - ") &&
-				p.Nombre.EndsWith($"Cron 0 11 15 * ? *") &&
-				p.Cron == "0 11 15 * ? *" &&
-				p.ArnRol == "arn-rol-test" &&
-				p.ArnProceso == "arn-proceso-test"
+			await kairosHelper.Received(1).IngresarVariosProcesos(Arg.Is<List<EntKairosIngresarProceso>>(p =>
+				p.Count == 1 &&
+			    p.First().Nombre.StartsWith("app-name-test - ") &&
+				p.First().Nombre.Contains($"- NormaSuscrita {normaSuscrita.Id} - ") &&
+				p.First().Nombre.EndsWith($"Cron 0 11 15 * ? *") &&
+				p.First().Cron == "0 11 15 * ? *" &&
+				p.First().ArnRol == "arn-rol-test" &&
+				p.First().ArnProceso == "arn-proceso-test"
 			));
-			await kairosHelper.Received(1).EliminarProceso(Arg.Any<string>());
-			await kairosHelper.Received(1).EliminarProceso(Arg.Is<string>(s => s == "id-proceso-test-2"));
+			await kairosHelper.Received(1).EliminarVariosProcesos(Arg.Is<List<string>>(s => s.Count == 1 && s.First() == "id-proceso-test-2"));
             await normaSuscritaDao.Received(1).Actualizar(Arg.Is<NormaSuscrita>(n =>
 					n.ProcesosNotificaciones.Count == 2 &&
 					n.ProcesosNotificaciones.Any(p => p.IdProceso == "id-proceso-test-1") &&
@@ -648,6 +630,7 @@ namespace TanatosAPI.Test.Business {
 
 		[Fact]
 		public async Task ActualizarProcesosCronProgramadosTest_Rollback() {
+			kairosHelper.IngresarVariosProcesos(Arg.Any<List<EntKairosIngresarProceso>>()).Returns([]);
 			normaSuscritaDao.Actualizar(Arg.Any<NormaSuscrita>(), Arg.Any<NpgsqlTransaction?>()).ThrowsAsync<Exception>();
 
 			await Assert.ThrowsAsync<Exception>(() => normaSuscritaBcp.ActualizarProcesosCronProgramados(NormaSuscritaDummy(), []));
@@ -726,22 +709,27 @@ namespace TanatosAPI.Test.Business {
 			variableEntorno.Obtener("APP_NAME").Returns("app-name-test");
 			variableEntorno.Obtener("NOTIFICACIONES_LAMBDA_ARN").Returns("arn-proceso-test");
 			variableEntorno.Obtener("NOTIFICACIONES_EJECUCION_ROLE_ARN").Returns("arn-rol-test");
-			kairosHelper.IngresarProceso(Arg.Any<EntKairosIngresarProceso>()).Returns(new SalKairosIngresarProceso() {
-				IdProceso = "id-proceso-test-3",
-				IdCalendarizacion = "id-calendarizacion-test-3",
-				Nombre = "nombre-test-3",
-				ArnProceso = "arn-proceso-test",
-				ArnRol = "arn-rol-test",
-				Parametros = JsonSerializer.Serialize(new EntKairosParametrosProceso {
-					IdNormaSuscrita = 100,
+			kairosHelper.IngresarVariosProcesos(Arg.Any<List<EntKairosIngresarProceso>>()).Returns([
+				new SalKairosIngresarProceso() {
+					IdProceso = "id-proceso-test-3",
+					IdCalendarizacion = "id-calendarizacion-test-3",
+					Nombre = "nombre-test-3",
+					ArnProceso = "arn-proceso-test",
+					ArnRol = "arn-rol-test",
+					Parametros = JsonSerializer.Serialize(new EntKairosParametrosProceso {
+						IdNormaSuscrita = 100,
+						FrecuenciaDias = 14,
+						InicioEjecucionUtc = FECHA_DUMMY.AddHours(-2),
+						IdTipoUnidadTiempoAntelacion = 1,
+						CantAntelacion = 2,
+						EsVencimiento = false,
+						ProgramarSiguienteEjecucion = false
+					}),
+					Cron = null,
 					FrecuenciaDias = 14,
-					InicioEjecucionUtc = FECHA_DUMMY.AddHours(-2),
-					IdTipoUnidadTiempoAntelacion = 1,
-					CantAntelacion = 2,
-					EsVencimiento = false,
-					ProgramarSiguienteEjecucion = false
-				})
-			});
+					InicioEjecucionUtc = FECHA_DUMMY.AddHours(-2)
+				}
+			]);
 
 			NormaSuscrita normaSuscrita = NormaSuscritaDummy(id: 100);
 			normaSuscrita.ProcesosNotificaciones = [
@@ -780,19 +768,18 @@ namespace TanatosAPI.Test.Business {
 				Assert.True(p.IdProceso == "id-proceso-test-1" || p.IdProceso == "id-proceso-test-3");
 				Assert.NotEqual("id-proceso-test-2", p.IdProceso);
 			});
-			await kairosHelper.Received(1).IngresarProceso(Arg.Any<EntKairosIngresarProceso>());
-			await kairosHelper.Received(1).IngresarProceso(Arg.Is<EntKairosIngresarProceso>(p =>
-				p.Nombre.StartsWith("app-name-test - ") &&
-				p.Nombre.Contains($"- NormaSuscrita {normaSuscrita.Id} - ") &&
-				p.Nombre.Contains($"- Inicio {FECHA_DUMMY_CHILE.AddHours(-2):dd-MM-yyyy HH:mm} -") &&
-				p.Nombre.EndsWith($"Frecuencia 14 Días") &&
-				p.FrecuenciaDias == 14 &&
-				p.InicioEjecucionUtc == FECHA_DUMMY.AddHours(-2) &&
-				p.ArnRol == "arn-rol-test" &&
-				p.ArnProceso == "arn-proceso-test"
+			await kairosHelper.Received(1).IngresarVariosProcesos(Arg.Is<List<EntKairosIngresarProceso>>(p =>
+				p.Count == 1 &&
+				p.First().Nombre.StartsWith("app-name-test - ") &&
+				p.First().Nombre.Contains($"- NormaSuscrita {normaSuscrita.Id} - ") &&
+				p.First().Nombre.Contains($"- Inicio {FECHA_DUMMY_CHILE.AddHours(-2):dd-MM-yyyy HH:mm} -") &&
+				p.First().Nombre.EndsWith($"Frecuencia 14 Días") &&
+				p.First().FrecuenciaDias == 14 &&
+				p.First().InicioEjecucionUtc == FECHA_DUMMY.AddHours(-2) &&
+				p.First().ArnRol == "arn-rol-test" &&
+				p.First().ArnProceso == "arn-proceso-test"
 			));
-			await kairosHelper.Received(1).EliminarProceso(Arg.Any<string>());
-			await kairosHelper.Received(1).EliminarProceso(Arg.Is<string>(s => s == "id-proceso-test-2"));
+			await kairosHelper.Received(1).EliminarVariosProcesos(Arg.Is<List<string>>(s => s.Count == 1 && s.First() == "id-proceso-test-2"));
 			await normaSuscritaDao.Received(1).Actualizar(Arg.Is<NormaSuscrita>(n =>
 					n.ProcesosNotificaciones.Count == 2 &&
 					n.ProcesosNotificaciones.Any(p => p.IdProceso == "id-proceso-test-1") &&
@@ -804,6 +791,7 @@ namespace TanatosAPI.Test.Business {
 
 		[Fact]
 		public async Task ActualizarProcesosFrecuenciaDiasProgramadosTest_Rollback() {
+			kairosHelper.IngresarVariosProcesos(Arg.Any<List<EntKairosIngresarProceso>>()).Returns([]);
 			normaSuscritaDao.Actualizar(Arg.Any<NormaSuscrita>(), Arg.Any<NpgsqlTransaction?>()).ThrowsAsync<Exception>();
 
 			await Assert.ThrowsAsync<Exception>(() => normaSuscritaBcp.ActualizarProcesosFrecuenciaDiasProgramados(NormaSuscritaDummy(), []));
