@@ -18,9 +18,7 @@ namespace TanatosAPI.Interfaces.Business {
 		public Task Activar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null);
 		public Task Desactivar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null);
 		public Task Eliminar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null);
-		public Task ProgramarUnProcesoNotificacion(EntKairosIngresarProceso procesosProgramar);
 		public Task ProgramarVariosProcesosNotificacion(List<EntKairosIngresarProceso> procesosProgramar);
-		public Task DesprogramarUnProcesoNotificacion(string idProcesosDesprogramar);
 		public Task DesprogramarVariosProcesosNotificacion(List<string> idProcesosDesprogramar);
 		public Task ReversarProcesosProgramadosDesprogramados(List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados);
         public Task<(List<ProcesoNotificacion> procesosCronProgramados, List<ProcesoNotificacion> procesosCronDesprogramados)> ActualizarProcesosCronProgramados(NormaSuscrita normaSuscrita, List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> cronsDeseados, NpgsqlTransaction? transaction = null);
