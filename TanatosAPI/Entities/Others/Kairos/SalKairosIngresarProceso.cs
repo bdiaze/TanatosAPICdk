@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Others.Kairos {
     [ExcludeFromCodeCoverage]
@@ -9,5 +10,8 @@ namespace TanatosAPI.Entities.Others.Kairos {
 		public required string ArnRol { get; set; }
 		public required string ArnProceso { get; set; }
 		public required string Parametros { get; set; }
+		public required string? Cron { get; set; }
+		public required int? FrecuenciaDias { get; set; }
+		public required DateTime? InicioEjecucionUtc { get; set; }
 	}
 }
