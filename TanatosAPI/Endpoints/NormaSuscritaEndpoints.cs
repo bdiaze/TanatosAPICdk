@@ -319,6 +319,8 @@ namespace TanatosAPI.Endpoints {
 						DocumentosAdjuntos = [.. (vencimiento.DocumentosAdjuntos ?? []).Select(da => new SalDocumentoAdjunto() {
 							Id = da.Id,
 							NombreArchivo = da.NombreArchivo,
+							Mime = da.MimeReal ?? da.MimeEsperado,
+							Tamanno = da.TamannoReal ?? da.TamannoEsperado,
 							FechaSubida = da.FechaConfirmacionSubida
 						})]
 					};
@@ -788,6 +790,8 @@ namespace TanatosAPI.Endpoints {
 						DocumentosAdjuntos = [.. (vencimiento.DocumentosAdjuntos ?? []).Select(da => new SalDocumentoAdjunto() {
 							Id = da.Id,
 							NombreArchivo = da.NombreArchivo,
+							Mime = da.MimeReal ?? da.MimeEsperado,
+							Tamanno = da.TamannoReal ?? da.TamannoEsperado,
 							FechaSubida = da.FechaConfirmacionSubida
 						})]
 					};
