@@ -144,7 +144,7 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-					string presignedUrl = await documentoAdjuntoUseCase.GenerarUrlBajada(sub, entrada.IdDocumentoAdjunto);
+					string presignedUrl = await documentoAdjuntoUseCase.GenerarUrlBajada(sub, entrada.IdDocumentoAdjunto, paraVisualizacion: entrada.ParaVisualizacion);
 
                     SalDocumentoAdjuntoGenerarUrlBajada retorno = new() {
 						PreSignedUrl = presignedUrl
@@ -269,7 +269,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					string presignedUrl = await documentoAdjuntoUseCase.GenerarUrlBajadaPorCodigoAcceso(entrada.CodigoAcceso, entrada.IdDocumentoAdjunto);
+					string presignedUrl = await documentoAdjuntoUseCase.GenerarUrlBajadaPorCodigoAcceso(entrada.CodigoAcceso, entrada.IdDocumentoAdjunto, entrada.ParaVisualizacion);
 
                     SalDocumentoAdjuntoGenerarUrlBajada retorno = new() {
 						PreSignedUrl = presignedUrl

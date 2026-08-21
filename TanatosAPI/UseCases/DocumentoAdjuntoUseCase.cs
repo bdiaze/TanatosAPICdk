@@ -120,7 +120,7 @@ namespace TanatosAPI.UseCases {
             await ConfirmarSubida(null, idDocumentoAdjunto, historialNotificacion!.IdHistorialNormaSuscrita);
         }
 
-        public async Task<string> GenerarUrlBajada(string? sub, long idDocumentoAdjunto, long? idHistorialNormaSuscrita = null) {
+        public async Task<string> GenerarUrlBajada(string? sub, long idDocumentoAdjunto, long? idHistorialNormaSuscrita = null, bool paraVisualizacion = false) {
             DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoBcp.Obtener(idDocumentoAdjunto);
             if (!documentoAdjuntoBcp.EstaVigente(documentoAdjunto)) {
                 throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El documento adjunto no existe o no está vigente", "El documento adjunto es inválido.");
@@ -145,13 +145,13 @@ namespace TanatosAPI.UseCases {
                 throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "La obligación no pertenece al usuario", "El documento adjunto es inválido.");
             }
 
-            return await documentoAdjuntoBcp.GenerarUrlBajada(documentoAdjunto);
+            return await documentoAdjuntoBcp.GenerarUrlBajada(documentoAdjunto, paraVisualizacion);
         }
 
-        public async Task<string> GenerarUrlBajadaPorCodigoAcceso(string codigoAcceso, long idDocumentoAdjunto) {
+        public async Task<string> GenerarUrlBajadaPorCodigoAcceso(string codigoAcceso, long idDocumentoAdjunto, bool paraVisualizacion = false) {
             HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAccesoValidandoVigencia(codigoAcceso);
 
-            return await GenerarUrlBajada(null, idDocumentoAdjunto, historialNotificacion!.IdHistorialNormaSuscrita);
+            return await GenerarUrlBajada(null, idDocumentoAdjunto, historialNotificacion!.IdHistorialNormaSuscrita, paraVisualizacion);
         }
 
         public async Task Eliminar(string? sub, long idDocumentoAdjunto, long? idHistorialNormaSuscrita = null) {

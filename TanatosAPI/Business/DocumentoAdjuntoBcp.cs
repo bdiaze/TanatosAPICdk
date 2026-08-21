@@ -99,8 +99,8 @@ namespace TanatosAPI.Business {
             }
         }
 
-        public async Task<string> GenerarUrlBajada(DocumentoAdjunto documentoAdjunto) {
-            return await documentoAdjuntoHelper.ObtenerGetPreSignedUrl(documentoAdjunto.BucketKey, documentoAdjunto.NombreArchivo);
+        public async Task<string> GenerarUrlBajada(DocumentoAdjunto documentoAdjunto, bool paraVisualizacion = false) {
+            return await documentoAdjuntoHelper.ObtenerGetPreSignedUrl(documentoAdjunto.BucketKey, documentoAdjunto.NombreArchivo, paraVisualizacion);
         }
 
 		public async Task Eliminar(DocumentoAdjunto documentoAdjunto, NpgsqlTransaction? transaction = null) {

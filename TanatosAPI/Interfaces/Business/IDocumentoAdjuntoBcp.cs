@@ -14,7 +14,7 @@ namespace TanatosAPI.Interfaces.Business {
 		public Task<List<DocumentoAdjunto>> ObtenerPorVencimiento(long idHistorialNormaSuscrita, bool filtrarVigentes = false, bool filtrarRecepcionados = false, NpgsqlTransaction? transaction = null);
 		public Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string sub, long idNegocio, long idNormaSuscrita, long idHistorialNormaSuscrita, string nombreArchivo, string mimeArchivo, long tamannoArchivo);
 		public Task ConfirmarSubida(DocumentoAdjunto documentoAdjunto);
-		public Task<string> GenerarUrlBajada(DocumentoAdjunto documentoAdjunto);
+		public Task<string> GenerarUrlBajada(DocumentoAdjunto documentoAdjunto, bool paraVisualizacion = false);
 		public Task Eliminar(DocumentoAdjunto documentoAdjunto, NpgsqlTransaction? transaction = null);
 		public Task EliminarPorHistorialNormaSuscrita(long idHistorialNormaSuscrita, NpgsqlTransaction? transaction = null);
 	}

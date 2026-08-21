@@ -9,13 +9,13 @@ namespace TanatosAPI.Helpers {
 			return (BUCKET_NAME, key, await s3Helper.ObtenerPutPreSignedUrl(BUCKET_NAME, key, contentType));
 		}
 
-		public async Task<string> ObtenerGetPreSignedUrl(string bucketKey, string nombreDocumento) {
-			return await s3Helper.ObtenerGetPreSignedUrl(BUCKET_NAME, bucketKey, nombreDocumento);
+		public async Task<string> ObtenerGetPreSignedUrl(string bucketKey, string nombreDocumento, bool inline = false) {
+			return await s3Helper.ObtenerGetPreSignedUrl(BUCKET_NAME, bucketKey, nombreDocumento, inline);
 		}
 
-		public async Task<(string bucketName, string bucketKey, string preSignedUrl, Dictionary<string, string> fields)> ObtenerPostPreSignedUrl(string sub, long idNegocio, long idNormaSuscrita, long idHistorialNormaSuscrita, string contentType, long maxSize = 10 * 1024 * 1024) {
+		public async Task<(string bucketName, string bucketKey, string preSignedUrl, Dictionary<string, string> fields)> ObtenerPostPreSignedUrl(string sub, long idNegocio, long idNormaSuscrita, long idHistorialNormaSuscrita, string contentType, long size) {
 			string key = $"Sub-{sub}/Negocio-{idNegocio}/NormaSuscrita-{idNormaSuscrita}/HistorialNormaSuscrita-{idHistorialNormaSuscrita}/{Guid.NewGuid()}";
-			(string url, Dictionary<string, string> fields) = await s3Helper.ObtenerPostPreSignedUrl(BUCKET_NAME, key, contentType, maxSize);
+			(string url, Dictionary<string, string> fields) = await s3Helper.ObtenerPostPreSignedUrl(BUCKET_NAME, key, contentType, size);
 			return (BUCKET_NAME, key, url, fields);
 		}
 

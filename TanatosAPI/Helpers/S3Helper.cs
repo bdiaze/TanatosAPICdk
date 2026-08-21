@@ -21,28 +21,30 @@ namespace TanatosAPI.Helpers {
 			return await amazonS3.GetPreSignedURLAsync(request);
 		}
 
-		public async Task<string> ObtenerGetPreSignedUrl(string bucketName, string bucketKey, string nombreArchivo) {
+		public async Task<string> ObtenerGetPreSignedUrl(string bucketName, string bucketKey, string nombreArchivo, bool inline = false) {
+			string contentDisposition = inline ? "inline" : "attachment";
+
 			GetPreSignedUrlRequest request = new() {
 				BucketName = bucketName,
 				Key = bucketKey,
 				Verb = HttpVerb.GET,
 				Expires = dateTimeProvider.UtcNow.AddMinutes(PRE_SIGNED_URL_EXPIRATION_MINUTES),
 				ResponseHeaderOverrides = new ResponseHeaderOverrides {
-					ContentDisposition = $"attachment; filename*=UTF-8''{Uri.EscapeDataString(nombreArchivo)}"
+					ContentDisposition = $"{contentDisposition}; filename*=UTF-8''{Uri.EscapeDataString(nombreArchivo)}"
 				}
 			};
 
 			return await amazonS3.GetPreSignedURLAsync(request);
 		}
 
-		public async Task<(string url, Dictionary<string, string> fields)> ObtenerPostPreSignedUrl(string bucketName, string bucketKey, string contentType, long maxSize = 10 * 1024 * 1024) {
+		public async Task<(string url, Dictionary<string, string> fields)> ObtenerPostPreSignedUrl(string bucketName, string bucketKey, string contentType, long size = 10 * 1024 * 1024) {
 			CreatePresignedPostRequest request = new() { 
 				BucketName = bucketName,
 				Key = bucketKey,
 				Expires = dateTimeProvider.UtcNow.AddMinutes(PRE_SIGNED_URL_EXPIRATION_MINUTES),
 				Conditions = [
 					S3PostCondition.ExactMatch("Content-Type", contentType),
-					S3PostCondition.ContentLengthRange(0, maxSize),
+					S3PostCondition.ContentLengthRange(size, size),
 				]
 			};
 

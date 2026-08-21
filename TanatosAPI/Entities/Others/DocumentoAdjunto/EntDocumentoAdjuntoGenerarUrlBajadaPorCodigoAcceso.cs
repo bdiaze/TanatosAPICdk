@@ -5,5 +5,6 @@ namespace TanatosAPI.Entities.Others.DocumentoAdjunto {
     public class EntDocumentoAdjuntoGenerarUrlBajadaPorCodigoAcceso {
 		public required string CodigoAcceso { get; set; }
 		public required long IdDocumentoAdjunto { get; set; }
+		public bool ParaVisualizacion { get; set; } = false;
 	}
 }
