@@ -67,6 +67,8 @@ namespace Cdk
 			string accessTokenValidityMinutes = System.Environment.GetEnvironmentVariable("ACCESS_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ACCESS_TOKEN_VALIDITY_MINUTES");
 			string idTokenValidityMinutes = System.Environment.GetEnvironmentVariable("ID_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ID_TOKEN_VALIDITY_MINUTES");
 			string refreshTokenValidityMinutes = System.Environment.GetEnvironmentVariable("REFRESH_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno REFRESH_TOKEN_VALIDITY_MINUTES");
+			string googleOauthClientId = System.Environment.GetEnvironmentVariable("GOOGLE_OAUTH_CLIENT_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_OAUTH_CLIENT_ID");
+			string googleOauthClientSecret = System.Environment.GetEnvironmentVariable("GOOGLE_OAUTH_CLIENT_SECRET") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_OAUTH_CLIENT_SECRET");
 
 			// Para procesos de cognito...
 			string cognitoTriggerTokenValidityMinutes = System.Environment.GetEnvironmentVariable("COGNITO_TRIGGER_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno COGNITO_TRIGGER_TOKEN_VALIDITY_MINUTES");
@@ -250,6 +252,18 @@ namespace Cdk
 				ManagedLoginVersion = ManagedLoginVersion.NEWER_MANAGED_LOGIN,
 			});
 
+			UserPoolIdentityProviderGoogle googleProvider = new(this, $"{appName}IdentityProviderGoogle", new UserPoolIdentityProviderGoogleProps {
+				UserPool = userPool,
+				ClientId = googleOauthClientId,
+				ClientSecretValue = SecretValue.UnsafePlainText(googleOauthClientSecret),
+				Scopes = ["email", "profile"],
+				AttributeMapping = new AttributeMapping() {
+					Email = ProviderAttribute.GOOGLE_EMAIL,
+					GivenName = ProviderAttribute.GOOGLE_GIVEN_NAME,
+					FamilyName = ProviderAttribute.GOOGLE_FAMILY_NAME,
+				}
+			});
+
 			// Se crean scopes y resource server...
 			// Formato: <entidad>.<accion>.<alcance>
 			// Alcances:
@@ -426,7 +440,8 @@ namespace Cdk
 					UserSrp = true,
 				},
 				SupportedIdentityProviders = [
-					UserPoolClientIdentityProvider.COGNITO
+					UserPoolClientIdentityProvider.COGNITO,
+					UserPoolClientIdentityProvider.GOOGLE,
                 ],
 				OAuth = new OAuthSettings {
 					CallbackUrls = callbackUrls,
@@ -452,6 +467,7 @@ namespace Cdk
 				IdTokenValidity = Duration.Minutes(double.Parse(idTokenValidityMinutes)),
 				RefreshTokenValidity = Duration.Minutes(double.Parse(refreshTokenValidityMinutes))
 			});
+			userPoolClient.Node.AddDependency(googleProvider);
 
 			// Se crea userpoolclient a ser usado por aplicacion de notificaciones...
 			UserPoolClient notificacionesUserPoolClient = new(this, $"{appName}NotificacionesUserPoolClient", new UserPoolClientProps {
