@@ -103,6 +103,9 @@ namespace TanatosAPI.Entities.Models {
 
 		[JsonIgnore]
 		public List<HistorialNormaSuscrita>? HistorialesNormaSuscrita { get; set; }
+
+		[JsonIgnore]
+		public List<NormaSuscritaProcesoNotificacion>? NormaSuscritaProcesosNotificaciones { get; set; }
 	}
 
 	public class ProcesoNotificacion {

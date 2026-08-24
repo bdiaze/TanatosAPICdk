@@ -617,6 +617,65 @@ namespace TanatosAPI.Design.Contexts {
 				entity.Property(o => o.Comentario).HasComment("Comentario que dejó el usuario.");
 				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se emitió la evaluación.");
 			});
+
+			modelBuilder.Entity<TipoProcesoAutomatico>(entity => {
+				entity.ToTable(o => o.HasComment("Tabla que contiene los tipos de procesos automáticos."));
+				entity.Property(o => o.Id).HasComment("Identificador del tipo de proceso automático.");
+				entity.Property(o => o.Nombre).HasComment("Nombre del tipo de proceso automático.");
+				entity.Property(o => o.Descripcion).HasComment("Descripción del tipo de proceso automático.");
+				entity.Property(o => o.Habilitado).HasComment("Indicador de si el tipo de proceso automático está habilitado.");
+				entity.Property(o => o.Orden).HasComment("Orden en que se presenta el tipo de proceso automático.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el tipo de proceso automático.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el tipo de proceso automático.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del tipo de proceso automático.");
+			});
+
+			modelBuilder.Entity<ProcesoAutomatico>(entity => {
+				entity.HasIndex(o => o.Nombre);
+				entity.ToTable(o => o.HasComment("Tabla que contiene los procesos automáticos."));
+				entity.Property(o => o.Id).HasComment("Identificador del proceso automático.");
+				entity.Property(o => o.IdTipoProcesoAutomatico).HasComment("Identificador del tipo de proceso automático.");
+				entity.Property(o => o.IdProcesoKairos).HasComment("Identificador del proceso en Kairos.");
+				entity.Property(o => o.IdCalendarizacionKairos).HasComment("Identificador de la calendarización en Kairos.");
+				entity.Property(o => o.Nombre).HasComment("Nombre del proceso automático.");
+				entity.Property(o => o.ArnRol).HasComment("ARN del rol con permisos de ejecución del proceso automático.");
+				entity.Property(o => o.ArnProceso).HasComment("ARN del proceso automático.");
+				entity.Property(o => o.Parametros).HasComment("Parámetros requeridos por el proceso automático.");
+				entity.Property(o => o.Cron).HasComment("Cron de ejecución del proceso automático.");
+				entity.Property(o => o.FrecuenciaDias).HasComment("Frecuencia en días en que se ejecuta el proceso automático.");
+				entity.Property(o => o.InicioEjecucionUtc).HasComment("Fecha en que inicia las ejecuciones del proceso automático.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el proceso automático.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el proceso automático.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del proceso automático.");
+
+				entity
+					.HasOne(o => o.TipoProcesoAutomatico)
+					.WithMany(o => o.ProcesosAutomaticos)
+					.HasForeignKey(o => o.IdTipoProcesoAutomatico)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
+
+			modelBuilder.Entity<NormaSuscritaProcesoNotificacion>(entity => {
+				entity.ToTable(o => o.HasComment("Tabla que contiene las relaciones entre normas suscritas y procesos de notificación."));
+				entity.Property(o => o.Id).HasComment("Identificador de la relación.");
+				entity.Property(o => o.IdNormaSuscrita).HasComment("Identificador de la norma suscrita.");
+				entity.Property(o => o.IdProcesoAutomatico).HasComment("Identificador del proceso de notificación.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó la relación.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó la relación.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia de la relación.");
+
+				entity
+					.HasOne(o => o.NormaSuscrita)
+					.WithMany(o => o.NormaSuscritaProcesosNotificaciones)
+					.HasForeignKey(o => o.IdNormaSuscrita)
+					.OnDelete(DeleteBehavior.Restrict);
+
+				entity
+					.HasOne(o => o.ProcesoAutomatico)
+					.WithMany(o => o.NormaSuscritaProcesoNotificacion)
+					.HasForeignKey(o => o.IdProcesoAutomatico)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -682,5 +741,11 @@ namespace TanatosAPI.Design.Contexts {
         public DbSet<VideoTutorial> VideosTutoriales { get; set; }
 
         public DbSet<Evaluacion> Evaluaciones { get; set; }
+
+        public DbSet<TipoProcesoAutomatico> TiposProcesosAutomaticos { get; set; }
+        
+        public DbSet<ProcesoAutomatico> ProcesosAutomaticos { get; set; }
+        
+        public DbSet<NormaSuscritaProcesoNotificacion> NormaSuscritaProcesosNotificaciones { get; set; }
 	}
 }
