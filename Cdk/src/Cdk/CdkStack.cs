@@ -680,6 +680,27 @@ namespace Cdk
 									{ CONST_TEXT_COLOR, CONST_COLOR_CALIPSO }
 								}},
 							}},
+						}},
+						{ "idpButton", new Dictionary<string, object> {
+							{ "standard", new Dictionary<string, object> {
+								{ CONST_LIGHT_MODE, new Dictionary<string, object> {
+									{ CONST_DEFAULT, new Dictionary<string, object>{
+										{ CONST_BACKGROUND_COLOR, CONST_COLOR_BLANCO },
+										{ CONST_BORDER_COLOR, CONST_COLOR_NEGRO },
+										{ CONST_TEXT_COLOR, CONST_COLOR_NEGRO }
+									}},
+									{ "hover", new Dictionary<string, object>{
+										{ CONST_BACKGROUND_COLOR, "e4e4e433" },
+										{ CONST_BORDER_COLOR, CONST_COLOR_NEGRO },
+										{ CONST_TEXT_COLOR, CONST_COLOR_NEGRO }
+									}},
+									{ "active", new Dictionary<string, object>{
+										{ CONST_BACKGROUND_COLOR, CONST_COLOR_BLANCO },
+										{ CONST_BORDER_COLOR, CONST_COLOR_NEGRO },
+										{ CONST_TEXT_COLOR, CONST_COLOR_NEGRO }
+									}},
+								}}
+							}}
 						}}
 					}}
 				},
