@@ -10,7 +10,7 @@ namespace TanatosAPI.Entities.Models {
 		[Required]
 		[Column("id")]
 		[Key]
-		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+		[DatabaseGenerated(DatabaseGeneratedOption.None)]
 		public required long Id { get; set; }
 
 		[Required]

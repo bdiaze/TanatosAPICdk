@@ -2759,3 +2759,46 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260825205641_IndexNombreTipoProcesoAutomatico') THEN
+    CREATE INDEX "IX_tipo_proceso_automatico_nombre" ON tanatos.tipo_proceso_automatico (nombre);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260825205641_IndexNombreTipoProcesoAutomatico') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260825205641_IndexNombreTipoProcesoAutomatico', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260825211824_RemoveIdentityTipoProcesoAutomatico') THEN
+    DROP INDEX tanatos."IX_tipo_proceso_automatico_nombre";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260825211824_RemoveIdentityTipoProcesoAutomatico') THEN
+    ALTER TABLE tanatos.tipo_proceso_automatico ALTER COLUMN id DROP IDENTITY;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260825211824_RemoveIdentityTipoProcesoAutomatico') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260825211824_RemoveIdentityTipoProcesoAutomatico', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+

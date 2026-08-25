@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TanatosAPI.Design.Contexts;
@@ -13,9 +14,11 @@ using TanatosAPI.Entities.Models;
 namespace TanatosAPI.Design.Migrations
 {
     [DbContext(typeof(TanatosDbContext))]
-    partial class TanatosDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260825205641_IndexNombreTipoProcesoAutomatico")]
+    partial class IndexNombreTipoProcesoAutomatico
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1737,9 +1740,12 @@ namespace TanatosAPI.Design.Migrations
             modelBuilder.Entity("TanatosAPI.Entities.Models.TipoProcesoAutomatico", b =>
                 {
                     b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
                         .HasColumnName("id")
                         .HasComment("Identificador del tipo de proceso automático.");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Descripcion")
                         .HasColumnType("text")
@@ -1778,6 +1784,8 @@ namespace TanatosAPI.Design.Migrations
                         .HasComment("Vigencia del tipo de proceso automático.");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Nombre");
 
                     b.ToTable("tipo_proceso_automatico", "tanatos", t =>
                         {
