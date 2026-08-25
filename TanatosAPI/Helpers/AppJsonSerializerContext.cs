@@ -23,6 +23,7 @@ using TanatosAPI.Entities.Others.Plan;
 using TanatosAPI.Entities.Others.PreguntaFrecuente;
 using TanatosAPI.Entities.Others.Suscripcion;
 using TanatosAPI.Entities.Others.TipoPeriodicidad;
+using TanatosAPI.Entities.Others.TipoProcesoAutomatico;
 using TanatosAPI.Entities.Others.VideoTutorial;
 using TanatosAPI.Entities.Others.Whatsapp;
 
@@ -165,6 +166,10 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(List<SalEvaluacion>))]
 	[JsonSerializable(typeof(EntEvaluacionCrear))]
 	[JsonSerializable(typeof(SalEvaluacionCrear))]
+	[JsonSerializable(typeof(EntTipoProcesoAutomaticoCrear))]
+	[JsonSerializable(typeof(EntTipoProcesoAutomaticoActualizar))]
+	[JsonSerializable(typeof(SalTipoProcesoAutomatico))]
+	[JsonSerializable(typeof(List<SalTipoProcesoAutomatico>))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }

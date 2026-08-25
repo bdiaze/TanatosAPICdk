@@ -203,6 +203,7 @@ builder.Services.AddScoped<IEmpleadoDao, EmpleadoDao>();
 builder.Services.AddScoped<IPreguntaFrecuenteDao, PreguntaFrecuenteDao>();
 builder.Services.AddScoped<IVideoTutorialDao, VideoTutorialDao>();
 builder.Services.AddScoped<IEvaluacionDao, EvaluacionDao>();
+builder.Services.AddScoped<ITipoProcesoAutomaticoDao, TipoProcesoAutomaticoDao>();
 #endregion
 
 #region Singleton BCP
@@ -233,6 +234,7 @@ builder.Services.AddScoped<ITemplateNormaFiscalizadorBcp, TemplateNormaFiscaliza
 builder.Services.AddScoped<ITipoUnidadTiempoBcp, TipoUnidadTiempoBcp>();
 builder.Services.AddScoped<ITipoFiscalizadorBcp, TipoFiscalizadorBcp>();
 builder.Services.AddScoped<ITemplateBcp, TemplateBcp>();
+builder.Services.AddScoped<ITipoProcesoAutomaticoBcp, TipoProcesoAutomaticoBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -253,6 +255,7 @@ builder.Services.AddScoped<TemplateNormaUseCase>();
 builder.Services.AddScoped<INotificacionNormaSuscritaUseCase, NotificacionNormaSuscritaUseCase>();
 builder.Services.AddScoped<IHistorialNormaSuscritaUseCase, HistorialNormaSuscritaUseCase>();
 builder.Services.AddScoped<TipoUnidadTiempoUseCase>();
+builder.Services.AddScoped<TipoProcesoAutomaticoUseCase>();
 #endregion
 
 string cognitoRegion;
@@ -378,7 +381,7 @@ app.MapPreguntaFrecuenteEndpoints();
 app.MapVideoTutorialEndpoints();
 app.MapFlowEndpoints();
 app.MapEvaluacionEndpoints();
-
+app.MapTipoProcesoAutomaticoEndpoints();
 
 await app.RunAsync();
 
