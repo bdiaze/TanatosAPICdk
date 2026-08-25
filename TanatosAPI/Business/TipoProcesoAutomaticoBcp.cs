@@ -30,7 +30,7 @@ namespace TanatosAPI.Business {
 			// Se aplican todas las validaciones...
 			if (validarVigencia && !EstaVigente(item)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El tipo de proceso automático no existe o no está vigente", "El tipo de proceso automático es inválido.");
 			if (item != null) {
-				if (validarHabilitado && !EstaHabilitado(item)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El tipo de proceso automático no está habilitado", "El tipo de proceso automático es inválido.");
+				if (validarHabilitado && !EstaHabilitado(item)) throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "El tipo de proceso automático no está habilitado", "El tipo de proceso automático es inválido.");
 			}
 
 			// Se aplican los filtros...

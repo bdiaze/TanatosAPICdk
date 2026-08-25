@@ -38,7 +38,7 @@ namespace TanatosAPI.Test.Business {
 			Url = url,
 			Habilitado = habilitado,
 			Orden = orden,
-			FechaCreacion = fechaCreacion ?? DateTime.UtcNow,
+			FechaCreacion = fechaCreacion ?? FECHA_DUMMY,
 			FechaEliminacion = fechaEliminacion,
 			Vigencia = vigencia
 		};
