@@ -58,7 +58,7 @@ namespace TanatosAPI.Endpoints {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					TipoProcesoAutomatico nuevo = await tipoProcesoAutomaticoUseCase.Registrar(entrada.Nombre, entrada.Descripcion, entrada.Habilitado, entrada.Orden);
+					TipoProcesoAutomatico nuevo = await tipoProcesoAutomaticoUseCase.Registrar(entrada.Id, entrada.Nombre, entrada.Descripcion, entrada.Habilitado, entrada.Orden);
 
 					SalTipoProcesoAutomatico retorno = new() {
 						Id = nuevo.Id,
