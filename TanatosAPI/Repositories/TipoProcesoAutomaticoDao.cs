@@ -77,11 +77,10 @@ namespace TanatosAPI.Repositories {
 			}
 		}
 
-		public async Task<long> Insertar(TipoProcesoAutomatico item, NpgsqlTransaction? transaction = null) {
+		public async Task Insertar(TipoProcesoAutomatico item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"INSERT INTO TANATOS.TIPO_PROCESO_AUTOMATICO(NOMBRE, DESCRIPCION, HABILITADO, ORDEN, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
-				"VALUES (@NOMBRE, @DESCRIPCION, @HABILITADO, @ORDEN, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
-				"RETURNING ID";
+				"INSERT INTO TANATOS.TIPO_PROCESO_AUTOMATICO(ID, NOMBRE, DESCRIPCION, HABILITADO, ORDEN, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
+				"VALUES (@ID, @NOMBRE, @DESCRIPCION, @HABILITADO, @ORDEN, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA)";
 
 			bool disposeConnection = transaction?.Connection == null;
 			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
@@ -89,6 +88,7 @@ namespace TanatosAPI.Repositories {
 			try {
 				await using NpgsqlCommand command = new(query, connection, transaction);
 
+				command.Parameters.AddWithValue("ID", item.Id);
 				command.Parameters.AddWithValue("NOMBRE", item.Nombre);
 				command.Parameters.AddWithValue("DESCRIPCION", (object?)item.Descripcion ?? DBNull.Value);
 				command.Parameters.AddWithValue("HABILITADO", item.Habilitado);
@@ -97,7 +97,7 @@ namespace TanatosAPI.Repositories {
 				command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
 				command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
 
-				return Convert.ToInt64(await command.ExecuteScalarAsync());
+				await command.ExecuteNonQueryAsync();
 			} finally {
 				if (disposeConnection && connection != null) {
 					await connection.DisposeAsync();
