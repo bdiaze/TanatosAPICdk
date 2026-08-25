@@ -9,7 +9,7 @@ namespace TanatosAPI.Interfaces.Business {
 		public List<TipoProcesoAutomatico> FiltrarHabilitados(List<TipoProcesoAutomatico> items);
 		public Task<TipoProcesoAutomatico?> Obtener(long id, bool filtrarVigente = false, bool filtrarHabilitado = false, bool validarVigencia = false, bool validarHabilitado = false, NpgsqlTransaction? transaction = null);
 		public Task<List<TipoProcesoAutomatico>> ObtenerTodos(bool filtrarVigentes = false, bool filtrarHabilitados = false, NpgsqlTransaction? transaction = null);
-		public Task<TipoProcesoAutomatico> Insertar(string nombre, string? descripcion, bool habilitado, int orden, NpgsqlTransaction? transaction = null);
+		public Task<TipoProcesoAutomatico> Insertar(long id, string nombre, string? descripcion, bool habilitado, int orden, NpgsqlTransaction? transaction = null);
 		public Task Modificar(TipoProcesoAutomatico item, NpgsqlTransaction? transaction = null);
 		public Task Eliminar(TipoProcesoAutomatico item, NpgsqlTransaction? transaction = null);
 	}

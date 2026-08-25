@@ -49,9 +49,9 @@ namespace TanatosAPI.Business {
 			return items;
 		}
 
-		public async Task<TipoProcesoAutomatico> Insertar(string nombre, string? descripcion, bool habilitado, int orden, NpgsqlTransaction? transaction = null) {
+		public async Task<TipoProcesoAutomatico> Insertar(long id, string nombre, string? descripcion, bool habilitado, int orden, NpgsqlTransaction? transaction = null) {
 			TipoProcesoAutomatico nuevo = new() {
-				Id = 0,
+				Id = id,
 				Nombre = nombre,
 				Descripcion = descripcion,
 				Habilitado = habilitado,
@@ -60,7 +60,7 @@ namespace TanatosAPI.Business {
 				FechaEliminacion = null,
 				Vigencia = true
 			};
-			nuevo.Id = await tipoProcesoAutomaticoDao.Insertar(nuevo, transaction);
+			await tipoProcesoAutomaticoDao.Insertar(nuevo, transaction);
 			return nuevo;
 		}
 
