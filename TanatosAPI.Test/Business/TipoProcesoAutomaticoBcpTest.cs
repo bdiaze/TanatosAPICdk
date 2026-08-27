@@ -7,7 +7,6 @@ using System.Text;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
-using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
 

@@ -21,7 +21,8 @@ namespace TanatosAPI.Test.UseCases {
         private readonly IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         private readonly IHistorialNormaSuscritaUseCase historialNormaSuscritaUseCase = Substitute.For<IHistorialNormaSuscritaUseCase>();
         private readonly INotificacionNormaSuscritaUseCase notificacionNormaSuscritaUseCase = Substitute.For<INotificacionNormaSuscritaUseCase>();
-        private readonly INormaSuscritaBcp normaSuscritaBcp = Substitute.For<INormaSuscritaBcp>();
+		private readonly INormaSuscritaProcesoNotificacionUseCase normaSuscritaProcesoNotificacionUseCase = Substitute.For<INormaSuscritaProcesoNotificacionUseCase>();
+		private readonly INormaSuscritaBcp normaSuscritaBcp = Substitute.For<INormaSuscritaBcp>();
         private readonly IHistorialNormaSuscritaBcp historialNormaSuscritaBcp = Substitute.For<IHistorialNormaSuscritaBcp>();
         private readonly IHistorialNotificacionBcp historialNotificacionBcp = Substitute.For<IHistorialNotificacionBcp>();
         private readonly IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp = Substitute.For<IFiscalizadorNormaSuscritaBcp>();
@@ -52,8 +53,8 @@ namespace TanatosAPI.Test.UseCases {
             connectionHelper.ObtenerConexionWrapper().Returns(connection);
 
             normaSuscritaUseCase = new(
-                connectionHelper, dateTimeProvider, historialNormaSuscritaUseCase, notificacionNormaSuscritaUseCase,
-                normaSuscritaBcp, historialNormaSuscritaBcp, historialNotificacionBcp, fiscalizadorNormaSuscritaBcp,
+                connectionHelper, dateTimeProvider, historialNormaSuscritaUseCase, notificacionNormaSuscritaUseCase, normaSuscritaProcesoNotificacionUseCase,
+				normaSuscritaBcp, historialNormaSuscritaBcp, historialNotificacionBcp, fiscalizadorNormaSuscritaBcp,
                 notificacionNormaSuscritaBcp, templateBcp, templateNormaBcp, templateNormaNotificacionBcp, 
                 templateNormaFiscalizadorBcp, tipoPeriodicidadBcp, categoriaNormaBcp, tipoFiscalizadorBcp, 
                 tipoUnidadTiempoBcp, cargoBcp, negocioBcp, suscripcionBcp, documentoAdjuntoBcp
