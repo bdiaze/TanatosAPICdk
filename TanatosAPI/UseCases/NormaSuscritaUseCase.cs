@@ -5,16 +5,19 @@ using Npgsql;
 using Org.BouncyCastle.Crypto.Digests;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Text.Json;
 using System.Transactions;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Entities.Others.Kairos;
 using TanatosAPI.Exceptions;
+using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.UseCases;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-	public class NormaSuscritaUseCase(IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, IHistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, INotificacionNormaSuscritaUseCase notificacionNormaSuscritaUseCase, INormaSuscritaBcp normaSuscritaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionBcp historialNotificacionBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, ITemplateBcp templateBcp, ITemplateNormaBcp templateNormaBcp, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITemplateNormaFiscalizadorBcp templateNormaFiscalizadorBcp, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICategoriaNormaBcp categoriaNormaBcp, ITipoFiscalizadorBcp tipoFiscalizadorBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, ICargoBcp cargoBcp, INegocioBcp negocioBcp, ISuscripcionBcp suscripcionBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp) {
+	public class NormaSuscritaUseCase(IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, IHistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, INotificacionNormaSuscritaUseCase notificacionNormaSuscritaUseCase, INormaSuscritaProcesoNotificacionUseCase normaSuscritaProcesoNotificacionUseCase, INormaSuscritaBcp normaSuscritaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionBcp historialNotificacionBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, ITemplateBcp templateBcp, ITemplateNormaBcp templateNormaBcp, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITemplateNormaFiscalizadorBcp templateNormaFiscalizadorBcp, ITipoPeriodicidadBcp tipoPeriodicidadBcp, ICategoriaNormaBcp categoriaNormaBcp, ITipoFiscalizadorBcp tipoFiscalizadorBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, ICargoBcp cargoBcp, INegocioBcp negocioBcp, ISuscripcionBcp suscripcionBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp) {
 		public async Task IncluirTemplate(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
 			await IncluirTemplate([normaSuscrita], transaction);
         }
@@ -157,7 +160,11 @@ namespace TanatosAPI.UseCases {
 			);
 		}
 
-		public async Task<NormaSuscrita?> Obtener(long idNormaSuscrita, bool validarVigencia = false, string? validarSub = null, long? validarIdNegocio = null, bool incluirTemplate = false, bool incluirPeriodicidad = false, bool incluirCategoria = false, bool incluirCargo = false, bool incluirFiscalizadores = false, bool incluirNotificaciones = false, bool incluirHistorialVencimientos = false, NpgsqlTransaction? transaction = null) {
+		public async Task IncluirProcesosNotificaciones(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
+			normaSuscrita.NormaSuscritaProcesosNotificaciones = await normaSuscritaProcesoNotificacionUseCase.ObtenerPorNormaSuscrita(normaSuscrita.Id, filtrarVigente: true, transaction: transaction);
+		}
+
+		public async Task<NormaSuscrita?> Obtener(long idNormaSuscrita, bool validarVigencia = false, string? validarSub = null, long? validarIdNegocio = null, bool incluirTemplate = false, bool incluirPeriodicidad = false, bool incluirCategoria = false, bool incluirCargo = false, bool incluirFiscalizadores = false, bool incluirNotificaciones = false, bool incluirHistorialVencimientos = false, bool incluirProcesosNotificaciones = false, NpgsqlTransaction? transaction = null) {
 			NormaSuscrita? normaSuscrita = await normaSuscritaBcp.Obtener(idNormaSuscrita, validarVigencia: validarVigencia, validarSub: validarSub, validarIdNegocio: validarIdNegocio, transaction: transaction);
             if (normaSuscrita != null) {
                 if (incluirTemplate) await IncluirTemplate(normaSuscrita, transaction);
@@ -167,6 +174,7 @@ namespace TanatosAPI.UseCases {
                 if (incluirFiscalizadores) await IncluirFiscalizadores(normaSuscrita, transaction);
                 if (incluirNotificaciones) await IncluirNotificaciones(normaSuscrita, transaction);
 				if (incluirHistorialVencimientos) await IncluirHistorialVencimientos(normaSuscrita, transaction);
+				if (incluirProcesosNotificaciones) await IncluirProcesosNotificaciones(normaSuscrita, transaction);
 			}
             return normaSuscrita;
 		}
@@ -235,7 +243,7 @@ namespace TanatosAPI.UseCases {
 			List<ProcesoNotificacion> procesosProgramados = [];
 			List<ProcesoNotificacion> procesosDesprogramados = [];
 			try {
-				NormaSuscrita? normaSuscrita = await Obtener(idNormaSuscrita, incluirTemplate: true, transaction: transaction) ?? throw new InvalidOperationException("Norma suscrita inválida");
+				NormaSuscrita? normaSuscrita = await Obtener(idNormaSuscrita, incluirTemplate: true, incluirProcesosNotificaciones: true, transaction: transaction) ?? throw new InvalidOperationException("Norma suscrita inválida");
 				List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> cronsDeseados = [];
 				List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> frecuenciasDiasDeseadas = [];
 
