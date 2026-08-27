@@ -204,6 +204,8 @@ builder.Services.AddScoped<IPreguntaFrecuenteDao, PreguntaFrecuenteDao>();
 builder.Services.AddScoped<IVideoTutorialDao, VideoTutorialDao>();
 builder.Services.AddScoped<IEvaluacionDao, EvaluacionDao>();
 builder.Services.AddScoped<ITipoProcesoAutomaticoDao, TipoProcesoAutomaticoDao>();
+builder.Services.AddScoped<IProcesoAutomaticoDao, ProcesoAutomaticoDao>();
+builder.Services.AddScoped<INormaSuscritaProcesoNotificacionDao, NormaSuscritaProcesoNotificacionDao>();
 #endregion
 
 #region Singleton BCP
@@ -235,6 +237,8 @@ builder.Services.AddScoped<ITipoUnidadTiempoBcp, TipoUnidadTiempoBcp>();
 builder.Services.AddScoped<ITipoFiscalizadorBcp, TipoFiscalizadorBcp>();
 builder.Services.AddScoped<ITemplateBcp, TemplateBcp>();
 builder.Services.AddScoped<ITipoProcesoAutomaticoBcp, TipoProcesoAutomaticoBcp>();
+builder.Services.AddScoped<IProcesoAutomaticoBcp, ProcesoAutomaticoBcp>();
+builder.Services.AddScoped<INormaSuscritaProcesoNotificacionBcp, NormaSuscritaProcesoNotificacionBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -256,6 +260,7 @@ builder.Services.AddScoped<INotificacionNormaSuscritaUseCase, NotificacionNormaS
 builder.Services.AddScoped<IHistorialNormaSuscritaUseCase, HistorialNormaSuscritaUseCase>();
 builder.Services.AddScoped<TipoUnidadTiempoUseCase>();
 builder.Services.AddScoped<TipoProcesoAutomaticoUseCase>();
+builder.Services.AddScoped<INormaSuscritaProcesoNotificacionUseCase, NormaSuscritaProcesoNotificacionUseCase>();
 #endregion
 
 string cognitoRegion;
