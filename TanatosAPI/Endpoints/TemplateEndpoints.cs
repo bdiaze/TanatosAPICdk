@@ -4,6 +4,7 @@ using Npgsql;
 using System.Diagnostics;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Entities.Others.Kairos;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
@@ -336,7 +337,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaUseCase templateNormaUseCase, INormaSuscritaBcp normaSuscritaBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
+			routes.MapPut("/", async (Template entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaUseCase templateNormaUseCase, NormaSuscritaUseCase normaSuscritaUseCase, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -445,15 +446,15 @@ namespace TanatosAPI.Endpoints {
 					IDatabaseConnection? connection = null;
 					IDatabaseTransaction? transaction = null;
 
-					List<ProcesoNotificacion> procesosProgramados = [];
-					List<ProcesoNotificacion> procesosDesprogramados = [];
+					List<SalKairosIngresarProceso> procesosProgramados = [];
+					List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 					try {
 						connection = await connectionHelper.ObtenerConexionWrapper();
 						transaction = await connection.BeginTransactionAsync();
 
 						// Se eliminan las normas que ya no existen...
 						foreach (TemplateNorma normaEliminar in existente.TemplateNormas.Where(tne => (!entrada.TemplateNormas?.Any(tni => tni.IdTemplate == tne.IdTemplate && tni.IdNorma == tne.IdNorma)) ?? true)) {
-							(List<ProcesoNotificacion> programadosParcial, List<ProcesoNotificacion> desprogramadosParcial) = await templateNormaUseCase.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, transaction);
+							(List<SalKairosIngresarProceso> programadosParcial, List<NormaSuscritaProcesoNotificacion> desprogramadosParcial) = await templateNormaUseCase.Eliminar(normaEliminar.IdTemplate, normaEliminar.IdNorma, transaction);
 							procesosProgramados.AddRange(programadosParcial);
 							procesosDesprogramados.AddRange(desprogramadosParcial);
 						}
@@ -520,7 +521,7 @@ namespace TanatosAPI.Endpoints {
 					} catch {
 						if (transaction != null) {
 							await transaction.RollbackAsync();
-							await normaSuscritaBcp.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
+							await normaSuscritaUseCase.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
 						}
 						throw;
 					} finally {
@@ -548,7 +549,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaUseCase templateNormaUseCase, INormaSuscritaBcp normaSuscritaBcp, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, TemplateNormaUseCase templateNormaUseCase, NormaSuscritaUseCase normaSuscritaUseCase, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, ITemplateNormaNotificacionDao templateNormaNotificacionDao, ITemplateActividadDao templateActividadDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -565,8 +566,8 @@ namespace TanatosAPI.Endpoints {
 					IDatabaseConnection? connection = null;
 					IDatabaseTransaction? transaction = null;
 
-					List<ProcesoNotificacion> procesosProgramados = [];
-					List<ProcesoNotificacion> procesosDesprogramados = [];
+					List<SalKairosIngresarProceso> procesosProgramados = [];
+					List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 					try {
 						connection = await connectionHelper.ObtenerConexionWrapper();
 						transaction = await connection.BeginTransactionAsync();
@@ -579,7 +580,7 @@ namespace TanatosAPI.Endpoints {
 					} catch {
 						if (transaction != null) {
 							await transaction.RollbackAsync();
-							await normaSuscritaBcp.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
+							await normaSuscritaUseCase.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
 						}
 						throw;
 					} finally {

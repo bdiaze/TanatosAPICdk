@@ -239,26 +239,34 @@ namespace TanatosAPI.UseCases {
 			return await ObtenerVencimientoConDocumentosYPlan(null, historialNotificacion.IdHistorialNormaSuscrita, null, transaction);
 		}
 
-		public async Task<(List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados)> ActualizarProgramacionProcesosNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			List<ProcesoNotificacion> procesosProgramados = [];
-			List<ProcesoNotificacion> procesosDesprogramados = [];
+		public async Task<(List<SalKairosIngresarProceso> procesosProgramados, List<NormaSuscritaProcesoNotificacion> procesosDesprogramados)> ActualizarProgramacionProcesosNormaSuscrita(long idNormaSuscrita, IDatabaseTransaction? transaction = null) {
+			List<SalKairosIngresarProceso> procesosProgramados = [];
+			List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
+
+			bool ownsTransaction = transaction == null;
+			IDatabaseConnection? connection = null;
 			try {
-				NormaSuscrita? normaSuscrita = await Obtener(idNormaSuscrita, incluirTemplate: true, incluirProcesosNotificaciones: true, transaction: transaction) ?? throw new InvalidOperationException("Norma suscrita inválida");
+				if (ownsTransaction) {
+					connection = await connectionHelper.ObtenerConexionWrapper();
+					transaction = await connection.BeginTransactionAsync();
+				}
+
+				NormaSuscrita? normaSuscrita = await Obtener(idNormaSuscrita, incluirTemplate: true, incluirProcesosNotificaciones: true, transaction: transaction!.NpgsqlTransaction()) ?? throw new InvalidOperationException("Norma suscrita inválida");
 				List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> cronsDeseados = [];
 				List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> frecuenciasDiasDeseadas = [];
 
-                // Si la norma suscrita está activada, se obtienen los crons y frecuencias deseados...
-                if (normaSuscrita.Activado) {
+				// Si la norma suscrita está activada, se obtienen los crons y frecuencias deseados...
+				if (normaSuscrita.Activado) {
 					long idTipoPeriodicidad = (normaSuscrita.IdTipoPeriodicidad ?? normaSuscrita.TemplateNorma?.IdTipoPeriodicidad) ?? throw new InvalidOperationException("Obligación sin tipo de periodicidad asociada");
-					TipoPeriodicidad? tipoPeriodicidad = await tipoPeriodicidadBcp.ObtenerPorId(idTipoPeriodicidad, transaction);
+					TipoPeriodicidad? tipoPeriodicidad = await tipoPeriodicidadBcp.ObtenerPorId(idTipoPeriodicidad, transaction!.NpgsqlTransaction());
 
 					// Solo se obtienen los crons y frecuencias deseados si la periodicidad está vigente...
 					if (tipoPeriodicidadBcp.EstaVigente(tipoPeriodicidad)) {
 						// Se obtienen las notificaciones previas configuradas para la norma suscrita...
-						List<(TipoUnidadTiempo UnidadTiempo, int CantAntelacion)> antelaciones = await notificacionNormaSuscritaUseCase.ObtenerAntelacionesConsiderandoTemplate(normaSuscrita.Id, normaSuscrita.IdTemplate, normaSuscrita.IdNorma, transaction);
-							
+						List<(TipoUnidadTiempo UnidadTiempo, int CantAntelacion)> antelaciones = await notificacionNormaSuscritaUseCase.ObtenerAntelacionesConsiderandoTemplate(normaSuscrita.Id, normaSuscrita.IdTemplate, normaSuscrita.IdNorma, transaction!.NpgsqlTransaction());
+
 						// Se calculan los crons y frecuencias según el próximo vencimiento...
-						DateTime proximoVencimiento = await historialNormaSuscritaBcp.ObtenerProximoVencimiento(normaSuscrita.Id, transaction);
+						DateTime proximoVencimiento = await historialNormaSuscritaBcp.ObtenerProximoVencimiento(normaSuscrita.Id, transaction!.NpgsqlTransaction());
 						if (!string.IsNullOrWhiteSpace(tipoPeriodicidad!.Cron)) {
 							cronsDeseados = await notificacionNormaSuscritaUseCase.GenerarCrons(
 								proximoVencimiento,
@@ -266,42 +274,48 @@ namespace TanatosAPI.UseCases {
 								antelaciones
 							);
 						} else if (tipoPeriodicidad!.FrecuenciaDias != null) {
-                            frecuenciasDiasDeseadas = await notificacionNormaSuscritaUseCase.GenerarFrecuenciasDias(
-                                proximoVencimiento,
-                                tipoPeriodicidad!.FrecuenciaDias.Value,
-                                antelaciones
-                            );
-                        }
+							frecuenciasDiasDeseadas = await notificacionNormaSuscritaUseCase.GenerarFrecuenciasDias(
+								proximoVencimiento,
+								tipoPeriodicidad!.FrecuenciaDias.Value,
+								antelaciones
+							);
+						}
 					}
 				}
 
-                (List<ProcesoNotificacion> cronsProgramados, List<ProcesoNotificacion> cronsDesprogramados) = await normaSuscritaBcp.ActualizarProcesosCronProgramados(normaSuscrita, cronsDeseados, transaction);
-                procesosProgramados.AddRange(cronsProgramados);
-                procesosDesprogramados.AddRange(cronsDesprogramados);
+				(procesosProgramados, procesosDesprogramados) = await normaSuscritaProcesoNotificacionUseCase.ActualizarProcesosNotificacionesNormaSuscrita(normaSuscrita, cronsDeseados, frecuenciasDiasDeseadas, transaction);
 
-				(List<ProcesoNotificacion> frecuenciasDiasProgramados, List<ProcesoNotificacion> frecuenciasDiasDesprogramadas) = await normaSuscritaBcp.ActualizarProcesosFrecuenciaDiasProgramados(normaSuscrita, frecuenciasDiasDeseadas, transaction);
-                procesosProgramados.AddRange(frecuenciasDiasProgramados);
-                procesosDesprogramados.AddRange(frecuenciasDiasDesprogramadas);
+				if (ownsTransaction) {
+					await transaction!.CommitAsync();
+				}
 
 				return (procesosProgramados, procesosDesprogramados);
 			} catch {
-				await ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
+				await normaSuscritaProcesoNotificacionUseCase.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
+				if (ownsTransaction && transaction != null) {
+					await transaction.RollbackAsync();
+				}
 				throw;
+			} finally {
+				if (ownsTransaction) {
+					if (transaction != null) await transaction.DisposeAsync();
+					if (connection != null) await connection.DisposeAsync();
+				}
 			}
 		}
 
-		public async Task ReversarProcesosProgramadosDesprogramados(List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados) {
-			await normaSuscritaBcp.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
+		public async Task ReversarProcesosProgramadosDesprogramados(List<SalKairosIngresarProceso> procesosProgramados, List<NormaSuscritaProcesoNotificacion> procesosDesprogramados) {
+			await normaSuscritaProcesoNotificacionUseCase.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
 		}
 
-		public async Task<(List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados)> EliminarNormaSuscrita(NormaSuscrita normaSuscrita, IDatabaseTransaction transaction) {
-			List<ProcesoNotificacion> procesosProgramados = [];
-			List<ProcesoNotificacion> procesosDesprogramados = [];
+		public async Task<(List<SalKairosIngresarProceso> procesosProgramados, List<NormaSuscritaProcesoNotificacion> procesosDesprogramados)> EliminarNormaSuscrita(NormaSuscrita normaSuscrita, IDatabaseTransaction transaction) {
+			List<SalKairosIngresarProceso> procesosProgramados = [];
+			List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 
 			if (normaSuscrita.Vigencia) {
 				await normaSuscritaBcp.Eliminar(normaSuscrita, transaction!.NpgsqlTransaction());
 
-				(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction!.NpgsqlTransaction());
+				(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
 
 				await fiscalizadorNormaSuscritaBcp.EliminarPorNormaSuscrita(normaSuscrita.Id, transaction!.NpgsqlTransaction());
 				await notificacionNormaSuscritaBcp.EliminarPorNormaSuscrita(normaSuscrita.Id, transaction!.NpgsqlTransaction());
@@ -311,12 +325,12 @@ namespace TanatosAPI.UseCases {
 			return (procesosProgramados, procesosDesprogramados);
 		}
 
-        public async Task<(List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados)> EliminarNormaValidandoPertenencia(string sub, long idNormaSuscrita, IDatabaseTransaction? transaction = null) {
+        public async Task<(List<SalKairosIngresarProceso> procesosProgramados, List<NormaSuscritaProcesoNotificacion> procesosDesprogramados)> EliminarNormaValidandoPertenencia(string sub, long idNormaSuscrita, IDatabaseTransaction? transaction = null) {
             bool ownsTransaction = transaction == null;
             IDatabaseConnection? connection = null;
 
-			List<ProcesoNotificacion> procesosProgramados = [];
-			List<ProcesoNotificacion> procesosDesprogramados = [];
+			List<SalKairosIngresarProceso> procesosProgramados = [];
+			List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 			try {
                 if (ownsTransaction) {
                     connection = await connectionHelper.ObtenerConexionWrapper();
@@ -347,12 +361,12 @@ namespace TanatosAPI.UseCases {
             }
         }
 
-        public async Task<(NormaSuscrita, List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados)> CrearNormaSuscrita(string sub, long idNegocio, string nombre, string? descripcion, string? multa, long? idTipoPeriodicidad, long? idCategoriaNorma, long? idCargo, bool activado, DateTime? proximoVencimiento, HashSet<long> idFiscalizadores, HashSet<(long IdTipoUnidadTiempo, int CantAntelacion)> antelaciones, IDatabaseTransaction? transaction = null) {
+        public async Task<(NormaSuscrita, List<SalKairosIngresarProceso> procesosProgramados, List<NormaSuscritaProcesoNotificacion> procesosDesprogramados)> CrearNormaSuscrita(string sub, long idNegocio, string nombre, string? descripcion, string? multa, long? idTipoPeriodicidad, long? idCategoriaNorma, long? idCargo, bool activado, DateTime? proximoVencimiento, HashSet<long> idFiscalizadores, HashSet<(long IdTipoUnidadTiempo, int CantAntelacion)> antelaciones, IDatabaseTransaction? transaction = null) {
             bool ownsTransaction = transaction == null;
             IDatabaseConnection? connection = null;
 
-			List<ProcesoNotificacion> procesosProgramados = [];
-			List<ProcesoNotificacion> procesosDesprogramados = [];
+			List<SalKairosIngresarProceso> procesosProgramados = [];
+			List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 			try {
                 if (ownsTransaction) {
                     connection = await connectionHelper.ObtenerConexionWrapper();
@@ -401,7 +415,7 @@ namespace TanatosAPI.UseCases {
                 obligacion.HistorialesNormaSuscrita = [];
 				if (activado && proximoVencimiento != null) obligacion.HistorialesNormaSuscrita.Add(await historialNormaSuscritaBcp.Crear(obligacion.Id, proximoVencimiento.Value, transaction!.NpgsqlTransaction()));
 				
-				(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction!.NpgsqlTransaction());
+				(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction);
 
                 if (ownsTransaction) {
                     await transaction!.CommitAsync();
@@ -422,12 +436,12 @@ namespace TanatosAPI.UseCases {
             }
         }
 
-		public async Task<(NormaSuscrita, List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados)> ActualizarNormaSuscrita(string sub, long id, long idNegocio, string? nombre, string? descripcion, string? multa, long? idTipoPeriodicidad, long? idCategoriaNorma, long? idCargo, bool activado, DateTime? proximoVencimiento, HashSet<long> idFiscalizadores, HashSet<(long IdTipoUnidadTiempo, int CantAntelacion)> antelaciones, IDatabaseTransaction? transaction = null) {
+		public async Task<(NormaSuscrita, List<SalKairosIngresarProceso> procesosProgramados, List<NormaSuscritaProcesoNotificacion> procesosDesprogramados)> ActualizarNormaSuscrita(string sub, long id, long idNegocio, string? nombre, string? descripcion, string? multa, long? idTipoPeriodicidad, long? idCategoriaNorma, long? idCargo, bool activado, DateTime? proximoVencimiento, HashSet<long> idFiscalizadores, HashSet<(long IdTipoUnidadTiempo, int CantAntelacion)> antelaciones, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
 			IDatabaseConnection? connection = null;
 
-			List<ProcesoNotificacion> procesosProgramados = [];
-			List<ProcesoNotificacion> procesosDesprogramados = [];
+			List<SalKairosIngresarProceso> procesosProgramados = [];
+			List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 			try {
 				if (ownsTransaction) {
 					connection = await connectionHelper.ObtenerConexionWrapper();
@@ -544,7 +558,7 @@ namespace TanatosAPI.UseCases {
 					await historialNormaSuscritaUseCase.EliminarPorNormaSuscrita(obligacion.Id, false, transaction!.NpgsqlTransaction());
 				}
 
-				(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction!.NpgsqlTransaction());
+				(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction);
 
 				if (ownsTransaction) {
 					await transaction!.CommitAsync();
@@ -630,12 +644,12 @@ namespace TanatosAPI.UseCases {
             }
         }
 
-		public async Task<(NormaSuscrita, List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados)> DesactivarNormaSuscrita(long id, string sub, IDatabaseTransaction? transaction = null) {
+		public async Task<(NormaSuscrita, List<SalKairosIngresarProceso> procesosProgramados, List<NormaSuscritaProcesoNotificacion> procesosDesprogramados)> DesactivarNormaSuscrita(long id, string sub, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
 			IDatabaseConnection? connection = null;
 
-			List<ProcesoNotificacion> procesosProgramados = [];
-			List<ProcesoNotificacion> procesosDesprogramados = [];
+			List<SalKairosIngresarProceso> procesosProgramados = [];
+			List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 			try {
 				if (ownsTransaction) {
 					connection = await connectionHelper.ObtenerConexionWrapper();
@@ -647,7 +661,7 @@ namespace TanatosAPI.UseCases {
 					await normaSuscritaBcp.Desactivar(obligacion, transaction!.NpgsqlTransaction()); 
 					await historialNormaSuscritaUseCase.EliminarPorNormaSuscrita(obligacion.Id, false, transaction!.NpgsqlTransaction());
 					obligacion.HistorialesNormaSuscrita = [];
-					(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction!.NpgsqlTransaction());
+					(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction);
 				}
 
 				if (ownsTransaction) {
@@ -669,12 +683,12 @@ namespace TanatosAPI.UseCases {
 			}
 		}
 
-		public async Task<(NormaSuscrita, List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados)> ActivarNormaSuscrita(long id, string sub, DateTime proximoVencimiento, IDatabaseTransaction? transaction = null) {
+		public async Task<(NormaSuscrita, List<SalKairosIngresarProceso> procesosProgramados, List<NormaSuscritaProcesoNotificacion> procesosDesprogramados)> ActivarNormaSuscrita(long id, string sub, DateTime proximoVencimiento, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
 			IDatabaseConnection? connection = null;
 
-			List<ProcesoNotificacion> procesosProgramados = [];
-			List<ProcesoNotificacion> procesosDesprogramados = [];
+			List<SalKairosIngresarProceso> procesosProgramados = [];
+			List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 			try {
 				if (ownsTransaction) {
 					connection = await connectionHelper.ObtenerConexionWrapper();
@@ -699,7 +713,7 @@ namespace TanatosAPI.UseCases {
 					await normaSuscritaBcp.Activar(obligacion, transaction!.NpgsqlTransaction());					
 					obligacion.HistorialesNormaSuscrita = [];
 					obligacion.HistorialesNormaSuscrita.Add(await historialNormaSuscritaBcp.Crear(obligacion.Id, proximoVencimiento, transaction!.NpgsqlTransaction()));
-					(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction!.NpgsqlTransaction());
+					(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction);
 				}
 
 				if (ownsTransaction) {

@@ -7,6 +7,7 @@ using System.Security.Claims;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.InscripcionTemplate;
+using TanatosAPI.Entities.Others.Kairos;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
@@ -107,11 +108,11 @@ namespace TanatosAPI.Endpoints {
 
 					List<InscripcionTemplate> inscripcionesExistentes = await inscripcionTemplateDao.ObtenerPorSub(sub, entrada.IdNegocio, null);
 
-					await using NpgsqlConnection connection = await connectionHelper.ObtenerConexion();
-					await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+					await using IDatabaseConnection connection = await connectionHelper.ObtenerConexionWrapper();
+					await using IDatabaseTransaction transaction = await connection.BeginTransactionAsync();
 
-					List<ProcesoNotificacion> procesosProgramados = [];
-					List<ProcesoNotificacion> procesosDesprogramados = [];
+					List<SalKairosIngresarProceso> procesosProgramados = [];
+					List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 					try {
 						foreach(Template templateAInscribir in templatesAInscribir) {
 							InscripcionTemplate? inscripcionExistente = inscripcionesExistentes.FirstOrDefault(it => it.IdTemplate == templateAInscribir.Id);
@@ -128,16 +129,16 @@ namespace TanatosAPI.Endpoints {
 									IdTemplate = templateAInscribir.Id,
 									FechaActivacion = dateTimeProvider.UtcNow,
 									Vigencia = true
-								}, transaction);
+								}, transaction!.NpgsqlTransaction());
 							// Si no, se actualiza la existente...
 							} else {
 								inscripcionExistente.FechaActivacion = dateTimeProvider.UtcNow;
 								inscripcionExistente.FechaDesactivacion = null;
 								inscripcionExistente.Vigencia = true;
-								await inscripcionTemplateDao.Actualizar(inscripcionExistente, transaction);
+								await inscripcionTemplateDao.Actualizar(inscripcionExistente, transaction!.NpgsqlTransaction());
 							}
 
-							List<TemplateNorma> templateNormas = await templateNormaDao.ObtenerPorTemplate(templateAInscribir.Id, transaction);
+							List<TemplateNorma> templateNormas = await templateNormaDao.ObtenerPorTemplate(templateAInscribir.Id, transaction!.NpgsqlTransaction());
 							
 							// Se insertan las normas suscritas que no estaban registradas...
 							foreach (TemplateNorma templateNorma in templateNormas) {
@@ -152,7 +153,7 @@ namespace TanatosAPI.Endpoints {
 									FechaCreacion = dateTimeProvider.UtcNow,
 									Vigencia = true
 								};
-								normaSuscrita.Id = await normaSuscritaDao.Insertar(normaSuscrita, transaction);
+								normaSuscrita.Id = await normaSuscritaDao.Insertar(normaSuscrita, transaction!.NpgsqlTransaction());
 
 								if (!string.IsNullOrWhiteSpace(templateNorma.CronActivacionAutomatica)) {
 									CronExpression cron = CronExpression.Parse(templateNorma.CronActivacionAutomatica);
@@ -160,21 +161,21 @@ namespace TanatosAPI.Endpoints {
 									TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
 
 									DateTime proximoVencimiento = cron.GetNextOccurrence(dateTimeProvider.UtcNow, timeZoneInfo) ?? throw new InvalidOperationException("No se pudo calcular el próximo vencimiento para obligación con activación automática");
-									_ = await historialNormaSuscritaBcp.Crear(normaSuscrita.Id, proximoVencimiento, transaction);
+									_ = await historialNormaSuscritaBcp.Crear(normaSuscrita.Id, proximoVencimiento, transaction!.NpgsqlTransaction());
 
 									normaSuscrita.FechaActivacion = dateTimeProvider.UtcNow;
 									normaSuscrita.Activado = true;
-									await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
+									await normaSuscritaDao.Actualizar(normaSuscrita, transaction!.NpgsqlTransaction());
 								} else if (templateNorma.DiasActivacionAutomatica != null) {
 									DateTime localNow = DateTimeHelper.TransformarFechaUTCATimezone(dateTimeProvider.UtcNow);
 									DateTime vencimientoLocal = localNow.AddDays(templateNorma.DiasActivacionAutomatica.Value);
 									DateTime proximoVencimiento = DateTimeHelper.TransformarFechaTimezoneAUTC(vencimientoLocal);
 
-									_ = await historialNormaSuscritaBcp.Crear(normaSuscrita.Id, proximoVencimiento, transaction);
+									_ = await historialNormaSuscritaBcp.Crear(normaSuscrita.Id, proximoVencimiento, transaction!.NpgsqlTransaction());
 
 									normaSuscrita.FechaActivacion = dateTimeProvider.UtcNow;
 									normaSuscrita.Activado = true;
-									await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
+									await normaSuscritaDao.Actualizar(normaSuscrita, transaction!.NpgsqlTransaction());
 								}
 
 								(procesosProgramados, procesosDesprogramados) = await normaSuscritaUseCase.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
@@ -225,8 +226,8 @@ namespace TanatosAPI.Endpoints {
 					IDatabaseConnection? connection = null;
 					IDatabaseTransaction? transaction = null;
 
-					List<ProcesoNotificacion> procesosProgramados = [];
-					List<ProcesoNotificacion> procesosDesprogramados = [];
+					List<SalKairosIngresarProceso> procesosProgramados = [];
+					List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 					try {
 						connection = await connectionHelper.ObtenerConexionWrapper();
 						transaction = await connection.BeginTransactionAsync();
@@ -239,7 +240,7 @@ namespace TanatosAPI.Endpoints {
 							// Se actualizan las normas suscritas correspondientes al template...
 							List<NormaSuscrita> normasSuscritas = [.. (await normaSuscritaDao.ObtenerPorSub(sub, entrada.IdNegocio, true, transaction!.NpgsqlTransaction())).Where(ns => ns.IdTemplate == entrada.IdTemplate)];
 							foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
-								(List<ProcesoNotificacion> programadosParciales, List<ProcesoNotificacion> desprogramadosParciales) = await normaSuscritaUseCase.EliminarNormaSuscrita(normaSuscrita, transaction);
+								(List<SalKairosIngresarProceso> programadosParciales, List<NormaSuscritaProcesoNotificacion> desprogramadosParciales) = await normaSuscritaUseCase.EliminarNormaSuscrita(normaSuscrita, transaction);
 								procesosProgramados.AddRange(programadosParciales);
 								procesosDesprogramados.AddRange(desprogramadosParciales);
 							}

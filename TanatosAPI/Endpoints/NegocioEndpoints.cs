@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Security.Claims;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Entities.Others.Kairos;
 using TanatosAPI.Entities.Others.Negocio;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
@@ -262,7 +263,7 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, NegocioUseCase negocioUseCase, INormaSuscritaBcp normaSuscritaBcp, INegocioDao negocioDao) => {
+			routes.MapDelete("/{id}", async (long id, IHostEnvironment environment, ClaimsPrincipal user, IDatabaseConnectionHelper connectionHelper, NegocioUseCase negocioUseCase, NormaSuscritaUseCase normaSuscritaUseCase, INegocioDao negocioDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
@@ -282,8 +283,8 @@ namespace TanatosAPI.Endpoints {
 					IDatabaseConnection? connection = null;
 					IDatabaseTransaction? transaction = null;
 
-					List<ProcesoNotificacion> procesosProgramados = [];
-					List<ProcesoNotificacion> procesosDesprogramados = [];
+					List<SalKairosIngresarProceso> procesosProgramados = [];
+					List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 					try {
 						connection = await connectionHelper.ObtenerConexionWrapper();
 						transaction = await connection.BeginTransactionAsync();
@@ -294,7 +295,7 @@ namespace TanatosAPI.Endpoints {
 					} catch {
 						if (transaction != null) {
 							await transaction.RollbackAsync();
-							await normaSuscritaBcp.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
+							await normaSuscritaUseCase.ReversarProcesosProgramadosDesprogramados(procesosProgramados, procesosDesprogramados);
 						}
 						throw;
 					} finally {

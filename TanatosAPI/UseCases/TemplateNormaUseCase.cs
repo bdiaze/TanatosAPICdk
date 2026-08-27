@@ -2,6 +2,7 @@
 using Npgsql;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Entities.Others.Kairos;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
@@ -9,9 +10,9 @@ using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
 	public class TemplateNormaUseCase(NormaSuscritaUseCase normaSuscritaUseCase, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, ITemplateNormaDao templateNormaDao, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITemplateNormaFiscalizadorDao templateNormaFiscalizadorDao, INormaSuscritaDao normaSuscritaDao) {
-		public async Task<(List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados)> Eliminar(long idTemplate, long? idNorma, IDatabaseTransaction transaction) {
-			List<ProcesoNotificacion> procesosProgramados = [];
-			List<ProcesoNotificacion> procesosDesprogramados = [];
+		public async Task<(List<SalKairosIngresarProceso> procesosProgramados, List<NormaSuscritaProcesoNotificacion> procesosDesprogramados)> Eliminar(long idTemplate, long? idNorma, IDatabaseTransaction transaction) {
+			List<SalKairosIngresarProceso> procesosProgramados = [];
+			List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 
 			Dictionary<long, TemplateNorma> templateNormas = (await templateNormaDao.ObtenerPorTemplate(idTemplate, transaction!.NpgsqlTransaction())).ToDictionary(tn => tn.IdNorma, tn => tn);
 			Dictionary<long, HashSet<(long IdTipoUnidadTiempoAntelacion, int CantAntelacion)>> templateNormasNotificaciones =
@@ -51,7 +52,7 @@ namespace TanatosAPI.UseCases {
 
 				// Si la norma suscrita no está activada se elimina
 				if (!normaSuscrita.Activado) {
-					(List<ProcesoNotificacion> programadosParcial, List<ProcesoNotificacion> desprogramadosParcial) = await normaSuscritaUseCase.EliminarNormaSuscrita(normaSuscrita, transaction);
+					(List<SalKairosIngresarProceso> programadosParcial, List<NormaSuscritaProcesoNotificacion> desprogramadosParcial) = await normaSuscritaUseCase.EliminarNormaSuscrita(normaSuscrita, transaction);
 					procesosProgramados.AddRange(programadosParcial);
 					procesosDesprogramados.AddRange(desprogramadosParcial);
 

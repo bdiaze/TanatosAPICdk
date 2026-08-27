@@ -2,6 +2,7 @@
 using Npgsql;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Entities.Others.Kairos;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
@@ -27,12 +28,12 @@ namespace TanatosAPI.UseCases {
 			else return true;
 		}
 
-		public async Task<(List<ProcesoNotificacion> procesosProgramados, List<ProcesoNotificacion> procesosDesprogramados)> EliminarNegocio(Negocio negocio, IDatabaseTransaction? transaction = null) {
+		public async Task<(List<SalKairosIngresarProceso> procesosProgramados, List<NormaSuscritaProcesoNotificacion> procesosDesprogramados)> EliminarNegocio(Negocio negocio, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
 			IDatabaseConnection? connection = null;
 
-			List<ProcesoNotificacion> procesosProgramados = [];
-			List<ProcesoNotificacion> procesosDesprogramados = [];
+			List<SalKairosIngresarProceso> procesosProgramados = [];
+			List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 			try {
 				if (ownsTransaction) {
 					connection = await connectionHelper.ObtenerConexionWrapper();
@@ -46,7 +47,7 @@ namespace TanatosAPI.UseCases {
 
 					List<NormaSuscrita> normasSuscritas = await normaSuscritaDao.ObtenerPorSub(negocio.Sub, negocio.Id, true, transaction!.NpgsqlTransaction());
 					foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
-						(List<ProcesoNotificacion> programadosParciales, List<ProcesoNotificacion> desprogramadosParciales) = await normaSuscritaUseCase.EliminarNormaSuscrita(normaSuscrita, transaction);
+						(List<SalKairosIngresarProceso> programadosParciales, List<NormaSuscritaProcesoNotificacion> desprogramadosParciales) = await normaSuscritaUseCase.EliminarNormaSuscrita(normaSuscrita, transaction);
 						procesosProgramados.AddRange(programadosParciales);
 						procesosDesprogramados.AddRange(desprogramadosParciales);
 					}
