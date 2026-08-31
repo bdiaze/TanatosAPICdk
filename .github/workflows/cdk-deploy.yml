@@ -104,6 +104,7 @@ jobs:
             GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
             GOOGLE_DKIM_VALUE: ${{ vars.GOOGLE_DKIM_VALUE }}
             DMARC_VALUE: ${{ vars.DMARC_VALUE }}
+            BIMI_VALUE: ${{ vars.BIMI_VALUE }}
             
             COGNITO_CUSTOM_DOMAIN: ${{ vars.COGNITO_CUSTOM_DOMAIN }}            
             CALLBACK_URLS: ${{ vars.CALLBACK_URLS }}

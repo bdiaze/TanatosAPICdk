@@ -18,9 +18,10 @@ namespace Cdk {
 			string googleSiteVerification = System.Environment.GetEnvironmentVariable("GOOGLE_SITE_VERIFICATION") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_SITE_VERIFICATION");
 			string googleDkimValue = System.Environment.GetEnvironmentVariable("GOOGLE_DKIM_VALUE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_DKIM_VALUE");
 			string dmarcValue = System.Environment.GetEnvironmentVariable("DMARC_VALUE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno DMARC_VALUE");
+            string bimiValue = System.Environment.GetEnvironmentVariable("BIMI_VALUE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno BIMI_VALUE");
 
-			// Se crea hosted zone...
-			HostedZone = new(this, $"{appName}HostedZone", new HostedZoneProps {
+            // Se crea hosted zone...
+            HostedZone = new(this, $"{appName}HostedZone", new HostedZoneProps {
 				Comment = $"{appName} Hosted Zone",
 				ZoneName = certDomainName
 			});
@@ -56,8 +57,15 @@ namespace Cdk {
 				Values = [dmarcValue]
 			});
 
-			// Se crea certificado para custom domain...
-			Certificate = new(this, $"{appName}Certificate", new CertificateProps {
+            // Se configura BIMI para el dominio...
+            _ = new TxtRecord(this, $"{appName}BIMITXTRecord", new TxtRecordProps {
+                Zone = HostedZone,
+                RecordName = $"default._bimi.{HostedZone.ZoneName}",
+                Values = [bimiValue]
+            });
+
+            // Se crea certificado para custom domain...
+            Certificate = new(this, $"{appName}Certificate", new CertificateProps {
 				CertificateName = $"{appName}Certificate",
 				DomainName = certDomainName,
 				SubjectAlternativeNames = certAlternativeNames.Split(","),
