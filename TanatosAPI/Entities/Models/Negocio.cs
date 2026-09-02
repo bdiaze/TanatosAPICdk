@@ -27,6 +27,15 @@ namespace TanatosAPI.Entities.Models {
 		[Column("id_tipo_actividad")]
 		public long? IdTipoActividad { get; set; }
 
+		[Column("mision")]
+		public string? Mision { get; set; }
+
+		[Column("vision")]
+		public string? Vision { get; set; }
+
+		[Column("valores")]
+		public string? Valores { get; set; }
+
 		[Required]
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
 		public required DateTime FechaCreacion { get; set; }

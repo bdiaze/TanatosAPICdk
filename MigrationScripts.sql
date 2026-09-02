@@ -2802,3 +2802,38 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902004028_ColumnMisionVisionValoresNegocio') THEN
+    ALTER TABLE tanatos.negocio ADD mision text;
+    COMMENT ON COLUMN tanatos.negocio.mision IS 'Misión o propósito central del negocio.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902004028_ColumnMisionVisionValoresNegocio') THEN
+    ALTER TABLE tanatos.negocio ADD valores text;
+    COMMENT ON COLUMN tanatos.negocio.valores IS 'Valores o ideales con los que se identifica el negocio.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902004028_ColumnMisionVisionValoresNegocio') THEN
+    ALTER TABLE tanatos.negocio ADD vision text;
+    COMMENT ON COLUMN tanatos.negocio.vision IS 'Visión o aspiraciones del negocio.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902004028_ColumnMisionVisionValoresNegocio') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260902004028_ColumnMisionVisionValoresNegocio', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+

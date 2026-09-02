@@ -299,7 +299,10 @@ namespace TanatosAPI.Design.Contexts {
                 entity.Property(o => o.Nombre).HasComment("Nombre del negocio.");
                 entity.Property(o => o.Direccion).HasComment("Dirección del negocio.");
                 entity.Property(o => o.IdTipoActividad).HasComment("Identificador de la actividad que efectúa el negocio.");
-                entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el negocio.");
+				entity.Property(o => o.Mision).HasComment("Misión o propósito central del negocio.");
+				entity.Property(o => o.Vision).HasComment("Visión o aspiraciones del negocio.");
+				entity.Property(o => o.Valores).HasComment("Valores o ideales con los que se identifica el negocio.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el negocio.");
                 entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el negocio.");
                 entity.Property(o => o.Vigencia).HasComment("Vigencia del negocio.");
 
