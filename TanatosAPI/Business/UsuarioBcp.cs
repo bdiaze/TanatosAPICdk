@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Logging;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.IdentityModel.Logging;
 using Npgsql;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.Flow;
@@ -9,24 +10,46 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class UsuarioBcp(IUsuarioDao usuarioDao, ICognitoHelper cognitoHelper, IFlowHelper flowHelper) : IUsuarioBcp {
+	public class UsuarioBcp(IDateTimeProvider dateTimeProvider, IUsuarioDao usuarioDao, ICognitoHelper cognitoHelper, IFlowHelper flowHelper) : IUsuarioBcp {
 		public async Task<Usuario?> ObtenerPorFlowCustomerId(string flowCustomerId, NpgsqlTransaction? transaction = null) {
 			return await usuarioDao.ObtenerPorFlowCustomerId(flowCustomerId, transaction);
 		}	
 
+		public async Task<Usuario> Crear(string sub, string userName, string? flowCustomerId, string? nombre, string? apellido, string? correoElectronico, NpgsqlTransaction? transaction = null) {
+			Usuario nuevo = new() { 
+				Sub = sub,
+				UserName = userName,
+				FlowCustomerId = flowCustomerId,
+				Nombre = nombre,
+				Apellido = apellido,
+				CorreoElectronico = correoElectronico,
+				FechaCreacion = dateTimeProvider.UtcNow
+			};
+			await usuarioDao.Insertar(nuevo, transaction);
+			return nuevo;
+		}
+
+		public async Task<Usuario> CargarDesdeCognitoSiNoExiste(string userName, NpgsqlTransaction? transaction = null) {
+			Usuario? usuario = await usuarioDao.ObtenerPorUserName(userName, transaction);
+			if (usuario == null) {
+				Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(userName);
+				usuario = await Crear(
+					atributosUsuario.GetValueOrDefault("sub") ?? throw new InvalidOperationException("No se encuentra el sub en Cognito."),
+					userName,
+					null,
+					atributosUsuario.GetValueOrDefault("given_name"),
+					atributosUsuario.GetValueOrDefault("family_name"),
+					atributosUsuario.GetValueOrDefault("email"),
+					transaction
+				);
+			}
+			return usuario;
+		}
+
 		public async Task<Usuario> ObtenerInformacionUsuario(string sub, NpgsqlTransaction? transaction = null) {
 			Usuario? usuario = await usuarioDao.Obtener(sub, transaction);
 			if (usuario == null) {
-				// Si el usuario no existe, se inserta según información de Cognito...
-				Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
-				usuario = new() {
-					Sub = sub,
-					FlowCustomerId = null,
-					Nombre = atributosUsuario.TryGetValue("given_name", out string? givenName) ? givenName : null,
-					Apellido = atributosUsuario.TryGetValue("family_name", out string? familyName) ? familyName : null,
-					CorreoElectronico = atributosUsuario.TryGetValue("email", out string? email) ? email : null
-				};
-				await usuarioDao.Insertar(usuario, transaction);
+				usuario = await CargarDesdeCognitoSiNoExiste(sub, transaction);
 			} else if (usuario.Nombre == null || usuario.Apellido == null || usuario.CorreoElectronico == null) {
 				// Si el usuario existe, pero no cuenta con toda su información, se actualiza según información de Cognito...
 				Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);

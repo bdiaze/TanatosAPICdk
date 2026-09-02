@@ -28,12 +28,12 @@ namespace TanatosAPI.Repositories {
 				if (await reader.ReadAsync()) {
 					retorno = new Usuario {
 						Sub = reader.GetString(reader.GetOrdinal("SUB")),
-                        UserName = await reader.IsDBNullAsync(reader.GetOrdinal("USER_NAME")) ? null : reader.GetString(reader.GetOrdinal("USER_NAME")),
+                        UserName = reader.GetString(reader.GetOrdinal("USER_NAME")),
 						FlowCustomerId = await reader.IsDBNullAsync(reader.GetOrdinal("FLOW_CUSTOMER_ID")) ? null : reader.GetString(reader.GetOrdinal("FLOW_CUSTOMER_ID")),
 						Nombre = await reader.IsDBNullAsync(reader.GetOrdinal("NOMBRE")) ? null : reader.GetString(reader.GetOrdinal("NOMBRE")),
 						Apellido = await reader.IsDBNullAsync(reader.GetOrdinal("APELLIDO")) ? null : reader.GetString(reader.GetOrdinal("APELLIDO")),
 						CorreoElectronico = await reader.IsDBNullAsync(reader.GetOrdinal("CORREO_ELECTRONICO")) ? null : reader.GetString(reader.GetOrdinal("CORREO_ELECTRONICO")),
-                        FechaCreacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_CREACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
+                        FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
 					};
 				}
 
@@ -63,12 +63,12 @@ namespace TanatosAPI.Repositories {
 				if (await reader.ReadAsync()) {
 					retorno = new Usuario {
 						Sub = reader.GetString(reader.GetOrdinal("SUB")),
-						UserName = await reader.IsDBNullAsync(reader.GetOrdinal("USER_NAME")) ? null : reader.GetString(reader.GetOrdinal("USER_NAME")),
+						UserName = reader.GetString(reader.GetOrdinal("USER_NAME")),
 						FlowCustomerId = await reader.IsDBNullAsync(reader.GetOrdinal("FLOW_CUSTOMER_ID")) ? null : reader.GetString(reader.GetOrdinal("FLOW_CUSTOMER_ID")),
 						Nombre = await reader.IsDBNullAsync(reader.GetOrdinal("NOMBRE")) ? null : reader.GetString(reader.GetOrdinal("NOMBRE")),
 						Apellido = await reader.IsDBNullAsync(reader.GetOrdinal("APELLIDO")) ? null : reader.GetString(reader.GetOrdinal("APELLIDO")),
 						CorreoElectronico = await reader.IsDBNullAsync(reader.GetOrdinal("CORREO_ELECTRONICO")) ? null : reader.GetString(reader.GetOrdinal("CORREO_ELECTRONICO")),
-						FechaCreacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_CREACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
+						FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
 					};
 				}
 
@@ -98,12 +98,12 @@ namespace TanatosAPI.Repositories {
                 if (await reader.ReadAsync()) {
                     retorno = new Usuario {
 						Sub = reader.GetString(reader.GetOrdinal("SUB")),
-						UserName = await reader.IsDBNullAsync(reader.GetOrdinal("USER_NAME")) ? null : reader.GetString(reader.GetOrdinal("USER_NAME")),
+						UserName = reader.GetString(reader.GetOrdinal("USER_NAME")),
 						FlowCustomerId = await reader.IsDBNullAsync(reader.GetOrdinal("FLOW_CUSTOMER_ID")) ? null : reader.GetString(reader.GetOrdinal("FLOW_CUSTOMER_ID")),
 						Nombre = await reader.IsDBNullAsync(reader.GetOrdinal("NOMBRE")) ? null : reader.GetString(reader.GetOrdinal("NOMBRE")),
 						Apellido = await reader.IsDBNullAsync(reader.GetOrdinal("APELLIDO")) ? null : reader.GetString(reader.GetOrdinal("APELLIDO")),
 						CorreoElectronico = await reader.IsDBNullAsync(reader.GetOrdinal("CORREO_ELECTRONICO")) ? null : reader.GetString(reader.GetOrdinal("CORREO_ELECTRONICO")),
-						FechaCreacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_CREACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
+						FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
 					};
                 }
 
@@ -126,12 +126,12 @@ namespace TanatosAPI.Repositories {
             try {
                 await using NpgsqlCommand command = new(query, connection, transaction);
                 command.Parameters.AddWithValue("SUB", item.Sub);
-				command.Parameters.AddWithValue("USERNAME", (object?)item.UserName ?? DBNull.Value);
+				command.Parameters.AddWithValue("USERNAME", item.UserName);
 				command.Parameters.AddWithValue("FLOWCUSTOMERID", (object?)item.FlowCustomerId ?? DBNull.Value);
                 command.Parameters.AddWithValue("NOMBRE", (object?)item.Nombre ?? DBNull.Value);
                 command.Parameters.AddWithValue("APELLIDO", (object?)item.Apellido ?? DBNull.Value);
                 command.Parameters.AddWithValue("CORREOELECTRONICO", (object?)item.CorreoElectronico ?? DBNull.Value);
-				command.Parameters.AddWithValue("FECHACREACION", (object?)item.FechaCreacion ?? DBNull.Value);
+				command.Parameters.AddWithValue("FECHACREACION", item.FechaCreacion);
 				await command.ExecuteNonQueryAsync();
             } finally {
                 if (disposeConnection && connection != null) {
@@ -151,12 +151,12 @@ namespace TanatosAPI.Repositories {
 
             try {
                 await using NpgsqlCommand command = new(query, connection, transaction);
-				command.Parameters.AddWithValue("USERNAME", (object?)item.UserName ?? DBNull.Value);
+				command.Parameters.AddWithValue("USERNAME", item.UserName);
 				command.Parameters.AddWithValue("FLOWCUSTOMERID", (object?)item.FlowCustomerId ?? DBNull.Value);
                 command.Parameters.AddWithValue("NOMBRE", (object?)item.Nombre ?? DBNull.Value);
                 command.Parameters.AddWithValue("APELLIDO", (object?)item.Apellido ?? DBNull.Value);
                 command.Parameters.AddWithValue("CORREOELECTRONICO", (object?)item.CorreoElectronico ?? DBNull.Value);
-				command.Parameters.AddWithValue("FECHACREACION", (object?)item.FechaCreacion ?? DBNull.Value);
+				command.Parameters.AddWithValue("FECHACREACION", item.FechaCreacion);
 				command.Parameters.AddWithValue("SUB", item.Sub);
                 await command.ExecuteNonQueryAsync();
             } finally {

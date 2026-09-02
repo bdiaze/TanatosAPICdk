@@ -15,7 +15,7 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class NormaSuscritaBcp(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntornoHelper, IKairosHelper kairosHelper, INormaSuscritaDao normaSuscritaDao) : INormaSuscritaBcp {
+	public class NormaSuscritaBcp(IDateTimeProvider dateTimeProvider, INormaSuscritaDao normaSuscritaDao) : INormaSuscritaBcp {
 		public bool EstaVigente(NormaSuscrita? normaSuscrita) {
 			return normaSuscrita != null && normaSuscrita.Vigencia;
 		}

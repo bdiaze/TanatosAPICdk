@@ -2,10 +2,12 @@
 using Scriban.Runtime;
 using System.Diagnostics;
 using System.Net;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using TanatosAPI.Entities.Others.Hermes;
 using TanatosAPI.Entities.Others.Perfil;
+using TanatosAPI.Entities.Others.Suscripcion;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Helpers;
@@ -15,12 +17,42 @@ namespace TanatosAPI.Endpoints {
 	public static class PerfilEndpoints {
 		public static void MapPerfilEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/Perfil");
+			group.MapConfiguracionInicialEndpoint();
 			group.MapEnviarCodigoVerificacion();
 
             RouteGroupBuilder publicGroup = routes.MapGroup("/public/Perfil");
             publicGroup.MapConfirmarRegistro();
             publicGroup.MapReenviarCodigoVerificacion();
         }
+
+		private static IEndpointRouteBuilder MapConfiguracionInicialEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPost("/ConfiguracionInicial", async (EntPerfilConfiguracionInicial entrada, IHostEnvironment environment, PerfilUseCase perfilUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					await perfilUseCase.ConfiguracionInicial(entrada.UserName);
+
+					LambdaLogger.Log(
+						$"[POST] - [Perfil] - [ConfiguracionInicial] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Se ejecutó correctamente la configuración inicial - User Name: {entrada.UserName}.");
+					return Results.Ok();
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[POST] - [Perfil] - [ConfiguracionInicial] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[POST] - [Perfil] - [ConfiguracionInicial] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al ejecutar la configuración inicial - User Name: {entrada.UserName}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Perfil.Read.All", "Perfil.Write.All", "Suscripciones.Read.All", "Suscripciones.Write.All", "Sistema.Read.Public");
+
+			return routes;
+		}
 
 		private static void MapEnviarCodigoVerificacion(this IEndpointRouteBuilder routes) {
 			routes.MapPost("/EnviarCodigoVerificacion", async (EntPerfilEnviarCodigoVerificacion entrada, IHostEnvironment environment, IVariableEntornoHelper variableEntorno, IKMSHelper kmsHelper, IHtmlRenderer htmlRenderer, IHermesHelper hermesHelper) => {

@@ -261,6 +261,7 @@ builder.Services.AddScoped<IHistorialNormaSuscritaUseCase, HistorialNormaSuscrit
 builder.Services.AddScoped<TipoUnidadTiempoUseCase>();
 builder.Services.AddScoped<TipoProcesoAutomaticoUseCase>();
 builder.Services.AddScoped<INormaSuscritaProcesoNotificacionUseCase, NormaSuscritaProcesoNotificacionUseCase>();
+builder.Services.AddScoped<PerfilUseCase>();
 #endregion
 
 string cognitoRegion;

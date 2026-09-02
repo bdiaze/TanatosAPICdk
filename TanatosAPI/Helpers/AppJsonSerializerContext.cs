@@ -149,6 +149,7 @@ namespace TanatosAPI.Helpers {
     [JsonSerializable(typeof(GoogleAssessmentResponse))]
     [JsonSerializable(typeof(GoogleAssessmentParams))]
     [JsonSerializable(typeof(GoogleTokenResponse))]
+	[JsonSerializable(typeof(EntPerfilConfiguracionInicial))]
 	[JsonSerializable(typeof(EntPerfilEnviarCodigoVerificacion))]
     [JsonSerializable(typeof(EntPerfilConfirmarRegistro))]
     [JsonSerializable(typeof(EntPerfilReenviarCodigoVerificacion))]

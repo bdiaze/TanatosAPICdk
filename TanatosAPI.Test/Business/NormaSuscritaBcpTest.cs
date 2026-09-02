@@ -22,8 +22,6 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace TanatosAPI.Test.Business {
     public class NormaSuscritaBcpTest {
         private readonly IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
-        private readonly IVariableEntornoHelper variableEntorno = Substitute.For<IVariableEntornoHelper>();
-        private readonly IKairosHelper kairosHelper = Substitute.For<IKairosHelper>();
         private readonly INormaSuscritaDao normaSuscritaDao = Substitute.For<INormaSuscritaDao>();
         private readonly NormaSuscritaBcp normaSuscritaBcp;
 
@@ -33,7 +31,7 @@ namespace TanatosAPI.Test.Business {
 		public NormaSuscritaBcpTest() {
             dateTimeProvider.UtcNow.Returns(FECHA_DUMMY);
 
-            normaSuscritaBcp = new(dateTimeProvider, variableEntorno, kairosHelper, normaSuscritaDao);
+            normaSuscritaBcp = new(dateTimeProvider, normaSuscritaDao);
         }
 
         public static NormaSuscrita NormaSuscritaDummy(

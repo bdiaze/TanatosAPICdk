@@ -15,27 +15,36 @@ using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Test.Business {
 	public class UsuarioBcpTest {
+		private readonly IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 		private readonly IUsuarioDao usuarioDao = Substitute.For<IUsuarioDao>();
 		private readonly ICognitoHelper cognitoHelper = Substitute.For<ICognitoHelper>();
 		private readonly IFlowHelper flowHelper = Substitute.For<IFlowHelper>();
 		private readonly UsuarioBcp usuarioBcp;
 
+		private static readonly DateTime FECHA_DUMMY = new(2026, 1, 15, 14, 0, 0, DateTimeKind.Utc);
+
 		public UsuarioBcpTest() {
-			usuarioBcp = new(usuarioDao, cognitoHelper, flowHelper);
+			dateTimeProvider.UtcNow.Returns(FECHA_DUMMY);
+
+			usuarioBcp = new(dateTimeProvider, usuarioDao, cognitoHelper, flowHelper);
 		}
 
 		public static Usuario UsuarioDummy(
 			string sub = "sub-test",
+			string userName = "user-name-test",
 			string? flowCustomerId = "flow-customer-id-test",
 			string? nombre = "nombre-test",
 			string? apellido = "apellido-test",
-			string? correoElectronico = "correo@test.cl"
+			string? correoElectronico = "correo@test.cl",
+			DateTime? fechaCreacion = null
 		) => new() {
 			Sub = sub,
+			UserName = userName,
 			FlowCustomerId = flowCustomerId,
 			Nombre = nombre,
 			Apellido = apellido,
-			CorreoElectronico = correoElectronico
+			CorreoElectronico = correoElectronico,
+			FechaCreacion = fechaCreacion ?? FECHA_DUMMY,
 		};
 
 		[Fact]
@@ -84,34 +93,6 @@ namespace TanatosAPI.Test.Business {
 				u.CorreoElectronico == "correo@test.cl"), 
 				Arg.Any<NpgsqlTransaction?>()
 			);
-		}
-
-		[Fact]
-		public async Task ObtenerInformacionUsuarioTest_NoExistente() {
-			usuarioDao.Obtener("sub-test", Arg.Any<NpgsqlTransaction?>()).Returns((Usuario?)null);
-			cognitoHelper.ObtenerUsuario("sub-test").Returns(new Dictionary<string, string>() {
-				["given_name"] = "nombre-test",
-				["family_name"] = "apellido-test",
-				["email"] = "correo@test.cl"
-			});
-
-			Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario("sub-test");
-			Assert.Equal("sub-test", usuario.Sub);
-			Assert.Equal("nombre-test", usuario.Nombre);
-			Assert.Equal("apellido-test", usuario.Apellido);
-			Assert.Equal("correo@test.cl", usuario.CorreoElectronico);
-			await usuarioDao.Received(1).Obtener("sub-test", Arg.Any<NpgsqlTransaction?>());
-			await cognitoHelper.Received(1).ObtenerUsuario(Arg.Any<string>());
-			await usuarioDao.Received(1).Insertar(
-				Arg.Is<Usuario>(u =>
-					u.Sub == "sub-test" &&
-					u.Nombre == "nombre-test" &&
-					u.Apellido == "apellido-test" &&
-					u.CorreoElectronico == "correo@test.cl"
-				),
-				Arg.Any<NpgsqlTransaction?>()
-			);
-			await usuarioDao.DidNotReceive().Actualizar(Arg.Any<Usuario>(), Arg.Any<NpgsqlTransaction?>());
 		}
 
 		[Fact]

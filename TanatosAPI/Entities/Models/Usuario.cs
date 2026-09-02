@@ -11,7 +11,7 @@ namespace TanatosAPI.Entities.Models {
 		public required string Sub { get; set; }
 
 		[Column("user_name")]
-		public string? UserName { get; set; }
+		public required string UserName { get; set; }
 
 		[Column("flow_customer_id")]
 		public string? FlowCustomerId { get; set; }
@@ -26,6 +26,6 @@ namespace TanatosAPI.Entities.Models {
 		public string? CorreoElectronico { get; set; }
 
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
-		public DateTime? FechaCreacion { get; set; }
+		public required DateTime FechaCreacion { get; set; }
 	}
 }
