@@ -5,11 +5,11 @@ using TanatosAPI.Interfaces.Business;
 namespace TanatosAPI.UseCases {
 	public class TipoProcesoAutomaticoUseCase(ITipoProcesoAutomaticoBcp tipoProcesoAutomaticoBcp) {
 		public async Task<List<TipoProcesoAutomatico>> ObtenerHabilitados() {
-			return await tipoProcesoAutomaticoBcp.ObtenerTodos(filtrarVigentes: true, filtrarHabilitados: true);
+			return await tipoProcesoAutomaticoBcp.ObtenerTodos(filtrarHabilitados: true);
 		}
 
 		public async Task<List<TipoProcesoAutomatico>> ObtenerVigentes() {
-			return await tipoProcesoAutomaticoBcp.ObtenerTodos(filtrarVigentes: true);
+			return await tipoProcesoAutomaticoBcp.ObtenerTodos();
 		}
 
 		public async Task<TipoProcesoAutomatico> Registrar(long id, string nombre, string? descripcion, bool habilitado, int orden) {
@@ -76,11 +76,9 @@ namespace TanatosAPI.UseCases {
 		public async Task Eliminar(long idTipoProcesoAutomatico) {
 			TipoProcesoAutomatico? existente = await tipoProcesoAutomaticoBcp.Obtener(idTipoProcesoAutomatico);
 
-			if (!tipoProcesoAutomaticoBcp.EstaVigente(existente)) {
-				return;
+			if (existente != null) {
+				await tipoProcesoAutomaticoBcp.Eliminar(existente);
 			}
-
-			await tipoProcesoAutomaticoBcp.Eliminar(existente!);
 		}
 	}
 }

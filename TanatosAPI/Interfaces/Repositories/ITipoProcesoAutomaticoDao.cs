@@ -7,5 +7,6 @@ namespace TanatosAPI.Interfaces.Repositories {
 		public Task<List<TipoProcesoAutomatico>> ObtenerTodos(NpgsqlTransaction? transaction = null);
 		public Task Insertar(TipoProcesoAutomatico item, NpgsqlTransaction? transaction = null);
 		public Task Actualizar(TipoProcesoAutomatico item, NpgsqlTransaction? transaction = null);
+		public Task Eliminar(long id, NpgsqlTransaction? transaction = null);
 	}
 }

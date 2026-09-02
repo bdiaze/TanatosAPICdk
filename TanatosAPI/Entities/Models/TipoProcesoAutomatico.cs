@@ -32,13 +32,6 @@ namespace TanatosAPI.Entities.Models {
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
 		public required DateTime FechaCreacion { get; set; }
 
-		[Column("fecha_eliminacion", TypeName = "timestamp with time zone")]
-		public DateTime? FechaEliminacion { get; set; }
-
-		[Required]
-		[Column("vigencia")]
-		public required bool Vigencia { get; set; }
-
 		[JsonIgnore]
 		public List<ProcesoAutomatico>? ProcesosAutomaticos { get; set; }
 	}

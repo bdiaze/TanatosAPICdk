@@ -628,8 +628,6 @@ namespace TanatosAPI.Design.Contexts {
 				entity.Property(o => o.Habilitado).HasComment("Indicador de si el tipo de proceso automático está habilitado.");
 				entity.Property(o => o.Orden).HasComment("Orden en que se presenta el tipo de proceso automático.");
 				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el tipo de proceso automático.");
-				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el tipo de proceso automático.");
-				entity.Property(o => o.Vigencia).HasComment("Vigencia del tipo de proceso automático.");
 			});
 
 			modelBuilder.Entity<ProcesoAutomatico>(entity => {
