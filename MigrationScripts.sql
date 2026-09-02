@@ -2914,3 +2914,32 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902225925_RequiredUsuario') THEN
+    UPDATE tanatos.usuario SET user_name = '' WHERE user_name IS NULL;
+    ALTER TABLE tanatos.usuario ALTER COLUMN user_name SET NOT NULL;
+    ALTER TABLE tanatos.usuario ALTER COLUMN user_name SET DEFAULT '';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902225925_RequiredUsuario') THEN
+    UPDATE tanatos.usuario SET fecha_creacion = TIMESTAMPTZ '-infinity' WHERE fecha_creacion IS NULL;
+    ALTER TABLE tanatos.usuario ALTER COLUMN fecha_creacion SET NOT NULL;
+    ALTER TABLE tanatos.usuario ALTER COLUMN fecha_creacion SET DEFAULT TIMESTAMPTZ '-infinity';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902225925_RequiredUsuario') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260902225925_RequiredUsuario', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+
