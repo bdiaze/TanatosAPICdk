@@ -35,13 +35,37 @@ namespace TanatosAPI.UseCases {
 					cantAntelacion.Value, 
 					unidadAntelacion
 				);
-				vencimiento = vencimientos.FirstOrDefault(v => v.FechaVencimiento == DateTimeHelper.TransformarFechaTimezoneAUTC(fechaVencimientoChile));
+				vencimiento = vencimientos.FirstOrDefault(v => {
+					DateTime fechaSinSegundos = new(
+						v.FechaVencimiento.Year, 
+						v.FechaVencimiento.Month, 
+						v.FechaVencimiento.Day, 
+						v.FechaVencimiento.Hour, 
+						v.FechaVencimiento.Minute, 
+						0, 
+						v.FechaVencimiento.Kind
+					);
+
+					return fechaSinSegundos == DateTimeHelper.TransformarFechaTimezoneAUTC(fechaVencimientoChile);
+				});
 			} else if (!esVencimiento) {
 				// Si no estamos en una fecha de vencimiento, pero tampoco tenemos información de la notificación previa, se asume último vencimiento...
 				vencimiento = vencimientos.OrderByDescending(v => v.FechaVencimiento).FirstOrDefault();
 			} else {
 				// Si estamos en una fecha de vencimiento, se busca el vencimiento que coincide con la fecha de programación...
-				vencimiento = vencimientos.FirstOrDefault(v => v.FechaVencimiento == masCercanaUTC);
+				vencimiento = vencimientos.FirstOrDefault(v => {
+					DateTime fechaSinSegundos = new(
+						v.FechaVencimiento.Year,
+						v.FechaVencimiento.Month,
+						v.FechaVencimiento.Day,
+						v.FechaVencimiento.Hour,
+						v.FechaVencimiento.Minute,
+						0,
+						v.FechaVencimiento.Kind
+					);
+
+					return fechaSinSegundos == masCercanaUTC;
+				});
 			}
 
 			return (vencimiento, masCercanaUTC);

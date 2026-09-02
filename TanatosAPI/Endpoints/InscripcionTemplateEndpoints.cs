@@ -168,6 +168,9 @@ namespace TanatosAPI.Endpoints {
 									await normaSuscritaDao.Actualizar(normaSuscrita, transaction!.NpgsqlTransaction());
 								} else if (templateNorma.DiasActivacionAutomatica != null) {
 									DateTime localNow = DateTimeHelper.TransformarFechaUTCATimezone(dateTimeProvider.UtcNow);
+									// Se quitan segundos de la hora actual para los cálculos de próximo vencimiento...
+									localNow = new DateTime(localNow.Year, localNow.Month, localNow.Day, localNow.Hour, localNow.Minute, 0, localNow.Kind);
+
 									DateTime vencimientoLocal = localNow.AddDays(templateNorma.DiasActivacionAutomatica.Value);
 									DateTime proximoVencimiento = DateTimeHelper.TransformarFechaTimezoneAUTC(vencimientoLocal);
 
