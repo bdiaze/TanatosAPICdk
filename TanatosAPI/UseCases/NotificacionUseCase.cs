@@ -72,15 +72,7 @@ namespace TanatosAPI.UseCases {
 			);
 
 			if (vencimiento == null) {
-				LambdaLogger.Log(
-					$"No se logra identificar el vencimieto al que pertenece el proceso de notificación - " +
-					$"ID Norma Suscrita: {idNormaSuscrita} - " +
-					$"Cron: {cron} - " +
-					$"Frecuencia en Días: {frecuenciaDias} - " +
-					$"Inicio Ejecución UTC: {inicioEjecucionUtc:o}"
-				);
-
-				return;
+				throw new InvalidOperationException("No se logra identificar el vencimiento al que pertenece el proceso de notificación.");
 			}
 
 			// Se procesan las notificaciones de todos los destinatarios validados...
