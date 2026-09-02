@@ -83,6 +83,9 @@ namespace TanatosAPI.Endpoints {
 								Direccion = d.Direccion,
 								IdTipoActividad = tipoActividad?.Id,
 								NombreTipoActividad = tipoActividad?.Nombre,
+								Mision = d.Mision,
+								Vision = d.Vision,
+								Valores = d.Valores,
 								FechaCreacion = d.FechaCreacion,
 							}; 
 						})
@@ -112,6 +115,9 @@ namespace TanatosAPI.Endpoints {
 				try {
 					entrada.Nombre = entrada.Nombre.Trim();
 					entrada.Direccion = entrada.Direccion?.Trim();
+					entrada.Mision = entrada.Mision?.Trim();
+					entrada.Vision = entrada.Vision?.Trim();
+					entrada.Valores = entrada.Valores?.Trim();
 
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
@@ -153,6 +159,9 @@ namespace TanatosAPI.Endpoints {
 						Nombre = entrada.Nombre,
 						Direccion = entrada.Direccion,
 						IdTipoActividad = entrada.IdTipoActividad,
+						Mision = entrada.Mision,
+						Vision = entrada.Vision,
+						Valores = entrada.Valores,
 						FechaCreacion = dateTimeProvider.UtcNow,
 						Vigencia = true
 					};
@@ -164,6 +173,9 @@ namespace TanatosAPI.Endpoints {
 						Direccion = nuevo.Direccion,
 						IdTipoActividad = nuevo.IdTipoActividad,
 						NombreTipoActividad = tipoActividad?.Nombre,
+						Mision = nuevo.Mision,
+						Vision = nuevo.Vision,
+						Valores = nuevo.Valores,
 						FechaCreacion = nuevo.FechaCreacion,
 					};
 
@@ -191,6 +203,9 @@ namespace TanatosAPI.Endpoints {
 				try {
 					entrada.Nombre = entrada.Nombre.Trim();
 					entrada.Direccion = entrada.Direccion?.Trim();
+					entrada.Mision = entrada.Mision?.Trim();
+					entrada.Vision = entrada.Vision?.Trim();
+					entrada.Valores = entrada.Valores?.Trim();
 
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
@@ -228,10 +243,14 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
-					if (existente.Nombre != entrada.Nombre || existente.Direccion != entrada.Direccion || existente.IdTipoActividad != entrada.IdTipoActividad) {
+					if (existente.Nombre != entrada.Nombre || existente.Direccion != entrada.Direccion || existente.IdTipoActividad != entrada.IdTipoActividad ||
+						existente.Mision != entrada.Mision || existente.Vision != entrada.Vision || existente.Valores != entrada.Valores) {
 						existente.Nombre = entrada.Nombre;
 						existente.Direccion = entrada.Direccion;
 						existente.IdTipoActividad = entrada.IdTipoActividad;
+						existente.Mision = entrada.Mision;
+						existente.Vision = entrada.Vision;
+						existente.Valores = entrada.Valores;
 
 						await negocioDao.Actualizar(existente);
 					}
@@ -242,6 +261,9 @@ namespace TanatosAPI.Endpoints {
 						Direccion = existente.Direccion,
 						IdTipoActividad = existente.IdTipoActividad,
 						NombreTipoActividad = tipoActividad?.Nombre,
+						Mision = existente.Mision,
+						Vision = existente.Vision,
+						Valores = existente.Valores,
 						FechaCreacion = existente.FechaCreacion,
 					};
 
