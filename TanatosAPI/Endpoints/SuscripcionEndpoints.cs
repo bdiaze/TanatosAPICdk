@@ -188,7 +188,6 @@ namespace TanatosAPI.Endpoints {
 			return routes;
 		}
 
-
 		private static IEndpointRouteBuilder MapCancelarEndpoint(this IEndpointRouteBuilder routes) {
 			routes.MapDelete("/", async (IHostEnvironment environment, ClaimsPrincipal user, SuscripcionUseCase suscripcionUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();

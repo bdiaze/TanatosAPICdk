@@ -131,7 +131,11 @@ namespace TanatosAPI.UseCases {
 					transaction = await connection.BeginTransactionAsync();
 				}
 
-				List<Plan> planesGratuitos = await planBcp.ObtenerPlanesGratuitos(transaction!.NpgsqlTransaction());
+				List<Suscripcion> suscripcion = await suscripcionBcp.ObtenerVigentesPorSub(sub, transaction!.NpgsqlTransaction());
+				List<Plan> planesGratuitos = [.. (await planBcp.ObtenerPlanesGratuitos(transaction!.NpgsqlTransaction()))
+					.Where(p => !p.SuscripcionUnica || !suscripcion.Any(s => s.IdPlan == p.Id))
+				];
+
 				foreach (Plan plan in planesGratuitos) {
 					await SuscribirseAPlan(sub, plan.Id, transaction);
 				}
