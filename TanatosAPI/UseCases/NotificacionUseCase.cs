@@ -1,6 +1,8 @@
-﻿using Cronos;
+﻿using Amazon.Lambda.Core;
+using Cronos;
 using Npgsql;
 using Scriban.Runtime;
+using System.Diagnostics;
 using System.Net;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
@@ -69,84 +71,94 @@ namespace TanatosAPI.UseCases {
 				transaction
 			);
 
-			if (vencimiento != null) {
-				// Se procesan las notificaciones de todos los destinatarios validados...
-				foreach (DestinatarioNotificacion destinatario in destinatariosValidados) {
-					(HistorialNotificacion historialNotificacion, string codigoAcceso) = await historialNotificacionBcp.Registrar(
-						vencimiento.Id,
-                        destinatario.Id,
-                        idTipoUnidadTiempoAntelacion,
-                        cantAntelacion,
-                        fechaProgramacionNotificacion,
-						transaction
-                    );
+			if (vencimiento == null) {
+				LambdaLogger.Log(
+					$"No se logra identificar el vencimieto al que pertenece el proceso de notificación - " +
+					$"ID Norma Suscrita: {idNormaSuscrita} - " +
+					$"Cron: {cron} - " +
+					$"Frecuencia en Días: {frecuenciaDias} - " +
+					$"Inicio Ejecución UTC: {inicioEjecucionUtc:o}"
+				);
 
-					// Se valida que según suscripción el destinatario esté habilitado, si no lo esta entonces no se manda la notificación...
-					if (!await destinatarioNotificacionUseCase.DestinatarioHabilitado(normaSuscrita.Sub, normaSuscrita.IdNegocio, destinatario.Id, transaction)) {
-						await historialNotificacionBcp.MarcarOmitido(historialNotificacion, "El destinatario no está habilitado según la suscripción del usuario.", transaction);
-						continue;
-					}
+				return;
+			}
 
-					// Se valida que la unidad de tiempo este vigente, solo si viene como entrada...
-					if (idTipoUnidadTiempoAntelacion != null && unidadTiempo == null) {
-                        await historialNotificacionBcp.MarcarOmitido(historialNotificacion, "El tipo de unidad de tiempo no está vigente.", transaction);
-                        continue;
-					}
+			// Se procesan las notificaciones de todos los destinatarios validados...
+			foreach (DestinatarioNotificacion destinatario in destinatariosValidados) {
+				(HistorialNotificacion historialNotificacion, string codigoAcceso) = await historialNotificacionBcp.Registrar(
+					vencimiento.Id,
+                    destinatario.Id,
+                    idTipoUnidadTiempoAntelacion,
+                    cantAntelacion,
+                    fechaProgramacionNotificacion,
+					transaction
+                );
+
+				// Se valida que según suscripción el destinatario esté habilitado, si no lo esta entonces no se manda la notificación...
+				if (!await destinatarioNotificacionUseCase.DestinatarioHabilitado(normaSuscrita.Sub, normaSuscrita.IdNegocio, destinatario.Id, transaction)) {
+					await historialNotificacionBcp.MarcarOmitido(historialNotificacion, "El destinatario no está habilitado según la suscripción del usuario.", transaction);
+					continue;
+				}
+
+				// Se valida que la unidad de tiempo este vigente, solo si viene como entrada...
+				if (idTipoUnidadTiempoAntelacion != null && unidadTiempo == null) {
+                    await historialNotificacionBcp.MarcarOmitido(historialNotificacion, "El tipo de unidad de tiempo no está vigente.", transaction);
+                    continue;
+				}
 										
-					if (destinatario.IdTipoReceptor == 1) {
-                        // Si el destinatario es email, se manda correo electrónico...
-                        string hermesIdMensaje;
-						if (!esVencimiento.Value) {
-							hermesIdMensaje = await historialNotificacionBcp.EnviarCorreoNotificacionPrevia(
-                                destinatario.Destino,
-                                vencimiento.FechaVencimiento, 
-                                unidadTiempo, 
-                                cantAntelacion,
-                                normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre,
-                                normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
-                                codigoAcceso
-                            );
-						} else {
-							hermesIdMensaje = await historialNotificacionBcp.EnviarCorreoNotificacionVencido(
-                                destinatario.Destino,
-                                normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre,
-                                normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
-                                codigoAcceso
-                            );
-						}
-
-						await historialNotificacionBcp.MarcarEnviado(historialNotificacion, hermesIdMensaje, transaction);
-					} else if (destinatario.IdTipoReceptor == 2) {
-                        // Si el destinatario es Whatsapp, se manda mensaje de Whatsapp...
-                        string hermesIdMensaje;
-						if (!esVencimiento.Value) {
-                            hermesIdMensaje = await historialNotificacionBcp.EnviarWhatsappNotificacionPrevia(
-                                destinatario.Destino,
-                                vencimiento.FechaVencimiento, 
-                                unidadTiempo, 
-                                cantAntelacion,
-                                normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre,
-                                normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
-                                codigoAcceso
-                            );
-						} else {
-                            hermesIdMensaje = await historialNotificacionBcp.EnviarWhatsappNotificacionVencido(
-                                destinatario.Destino,
-                                normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre,
-                                normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
-                                codigoAcceso
-                            );
-                        }
-                        await historialNotificacionBcp.MarcarEnviado(historialNotificacion, hermesIdMensaje, transaction);
+				if (destinatario.IdTipoReceptor == 1) {
+                    // Si el destinatario es email, se manda correo electrónico...
+                    string hermesIdMensaje;
+					if (!esVencimiento.Value) {
+						hermesIdMensaje = await historialNotificacionBcp.EnviarCorreoNotificacionPrevia(
+                            destinatario.Destino,
+                            vencimiento.FechaVencimiento, 
+                            unidadTiempo, 
+                            cantAntelacion,
+                            normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre,
+                            normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
+                            codigoAcceso
+                        );
 					} else {
-                        // En cualquier otro caso, se omite la notificación por falta de implementación...
-                        await historialNotificacionBcp.MarcarOmitido(historialNotificacion, "El tipo de receptor asociado al destinatario no tiene lógica de notificación implementada.", transaction);
+						hermesIdMensaje = await historialNotificacionBcp.EnviarCorreoNotificacionVencido(
+                            destinatario.Destino,
+                            normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre,
+                            normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
+                            codigoAcceso
+                        );
 					}
-				}
 
-				if (programarSiguienteEjecucion) {
-					await historialNormaSuscritaUseCase.ProgramarSiguienteVencimiento(vencimiento, transaction);
+					await historialNotificacionBcp.MarcarEnviado(historialNotificacion, hermesIdMensaje, transaction);
+				} else if (destinatario.IdTipoReceptor == 2) {
+                    // Si el destinatario es Whatsapp, se manda mensaje de Whatsapp...
+                    string hermesIdMensaje;
+					if (!esVencimiento.Value) {
+                        hermesIdMensaje = await historialNotificacionBcp.EnviarWhatsappNotificacionPrevia(
+                            destinatario.Destino,
+                            vencimiento.FechaVencimiento, 
+                            unidadTiempo, 
+                            cantAntelacion,
+                            normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre,
+                            normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
+                            codigoAcceso
+                        );
+					} else {
+                        hermesIdMensaje = await historialNotificacionBcp.EnviarWhatsappNotificacionVencido(
+                            destinatario.Destino,
+                            normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre,
+                            normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
+                            codigoAcceso
+                        );
+                    }
+                    await historialNotificacionBcp.MarcarEnviado(historialNotificacion, hermesIdMensaje, transaction);
+				} else {
+                    // En cualquier otro caso, se omite la notificación por falta de implementación...
+                    await historialNotificacionBcp.MarcarOmitido(historialNotificacion, "El tipo de receptor asociado al destinatario no tiene lógica de notificación implementada.", transaction);
 				}
+			}
+
+			if (programarSiguienteEjecucion) {
+				await historialNormaSuscritaUseCase.ProgramarSiguienteVencimiento(vencimiento, transaction);
 			}
 		}
 	}
