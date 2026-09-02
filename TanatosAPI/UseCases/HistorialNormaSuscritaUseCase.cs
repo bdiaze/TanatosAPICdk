@@ -53,12 +53,14 @@ namespace TanatosAPI.UseCases {
 				transaction
             );
 
-			DateTime proximoVencimiento = CalcularSiguienteVencimiento(historialNormaSuscrita.FechaVencimiento, tipoPeriodicidad);
+            if (tipoPeriodicidad.DeltaDias != null || tipoPeriodicidad.DeltaMeses != null || tipoPeriodicidad.DeltaAnnos != null) {
+                DateTime proximoVencimiento = CalcularSiguienteVencimiento(historialNormaSuscrita.FechaVencimiento, tipoPeriodicidad);
 
-			if (historialNormaSuscrita.FechaVencimiento != proximoVencimiento) {
-				// Se crea el próximo vencimiento...
-				_ = await historialNormaSuscritaBcp.Crear(historialNormaSuscrita.IdNormaSuscrita, proximoVencimiento, transaction);
-			}
+                if (historialNormaSuscrita.FechaVencimiento != proximoVencimiento) {
+                    // Se crea el próximo vencimiento...
+                    _ = await historialNormaSuscritaBcp.Crear(historialNormaSuscrita.IdNormaSuscrita, proximoVencimiento, transaction);
+                }
+            }
 		}
 
         public DateTime CalcularSiguienteVencimiento(DateTime vencimientoActual, TipoPeriodicidad tipoPeriodicidad, bool fechasChilenas = false) {
