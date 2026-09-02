@@ -577,13 +577,16 @@ namespace TanatosAPI.Design.Contexts {
 
             modelBuilder.Entity<Usuario>(entity => {
                 entity.HasIndex(o => new { o.FlowCustomerId }).IsUnique();
-                entity.ToTable(o => o.HasComment("Tabla que contiene la información del usuario."));
+				entity.HasIndex(o => new { o.UserName }).IsUnique();
+				entity.ToTable(o => o.HasComment("Tabla que contiene la información del usuario."));
                 entity.Property(o => o.Sub).HasComment("Identificador del usuario.");
-                entity.Property(o => o.FlowCustomerId).HasComment("ID del cliente en Flow.");
+				entity.Property(o => o.UserName).HasComment("User name del usuario.");
+				entity.Property(o => o.FlowCustomerId).HasComment("ID del cliente en Flow.");
                 entity.Property(o => o.Nombre).HasComment("Nombre del usuario.");
                 entity.Property(o => o.Apellido).HasComment("Apellido del usuario.");
                 entity.Property(o => o.CorreoElectronico).HasComment("Correo electrónico del usuario.");
-            });
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha de creación del usuario.");
+			});
 
 			modelBuilder.Entity<PreguntaFrecuente>(entity => {
 				entity.ToTable(o => o.HasComment("Tabla que contiene las preguntas frecuentes con sus respectivas respuestas."));

@@ -14,20 +14,20 @@ namespace TanatosAPI.Helpers {
 
 		private readonly Dictionary<string, Dictionary<string, string>> atributosUsuarios = [];
 
-		public async Task<Dictionary<string, string>> ObtenerUsuario(string sub) {
-			if (!atributosUsuarios.TryGetValue(sub, out Dictionary<string, string>? atributos)) {
+		public async Task<Dictionary<string, string>> ObtenerUsuario(string username) {
+			if (!atributosUsuarios.TryGetValue(username, out Dictionary<string, string>? atributos)) {
 
 			 	AdminGetUserResponse response = await client.AdminGetUserAsync(new AdminGetUserRequest {
 					UserPoolId = variableEntorno.Obtener("COGNITO_USER_POOL_ID"),
-					Username = sub
+					Username = username
 				});
 
 				if (response == null || response.UserAttributes == null) {
-					throw new InvalidOperationException($"No se pudo rescatar correctamente los atributos del usuario: {sub}");
+					throw new InvalidOperationException($"No se pudo rescatar correctamente los atributos del usuario: {username}");
 				}
 
 				atributos = response.UserAttributes.ToDictionary(a => a.Name, a => a.Value);
-				atributosUsuarios[sub] = atributos;
+				atributosUsuarios[username] = atributos;
 			}
 
 			return atributos;

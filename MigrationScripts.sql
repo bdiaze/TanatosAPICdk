@@ -2880,3 +2880,37 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902212029_AddColumnUserNameFechaCreacionUsuario') THEN
+    ALTER TABLE tanatos.usuario ADD fecha_creacion timestamp with time zone;
+    COMMENT ON COLUMN tanatos.usuario.fecha_creacion IS 'Fecha de creación del usuario.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902212029_AddColumnUserNameFechaCreacionUsuario') THEN
+    ALTER TABLE tanatos.usuario ADD user_name text;
+    COMMENT ON COLUMN tanatos.usuario.user_name IS 'User name del usuario.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902212029_AddColumnUserNameFechaCreacionUsuario') THEN
+    CREATE UNIQUE INDEX "IX_usuario_user_name" ON tanatos.usuario (user_name);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902212029_AddColumnUserNameFechaCreacionUsuario') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260902212029_AddColumnUserNameFechaCreacionUsuario', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+
