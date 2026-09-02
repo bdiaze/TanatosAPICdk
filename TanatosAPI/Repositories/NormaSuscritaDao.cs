@@ -13,7 +13,7 @@ namespace TanatosAPI.Repositories {
 		public async Task<List<NormaSuscrita>> ObtenerPorSub(string sub, long? idNegocio = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ID_CARGO, ORDEN_VISUAL, " +
-				"EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, PROCESOS_NOTIFICACIONES, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NORMA_SUSCRITA " +
+				"EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NORMA_SUSCRITA " +
 				"WHERE SUB = @SUB AND (ID_NEGOCIO = @IDNEGOCIO OR @IDNEGOCIO IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
 
 			bool disposeConnection = transaction?.Connection == null;
@@ -32,26 +32,25 @@ namespace TanatosAPI.Repositories {
 
 				while (await reader.ReadAsync()) {
 					retorno.Add(new NormaSuscrita {
-						Id = reader.GetInt64(0),
-						Sub = reader.GetString(1),
-						IdNegocio = reader.GetInt64(2),
-						IdTemplate = await reader.IsDBNullAsync(3) ? null : reader.GetInt64(3),
-						IdNorma = await reader.IsDBNullAsync(4) ? null : reader.GetInt64(4),
-						Nombre = await reader.IsDBNullAsync(5) ? null : reader.GetString(5),
-						Descripcion = await reader.IsDBNullAsync(6) ? null : reader.GetString(6),
-						IdTipoPeriodicidad = await reader.IsDBNullAsync(7) ? null : reader.GetInt64(7),
-						Multa = await reader.IsDBNullAsync(8) ? null : reader.GetString(8),
-						IdCategoriaNorma = await reader.IsDBNullAsync(9) ? null : reader.GetInt64(9),
-                        IdCargo = await reader.IsDBNullAsync(10) ? null : reader.GetInt64(10),
-                        OrdenVisual = await reader.IsDBNullAsync(11) ? null : reader.GetInt64(11),
-						Editable = reader.GetBoolean(12),
-						FechaActivacion = await reader.IsDBNullAsync(13) ? null : reader.GetDateTime(13),
-						FechaDesactivacion = await reader.IsDBNullAsync(14) ? null : reader.GetDateTime(14),
-						Activado = reader.GetBoolean(15),
-						ProcesosNotificaciones = await reader.IsDBNullAsync(16) ? [] : JsonSerializer.Deserialize(reader.GetString(16), AppJsonSerializerContext.Default.ListProcesoNotificacion)!,
-						FechaCreacion = await reader.IsDBNullAsync(17) ? null : reader.GetDateTime(17),
-						FechaEliminacion = await reader.IsDBNullAsync(18) ? null : reader.GetDateTime(18),
-						Vigencia = reader.GetBoolean(19)
+						Id = reader.GetInt64(reader.GetOrdinal("ID")),
+						Sub = reader.GetString(reader.GetOrdinal("SUB")),
+						IdNegocio = reader.GetInt64(reader.GetOrdinal("ID_NEGOCIO")),
+						IdTemplate = await reader.IsDBNullAsync(reader.GetOrdinal("ID_TEMPLATE")) ? null : reader.GetInt64(reader.GetOrdinal("ID_TEMPLATE")),
+						IdNorma = await reader.IsDBNullAsync(reader.GetOrdinal("ID_NORMA")) ? null : reader.GetInt64(reader.GetOrdinal("ID_NORMA")),
+						Nombre = await reader.IsDBNullAsync(reader.GetOrdinal("NOMBRE")) ? null : reader.GetString(reader.GetOrdinal("NOMBRE")),
+						Descripcion = await reader.IsDBNullAsync(reader.GetOrdinal("DESCRIPCION")) ? null : reader.GetString(reader.GetOrdinal("DESCRIPCION")),
+						IdTipoPeriodicidad = await reader.IsDBNullAsync(reader.GetOrdinal("ID_TIPO_PERIODICIDAD")) ? null : reader.GetInt64(reader.GetOrdinal("ID_TIPO_PERIODICIDAD")),
+						Multa = await reader.IsDBNullAsync(reader.GetOrdinal("MULTA")) ? null : reader.GetString(reader.GetOrdinal("MULTA")),
+						IdCategoriaNorma = await reader.IsDBNullAsync(reader.GetOrdinal("ID_CATEGORIA_NORMA")) ? null : reader.GetInt64(reader.GetOrdinal("ID_CATEGORIA_NORMA")),
+                        IdCargo = await reader.IsDBNullAsync(reader.GetOrdinal("ID_CARGO")) ? null : reader.GetInt64(reader.GetOrdinal("ID_CARGO")),
+                        OrdenVisual = await reader.IsDBNullAsync(reader.GetOrdinal("ORDEN_VISUAL")) ? null : reader.GetInt64(reader.GetOrdinal("ORDEN_VISUAL")),
+						Editable = reader.GetBoolean(reader.GetOrdinal("EDITABLE")),
+						FechaActivacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_ACTIVACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_ACTIVACION")),
+						FechaDesactivacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_DESACTIVACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_DESACTIVACION")),
+						Activado = reader.GetBoolean(reader.GetOrdinal("ACTIVADO")),
+						FechaCreacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_CREACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
+						FechaEliminacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_ELIMINACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_ELIMINACION")),
+						Vigencia = reader.GetBoolean(reader.GetOrdinal("VIGENCIA"))
 					});
 				}
 
@@ -66,7 +65,7 @@ namespace TanatosAPI.Repositories {
 		public async Task<NormaSuscrita?> ObtenerPorId(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ID_CARGO, ORDEN_VISUAL, " +
-				"EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, PROCESOS_NOTIFICACIONES, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NORMA_SUSCRITA " +
+				"EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NORMA_SUSCRITA " +
 				"WHERE ID = @IDNORMASUSCRITA";
 
 			bool disposeConnection = transaction?.Connection == null;
@@ -83,26 +82,25 @@ namespace TanatosAPI.Repositories {
 
 				if (await reader.ReadAsync()) {
 					retorno = new NormaSuscrita {
-						Id = reader.GetInt64(0),
-						Sub = reader.GetString(1),
-						IdNegocio = reader.GetInt64(2),
-						IdTemplate = await reader.IsDBNullAsync(3) ? null : reader.GetInt64(3),
-						IdNorma = await reader.IsDBNullAsync(4) ? null : reader.GetInt64(4),
-						Nombre = await reader.IsDBNullAsync(5) ? null : reader.GetString(5),
-						Descripcion = await reader.IsDBNullAsync(6) ? null : reader.GetString(6),
-						IdTipoPeriodicidad = await reader.IsDBNullAsync(7) ? null : reader.GetInt64(7),
-						Multa = await reader.IsDBNullAsync(8) ? null : reader.GetString(8),
-						IdCategoriaNorma = await reader.IsDBNullAsync(9) ? null : reader.GetInt64(9),
-						IdCargo = await reader.IsDBNullAsync(10) ? null : reader.GetInt64(10),
-                        OrdenVisual = await reader.IsDBNullAsync(11) ? null : reader.GetInt64(11),
-						Editable = reader.GetBoolean(12),
-						FechaActivacion = await reader.IsDBNullAsync(13) ? null : reader.GetDateTime(13),
-						FechaDesactivacion = await reader.IsDBNullAsync(14) ? null : reader.GetDateTime(14),
-						Activado = reader.GetBoolean(15),
-						ProcesosNotificaciones = await reader.IsDBNullAsync(16) ? [] : JsonSerializer.Deserialize(reader.GetString(16), AppJsonSerializerContext.Default.ListProcesoNotificacion)!,
-						FechaCreacion = await reader.IsDBNullAsync(17) ? null : reader.GetDateTime(17),
-						FechaEliminacion = await reader.IsDBNullAsync(18) ? null : reader.GetDateTime(18),
-						Vigencia = reader.GetBoolean(19)
+						Id = reader.GetInt64(reader.GetOrdinal("ID")),
+						Sub = reader.GetString(reader.GetOrdinal("SUB")),
+						IdNegocio = reader.GetInt64(reader.GetOrdinal("ID_NEGOCIO")),
+						IdTemplate = await reader.IsDBNullAsync(reader.GetOrdinal("ID_TEMPLATE")) ? null : reader.GetInt64(reader.GetOrdinal("ID_TEMPLATE")),
+						IdNorma = await reader.IsDBNullAsync(reader.GetOrdinal("ID_NORMA")) ? null : reader.GetInt64(reader.GetOrdinal("ID_NORMA")),
+						Nombre = await reader.IsDBNullAsync(reader.GetOrdinal("NOMBRE")) ? null : reader.GetString(reader.GetOrdinal("NOMBRE")),
+						Descripcion = await reader.IsDBNullAsync(reader.GetOrdinal("DESCRIPCION")) ? null : reader.GetString(reader.GetOrdinal("DESCRIPCION")),
+						IdTipoPeriodicidad = await reader.IsDBNullAsync(reader.GetOrdinal("ID_TIPO_PERIODICIDAD")) ? null : reader.GetInt64(reader.GetOrdinal("ID_TIPO_PERIODICIDAD")),
+						Multa = await reader.IsDBNullAsync(reader.GetOrdinal("MULTA")) ? null : reader.GetString(reader.GetOrdinal("MULTA")),
+						IdCategoriaNorma = await reader.IsDBNullAsync(reader.GetOrdinal("ID_CATEGORIA_NORMA")) ? null : reader.GetInt64(reader.GetOrdinal("ID_CATEGORIA_NORMA")),
+						IdCargo = await reader.IsDBNullAsync(reader.GetOrdinal("ID_CARGO")) ? null : reader.GetInt64(reader.GetOrdinal("ID_CARGO")),
+						OrdenVisual = await reader.IsDBNullAsync(reader.GetOrdinal("ORDEN_VISUAL")) ? null : reader.GetInt64(reader.GetOrdinal("ORDEN_VISUAL")),
+						Editable = reader.GetBoolean(reader.GetOrdinal("EDITABLE")),
+						FechaActivacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_ACTIVACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_ACTIVACION")),
+						FechaDesactivacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_DESACTIVACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_DESACTIVACION")),
+						Activado = reader.GetBoolean(reader.GetOrdinal("ACTIVADO")),
+						FechaCreacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_CREACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
+						FechaEliminacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_ELIMINACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_ELIMINACION")),
+						Vigencia = reader.GetBoolean(reader.GetOrdinal("VIGENCIA"))
 					};
 				}
 
@@ -117,7 +115,7 @@ namespace TanatosAPI.Repositories {
         public async Task<List<NormaSuscrita>> ObtenerPorTemplate(long idTemplate, long? idNorma = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
             string query =
                 "SELECT ID, SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ID_CARGO, ORDEN_VISUAL, " +
-                "EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, PROCESOS_NOTIFICACIONES, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NORMA_SUSCRITA " +
+                "EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.NORMA_SUSCRITA " +
                 "WHERE ID_TEMPLATE = @IDTEMPLATE AND (ID_NORMA = @IDNORMA OR @IDNORMA IS NULL) AND (VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL)";
 
             bool disposeConnection = transaction?.Connection == null;
@@ -136,27 +134,26 @@ namespace TanatosAPI.Repositories {
 
                 while (await reader.ReadAsync()) {
                     retorno.Add(new NormaSuscrita {
-                        Id = reader.GetInt64(0),
-                        Sub = reader.GetString(1),
-                        IdNegocio = reader.GetInt64(2),
-                        IdTemplate = await reader.IsDBNullAsync(3) ? null : reader.GetInt64(3),
-                        IdNorma = await reader.IsDBNullAsync(4) ? null : reader.GetInt64(4),
-                        Nombre = await reader.IsDBNullAsync(5) ? null : reader.GetString(5),
-                        Descripcion = await reader.IsDBNullAsync(6) ? null : reader.GetString(6),
-                        IdTipoPeriodicidad = await reader.IsDBNullAsync(7) ? null : reader.GetInt64(7),
-                        Multa = await reader.IsDBNullAsync(8) ? null : reader.GetString(8),
-                        IdCategoriaNorma = await reader.IsDBNullAsync(9) ? null : reader.GetInt64(9),
-                        IdCargo = await reader.IsDBNullAsync(10) ? null : reader.GetInt64(10),
-                        OrdenVisual = await reader.IsDBNullAsync(11) ? null : reader.GetInt64(11),
-                        Editable = reader.GetBoolean(12),
-                        FechaActivacion = await reader.IsDBNullAsync(13) ? null : reader.GetDateTime(13),
-                        FechaDesactivacion = await reader.IsDBNullAsync(14) ? null : reader.GetDateTime(14),
-                        Activado = reader.GetBoolean(15),
-                        ProcesosNotificaciones = await reader.IsDBNullAsync(16) ? [] : JsonSerializer.Deserialize(reader.GetString(16), AppJsonSerializerContext.Default.ListProcesoNotificacion)!,
-                        FechaCreacion = await reader.IsDBNullAsync(17) ? null : reader.GetDateTime(17),
-                        FechaEliminacion = await reader.IsDBNullAsync(18) ? null : reader.GetDateTime(18),
-                        Vigencia = reader.GetBoolean(19)
-                    });
+						Id = reader.GetInt64(reader.GetOrdinal("ID")),
+						Sub = reader.GetString(reader.GetOrdinal("SUB")),
+						IdNegocio = reader.GetInt64(reader.GetOrdinal("ID_NEGOCIO")),
+						IdTemplate = await reader.IsDBNullAsync(reader.GetOrdinal("ID_TEMPLATE")) ? null : reader.GetInt64(reader.GetOrdinal("ID_TEMPLATE")),
+						IdNorma = await reader.IsDBNullAsync(reader.GetOrdinal("ID_NORMA")) ? null : reader.GetInt64(reader.GetOrdinal("ID_NORMA")),
+						Nombre = await reader.IsDBNullAsync(reader.GetOrdinal("NOMBRE")) ? null : reader.GetString(reader.GetOrdinal("NOMBRE")),
+						Descripcion = await reader.IsDBNullAsync(reader.GetOrdinal("DESCRIPCION")) ? null : reader.GetString(reader.GetOrdinal("DESCRIPCION")),
+						IdTipoPeriodicidad = await reader.IsDBNullAsync(reader.GetOrdinal("ID_TIPO_PERIODICIDAD")) ? null : reader.GetInt64(reader.GetOrdinal("ID_TIPO_PERIODICIDAD")),
+						Multa = await reader.IsDBNullAsync(reader.GetOrdinal("MULTA")) ? null : reader.GetString(reader.GetOrdinal("MULTA")),
+						IdCategoriaNorma = await reader.IsDBNullAsync(reader.GetOrdinal("ID_CATEGORIA_NORMA")) ? null : reader.GetInt64(reader.GetOrdinal("ID_CATEGORIA_NORMA")),
+						IdCargo = await reader.IsDBNullAsync(reader.GetOrdinal("ID_CARGO")) ? null : reader.GetInt64(reader.GetOrdinal("ID_CARGO")),
+						OrdenVisual = await reader.IsDBNullAsync(reader.GetOrdinal("ORDEN_VISUAL")) ? null : reader.GetInt64(reader.GetOrdinal("ORDEN_VISUAL")),
+						Editable = reader.GetBoolean(reader.GetOrdinal("EDITABLE")),
+						FechaActivacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_ACTIVACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_ACTIVACION")),
+						FechaDesactivacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_DESACTIVACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_DESACTIVACION")),
+						Activado = reader.GetBoolean(reader.GetOrdinal("ACTIVADO")),
+						FechaCreacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_CREACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
+						FechaEliminacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_ELIMINACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_ELIMINACION")),
+						Vigencia = reader.GetBoolean(reader.GetOrdinal("VIGENCIA"))
+					});
                 }
 
                 return retorno;
@@ -169,8 +166,8 @@ namespace TanatosAPI.Repositories {
 
         public async Task<long> Insertar(NormaSuscrita item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"INSERT INTO TANATOS.NORMA_SUSCRITA(SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ID_CARGO, ORDEN_VISUAL, EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, PROCESOS_NOTIFICACIONES, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
-                "VALUES (@SUB, @IDNEGOCIO, @IDTEMPLATE, @IDNORMA, @NOMBRE, @DESCRIPCION, @IDTIPOPERIODICIDAD, @MULTA, @IDCATEGORIANORMA, @IDCARGO, @ORDENVISUAL, @EDITABLE, @FECHAACTIVACION, @FECHADESACTIVACION, @ACTIVADO, @PROCESOSNOTIFICACIONES::JSONB, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
+				"INSERT INTO TANATOS.NORMA_SUSCRITA(SUB, ID_NEGOCIO, ID_TEMPLATE, ID_NORMA, NOMBRE, DESCRIPCION, ID_TIPO_PERIODICIDAD, MULTA, ID_CATEGORIA_NORMA, ID_CARGO, ORDEN_VISUAL, EDITABLE, FECHA_ACTIVACION, FECHA_DESACTIVACION, ACTIVADO, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA) " +
+                "VALUES (@SUB, @IDNEGOCIO, @IDTEMPLATE, @IDNORMA, @NOMBRE, @DESCRIPCION, @IDTIPOPERIODICIDAD, @MULTA, @IDCATEGORIANORMA, @IDCARGO, @ORDENVISUAL, @EDITABLE, @FECHAACTIVACION, @FECHADESACTIVACION, @ACTIVADO, @FECHACREACION, @FECHAELIMINACION, @VIGENCIA) " +
 				"RETURNING ID";
 
             bool disposeConnection = transaction?.Connection == null;
@@ -193,7 +190,6 @@ namespace TanatosAPI.Repositories {
                 command.Parameters.AddWithValue("FECHAACTIVACION", (object?)item.FechaActivacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("FECHADESACTIVACION", (object?)item.FechaDesactivacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("ACTIVADO", item.Activado);
-                command.Parameters.AddWithValue("PROCESOSNOTIFICACIONES", JsonSerializer.Serialize(item.ProcesosNotificaciones, AppJsonSerializerContext.Default.ListProcesoNotificacion));
                 command.Parameters.AddWithValue("FECHACREACION", (object?)item.FechaCreacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);
@@ -212,7 +208,7 @@ namespace TanatosAPI.Repositories {
                 "ID_TIPO_PERIODICIDAD = @IDTIPOPERIODICIDAD, MULTA = @MULTA, ID_CATEGORIA_NORMA = @IDCATEGORIANORMA, " +
                 "ID_CARGO = @IDCARGO, ORDEN_VISUAL = @ORDENVISUAL, EDITABLE = @EDITABLE, " +
 				"FECHA_ACTIVACION = @FECHAACTIVACION, FECHA_DESACTIVACION = @FECHADESACTIVACION, ACTIVADO = @ACTIVADO, " +
-                "PROCESOS_NOTIFICACIONES = @PROCESOSNOTIFICACIONES::JSONB, FECHA_CREACION = @FECHACREACION, " +
+                "FECHA_CREACION = @FECHACREACION, " +
                 "FECHA_ELIMINACION = @FECHAELIMINACION, VIGENCIA = @VIGENCIA " +
 				"WHERE ID = @ID";
 
@@ -236,7 +232,6 @@ namespace TanatosAPI.Repositories {
                 command.Parameters.AddWithValue("FECHAACTIVACION", (object?)item.FechaActivacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("FECHADESACTIVACION", (object?)item.FechaDesactivacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("ACTIVADO", item.Activado);
-                command.Parameters.AddWithValue("PROCESOSNOTIFICACIONES", JsonSerializer.Serialize(item.ProcesosNotificaciones, AppJsonSerializerContext.Default.ListProcesoNotificacion));
                 command.Parameters.AddWithValue("FECHACREACION", (object?)item.FechaCreacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("FECHAELIMINACION", (object?)item.FechaEliminacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("VIGENCIA", item.Vigencia);

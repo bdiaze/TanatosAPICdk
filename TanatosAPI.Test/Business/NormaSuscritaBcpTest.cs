@@ -74,7 +74,6 @@ namespace TanatosAPI.Test.Business {
             FechaActivacion = fechaActivacion,
             FechaDesactivacion = fechaDesactivacion,
             Activado = activado,
-            ProcesosNotificaciones = procesosNotificacion ?? [],
             FechaCreacion = fechaCreacion ?? FECHA_DUMMY,
             FechaEliminacion = fechaEliminacion,
             Vigencia = vigencia

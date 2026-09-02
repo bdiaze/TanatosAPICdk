@@ -180,7 +180,6 @@ namespace TanatosAPI.Design.Contexts {
                 entity.Property(o => o.FechaActivacion).HasComment("Fecha en que se activó el cumplimiento de la norma.");
                 entity.Property(o => o.FechaDesactivacion).HasComment("Fecha en que se desactivó el cumplimiento de la norma.");
                 entity.Property(o => o.Activado).HasComment("Estado de activación de la norma.");
-                entity.Property(o => o.ProcesosNotificaciones).HasComment("Procesos de notificaciones asociados a la norma suscrita.");
                 entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó la norma.");
                 entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó la norma.");
                 entity.Property(o => o.Vigencia).HasComment("Vigencia de la norma.");

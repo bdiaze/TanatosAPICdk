@@ -63,9 +63,6 @@ namespace TanatosAPI.Entities.Models {
 		[Column("activado")]
 		public required bool Activado { get; set; }
 
-		[Column("procesos_notificaciones", TypeName = "jsonb")]
-		public List<ProcesoNotificacion> ProcesosNotificaciones { get; set; } = [];
-
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
 		public DateTime? FechaCreacion { get; set; }
 
