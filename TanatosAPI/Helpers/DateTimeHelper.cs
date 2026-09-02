@@ -1,5 +1,9 @@
 ﻿namespace TanatosAPI.Helpers {
 	public static class DateTimeHelper {
+		public static DateTime QuitarSegundos(DateTime fecha) {
+			return new DateTime(fecha.Year, fecha.Month, fecha.Day, fecha.Hour, fecha.Minute, 0, fecha.Kind);
+		}
+
 		public static DateTime TransformarFechaUTCATimezone(DateTime fecha, string timezone = "America/Santiago") {
 			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
 			
