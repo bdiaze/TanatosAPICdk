@@ -40,5 +40,14 @@ namespace TanatosAPI.Business {
 			if (filtrarVigentes) negocios = FiltrarVigentes(negocios);
 			return negocios;
 		}
+
+		public async Task<Negocio?> ObtenerPrimerNegocio(string sub, NpgsqlTransaction? transaction = null) {
+			List<Negocio> negocios = await ObtenerPorSub(sub, filtrarVigentes: true, transaction: transaction);
+			return negocios.OrderBy(n => n.FechaCreacion).FirstOrDefault();
+		}
+
+		public async Task Actualizar(Negocio negocio, NpgsqlTransaction? transaction = null) {
+			await negocioDao.Actualizar(negocio, transaction);
+		}
 	}
 }

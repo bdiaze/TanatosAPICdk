@@ -8,5 +8,7 @@ namespace TanatosAPI.Interfaces.Business {
 		public List<Negocio> FiltrarVigentes(List<Negocio> negocios);
 		public Task<Negocio?> Obtener(long idNegocio, bool filtrarVigente = false, bool validarVigencia = false, string? validarSub = null, NpgsqlTransaction? transaction = null);
 		public Task<List<Negocio>> ObtenerPorSub(string sub, bool filtrarVigentes = false, NpgsqlTransaction? transaction = null);
+		public Task<Negocio?> ObtenerPrimerNegocio(string sub, NpgsqlTransaction? transaction = null);
+		public Task Actualizar(Negocio negocio, NpgsqlTransaction? transaction = null);
 	}
 }
