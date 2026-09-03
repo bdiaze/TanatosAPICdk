@@ -6,6 +6,7 @@ using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.Kairos;
 using TanatosAPI.Entities.Others.Negocio;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
@@ -21,6 +22,7 @@ namespace TanatosAPI.Endpoints {
 			group.MapObtenerVigentes();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
+			group.MapActualizarMisionVisionValoresEndpoint();
 			group.MapEliminarEndpoint();
 
 			return routes;
@@ -115,9 +117,6 @@ namespace TanatosAPI.Endpoints {
 				try {
 					entrada.Nombre = entrada.Nombre.Trim();
 					entrada.Direccion = entrada.Direccion?.Trim();
-					entrada.Mision = entrada.Mision?.Trim();
-					entrada.Vision = entrada.Vision?.Trim();
-					entrada.Valores = entrada.Valores?.Trim();
 
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
@@ -159,9 +158,9 @@ namespace TanatosAPI.Endpoints {
 						Nombre = entrada.Nombre,
 						Direccion = entrada.Direccion,
 						IdTipoActividad = entrada.IdTipoActividad,
-						Mision = entrada.Mision,
-						Vision = entrada.Vision,
-						Valores = entrada.Valores,
+						Mision = null,
+						Vision = null,
+						Valores = null,
 						FechaCreacion = dateTimeProvider.UtcNow,
 						Vigencia = true
 					};
@@ -203,9 +202,6 @@ namespace TanatosAPI.Endpoints {
 				try {
 					entrada.Nombre = entrada.Nombre.Trim();
 					entrada.Direccion = entrada.Direccion?.Trim();
-					entrada.Mision = entrada.Mision?.Trim();
-					entrada.Vision = entrada.Vision?.Trim();
-					entrada.Valores = entrada.Valores?.Trim();
 
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
@@ -243,14 +239,10 @@ namespace TanatosAPI.Endpoints {
 						}
 					}
 
-					if (existente.Nombre != entrada.Nombre || existente.Direccion != entrada.Direccion || existente.IdTipoActividad != entrada.IdTipoActividad ||
-						existente.Mision != entrada.Mision || existente.Vision != entrada.Vision || existente.Valores != entrada.Valores) {
+					if (existente.Nombre != entrada.Nombre || existente.Direccion != entrada.Direccion || existente.IdTipoActividad != entrada.IdTipoActividad) {
 						existente.Nombre = entrada.Nombre;
 						existente.Direccion = entrada.Direccion;
 						existente.IdTipoActividad = entrada.IdTipoActividad;
-						existente.Mision = entrada.Mision;
-						existente.Vision = entrada.Vision;
-						existente.Valores = entrada.Valores;
 
 						await negocioDao.Actualizar(existente);
 					}
@@ -280,6 +272,48 @@ namespace TanatosAPI.Endpoints {
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 			}).RequireAuthorization("Negocios.Write.Self", "Sistema.Read.Public");
+
+			return routes;
+		}
+
+		private static IEndpointRouteBuilder MapActualizarMisionVisionValoresEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPut("/MisionVisionValores", async (EntNegocioMisionVisionValores entrada, IHostEnvironment environment, ClaimsPrincipal user, NegocioUseCase negocioUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+
+					Negocio negocio = await negocioUseCase.ActualizarMisionVisionValores(sub, entrada.Id, entrada.Mision, entrada.Vision, entrada.Valores);
+					SalNegocio retorno = new() {
+						Id = negocio.Id,
+						Nombre = negocio.Nombre,
+						Direccion = negocio.Direccion,
+						IdTipoActividad = negocio.TipoActividad?.Id,
+						NombreTipoActividad = negocio.TipoActividad?.Nombre,
+						Mision = negocio.Mision,
+						Vision = negocio.Vision,
+						Valores = negocio.Valores,
+						FechaCreacion = negocio.FechaCreacion,
+					};
+
+					LambdaLogger.Log(
+						$"[PUT] - [Negocio] - [MisionVisionValores] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Actualización exitosa de la misión, visión y valores del negocio - ID: {entrada.Id}.");
+					return Results.Ok();
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [Negocio] - [MisionVisionValores] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [Negocio] - [MisionVisionValores] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error en la actualización de la misión, visión y valores del negocio - ID: {entrada.Id}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Negocios.Read.Self", "Negocios.Write.Self", "Sistema.Read.Public");
 
 			return routes;
 		}
