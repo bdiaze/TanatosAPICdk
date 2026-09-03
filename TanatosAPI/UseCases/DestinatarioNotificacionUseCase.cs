@@ -18,7 +18,7 @@ namespace TanatosAPI.UseCases {
             List<DestinatarioNotificacion> destinatarios = await destinatarioNotificacionBcp.ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigente: filtrarVigente, filtrarValidado: filtrarValidado, transaction: transaction);
 
             if (crearDestinoUsuario) {
-                Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(sub, transaction);
+                Usuario usuario = await usuarioBcp.Obtener(sub, transaction) ?? throw new InvalidOperationException("No se encuentra registro del usuario."); ;
                 if (usuario.CorreoElectronico != null) {
 					bool destinoUsuarioYaCreado = destinatarios.Any(d => d.IdEmpleado == null && d.IdTipoReceptor == 1 /* Correo electrónico */ && d.Destino == usuario.CorreoElectronico);
                     if (!destinoUsuarioYaCreado) {
@@ -95,7 +95,7 @@ namespace TanatosAPI.UseCases {
                 if (!destinatarioNotificacion.Validado) {
                     if (destinatarioNotificacion.IdTipoReceptor == 1 /* Correo electrónico */) {
                         Negocio negocio = await negocioBcp.Obtener(destinatarioNotificacion.IdNegocio, filtrarVigente: true, validarSub: destinatarioNotificacion.Sub, transaction: transaction) ?? throw new InvalidOperationException("ID de negocio no válido");
-                        Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(destinatarioNotificacion.Sub, transaction);
+                        Usuario usuario = await usuarioBcp.Obtener(destinatarioNotificacion.Sub, transaction) ?? throw new InvalidOperationException("No se encuentra registro del usuario."); ;
 
                         string idMensaje = await destinatarioNotificacionBcp.EnviarCorreoValidacionDestinatario(
                             destinatarioNotificacion.Destino, 
@@ -108,7 +108,7 @@ namespace TanatosAPI.UseCases {
 
                     } else if (destinatarioNotificacion.IdTipoReceptor == 2 /* Whatsapp */) {
                         Negocio negocio = await negocioBcp.Obtener(destinatarioNotificacion.IdNegocio, filtrarVigente: true, validarSub: destinatarioNotificacion.Sub, transaction: transaction) ?? throw new InvalidOperationException("ID de negocio no válido");
-                        Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(destinatarioNotificacion.Sub, transaction);
+                        Usuario usuario = await usuarioBcp.Obtener(destinatarioNotificacion.Sub, transaction) ?? throw new InvalidOperationException("No se encuentra registro del usuario."); ;
 
                         string idMensaje = await destinatarioNotificacionBcp.EnviarWhatsappValidacionDestinatario(
                             destinatarioNotificacion.Destino,

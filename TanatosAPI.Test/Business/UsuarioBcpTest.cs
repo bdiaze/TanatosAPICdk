@@ -61,38 +61,13 @@ namespace TanatosAPI.Test.Business {
 		public async Task ObtenerInformacionUsuarioTest_Existente() {
 			usuarioDao.Obtener("sub-test", Arg.Any<NpgsqlTransaction?>()).Returns(UsuarioDummy(sub: "sub-test"));
 
-			Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario("sub-test");
+			Usuario? usuario = await usuarioBcp.Obtener("sub-test");
+			Assert.NotNull(usuario);
 			Assert.Equal("sub-test", usuario.Sub);
 			await usuarioDao.Received(1).Obtener("sub-test", Arg.Any<NpgsqlTransaction?>());
 			await cognitoHelper.DidNotReceive().ObtenerUsuario(Arg.Any<string>());
 			await usuarioDao.DidNotReceive().Insertar(Arg.Any<Usuario>(), Arg.Any<NpgsqlTransaction?>());
 			await usuarioDao.DidNotReceive().Actualizar(Arg.Any<Usuario>(), Arg.Any<NpgsqlTransaction?>());
-		}
-
-		[Fact]
-		public async Task ObtenerInformacionUsuarioTest_AtributoNulo() {
-			usuarioDao.Obtener("sub-test", Arg.Any<NpgsqlTransaction?>()).Returns(UsuarioDummy(sub: "sub-test", nombre: null, apellido: null, correoElectronico: null));
-			cognitoHelper.ObtenerUsuario("sub-test").Returns(new Dictionary<string, string>() {
-				["given_name"] = "nombre-test",
-				["family_name"] = "apellido-test",
-				["email"] = "correo@test.cl"
-			});
-
-			Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario("sub-test");
-			Assert.Equal("sub-test", usuario.Sub);
-			Assert.Equal("nombre-test", usuario.Nombre);
-			Assert.Equal("apellido-test", usuario.Apellido);
-			Assert.Equal("correo@test.cl", usuario.CorreoElectronico);
-			await usuarioDao.Received(1).Obtener("sub-test", Arg.Any<NpgsqlTransaction?>());
-			await cognitoHelper.Received(1).ObtenerUsuario(Arg.Any<string>());
-			await usuarioDao.DidNotReceive().Insertar(Arg.Any<Usuario>(), Arg.Any<NpgsqlTransaction?>());
-			await usuarioDao.Received(1).Actualizar(Arg.Is<Usuario>(u => 
-				u.Sub == "sub-test" && 
-				u.Nombre == "nombre-test" && 
-				u.Apellido == "apellido-test" && 
-				u.CorreoElectronico == "correo@test.cl"), 
-				Arg.Any<NpgsqlTransaction?>()
-			);
 		}
 
 		[Fact]
@@ -121,14 +96,9 @@ namespace TanatosAPI.Test.Business {
 		[Fact]
 		public async Task RegistrarUsuarioEnFlowTest_SinCorreoElectronico() {
 			usuarioDao.Obtener("sub-test", Arg.Any<NpgsqlTransaction?>()).Returns(UsuarioDummy(sub: "sub-test", correoElectronico: null));
-			cognitoHelper.ObtenerUsuario("sub-test").Returns(new Dictionary<string, string>() {
-				["given_name"] = "nombre-test",
-				["family_name"] = "apellido-test",
-			});
-
+			
 			await Assert.ThrowsAsync<InvalidOperationException>(() => usuarioBcp.RegistrarUsuarioEnFlow("sub-test"));
 			await usuarioDao.Received(1).Obtener("sub-test", Arg.Any<NpgsqlTransaction?>());
-			await usuarioDao.Received(1).Actualizar(Arg.Any<Usuario>(), Arg.Any<NpgsqlTransaction?>());
 			await flowHelper.DidNotReceive().CustomerCreate(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
 		}
 

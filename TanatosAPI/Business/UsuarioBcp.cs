@@ -46,24 +46,12 @@ namespace TanatosAPI.Business {
 			return usuario;
 		}
 
-		public async Task<Usuario> ObtenerInformacionUsuario(string sub, NpgsqlTransaction? transaction = null) {
-			Usuario? usuario = await usuarioDao.Obtener(sub, transaction);
-			if (usuario == null) {
-				usuario = await CargarDesdeCognitoSiNoExiste(sub, transaction);
-			} else if (usuario.Nombre == null || usuario.Apellido == null || usuario.CorreoElectronico == null) {
-				// Si el usuario existe, pero no cuenta con toda su información, se actualiza según información de Cognito...
-				Dictionary<string, string> atributosUsuario = await cognitoHelper.ObtenerUsuario(sub);
-				usuario.Nombre = atributosUsuario.TryGetValue("given_name", out string? givenName) ? givenName : null;
-				usuario.Apellido = atributosUsuario.TryGetValue("family_name", out string? familyName) ? familyName : null;
-				usuario.CorreoElectronico = atributosUsuario.TryGetValue("email", out string? email) ? email : null;
-				await usuarioDao.Actualizar(usuario, transaction);
-			}
-
-			return usuario;
+		public async Task<Usuario?> Obtener(string sub, NpgsqlTransaction? transaction = null) {
+			return await usuarioDao.Obtener(sub, transaction);
 		}
 
 		public async Task<string> RegistrarUsuarioEnFlow(string sub, NpgsqlTransaction? transaction = null) {
-			Usuario usuario = await ObtenerInformacionUsuario(sub, transaction);
+			Usuario usuario = await Obtener(sub, transaction) ?? throw new InvalidOperationException("No se encuentra registro del usuario.");
 
 			string nombre = usuario.Nombre ?? "";
 			string apellido = usuario.Apellido ?? "";

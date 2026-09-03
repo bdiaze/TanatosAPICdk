@@ -33,7 +33,7 @@ namespace TanatosAPI.Endpoints {
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
-					Usuario usuario = await usuarioBcp.ObtenerInformacionUsuario(sub);
+					Usuario usuario = await usuarioBcp.Obtener(sub) ?? throw new InvalidOperationException("No se encuentra registro del usuario.");
 
 					SalNegocioInformacionUsuario retorno = new() {
 						Nombre = usuario.Nombre,
