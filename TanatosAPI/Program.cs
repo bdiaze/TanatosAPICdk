@@ -239,6 +239,8 @@ builder.Services.AddScoped<ITemplateBcp, TemplateBcp>();
 builder.Services.AddScoped<ITipoProcesoAutomaticoBcp, TipoProcesoAutomaticoBcp>();
 builder.Services.AddScoped<IProcesoAutomaticoBcp, ProcesoAutomaticoBcp>();
 builder.Services.AddScoped<INormaSuscritaProcesoNotificacionBcp, NormaSuscritaProcesoNotificacionBcp>();
+builder.Services.AddScoped<ITipoActividadBcp, TipoActividadBcp>();
+builder.Services.AddScoped<ITipoRubroBcp, TipoRubroBcp>();
 #endregion
 
 #region Singleton UseCases
