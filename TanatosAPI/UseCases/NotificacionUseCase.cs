@@ -26,7 +26,7 @@ namespace TanatosAPI.UseCases {
 				throw new InvalidOperationException("No se incluyen configuración de cron ni de frecuencia en días.");
 			};
 			
-			List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaBcp.ObtenerPorNormaSuscrita(idNormaSuscrita, filtrarVigente: true, filtrarNoCompletadas: true, transaction: transaction);
+			List<HistorialNormaSuscrita> vencimientos = await historialNormaSuscritaBcp.ObtenerPorNormaSuscrita(idNormaSuscrita, filtrarVigente: true, transaction: transaction);
 			HistorialNormaSuscrita? vencimiento;
 			if (cantAntelacion != null && unidadAntelacion != null) {
 				// Si tenemos información de la notificación previa, se calculca la fecha de vencimiento...
@@ -74,7 +74,7 @@ namespace TanatosAPI.UseCases {
 			if (vencimiento == null) {
 				throw new InvalidOperationException("No se logra identificar el vencimiento al que pertenece el proceso de notificación.");
 			}
-
+			
 			// Se procesan las notificaciones de todos los destinatarios validados...
 			foreach (DestinatarioNotificacion destinatario in destinatariosValidados) {
 				(HistorialNotificacion historialNotificacion, string codigoAcceso) = await historialNotificacionBcp.Registrar(
@@ -85,6 +85,12 @@ namespace TanatosAPI.UseCases {
                     fechaProgramacionNotificacion,
 					transaction
                 );
+
+				// Si el vencimiento ya fue completado, entonces no se procesa la notificación...
+				if (historialNormaSuscritaBcp.EstaCompletada(vencimiento)) {
+					await historialNotificacionBcp.MarcarOmitido(historialNotificacion, "El vencimiento ya fue completado.", transaction);
+					continue;
+				}
 
 				// Se valida que según suscripción el destinatario esté habilitado, si no lo esta entonces no se manda la notificación...
 				if (!await destinatarioNotificacionUseCase.DestinatarioHabilitado(normaSuscrita.Sub, normaSuscrita.IdNegocio, destinatario.Id, transaction)) {
