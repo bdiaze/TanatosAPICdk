@@ -50,15 +50,13 @@ namespace TanatosAPI.UseCases {
 				normaSuscrita.IdTemplate = null;
 				normaSuscrita.IdNorma = null;
 
-				// Si la norma suscrita no está activada se elimina
-				if (!normaSuscrita.Activado) {
+                await normaSuscritaDao.Actualizar(normaSuscrita, transaction!.NpgsqlTransaction());
+
+                // Si la norma suscrita no está activada se elimina
+                if (!normaSuscrita.Activado) {
 					(List<SalKairosIngresarProceso> programadosParcial, List<NormaSuscritaProcesoNotificacion> desprogramadosParcial) = await normaSuscritaUseCase.EliminarNormaSuscrita(normaSuscrita, transaction);
 					procesosProgramados.AddRange(programadosParcial);
 					procesosDesprogramados.AddRange(desprogramadosParcial);
-
-					// Pero si está activada, solo se desenlaza del template
-				} else {
-					await normaSuscritaDao.Actualizar(normaSuscrita, transaction!.NpgsqlTransaction());
 				}
 			}
 
