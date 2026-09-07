@@ -50,6 +50,56 @@ namespace TanatosAPI.Repositories {
 			}
 		}
 
+		public async Task<List<ProcesoAutomatico>> ObtenerConPaginacion(long? primerId = null, int cantidad = 50, string? nombre = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
+			string query =
+				"SELECT ID, ID_TIPO_PROCESO_AUTOMATICO, ID_PROCESO_KAIROS, ID_CALENDARIZACION_KAIROS, NOMBRE, ARN_ROL, ARN_PROCESO, PARAMETROS, " +
+				"CRON, FRECUENCIA_DIAS, INICIO_EJECUCION_UTC, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA " +
+				"FROM TANATOS.PROCESO_AUTOMATICO " +
+				"WHERE (@PRIMERID IS NULL OR ID >= @PRIMERID) " +
+				"AND (@NOMBRE IS NULL OR NOMBRE LIKE @NOMBRE || '%') " +
+				"AND (@VIGENCIA IS NULL OR VIGENCIA = @VIGENCIA)" +
+				"ORDER BY ID " +
+				"LIMIT @CANTIDAD";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+				command.Parameters.AddWithValue("PRIMERID", (object?)primerId ?? DBNull.Value);
+				command.Parameters.AddWithValue("NOMBRE", (object?)nombre ?? DBNull.Value);
+				command.Parameters.AddWithValue("VIGENCIA", (object?)vigencia ?? DBNull.Value);
+				command.Parameters.AddWithValue("CANTIDAD", cantidad);
+
+				await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+
+				List<ProcesoAutomatico> retorno = [];
+				while (await reader.ReadAsync()) {
+					retorno.Add(new ProcesoAutomatico {
+						Id = reader.GetInt64(reader.GetOrdinal("ID")),
+						IdTipoProcesoAutomatico = reader.GetInt64(reader.GetOrdinal("ID_TIPO_PROCESO_AUTOMATICO")),
+						IdProcesoKairos = reader.GetString(reader.GetOrdinal("ID_PROCESO_KAIROS")),
+						IdCalendarizacionKairos = reader.GetString(reader.GetOrdinal("ID_CALENDARIZACION_KAIROS")),
+						Nombre = reader.GetString(reader.GetOrdinal("NOMBRE")),
+						ArnRol = reader.GetString(reader.GetOrdinal("ARN_ROL")),
+						ArnProceso = reader.GetString(reader.GetOrdinal("ARN_PROCESO")),
+						Parametros = reader.GetString(reader.GetOrdinal("PARAMETROS")),
+						Cron = await reader.IsDBNullAsync(reader.GetOrdinal("CRON")) ? null : reader.GetString(reader.GetOrdinal("CRON")),
+						FrecuenciaDias = await reader.IsDBNullAsync(reader.GetOrdinal("FRECUENCIA_DIAS")) ? null : reader.GetInt32(reader.GetOrdinal("FRECUENCIA_DIAS")),
+						InicioEjecucionUtc = await reader.IsDBNullAsync(reader.GetOrdinal("INICIO_EJECUCION_UTC")) ? null : reader.GetDateTime(reader.GetOrdinal("INICIO_EJECUCION_UTC")),
+						FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
+						FechaEliminacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_ELIMINACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_ELIMINACION")),
+						Vigencia = reader.GetBoolean(reader.GetOrdinal("VIGENCIA"))
+					});
+				}
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
+		}
+		
 		public async Task<List<ProcesoAutomatico>> ObtenerPorNombre(string nombre, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_TIPO_PROCESO_AUTOMATICO, ID_PROCESO_KAIROS, ID_CALENDARIZACION_KAIROS, NOMBRE, ARN_ROL, ARN_PROCESO, PARAMETROS, " +
