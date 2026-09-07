@@ -271,13 +271,15 @@ namespace TanatosAPI.UseCases {
 							cronsDeseados = await notificacionNormaSuscritaUseCase.GenerarCrons(
 								proximoVencimiento,
 								tipoPeriodicidad!.Cron,
-								antelaciones
+								antelaciones,
+								tipoPeriodicidad
 							);
 						} else if (tipoPeriodicidad!.FrecuenciaDias != null) {
 							frecuenciasDiasDeseadas = await notificacionNormaSuscritaUseCase.GenerarFrecuenciasDias(
 								proximoVencimiento,
 								tipoPeriodicidad!.FrecuenciaDias.Value,
-								antelaciones
+								antelaciones,
+								tipoPeriodicidad
 							);
 						}
 					}

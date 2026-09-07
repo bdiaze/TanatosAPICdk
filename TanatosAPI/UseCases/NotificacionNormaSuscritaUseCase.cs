@@ -2,10 +2,11 @@
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
+using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.UseCases;
 
 namespace TanatosAPI.UseCases {
-	public class NotificacionNormaSuscritaUseCase(INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp) : INotificacionNormaSuscritaUseCase {
+	public class NotificacionNormaSuscritaUseCase(IDateTimeProvider dateTimeProvider, INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITipoUnidadTiempoBcp tipoUnidadTiempoBcp, ITipoPeriodicidadBcp tipoPeriodicidadBcp) : INotificacionNormaSuscritaUseCase {
 		public async Task<List<(TipoUnidadTiempo UnidadTiempoAntelacion, int CantAntelacion)>> ObtenerAntelacionesConsiderandoTemplate(long idNormaSuscrita, long? idTemplate, long? idNormaTemplate, NpgsqlTransaction? transaction = null) {
 			List<NotificacionNormaSuscrita> notificacionesNormaSuscrita = await notificacionNormaSuscritaBcp.ObtenerVigentesPorNormaSuscrita(idNormaSuscrita, transaction);
 			List<TemplateNormaNotificacion> templateNormaNotificacion = [];
@@ -22,7 +23,7 @@ namespace TanatosAPI.UseCases {
 			return [.. antelaciones.Where(a => unidadesTiempo.ContainsKey(a.idTipoUnidadTiempo)).Select(a => (unidadesTiempo[a.idTipoUnidadTiempo] , a.cantAntelacion))];
 		}
 
-		public async Task<List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>> GenerarCrons(DateTime proximoVencimientoUtc, string baseCronAws, List<(TipoUnidadTiempo TipoUnidadTiempo, int CantAntelacion)> antelaciones) {
+		public async Task<List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>> GenerarCrons(DateTime proximoVencimientoUtc, string baseCronAws, List<(TipoUnidadTiempo TipoUnidadTiempo, int CantAntelacion)> antelaciones, TipoPeriodicidad tipoPeriodicidad) {
 			List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> crons = [];
 
 			// Se añade primer cron correspondiente al vencimiento, sin info de antelación...
@@ -32,13 +33,22 @@ namespace TanatosAPI.UseCases {
 			// Por cada antelación, se calcula fecha de programación y se agrega cron respectivo...
 			foreach ((TipoUnidadTiempo tipoUnidadTiempo, int cantAntelacion) in antelaciones) {
 				DateTime fechaProgramacionChile = NotificacionPreviaHelper.ObtenerFechaChileNotificacionPrevia(proximoVencimientoChile, cantAntelacion, tipoUnidadTiempo);
-				crons.Add((CronHelper.GenerarCronAWSDesdeFecha(fechaProgramacionChile, baseCronAws), tipoUnidadTiempo, cantAntelacion, false));
+				if (DateTimeHelper.TransformarFechaTimezoneAUTC(fechaProgramacionChile) <= dateTimeProvider.UtcNow) {
+					if (tipoPeriodicidadBcp.PuedeCalcularSiguienteIteracion(tipoPeriodicidad)) {
+						while (DateTimeHelper.TransformarFechaTimezoneAUTC(fechaProgramacionChile) <= dateTimeProvider.UtcNow) {
+							fechaProgramacionChile = tipoPeriodicidadBcp.CalcularSiguienteIteracion(fechaProgramacionChile, tipoPeriodicidad, true);
+						}
+						crons.Add((CronHelper.GenerarCronAWSDesdeFecha(fechaProgramacionChile, baseCronAws), tipoUnidadTiempo, cantAntelacion, false));
+					}
+				} else {
+					crons.Add((CronHelper.GenerarCronAWSDesdeFecha(fechaProgramacionChile, baseCronAws), tipoUnidadTiempo, cantAntelacion, false));
+				}
 			}
 
 			return crons;
 		}
 
-		public async Task<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>> GenerarFrecuenciasDias(DateTime proximoVencimientoUtc, int frecuenciaDias, List<(TipoUnidadTiempo TipoUnidadTiempo, int CantAntelacion)> antelaciones) {
+		public async Task<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>> GenerarFrecuenciasDias(DateTime proximoVencimientoUtc, int frecuenciaDias, List<(TipoUnidadTiempo TipoUnidadTiempo, int CantAntelacion)> antelaciones, TipoPeriodicidad tipoPeriodicidad) {
 			List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> frecuencias = [];
 
             // Se añade primera frecuencia correspondiente al vencimiento, sin info de antelación...
@@ -48,7 +58,16 @@ namespace TanatosAPI.UseCases {
 			DateTime proximoVencimientoChile = DateTimeHelper.TransformarFechaUTCATimezone(proximoVencimientoUtc);
             foreach ((TipoUnidadTiempo tipoUnidadTiempo, int cantAntelacion) in antelaciones) {
                 DateTime fechaProgramacionChile = NotificacionPreviaHelper.ObtenerFechaChileNotificacionPrevia(proximoVencimientoChile, cantAntelacion, tipoUnidadTiempo);
-                frecuencias.Add((frecuenciaDias, DateTimeHelper.TransformarFechaTimezoneAUTC(fechaProgramacionChile), tipoUnidadTiempo, cantAntelacion, false));
+				if (DateTimeHelper.TransformarFechaTimezoneAUTC(fechaProgramacionChile) <= dateTimeProvider.UtcNow) {
+					if (tipoPeriodicidadBcp.PuedeCalcularSiguienteIteracion(tipoPeriodicidad)) {
+						while (DateTimeHelper.TransformarFechaTimezoneAUTC(fechaProgramacionChile) <= dateTimeProvider.UtcNow) {
+							fechaProgramacionChile = tipoPeriodicidadBcp.CalcularSiguienteIteracion(fechaProgramacionChile, tipoPeriodicidad, true);
+						}
+						frecuencias.Add((frecuenciaDias, DateTimeHelper.TransformarFechaTimezoneAUTC(fechaProgramacionChile), tipoUnidadTiempo, cantAntelacion, false));
+					}
+				} else {
+					frecuencias.Add((frecuenciaDias, DateTimeHelper.TransformarFechaTimezoneAUTC(fechaProgramacionChile), tipoUnidadTiempo, cantAntelacion, false));
+				}
             }
 
             return frecuencias;
