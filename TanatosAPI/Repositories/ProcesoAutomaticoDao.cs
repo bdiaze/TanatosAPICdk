@@ -1,5 +1,5 @@
 ﻿using Npgsql;
-using System.Data.Common;
+using NpgsqlTypes;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
@@ -66,10 +66,10 @@ namespace TanatosAPI.Repositories {
 
 			try {
 				await using NpgsqlCommand command = new(query, connection, transaction);
-				command.Parameters.AddWithValue("PRIMERID", (object?)primerId ?? DBNull.Value);
-				command.Parameters.AddWithValue("NOMBRE", (object?)nombre ?? DBNull.Value);
-				command.Parameters.AddWithValue("VIGENCIA", (object?)vigencia ?? DBNull.Value);
-				command.Parameters.AddWithValue("CANTIDAD", cantidad);
+				command.Parameters.AddWithValue("PRIMERID", NpgsqlDbType.Bigint, (object?)primerId ?? DBNull.Value);
+				command.Parameters.AddWithValue("NOMBRE", NpgsqlDbType.Text, (object?)nombre ?? DBNull.Value);
+				command.Parameters.AddWithValue("VIGENCIA", NpgsqlDbType.Boolean, (object?)vigencia ?? DBNull.Value);
+				command.Parameters.AddWithValue("CANTIDAD", NpgsqlDbType.Integer, cantidad);
 
 				await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
 
