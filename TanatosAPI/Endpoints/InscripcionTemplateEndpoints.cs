@@ -63,14 +63,16 @@ namespace TanatosAPI.Endpoints {
 		}
 
 		private static IEndpointRouteBuilder MapActivarEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/Activar", async (EntInscripcionTemplateActivar entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, NormaSuscritaUseCase normaSuscritaUseCase, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, ISuscripcionBcp suscripcionBcp, IInscripcionTemplateDao inscripcionTemplateDao, INormaSuscritaDao normaSuscritaDao, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao) => {
+			routes.MapPost("/Activar", async (EntInscripcionTemplateActivar entrada, IHostEnvironment environment, IDatabaseConnectionHelper connectionHelper, ClaimsPrincipal user, IDateTimeProvider dateTimeProvider, NormaSuscritaUseCase normaSuscritaUseCase, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, ISuscripcionBcp suscripcionBcp, INegocioBcp negocioBcp, IInscripcionTemplateDao inscripcionTemplateDao, INormaSuscritaDao normaSuscritaDao, ITemplateDao templateDao, ITemplateNormaDao templateNormaDao) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
+					Negocio negocio = (await negocioBcp.Obtener(entrada.IdNegocio, validarVigencia: true, validarSub: sub))!;
+
 					// Se valida que el template esté vigente...
-					List<Template> templatesVigentes = await templateDao.ObtenerPorVigencia(true);
+					List <Template> templatesVigentes = await templateDao.ObtenerPorVigencia(true);
 					Template? templateExistente = templatesVigentes.FirstOrDefault(t => t.Id == entrada.IdTemplate);
 					if (templateExistente == null || !templateExistente.Vigencia) {
 						LambdaLogger.Log(
@@ -106,7 +108,7 @@ namespace TanatosAPI.Endpoints {
 					}
 
 
-					List<InscripcionTemplate> inscripcionesExistentes = await inscripcionTemplateDao.ObtenerPorSub(sub, entrada.IdNegocio, null);
+					List<InscripcionTemplate> inscripcionesExistentes = await inscripcionTemplateDao.ObtenerPorSub(sub, negocio.Id, null);
 
 					await using IDatabaseConnection connection = await connectionHelper.ObtenerConexionWrapper();
 					await using IDatabaseTransaction transaction = await connection.BeginTransactionAsync();
@@ -125,7 +127,7 @@ namespace TanatosAPI.Endpoints {
 							if (inscripcionExistente == null) {
 								await inscripcionTemplateDao.Insertar(new InscripcionTemplate {
 									Sub = sub,
-									IdNegocio = entrada.IdNegocio,
+									IdNegocio = negocio.Id,
 									IdTemplate = templateAInscribir.Id,
 									FechaActivacion = dateTimeProvider.UtcNow,
 									Vigencia = true
@@ -145,7 +147,7 @@ namespace TanatosAPI.Endpoints {
 								NormaSuscrita normaSuscrita = new() {
 									Id = 0,
 									Sub = sub,
-									IdNegocio = entrada.IdNegocio,
+									IdNegocio = negocio.Id,
 									IdTemplate = templateNorma.IdTemplate,
 									IdNorma = templateNorma.IdNorma,
 									Editable = false,

@@ -26,7 +26,6 @@ namespace TanatosAPI.Endpoints {
 			group.MapObtenerVigentesEndpoint();
 			group.MapCrearEndpoint();
 			group.MapCancelarEndpoint();
-			group.MapActivarSuscripcionGratuitaEndpoint();
 
 			RouteGroupBuilder publicGroup = routes.MapGroup("/public/Suscripcion");
 			publicGroup.MapWebhookEndpoint();
@@ -154,36 +153,6 @@ namespace TanatosAPI.Endpoints {
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 			}).RequireAuthorization("Suscripciones.Write.Self");
-
-			return routes;
-		}
-
-		private static IEndpointRouteBuilder MapActivarSuscripcionGratuitaEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapPost("/ActivarSuscripcionGratuita", async (EntSuscripcionActivarSuscripcionGratuita entrada, IHostEnvironment environment, ClaimsPrincipal user, SuscripcionUseCase suscripcionUseCase) => {
-				Stopwatch stopwatch = Stopwatch.StartNew();
-
-				try {
-					List<Plan> planesGratuitosSuscritos = await suscripcionUseCase.SuscribirseAPlanesGratuitos(entrada.Sub);
-
-					LambdaLogger.Log(
-						$"[POST] - [Suscripcion] - [ActivarSuscripcionGratuita] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Se activó exitosamente {planesGratuitosSuscritos.Count} planes gratuitos - Sub: {entrada.Sub}.");
-
-					return Results.Ok();
-				} catch (ErrorValidacion ex) {
-					LambdaLogger.Log(
-						$"[POST] - [Suscripcion] - [ActivarSuscripcionGratuita] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-						$"Ocurrió un error de validación. " +
-						$"{ex}");
-					return Results.BadRequest(ex.MensajeGenerico);
-				} catch (Exception ex) {
-					LambdaLogger.Log(
-						$"[POST] - [Suscripcion] - [ActivarSuscripcionGratuita] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error en la activación de suscripciones gratuitas - Sub: {entrada.Sub}. " +
-						$"{ex}");
-					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
-				}
-			}).RequireAuthorization("Suscripciones.Read.All", "Suscripciones.Write.All", "Sistema.Read.Public");
 
 			return routes;
 		}

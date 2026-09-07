@@ -589,7 +589,7 @@ namespace TanatosAPI.UseCases {
                 }
 
 				NormaSuscrita obligacion = (await normaSuscritaBcp.Obtener(idNormaSuscrita, validarVigencia: true, validarSub: sub, transaction: transaction!.NpgsqlTransaction()))!;
-				HistorialNormaSuscrita vencimiento = (await historialNormaSuscritaBcp.Obtener(idHistorialNormaSuscrita, validarVigencia: true, validarIdNormaSuscrita: idNormaSuscrita, transaction: transaction!.NpgsqlTransaction()))!;
+				HistorialNormaSuscrita vencimiento = (await historialNormaSuscritaBcp.Obtener(idHistorialNormaSuscrita, validarVigencia: true, validarIdNormaSuscrita: obligacion.Id, transaction: transaction!.NpgsqlTransaction()))!;
 
 				vencimiento.FechaCompletitud = await historialNormaSuscritaUseCase.CompletarHistorialNormaSuscrita(vencimiento, transaction!.NpgsqlTransaction());
 
