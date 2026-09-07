@@ -182,7 +182,9 @@ namespace TanatosAPI.Endpoints {
 									await normaSuscritaDao.Actualizar(normaSuscrita, transaction!.NpgsqlTransaction());
 								}
 
-								(procesosProgramados, procesosDesprogramados) = await normaSuscritaUseCase.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
+								(List<SalKairosIngresarProceso> procesosProgramadosParcial, List<NormaSuscritaProcesoNotificacion> procesosDesprogramadosParcial) = await normaSuscritaUseCase.ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
+								procesosProgramados.AddRange(procesosProgramadosParcial);
+								procesosDesprogramados.AddRange(procesosDesprogramadosParcial);
 							}
 						}
 
