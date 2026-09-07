@@ -21,6 +21,7 @@ using TanatosAPI.Entities.Others.NormaSuscrita;
 using TanatosAPI.Entities.Others.Perfil;
 using TanatosAPI.Entities.Others.Plan;
 using TanatosAPI.Entities.Others.PreguntaFrecuente;
+using TanatosAPI.Entities.Others.ProcesoAutomatico;
 using TanatosAPI.Entities.Others.Suscripcion;
 using TanatosAPI.Entities.Others.TipoPeriodicidad;
 using TanatosAPI.Entities.Others.TipoProcesoAutomatico;
@@ -171,6 +172,9 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(EntTipoProcesoAutomaticoActualizar))]
 	[JsonSerializable(typeof(SalTipoProcesoAutomatico))]
 	[JsonSerializable(typeof(List<SalTipoProcesoAutomatico>))]
+	[JsonSerializable(typeof(ProcesoAutomatico))]
+	[JsonSerializable(typeof(List<ProcesoAutomatico>))]
+	[JsonSerializable(typeof(SalProcesoAutomaticoObtenerPorPaginacion))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }
