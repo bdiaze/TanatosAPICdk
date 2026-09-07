@@ -391,6 +391,7 @@ app.MapVideoTutorialEndpoints();
 app.MapFlowEndpoints();
 app.MapEvaluacionEndpoints();
 app.MapTipoProcesoAutomaticoEndpoints();
+app.MapProcesoAutomaticoEndpoints();
 
 await app.RunAsync();
 
