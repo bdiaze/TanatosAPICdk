@@ -1,7 +1,7 @@
-﻿using Actions_Compile;
-using Npgsql;
+﻿using Npgsql;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
+using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Repositories;
 
@@ -34,7 +34,34 @@ namespace TanatosAPI.Business {
                 throw new InvalidOperationException($"El tipo de periodicidad tiene un delta de dias inválido - ID Tipo Periodicidad: {tipoPeriodicidad.Id}");
         }
 
-        public async Task<TipoPeriodicidad?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
+		public bool PuedeCalcularSiguienteIteracion(TipoPeriodicidad tipoPeriodicidad) {
+			int cantDeltas =
+				(tipoPeriodicidad.DeltaAnnos != null ? 1 : 0) +
+				(tipoPeriodicidad.DeltaMeses != null ? 1 : 0) +
+				(tipoPeriodicidad.DeltaDias != null ? 1 : 0);
+
+			return cantDeltas > 0;
+		}
+
+		public DateTime CalcularSiguienteIteracion(DateTime fechaReferencia, TipoPeriodicidad tipoPeriodicidad, bool fechasChilenas = false) {
+			ValidarDeltas(tipoPeriodicidad);
+
+			DateTime fechaReferenciaChile = !fechasChilenas ? DateTimeHelper.TransformarFechaUTCATimezone(fechaReferencia) : fechaReferencia;
+
+			// Se añaden los deltas de la periodicidad...
+			if (tipoPeriodicidad.DeltaDias != null) {
+				fechaReferenciaChile = fechaReferenciaChile.AddDays(tipoPeriodicidad.DeltaDias.Value);
+			} else if (tipoPeriodicidad.DeltaMeses != null) {
+				fechaReferenciaChile = fechaReferenciaChile.AddMonths(tipoPeriodicidad.DeltaMeses.Value);
+			} else if (tipoPeriodicidad.DeltaAnnos != null) {
+				fechaReferenciaChile = fechaReferenciaChile.AddYears(tipoPeriodicidad.DeltaAnnos.Value);
+			}
+
+			// Se convierte próximo vencimiento calculado a UTC...
+			return !fechasChilenas ? DateTimeHelper.TransformarFechaTimezoneAUTC(fechaReferenciaChile) : fechaReferenciaChile;
+		}
+
+		public async Task<TipoPeriodicidad?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null) {
 			return await tipoPeriodicidadDao.ObtenerPorId(id, transaction);
 		}
 

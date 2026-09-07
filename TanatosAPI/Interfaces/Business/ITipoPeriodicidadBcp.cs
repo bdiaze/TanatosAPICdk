@@ -5,7 +5,9 @@ namespace TanatosAPI.Interfaces.Business {
 	public interface ITipoPeriodicidadBcp {
 		public bool EstaVigente(TipoPeriodicidad? periodicidad);
 		public void ValidarDeltas(TipoPeriodicidad tipoPeriodicidad);
-        public Task<TipoPeriodicidad?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null);
+		public bool PuedeCalcularSiguienteIteracion(TipoPeriodicidad tipoPeriodicidad);
+		public DateTime CalcularSiguienteIteracion(DateTime fechaReferencia, TipoPeriodicidad tipoPeriodicidad, bool fechasChilenas = false);
+		public Task<TipoPeriodicidad?> ObtenerPorId(long id, NpgsqlTransaction? transaction = null);
 		public Task<TipoPeriodicidad> ObtenerValidandoVigencia(long? id, NpgsqlTransaction? transaction = null);
         public Task<List<TipoPeriodicidad>> ObtenerVigentes(NpgsqlTransaction? transaction = null);
 		public Task<List<TipoPeriodicidad>> ObtenerPorVigencia(bool? vigencia, NpgsqlTransaction? transaction = null);
