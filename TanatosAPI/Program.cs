@@ -264,6 +264,7 @@ builder.Services.AddScoped<TipoUnidadTiempoUseCase>();
 builder.Services.AddScoped<TipoProcesoAutomaticoUseCase>();
 builder.Services.AddScoped<INormaSuscritaProcesoNotificacionUseCase, NormaSuscritaProcesoNotificacionUseCase>();
 builder.Services.AddScoped<PerfilUseCase>();
+builder.Services.AddScoped<ProcesoAutomaticoUseCase>();
 #endregion
 
 string cognitoRegion;
