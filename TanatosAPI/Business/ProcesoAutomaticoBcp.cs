@@ -22,6 +22,11 @@ namespace TanatosAPI.Business {
 			return items;
 		}
 
+		public async Task<List<ProcesoAutomatico>> ObtenerConPaginacion(long? primerId = null, int cantidad = 50, string? nombre = null, bool? vigencia = true, NpgsqlTransaction? transaction = null) {
+			List<ProcesoAutomatico> items = await procesoAutomaticoDao.ObtenerConPaginacion(primerId, cantidad, nombre, vigencia, transaction);
+			return items;
+		}
+
 		public async Task<List<ProcesoAutomatico>> ObtenerPorNombre(string nombre, bool filtrarVigente = false, NpgsqlTransaction? transaction = null) {
 			List<ProcesoAutomatico> items = await procesoAutomaticoDao.ObtenerPorNombre(nombre, transaction);
 			if (filtrarVigente) items = FiltrarVigentes(items);
