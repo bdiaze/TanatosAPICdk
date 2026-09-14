@@ -206,6 +206,7 @@ builder.Services.AddScoped<IEvaluacionDao, EvaluacionDao>();
 builder.Services.AddScoped<ITipoProcesoAutomaticoDao, TipoProcesoAutomaticoDao>();
 builder.Services.AddScoped<IProcesoAutomaticoDao, ProcesoAutomaticoDao>();
 builder.Services.AddScoped<INormaSuscritaProcesoNotificacionDao, NormaSuscritaProcesoNotificacionDao>();
+builder.Services.AddScoped<IModeloCanvasDao, ModeloCanvasDao>();
 #endregion
 
 #region Singleton BCP
