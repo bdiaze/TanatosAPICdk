@@ -66,5 +66,7 @@ namespace TanatosAPI.Entities.Models {
 		[JsonIgnore]
 		public List<Empleado>? Empleados { get; set; }
 
+		[JsonIgnore]
+		public List<ModeloCanvas>? ModelosCanvas { get; set; }
 	}
 }

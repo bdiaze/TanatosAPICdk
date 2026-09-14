@@ -679,6 +679,32 @@ namespace TanatosAPI.Design.Contexts {
 					.HasForeignKey(o => o.IdProcesoAutomatico)
 					.OnDelete(DeleteBehavior.Restrict);
 			});
+
+			modelBuilder.Entity<ModeloCanvas>(entity => {
+				entity.HasIndex(o => new { o.Sub, o.IdNegocio });
+				entity.ToTable(o => o.HasComment("Tabla que contiene los modelos Canvas asociados al negocio del usuario."));
+				entity.Property(o => o.Id).HasComment("Identificador del modelo Canvas.");
+				entity.Property(o => o.Sub).HasComment("Usuario al que pertenece el modelo Canvas.");
+				entity.Property(o => o.IdNegocio).HasComment("Identificador del negocio del usuario.");
+				entity.Property(o => o.SociosClave).HasComment("Corresponde a los aliados estratégicos, proveedores o socios comerciales que te ayudan a optimizar recursos o mitigar riesgos.");
+				entity.Property(o => o.ActividadesClave).HasComment("Corresponde a las acciones más importantes que debes ejecutar para operar, como producción, desarrollo de software, resolución de problemas, etc.");
+				entity.Property(o => o.RecursosClave).HasComment("Corresponde a los activos indispensables para que el negocio funcione, como humanos, tecnológicos, físicos o financieros.");
+				entity.Property(o => o.PropuestaValor).HasComment("Identifica el problema o necesidad que resuelve tu producto o servicio, qué lo hace diferente de la competencia.");
+				entity.Property(o => o.RelacionesClientes).HasComment("Identifica el tipo de interacción que tendrás con los clientes, como asistencia personalizada, autoservicio automatizado, o a través de comunidades.");
+				entity.Property(o => o.Canales).HasComment("Identifica cómo vas a entregar tu propuesta de valor a los clientess, mediante tiendas físicas, plataformas digitales o aplicaciones móviles.");
+				entity.Property(o => o.SegmentosClientes).HasComment("Identifica quiénes son tus clientes objetivos, definiendo características demográficas, sociales y comportamientos específicos.");
+				entity.Property(o => o.EstructuraCostos).HasComment("Corresponde a todos los gastos e inversiones necesarios para mantener el negocio en marcha.");
+				entity.Property(o => o.FuentesIngresos).HasComment("Identifica cómo va a ganar dinero el negocio, define estrategias de precios y los métodos de pago disponibles.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el modelo Canvas.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el modelo Canvas.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del modelo Canvas.");
+
+				entity
+					.HasOne(o => o.Negocio)
+					.WithMany(o => o.ModelosCanvas)
+					.HasForeignKey(o => o.IdNegocio)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -750,5 +776,7 @@ namespace TanatosAPI.Design.Contexts {
         public DbSet<ProcesoAutomatico> ProcesosAutomaticos { get; set; }
         
         public DbSet<NormaSuscritaProcesoNotificacion> NormaSuscritaProcesosNotificaciones { get; set; }
+
+        public DbSet<ModeloCanvas> ModelosCanvas { get; set; }
 	}
 }
