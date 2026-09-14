@@ -242,6 +242,7 @@ builder.Services.AddScoped<IProcesoAutomaticoBcp, ProcesoAutomaticoBcp>();
 builder.Services.AddScoped<INormaSuscritaProcesoNotificacionBcp, NormaSuscritaProcesoNotificacionBcp>();
 builder.Services.AddScoped<ITipoActividadBcp, TipoActividadBcp>();
 builder.Services.AddScoped<ITipoRubroBcp, TipoRubroBcp>();
+builder.Services.AddScoped<IModeloCanvasBcp, ModeloCanvasBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -266,6 +267,7 @@ builder.Services.AddScoped<TipoProcesoAutomaticoUseCase>();
 builder.Services.AddScoped<INormaSuscritaProcesoNotificacionUseCase, NormaSuscritaProcesoNotificacionUseCase>();
 builder.Services.AddScoped<PerfilUseCase>();
 builder.Services.AddScoped<ProcesoAutomaticoUseCase>();
+builder.Services.AddScoped<ModeloCanvasUseCase>();
 #endregion
 
 string cognitoRegion;
