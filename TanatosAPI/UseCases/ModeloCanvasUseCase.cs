@@ -3,7 +3,7 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Interfaces.Business;
 
 namespace TanatosAPI.UseCases {
-	public class ModeloCanvasUseCase(IModeloCanvasBcp modeloCanvasBcp) {
+	public class ModeloCanvasUseCase(IModeloCanvasBcp modeloCanvasBcp, INegocioBcp negocioBcp) {
 		public async Task<List<ModeloCanvas>> ObtenerVigentes(string sub, long idNegocio) {
 			return await modeloCanvasBcp.ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigentes: true);
 		}
@@ -19,9 +19,11 @@ namespace TanatosAPI.UseCases {
 			estructuraCostos = string.IsNullOrWhiteSpace(estructuraCostos) ? null : estructuraCostos.Trim();
 			fuentesIngresos = string.IsNullOrWhiteSpace(fuentesIngresos) ? null : fuentesIngresos.Trim();
 
+			Negocio negocio = (await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub))!;
+
 			return await modeloCanvasBcp.Insertar(
-				sub, 
-				idNegocio, 
+				sub,
+				negocio.Id, 
 				sociosClave, 
 				actividadesClave, 
 				recursosClave, 
