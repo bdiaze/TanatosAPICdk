@@ -395,6 +395,7 @@ app.MapFlowEndpoints();
 app.MapEvaluacionEndpoints();
 app.MapTipoProcesoAutomaticoEndpoints();
 app.MapProcesoAutomaticoEndpoints();
+app.MapModeloCanvasEndpoints();
 
 await app.RunAsync();
 

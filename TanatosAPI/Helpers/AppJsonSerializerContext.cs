@@ -16,6 +16,7 @@ using TanatosAPI.Entities.Others.Hermes;
 using TanatosAPI.Entities.Others.InscripcionTemplate;
 using TanatosAPI.Entities.Others.Kairos;
 using TanatosAPI.Entities.Others.Mensaje;
+using TanatosAPI.Entities.Others.ModeloCanvas;
 using TanatosAPI.Entities.Others.Negocio;
 using TanatosAPI.Entities.Others.NormaSuscrita;
 using TanatosAPI.Entities.Others.Perfil;
@@ -29,11 +30,11 @@ using TanatosAPI.Entities.Others.VideoTutorial;
 using TanatosAPI.Entities.Others.Whatsapp;
 
 namespace TanatosAPI.Helpers {
-    [ExcludeFromCodeCoverage]
-    [JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
+	[ExcludeFromCodeCoverage]
+	[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
 	[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyResponse))]
 	[JsonSerializable(typeof(ProblemDetails))]
-    [JsonSerializable(typeof(Dictionary<string, string>))]
+	[JsonSerializable(typeof(Dictionary<string, string>))]
 	[JsonSerializable(typeof(Dictionary<string, JsonElement>))]
 	[JsonSerializable(typeof(List<string>))]
 	[JsonSerializable(typeof(List<Dictionary<string, JsonElement>>))]
@@ -91,9 +92,9 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(EntNormaSuscritaActualizar))]
 	[JsonSerializable(typeof(SalNormaSuscrita))]
 	[JsonSerializable(typeof(List<SalNormaSuscrita>))]
-    [JsonSerializable(typeof(ProcesoNotificacion))]
-    [JsonSerializable(typeof(List<ProcesoNotificacion>))]
-    [JsonSerializable(typeof(SalInscripcionTemplate))]
+	[JsonSerializable(typeof(ProcesoNotificacion))]
+	[JsonSerializable(typeof(List<ProcesoNotificacion>))]
+	[JsonSerializable(typeof(SalInscripcionTemplate))]
 	[JsonSerializable(typeof(List<SalInscripcionTemplate>))]
 	[JsonSerializable(typeof(EntInscripcionTemplateActivar))]
 	[JsonSerializable(typeof(EntInscripcionTemplateDesactivar))]
@@ -138,22 +139,22 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(SalFlowSubscriptionCancel))]
 	[JsonSerializable(typeof(SalFlowPaymentGetStatus))]
 	[JsonSerializable(typeof(SalFlowInvoiceGet))]
-    [JsonSerializable(typeof(SalCargo))]
-    [JsonSerializable(typeof(List<SalCargo>))]
-    [JsonSerializable(typeof(EntCargoCrear))]
-    [JsonSerializable(typeof(EntCargoActualizar))]
+	[JsonSerializable(typeof(SalCargo))]
+	[JsonSerializable(typeof(List<SalCargo>))]
+	[JsonSerializable(typeof(EntCargoCrear))]
+	[JsonSerializable(typeof(EntCargoActualizar))]
 	[JsonSerializable(typeof(SalEmpleado))]
 	[JsonSerializable(typeof(List<SalEmpleado>))]
 	[JsonSerializable(typeof(EntEmpleadoCrear))]
 	[JsonSerializable(typeof(EntEmpleadoActualizar))]
-    [JsonSerializable(typeof(GoogleRecaptchaCredential))]
-    [JsonSerializable(typeof(GoogleAssessmentResponse))]
-    [JsonSerializable(typeof(GoogleAssessmentParams))]
-    [JsonSerializable(typeof(GoogleTokenResponse))]
+	[JsonSerializable(typeof(GoogleRecaptchaCredential))]
+	[JsonSerializable(typeof(GoogleAssessmentResponse))]
+	[JsonSerializable(typeof(GoogleAssessmentParams))]
+	[JsonSerializable(typeof(GoogleTokenResponse))]
 	[JsonSerializable(typeof(EntPerfilConfiguracionInicial))]
 	[JsonSerializable(typeof(EntPerfilEnviarCodigoVerificacion))]
-    [JsonSerializable(typeof(EntPerfilConfirmarRegistro))]
-    [JsonSerializable(typeof(EntPerfilReenviarCodigoVerificacion))]
+	[JsonSerializable(typeof(EntPerfilConfirmarRegistro))]
+	[JsonSerializable(typeof(EntPerfilReenviarCodigoVerificacion))]
 	[JsonSerializable(typeof(PerfilEnviarCodigoVerificacionUrlPayload))]
 	[JsonSerializable(typeof(EntPreguntaFrecuenteCrear))]
 	[JsonSerializable(typeof(EntPreguntaFrecuenteActualizar))]
@@ -175,6 +176,10 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(ProcesoAutomatico))]
 	[JsonSerializable(typeof(List<ProcesoAutomatico>))]
 	[JsonSerializable(typeof(SalProcesoAutomaticoObtenerPorPaginacion))]
+	[JsonSerializable(typeof(SalModeloCanvas))]
+	[JsonSerializable(typeof(List<SalModeloCanvas>))]
+	[JsonSerializable(typeof(EntModeloCanvasCrear))]
+	[JsonSerializable(typeof(EntModeloCanvasActualizar))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }
