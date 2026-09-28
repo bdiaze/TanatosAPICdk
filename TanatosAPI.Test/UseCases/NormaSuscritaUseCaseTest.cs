@@ -734,9 +734,9 @@ namespace TanatosAPI.Test.UseCases {
 			]);
 			historialNormaSuscritaBcp.ObtenerProximoVencimiento(10, Arg.Any<NpgsqlTransaction?>()).Returns(FECHA_DUMMY.AddMonths(1)); // 15-02-2026 11:00 Chile
 			notificacionNormaSuscritaUseCase.GenerarCrons(FECHA_DUMMY.AddMonths(1), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
-				("0 11 15 * ? *", TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 1, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
+				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 1, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
-			normaSuscritaProcesoNotificacionUseCase.ActualizarProcesosNotificacionesNormaSuscrita(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>()).Returns(
+			normaSuscritaProcesoNotificacionUseCase.ActualizarProcesosNotificacionesNormaSuscrita(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>()).Returns(
 				([], [])
 			);
 
@@ -744,7 +744,7 @@ namespace TanatosAPI.Test.UseCases {
 			await notificacionNormaSuscritaUseCase.Received(1).ObtenerAntelacionesConsiderandoTemplate(10, null, null, Arg.Any<NpgsqlTransaction?>());
 			await historialNormaSuscritaBcp.Received(1).ObtenerProximoVencimiento(10, Arg.Any<NpgsqlTransaction?>());
 			await notificacionNormaSuscritaUseCase.Received(1).GenerarCrons(FECHA_DUMMY.AddMonths(1), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>());
-			await normaSuscritaProcesoNotificacionUseCase.Received(1).ActualizarProcesosNotificacionesNormaSuscrita(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<IDatabaseTransaction>());
+			await normaSuscritaProcesoNotificacionUseCase.Received(1).ActualizarProcesosNotificacionesNormaSuscrita(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<IDatabaseTransaction>());
 		}
 
 		[Fact]
@@ -767,7 +767,7 @@ namespace TanatosAPI.Test.UseCases {
 			notificacionNormaSuscritaUseCase.GenerarFrecuenciasDias(FECHA_DUMMY.AddMonths(1), 14, Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
 				(14, FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 1, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
-			normaSuscritaProcesoNotificacionUseCase.ActualizarProcesosNotificacionesNormaSuscrita(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>()).Returns(
+			normaSuscritaProcesoNotificacionUseCase.ActualizarProcesosNotificacionesNormaSuscrita(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>()).Returns(
 				([], [])
 			);
 
@@ -775,7 +775,7 @@ namespace TanatosAPI.Test.UseCases {
 			await notificacionNormaSuscritaUseCase.Received(1).ObtenerAntelacionesConsiderandoTemplate(10, null, null, Arg.Any<NpgsqlTransaction?>());
 			await historialNormaSuscritaBcp.Received(1).ObtenerProximoVencimiento(10, Arg.Any<NpgsqlTransaction?>());
 			await notificacionNormaSuscritaUseCase.Received(1).GenerarFrecuenciasDias(FECHA_DUMMY.AddMonths(1), 14, Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>());
-			await normaSuscritaProcesoNotificacionUseCase.Received(1).ActualizarProcesosNotificacionesNormaSuscrita(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<IDatabaseTransaction>());
+			await normaSuscritaProcesoNotificacionUseCase.Received(1).ActualizarProcesosNotificacionesNormaSuscrita(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<IDatabaseTransaction>());
 		}
 
 		[Fact]
@@ -790,7 +790,7 @@ namespace TanatosAPI.Test.UseCases {
 			tipoPeriodicidadBcp.ObtenerPorId(1, Arg.Any<NpgsqlTransaction?>()).Returns(
 				TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 1, vigencia: true, cron: "MI HO DM * ? *", deltaDias: null, deltaMeses: 1, deltaAnnos: null)
 			);
-			normaSuscritaProcesoNotificacionUseCase.ActualizarProcesosNotificacionesNormaSuscrita(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>()).Returns(
+			normaSuscritaProcesoNotificacionUseCase.ActualizarProcesosNotificacionesNormaSuscrita(Arg.Any<NormaSuscrita>(), Arg.Any<List<(string Cron, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(), Arg.Any<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>()).Returns(
 				([], [])
 			);
 
@@ -801,7 +801,7 @@ namespace TanatosAPI.Test.UseCases {
 			await notificacionNormaSuscritaUseCase.DidNotReceive().GenerarFrecuenciasDias(Arg.Any<DateTime>(), Arg.Any<int>(), Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>());
 			await normaSuscritaProcesoNotificacionUseCase.Received(1).ActualizarProcesosNotificacionesNormaSuscrita(
 				Arg.Any<NormaSuscrita>(),
-				Arg.Is<List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(d => d.Count == 0),
+				Arg.Is<List<(string Cron, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(d => d.Count == 0),
 				Arg.Is<List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>>(d => d.Count == 0),
 				Arg.Any<IDatabaseTransaction>()
 			);
@@ -946,7 +946,7 @@ namespace TanatosAPI.Test.UseCases {
 			]);
 			historialNormaSuscritaBcp.ObtenerProximoVencimiento(10, Arg.Any<NpgsqlTransaction?>()).Returns(FECHA_DUMMY);
 			notificacionNormaSuscritaUseCase.GenerarCrons(FECHA_DUMMY.AddMonths(1), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
-				("0 11 15 * ? *", TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
+				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
 		
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.CrearNormaSuscrita(
@@ -1183,7 +1183,7 @@ namespace TanatosAPI.Test.UseCases {
 			]);
 			historialNormaSuscritaBcp.ObtenerProximoVencimiento(10, Arg.Any<NpgsqlTransaction?>()).Returns(FECHA_DUMMY.AddDays(14));
 			notificacionNormaSuscritaUseCase.GenerarCrons(FECHA_DUMMY.AddDays(14), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
-				("0 11 15 * ? *", TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
+				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
 			
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActualizarNormaSuscrita(
@@ -1266,7 +1266,7 @@ namespace TanatosAPI.Test.UseCases {
 			]);
 			historialNormaSuscritaBcp.ObtenerProximoVencimiento(10, Arg.Any<NpgsqlTransaction?>()).Returns(FECHA_DUMMY.AddDays(14));
 			notificacionNormaSuscritaUseCase.GenerarCrons(FECHA_DUMMY.AddDays(14), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
-				("0 11 15 * ? *", TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
+				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
 
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActualizarNormaSuscrita(
@@ -1414,7 +1414,7 @@ namespace TanatosAPI.Test.UseCases {
 			]);
 			historialNormaSuscritaBcp.ObtenerProximoVencimiento(10, Arg.Any<NpgsqlTransaction?>()).Returns(FECHA_DUMMY.AddDays(14));
 			notificacionNormaSuscritaUseCase.GenerarCrons(FECHA_DUMMY.AddDays(14), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
-				("0 11 15 * ? *", TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
+				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
 			
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActualizarNormaSuscrita(
@@ -1494,7 +1494,7 @@ namespace TanatosAPI.Test.UseCases {
 			]);
 			historialNormaSuscritaBcp.ObtenerProximoVencimiento(10, Arg.Any<NpgsqlTransaction?>()).Returns(FECHA_DUMMY.AddDays(14));
 			notificacionNormaSuscritaUseCase.GenerarCrons(FECHA_DUMMY.AddDays(14), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
-				("0 11 15 * ? *", TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
+				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
 			
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActualizarNormaSuscrita(
@@ -1597,7 +1597,7 @@ namespace TanatosAPI.Test.UseCases {
 			]);
 			historialNormaSuscritaBcp.ObtenerProximoVencimiento(10, Arg.Any<NpgsqlTransaction?>()).Returns(FECHA_DUMMY.AddDays(14));
 			notificacionNormaSuscritaUseCase.GenerarCrons(FECHA_DUMMY.AddDays(14), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
-				("0 11 15 * ? *", TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
+				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
 			
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActualizarNormaSuscrita(

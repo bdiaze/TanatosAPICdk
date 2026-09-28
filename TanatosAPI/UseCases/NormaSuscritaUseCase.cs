@@ -252,7 +252,7 @@ namespace TanatosAPI.UseCases {
 				}
 
 				NormaSuscrita? normaSuscrita = await Obtener(idNormaSuscrita, incluirTemplate: true, incluirProcesosNotificaciones: true, transaction: transaction!.NpgsqlTransaction()) ?? throw new InvalidOperationException("Norma suscrita inválida");
-				List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> cronsDeseados = [];
+				List<(string Cron, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> cronsDeseados = [];
 				List<(int FrecuenciaDias, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> frecuenciasDiasDeseadas = [];
 
 				// Si la norma suscrita está activada, se obtienen los crons y frecuencias deseados...

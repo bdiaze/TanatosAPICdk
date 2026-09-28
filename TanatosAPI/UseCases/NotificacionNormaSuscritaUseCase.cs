@@ -23,12 +23,12 @@ namespace TanatosAPI.UseCases {
 			return [.. antelaciones.Where(a => unidadesTiempo.ContainsKey(a.idTipoUnidadTiempo)).Select(a => (unidadesTiempo[a.idTipoUnidadTiempo] , a.cantAntelacion))];
 		}
 
-		public async Task<List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>> GenerarCrons(DateTime proximoVencimientoUtc, string baseCronAws, List<(TipoUnidadTiempo TipoUnidadTiempo, int CantAntelacion)> antelaciones, TipoPeriodicidad tipoPeriodicidad) {
-			List<(string Cron, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> crons = [];
+		public async Task<List<(string Cron, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)>> GenerarCrons(DateTime proximoVencimientoUtc, string baseCronAws, List<(TipoUnidadTiempo TipoUnidadTiempo, int CantAntelacion)> antelaciones, TipoPeriodicidad tipoPeriodicidad) {
+			List<(string Cron, DateTime InicioEjecucionUtc, TipoUnidadTiempo? UnidadTiempoAntelacion, int? CantAntelacion, bool EsVencimiento)> crons = [];
 
 			// Se añade primer cron correspondiente al vencimiento, sin info de antelación...
 			DateTime proximoVencimientoChile = DateTimeHelper.TransformarFechaUTCATimezone(proximoVencimientoUtc);
-			crons.Add((CronHelper.GenerarCronAWSDesdeFecha(proximoVencimientoChile, baseCronAws), null, null, true));
+			crons.Add((CronHelper.GenerarCronAWSDesdeFecha(proximoVencimientoChile, baseCronAws), proximoVencimientoUtc, null, null, true));
 
 			// Por cada antelación, se calcula fecha de programación y se agrega cron respectivo...
 			foreach ((TipoUnidadTiempo tipoUnidadTiempo, int cantAntelacion) in antelaciones) {
@@ -38,10 +38,22 @@ namespace TanatosAPI.UseCases {
 						while (DateTimeHelper.TransformarFechaTimezoneAUTC(fechaProgramacionChile) <= dateTimeProvider.UtcNow) {
 							fechaProgramacionChile = tipoPeriodicidadBcp.CalcularSiguienteIteracion(fechaProgramacionChile, tipoPeriodicidad, true);
 						}
-						crons.Add((CronHelper.GenerarCronAWSDesdeFecha(fechaProgramacionChile, baseCronAws), tipoUnidadTiempo, cantAntelacion, false));
+						crons.Add((
+							CronHelper.GenerarCronAWSDesdeFecha(fechaProgramacionChile, baseCronAws),
+							DateTimeHelper.TransformarFechaTimezoneAUTC(fechaProgramacionChile),
+							tipoUnidadTiempo, 
+							cantAntelacion, 
+							false
+						));
 					}
 				} else {
-					crons.Add((CronHelper.GenerarCronAWSDesdeFecha(fechaProgramacionChile, baseCronAws), tipoUnidadTiempo, cantAntelacion, false));
+					crons.Add((
+						CronHelper.GenerarCronAWSDesdeFecha(fechaProgramacionChile, baseCronAws), 
+						DateTimeHelper.TransformarFechaTimezoneAUTC(fechaProgramacionChile), 
+						tipoUnidadTiempo, 
+						cantAntelacion, 
+						false
+					));
 				}
 			}
 
