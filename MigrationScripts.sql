@@ -3009,3 +3009,30 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260930193316_ColumnsFechaNotificacionHermesIdMensajeSuscripcion') THEN
+    ALTER TABLE tanatos.suscripcion ADD fecha_notificacion timestamp with time zone;
+    COMMENT ON COLUMN tanatos.suscripcion.fecha_notificacion IS 'Fecha en que se notifica contratación del plan.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260930193316_ColumnsFechaNotificacionHermesIdMensajeSuscripcion') THEN
+    ALTER TABLE tanatos.suscripcion ADD hermes_id_mensaje text;
+    COMMENT ON COLUMN tanatos.suscripcion.hermes_id_mensaje IS 'ID del mensaje en Hermes asociado a la notificación de contratación.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260930193316_ColumnsFechaNotificacionHermesIdMensajeSuscripcion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260930193316_ColumnsFechaNotificacionHermesIdMensajeSuscripcion', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+

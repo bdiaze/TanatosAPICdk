@@ -48,6 +48,12 @@ namespace TanatosAPI.Entities.Models {
 		[Column("flow_subscription_id")]
 		public string? FlowSubscriptionId { get; set; }
 
+		[Column("fecha_notificacion", TypeName = "timestamp with time zone")]
+		public DateTime? FechaNotificacion { get; set; }
+
+		[Column("hermes_id_mensaje")]
+		public string? HermesIdMensaje { get; set; }
+
 		[Required]
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
 		public required DateTime FechaCreacion { get; set; }
