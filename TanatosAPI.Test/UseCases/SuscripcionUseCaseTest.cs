@@ -4,6 +4,7 @@ using NSubstitute.ExceptionExtensions;
 using Scriban.Parsing;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
@@ -324,7 +325,14 @@ namespace TanatosAPI.Test.UseCases {
 
 		[Fact]
 		public async Task ProcesarWebhookFlowCustomerRegisterTest_Valido() {
-			usuarioBcp.ObtenerPorFlowCustomerId("flow-customer-id-test", Arg.Any<NpgsqlTransaction?>()).Returns(UsuarioBcpTest.UsuarioDummy(sub: "sub-test", flowCustomerId: "flow-customer-id-test"));
+			usuarioBcp.ObtenerPorFlowCustomerId("flow-customer-id-test", Arg.Any<NpgsqlTransaction?>()).Returns(
+				UsuarioBcpTest.UsuarioDummy(
+					sub: "sub-test", 
+					flowCustomerId: "flow-customer-id-test",
+					correoElectronico: "correo@test.cl",
+					nombre: "nombre-test"
+				)
+			);
 			suscripcionBcp.ObtenerVigentesPorSub("sub-test", Arg.Any<NpgsqlTransaction?>()).Returns([
 				SuscripcionBcpTest.SuscripcionDummy(id: 100, sub: "sub-test", idPlan: 10, estado: 5 /* En Creación */, flowCustomerId: "flow-customer-id-test", flowSubscriptionId: null),
 			]);
@@ -337,6 +345,7 @@ namespace TanatosAPI.Test.UseCases {
 				SubscriptionId = "flow-subscription-id-test",
 				NextInvoiceDate = "2020-07-01 12:30:15" // Formato: yyyy-MM-dd HH:mm:ss - UTC: 2020-07-01 16:30:15
 			});
+			suscripcionBcp.EnviarNotificacionContratacion("correo@test.cl", "nombre-test", Arg.Any<Plan>(), Arg.Any<DateTime?>()).Returns("id-mensaje-test");
 
 			await suscripcionUseCase.ProcesarWebhookFlowCustomerRegister(new SalFlowCustomerGetRegisterStatus() {
 				CustomerId = "flow-customer-id-test",
@@ -344,7 +353,7 @@ namespace TanatosAPI.Test.UseCases {
 			});
 			await connection.Received(1).BeginTransactionAsync();
 			await flowHelper.Received(1).SubscriptionCreate("flow-plan-id-test", "flow-customer-id-test", Arg.Any<DateTime?>());
-			await suscripcionBcp.Received(1).Modificar(
+			await suscripcionBcp.Received(2).Modificar(
 				Arg.Is<Suscripcion>(s =>
 					s.Id == 100 &&
 					s.Estado == 4 /* Pago Pendiente */ &&
@@ -353,6 +362,7 @@ namespace TanatosAPI.Test.UseCases {
 				),
 				Arg.Any<NpgsqlTransaction?>()
 			);
+			await suscripcionBcp.Received(1).EnviarNotificacionContratacion("correo@test.cl", "nombre-test", Arg.Any<Plan>(), Arg.Any<DateTime?>());
 			await transaction.Received(1).CommitAsync();
 			await transaction.DidNotReceive().RollbackAsync();
 			await transaction.Received(1).DisposeAsync();

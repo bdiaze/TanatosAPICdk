@@ -263,18 +263,22 @@ namespace TanatosAPI.UseCases {
 								suscripcionActivar.FlowSubscriptionId = salFlowSubscriptionCreate.SubscriptionId;
 								suscripcionActivar.FechaProximoCobro = fechaProximoCobro;
 								await suscripcionBcp.Modificar(suscripcionActivar, transaction!.NpgsqlTransaction());
-							}
 
-							// Se envía correo de notificación de contratación de plan...
-							if (usuario.CorreoElectronico != null) {
-								suscripcionActivar.FechaNotificacion = dateTimeProvider.UtcNow;
-								suscripcionActivar.HermesIdMensaje = await suscripcionBcp.EnviarNotificacionContratacion(
-									usuario.CorreoElectronico!,
-									usuario.Nombre,
-									plan,
-									fechaInicio
-								);
-								await suscripcionBcp.Modificar(suscripcionActivar, transaction!.NpgsqlTransaction());
+								// Se envía correo de notificación de contratación de plan...
+								if (usuario.CorreoElectronico != null) {
+									DateTime? fechaInicioSuscripcionChile = null;
+									if (!string.IsNullOrWhiteSpace(salFlowSubscriptionCreate.SubscriptionStart) && DateTime.TryParseExact(salFlowSubscriptionCreate.SubscriptionStart, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime subscriptionStart)) {
+										fechaInicioSuscripcionChile = subscriptionStart;
+									}
+									suscripcionActivar.FechaNotificacion = dateTimeProvider.UtcNow;
+									suscripcionActivar.HermesIdMensaje = await suscripcionBcp.EnviarNotificacionContratacion(
+										usuario.CorreoElectronico!,
+										usuario.Nombre,
+										plan,
+										fechaInicioSuscripcionChile
+									);
+									await suscripcionBcp.Modificar(suscripcionActivar, transaction!.NpgsqlTransaction());
+								}
 							}
 						}
 					}
