@@ -33,6 +33,9 @@
     <None Update="TemplatesCorreos\CodigoVerificacion.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TemplatesCorreos\ContratacionPlan.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TemplatesCorreos\NormaVencida.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

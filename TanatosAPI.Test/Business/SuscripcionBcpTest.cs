@@ -15,9 +15,12 @@ using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Test.Business {
 	public class SuscripcionBcpTest {
+		private readonly IVariableEntornoHelper variableEntorno = Substitute.For<IVariableEntornoHelper>();
 		private readonly IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 		private readonly ISuscripcionDao suscripcionDao = Substitute.For<ISuscripcionDao>();
 		private readonly IFlowHelper flowHelper = Substitute.For<IFlowHelper>();
+		private readonly IHermesHelper hermesHelper = Substitute.For<IHermesHelper>();
+		private readonly IHtmlRenderer renderer = Substitute.For<IHtmlRenderer>();
 		private readonly SuscripcionBcp suscripcionBcp;
 
 		private static readonly DateTime FECHA_DUMMY = new(2026, 1, 15, 14, 0, 0, DateTimeKind.Utc);
@@ -25,7 +28,7 @@ namespace TanatosAPI.Test.Business {
 		public SuscripcionBcpTest() {
 			dateTimeProvider.UtcNow.Returns(FECHA_DUMMY);
 
-			suscripcionBcp = new(dateTimeProvider, suscripcionDao, flowHelper);
+			suscripcionBcp = new(variableEntorno, dateTimeProvider, suscripcionDao, flowHelper, hermesHelper, renderer);
 		}
 
 		public static Suscripcion SuscripcionDummy(

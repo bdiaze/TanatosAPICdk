@@ -19,6 +19,7 @@ using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Test.UseCases {
 	public class SuscripcionUseCaseTest {
+		private readonly IVariableEntornoHelper variableEntorno = Substitute.For<IVariableEntornoHelper>();
 		private readonly IDatabaseConnectionHelper connectionHelper = Substitute.For<IDatabaseConnectionHelper>();
 		private readonly IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 		private readonly ISuscripcionBcp suscripcionBcp = Substitute.For<ISuscripcionBcp>();
@@ -27,6 +28,8 @@ namespace TanatosAPI.Test.UseCases {
 		private readonly IEventoPagoBcp eventoPagoBcp = Substitute.For<IEventoPagoBcp>();
 		private readonly IPagoBcp pagoBcp = Substitute.For<IPagoBcp>();
 		private readonly IFlowHelper flowHelper = Substitute.For<IFlowHelper>();
+		private readonly IHermesHelper hermesHelper = Substitute.For<IHermesHelper>();
+		private readonly IHtmlRenderer renderer = Substitute.For<IHtmlRenderer>();
 		private readonly SuscripcionUseCase suscripcionUseCase;
 
 		private readonly IDatabaseConnection connection = Substitute.For<IDatabaseConnection>();
@@ -73,7 +76,7 @@ namespace TanatosAPI.Test.UseCases {
 		[MemberData(nameof(ResumenSuscripcion))]
 		public async Task ObtenerResumenSuscripcionTest(List<Suscripcion> suscripciones, (bool tienePlanEmpresa, Plan? planEnCurso, Plan? planPagoEnCurso, DateTime? fechaExpiracion, DateTime? fechaProximoCobro, bool renovacionAutomatica) expected) {
 			ISuscripcionDao suscripcionDao = Substitute.For<ISuscripcionDao>();
-			SuscripcionBcp suscripcionBcpReferencia = new(dateTimeProvider, suscripcionDao, flowHelper);
+			SuscripcionBcp suscripcionBcpReferencia = new(variableEntorno, dateTimeProvider, suscripcionDao, flowHelper, hermesHelper, renderer);
 			
 			suscripcionBcp.ObtenerVigentesPorSub("sub-test", Arg.Any<NpgsqlTransaction?>()).Returns(suscripciones);
 			suscripcionBcp.TienePlanEmpresa(Arg.Any<List<Suscripcion>>(), Arg.Any<DateTime?>()).Returns(ci => suscripcionBcpReferencia.TienePlanEmpresa(ci.Arg<List<Suscripcion>>(), ci.Arg<DateTime?>()));

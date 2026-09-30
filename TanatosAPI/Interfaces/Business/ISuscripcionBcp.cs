@@ -24,5 +24,6 @@ namespace TanatosAPI.Interfaces.Business {
 		public Task EliminarCreacionNoConfirmada(List<Suscripcion> suscripciones, NpgsqlTransaction? transaction = null);
 		public Task<Suscripcion> Crear(string sub, long idPlan, DateTime? fechaInicio, DateTime? fechaExpiracion, short estado, NpgsqlTransaction? transaction = null);
 		public Task Modificar(Suscripcion suscripcion, NpgsqlTransaction? transaction = null);
+		public Task<string> EnviarNotificacionContratacion(string correoUsuario, string? nombreUsuario, Plan plan, DateTime? fechaInicioUtc);
 	}
 }

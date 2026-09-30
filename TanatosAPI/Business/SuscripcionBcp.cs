@@ -1,17 +1,17 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using Microsoft.IdentityModel.Logging;
-using Npgsql;
-using System.Transactions;
+﻿using Npgsql;
+using Scriban.Runtime;
+using System.Globalization;
+using System.Net;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Entities.Others.Hermes;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
-using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class SuscripcionBcp(IDateTimeProvider dateTimeProvider, ISuscripcionDao suscripcionDao, IFlowHelper flowHelper) : ISuscripcionBcp {
+	public class SuscripcionBcp(IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, ISuscripcionDao suscripcionDao, IFlowHelper flowHelper, IHermesHelper hermesHelper, IHtmlRenderer renderer) : ISuscripcionBcp {
 		public bool EstaVigente(Suscripcion? suscripcion) {
 			return suscripcion != null && suscripcion.Vigencia;
 		}
@@ -175,6 +175,43 @@ namespace TanatosAPI.Business {
 
 		public async Task Modificar(Suscripcion suscripcion, NpgsqlTransaction? transaction = null) {
 			await suscripcionDao.Actualizar(suscripcion, transaction);
+		}
+
+		public async Task<string> EnviarNotificacionContratacion(string correoUsuario, string? nombreUsuario, Plan plan, DateTime? fechaInicioUtc) {
+			string cadaCuanto = plan.DuracionMeses switch {
+				1 => "mensuales",
+				12 => "anuales",
+				_ => $"cada {plan.DuracionMeses} meses"
+			};
+
+			DateTime? fechaInicioChile = fechaInicioUtc != null ? DateTimeHelper.TransformarFechaUTCATimezone(fechaInicioUtc.Value) : null;
+
+			NumberFormatInfo formatoNumero = new() {
+				NumberGroupSeparator = ".",
+				NumberDecimalSeparator = ","
+			};
+
+			SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+				De = new DireccionCorreo() {
+					Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
+					Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
+				},
+				Para = [
+					new DireccionCorreo() {
+						Correo = correoUsuario
+					}
+				],
+				Asunto = $"Contratación de {plan.Nombre} - Todo en Orden",
+				Cuerpo = await renderer.GenerarHtml("ContratacionPlan.html", new ScriptObject() {
+					["NOMBRE_USUARIO"] = nombreUsuario != null ? WebUtility.HtmlEncode(nombreUsuario) : null,
+					["NOMBRE_PLAN"] = WebUtility.HtmlEncode(plan.Nombre),
+					["PRECIO_PLAN"] = WebUtility.HtmlEncode(plan.Precio.ToString("N0", formatoNumero)),
+					["CADA_CUANTO"] = WebUtility.HtmlEncode(cadaCuanto),
+					["FECHA_INICIO"] = fechaInicioChile != null ? WebUtility.HtmlEncode(fechaInicioChile.Value.ToString("dd/MM/yyyy HH:mm")) : null,
+				})
+			});
+
+			return retorno.IdMensaje;
 		}
 	}
 }
