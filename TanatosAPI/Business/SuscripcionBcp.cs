@@ -177,14 +177,12 @@ namespace TanatosAPI.Business {
 			await suscripcionDao.Actualizar(suscripcion, transaction);
 		}
 
-		public async Task<string> EnviarNotificacionContratacion(string correoUsuario, string? nombreUsuario, Plan plan, DateTime? fechaInicioUtc) {
+		public async Task<string> EnviarNotificacionContratacion(string correoUsuario, string? nombreUsuario, Plan plan, DateTime? fechaInicioChile) {
 			string cadaCuanto = plan.DuracionMeses switch {
 				1 => "mensuales",
 				12 => "anuales",
 				_ => $"cada {plan.DuracionMeses} meses"
 			};
-
-			DateTime? fechaInicioChile = fechaInicioUtc != null ? DateTimeHelper.TransformarFechaUTCATimezone(fechaInicioUtc.Value) : null;
 
 			NumberFormatInfo formatoNumero = new() {
 				NumberGroupSeparator = ".",
