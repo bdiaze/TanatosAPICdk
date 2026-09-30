@@ -70,6 +70,9 @@ namespace Cdk
 			string googleOauthClientId = System.Environment.GetEnvironmentVariable("GOOGLE_OAUTH_CLIENT_ID") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_OAUTH_CLIENT_ID");
 			string googleOauthClientSecret = System.Environment.GetEnvironmentVariable("GOOGLE_OAUTH_CLIENT_SECRET") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno GOOGLE_OAUTH_CLIENT_SECRET");
 
+			string linkAvisoLegal = System.Environment.GetEnvironmentVariable("LINK_AVISO_LEGAL") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno LINK_AVISO_LEGAL");
+			string linkPoliticaPrivacidad = System.Environment.GetEnvironmentVariable("LINK_POLITICA_PRIVACIDAD") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno LINK_POLITICA_PRIVACIDAD");
+
 			// Para procesos de cognito...
 			string cognitoTriggerTokenValidityMinutes = System.Environment.GetEnvironmentVariable("COGNITO_TRIGGER_TOKEN_VALIDITY_MINUTES") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno COGNITO_TRIGGER_TOKEN_VALIDITY_MINUTES");
 			string arnParameterCognitoTriggerLambdaArn = System.Environment.GetEnvironmentVariable("ARN_PARAMETER_COGNITO_TRIGGER_LAMBDA_ARN") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno ARN_PARAMETER_COGNITO_TRIGGER_LAMBDA_ARN");
@@ -730,6 +733,28 @@ namespace Cdk
 						Bytes = base64Favicon,
 					},
 				}).ToArray()
+			});
+
+			_ = new CfnTerms(this, $"{appName}TermsOfUse", new CfnTermsProps {
+				UserPoolId = userPool.UserPoolId,
+				ClientId = userPoolClient.UserPoolClientId,
+				TermsName = "terms-of-use",
+				TermsSource = "LINK",
+				Enforcement = "NONE",
+				Links = new Dictionary<string, string> {
+					["cognito:default"] = linkAvisoLegal
+				}
+			});
+
+			_ = new CfnTerms(this, $"{appName}PrivacyPolicy", new CfnTermsProps {
+				UserPoolId = userPool.UserPoolId,
+				ClientId = userPoolClient.UserPoolClientId,
+				TermsName = "privacy-policy",
+				TermsSource = "LINK",
+				Enforcement = "NONE",
+				Links = new Dictionary<string, string> {
+					["cognito:default"] = linkPoliticaPrivacidad
+				}
 			});
 
 			// Se crea record en hosted zone...
