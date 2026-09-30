@@ -205,7 +205,7 @@ namespace TanatosAPI.Business {
 					["NOMBRE_PLAN"] = WebUtility.HtmlEncode(plan.Nombre),
 					["PRECIO_PLAN"] = WebUtility.HtmlEncode(plan.Precio.ToString("N0", formatoNumero)),
 					["CADA_CUANTO"] = WebUtility.HtmlEncode(cadaCuanto),
-					["FECHA_INICIO"] = fechaInicioChile != null ? WebUtility.HtmlEncode(fechaInicioChile.Value.ToString("dd/MM/yyyy HH:mm")) : null,
+					["FECHA_INICIO"] = fechaInicioChile != null ? WebUtility.HtmlEncode(fechaInicioChile.Value.ToString("dd/MM/yyyy")) : null,
 				})
 			});
 
