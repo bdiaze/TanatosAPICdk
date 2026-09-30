@@ -264,6 +264,18 @@ namespace TanatosAPI.UseCases {
 								suscripcionActivar.FechaProximoCobro = fechaProximoCobro;
 								await suscripcionBcp.Modificar(suscripcionActivar, transaction!.NpgsqlTransaction());
 							}
+
+							// Se envía correo de notificación de contratación de plan...
+							if (usuario.CorreoElectronico != null) {
+								suscripcionActivar.FechaNotificacion = dateTimeProvider.UtcNow;
+								suscripcionActivar.HermesIdMensaje = await suscripcionBcp.EnviarNotificacionContratacion(
+									usuario.CorreoElectronico!,
+									usuario.Nombre,
+									plan,
+									fechaInicio
+								);
+								await suscripcionBcp.Modificar(suscripcionActivar, transaction!.NpgsqlTransaction());
+							}
 						}
 					}
 				}
