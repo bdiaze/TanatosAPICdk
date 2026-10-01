@@ -207,6 +207,9 @@ builder.Services.AddScoped<ITipoProcesoAutomaticoDao, TipoProcesoAutomaticoDao>(
 builder.Services.AddScoped<IProcesoAutomaticoDao, ProcesoAutomaticoDao>();
 builder.Services.AddScoped<INormaSuscritaProcesoNotificacionDao, NormaSuscritaProcesoNotificacionDao>();
 builder.Services.AddScoped<IModeloCanvasDao, ModeloCanvasDao>();
+builder.Services.AddScoped<IAccesoDao, AccesoDao>();
+builder.Services.AddScoped<IRecursoDao, RecursoDao>();
+builder.Services.AddScoped<IPermisoDao, PermisoDao>();
 #endregion
 
 #region Singleton BCP
@@ -243,6 +246,9 @@ builder.Services.AddScoped<INormaSuscritaProcesoNotificacionBcp, NormaSuscritaPr
 builder.Services.AddScoped<ITipoActividadBcp, TipoActividadBcp>();
 builder.Services.AddScoped<ITipoRubroBcp, TipoRubroBcp>();
 builder.Services.AddScoped<IModeloCanvasBcp, ModeloCanvasBcp>();
+builder.Services.AddScoped<IAccesoBcp, AccesoBcp>();
+builder.Services.AddScoped<IRecursoBcp, RecursoBcp>();
+builder.Services.AddScoped<IPermisoBcp, PermisoBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -268,6 +274,7 @@ builder.Services.AddScoped<INormaSuscritaProcesoNotificacionUseCase, NormaSuscri
 builder.Services.AddScoped<PerfilUseCase>();
 builder.Services.AddScoped<ProcesoAutomaticoUseCase>();
 builder.Services.AddScoped<ModeloCanvasUseCase>();
+builder.Services.AddScoped<AccesoUseCase>();
 #endregion
 
 string cognitoRegion;
