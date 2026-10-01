@@ -3145,3 +3145,28 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261001144330_UniqueIndexAcceso') THEN
+    DROP INDEX tanatos."IX_acceso_hash_codigo";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261001144330_UniqueIndexAcceso') THEN
+    CREATE UNIQUE INDEX "IX_acceso_hash_codigo" ON tanatos.acceso (hash_codigo);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261001144330_UniqueIndexAcceso') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261001144330_UniqueIndexAcceso', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+

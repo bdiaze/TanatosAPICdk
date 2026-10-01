@@ -709,7 +709,7 @@ namespace TanatosAPI.Design.Contexts {
 			});
 
 			modelBuilder.Entity<Acceso>(entity => {
-				entity.HasIndex(o => new { o.HashCodigo });
+				entity.HasIndex(o => new { o.HashCodigo }).IsUnique();
 				entity.ToTable(o => o.HasComment("Tabla que contiene los accesos delegados a recursos de usuarios."));
 				entity.Property(o => o.Id).HasComment("Identificador del acceso.");
 				entity.Property(o => o.HashCodigo).HasComment("Hash SHA256 del código de acceso.");
