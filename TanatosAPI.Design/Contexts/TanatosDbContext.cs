@@ -707,6 +707,51 @@ namespace TanatosAPI.Design.Contexts {
 					.HasForeignKey(o => o.IdNegocio)
 					.OnDelete(DeleteBehavior.Restrict);
 			});
+
+			modelBuilder.Entity<Acceso>(entity => {
+				entity.HasIndex(o => new { o.HashCodigo });
+				entity.ToTable(o => o.HasComment("Tabla que contiene los accesos delegados a recursos de usuarios."));
+				entity.Property(o => o.Id).HasComment("Identificador del acceso.");
+				entity.Property(o => o.HashCodigo).HasComment("Hash SHA256 del código de acceso.");
+				entity.Property(o => o.FechaExpiracion).HasComment("Fecha de expiración del acceso.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el acceso.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el acceso.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del acceso.");
+			});
+
+			modelBuilder.Entity<Recurso>(entity => {
+				entity.HasIndex(o => new { o.Tipo, o.IdInterno });
+				entity.ToTable(o => o.HasComment("Tabla que contiene los recursos de usuarios a los que se le ha delegado acceso."));
+				entity.Property(o => o.Id).HasComment("Identificador del recurso.");
+				entity.Property(o => o.Tipo).HasComment("Tipo de recurso. Por ejemplo, norma suscrita, historial_norma_suscrita, documento_adjunto.");
+				entity.Property(o => o.IdInterno).HasComment("Identificador interno del recurso, por lo general es una referencia al ID de la tabla asociada al tipo de recurso.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el recurso.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el recurso.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del recurso.");
+			});
+
+			modelBuilder.Entity<Permiso>(entity => {
+				entity.ToTable(o => o.HasComment("Tabla que contiene los permisos que tiene un acceso sobre determinado recurso."));
+				entity.Property(o => o.Id).HasComment("Identificador del permiso.");
+				entity.Property(o => o.IdAcceso).HasComment("Identificador del acceso asociado al permiso.");
+				entity.Property(o => o.IdRecurso).HasComment("Identificador del recurso asociado al permiso.");
+				entity.Property(o => o.Accion).HasComment("Acción permitida por el acceso sobre el recurso. Por ejemplo, leer, completar, descargar, etc.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el permiso.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el permiso.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del permiso.");
+
+				entity
+					.HasOne(o => o.Acceso)
+					.WithMany(o => o.Permisos)
+					.HasForeignKey(o => o.IdAcceso)
+					.OnDelete(DeleteBehavior.Restrict);
+
+				entity
+					.HasOne(o => o.Recurso)
+					.WithMany(o => o.Permisos)
+					.HasForeignKey(o => o.IdRecurso)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -780,5 +825,11 @@ namespace TanatosAPI.Design.Contexts {
         public DbSet<NormaSuscritaProcesoNotificacion> NormaSuscritaProcesosNotificaciones { get; set; }
 
         public DbSet<ModeloCanvas> ModelosCanvas { get; set; }
+
+        public DbSet<Acceso> Accesos { get; set; }
+
+		public DbSet<Recurso> Recursos { get; set; }
+
+		public DbSet<Permiso> AccesosRecursos { get; set; }
 	}
 }
