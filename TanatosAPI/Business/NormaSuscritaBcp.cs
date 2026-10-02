@@ -179,5 +179,51 @@ namespace TanatosAPI.Business {
 
 			return retorno.IdMensaje;
 		}
+
+		public async Task<string> EnviarCorreoObligacionModificada(string? codigoAcceso, string correoElectronico, string? nombreEmpleado, long? idNormaSuscrita, string nombreObligacion, string? multa, DateTime proximoVencimientoChile, TipoPeriodicidad periodicidad) {
+			SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+				De = new DireccionCorreo() {
+					Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
+					Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
+				},
+				Para = [
+					new DireccionCorreo() {
+						Correo = correoElectronico
+					}
+				],
+				Asunto = $"Una obligación ha sufrido cambios - Todo en Orden",
+				Cuerpo = await renderer.GenerarHtml("ObligacionModificada.html", new ScriptObject() {
+					["NOMBRE_EMPLEADO"] = nombreEmpleado != null ? WebUtility.HtmlEncode(nombreEmpleado) : null,
+					["NOMBRE_OBLIGACION"] = WebUtility.HtmlEncode(nombreObligacion),
+					["PROXIMO_VENCIMIENTO"] = WebUtility.HtmlEncode(proximoVencimientoChile.ToString("dd/MM/yyyy HH:mm")),
+					["PERIODICIDAD"] = WebUtility.HtmlEncode(periodicidad.Nombre),
+					["MULTA"] = multa != null ? WebUtility.HtmlEncode(multa) : null,
+					["ID_NORMA_SUSCRITA"] = idNormaSuscrita,
+					["CODIGO_ACCESO"] = codigoAcceso != null ? Uri.EscapeDataString(codigoAcceso) : null
+				})
+			});
+
+			return retorno.IdMensaje;
+		}
+
+		public async Task<string> EnviarWhatsappObligacionModificada(string? codigoAcceso, string numeroWhatsapp, string? nombreEmpleado, long? idNormaSuscrita, string nombreObligacion, string? multa, DateTime proximoVencimientoChile, TipoPeriodicidad periodicidad) {
+			SalHermesEnviar retorno = await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {
+				De = variableEntorno.Obtener("HERMES_DE_WHATSAPP"),
+				Para = numeroWhatsapp,
+				NombreTemplate = "obligacion_modificada",
+				ParametrosCuerpo = [
+					nombreEmpleado ?? "",
+					nombreObligacion,
+					proximoVencimientoChile.ToString("dd/MM/yyyy HH:mm"),
+					periodicidad.Nombre,
+					multa ?? "Sin multa"
+				],
+				ParametrosBoton = [
+					$"{idNormaSuscrita}?codigo={Uri.EscapeDataString(codigoAcceso ?? "")}"
+				]
+			});
+
+			return retorno.IdMensaje;
+		}
 	}
 }

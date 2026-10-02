@@ -513,6 +513,7 @@ namespace TanatosAPI.UseCases {
 
 				// Se determina si el cargo responsable está siendo modificado para envío de notificación...
 				bool enviarNotificacionAsignacion = cargo != null && obligacion.IdCargo != cargo.Id;
+				bool enviarNotificacionModificacion = false;
 				
 				// Si se modifica algún atributo de la obligación, se actualiza...
 				if (obligacion.Nombre != nombre || obligacion.Descripcion != descripcion || obligacion.Multa != multa ||
@@ -527,6 +528,8 @@ namespace TanatosAPI.UseCases {
 					obligacion.IdCargo = idCargo;
 
 					await normaSuscritaBcp.Actualizar(obligacion, transaction!.NpgsqlTransaction());
+
+					enviarNotificacionModificacion = true;
 				}
 
 				obligacion.TipoPeriodicidad = periodicidad;
@@ -558,6 +561,7 @@ namespace TanatosAPI.UseCases {
 					if (proximoVencimientoExistente?.FechaVencimiento != proximoVencimiento) {
 						await historialNormaSuscritaUseCase.EliminarPorNormaSuscrita(obligacion.Id, true, transaction!.NpgsqlTransaction());
 						obligacion.HistorialesNormaSuscrita.Add(await historialNormaSuscritaBcp.Crear(obligacion.Id, proximoVencimiento!.Value, transaction!.NpgsqlTransaction()));
+						enviarNotificacionModificacion = true;
 					} else {
 						obligacion.HistorialesNormaSuscrita.Add(proximoVencimientoExistente!);
 					}
@@ -568,6 +572,7 @@ namespace TanatosAPI.UseCases {
 				(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction);
 
 				if (enviarNotificacionAsignacion) await EnviarNotificacionesObligacionAsignada(obligacion.Id, transaction);
+				else if (enviarNotificacionModificacion) await EnviarNotificacionesObligacionModificada(obligacion.Id, transaction);
 
 				if (ownsTransaction) {
 					await transaction!.CommitAsync();
@@ -704,7 +709,7 @@ namespace TanatosAPI.UseCases {
 					transaction = await connection.BeginTransactionAsync();
 				}
 
-				NormaSuscrita obligacion = (await Obtener(id, validarVigencia: true, validarSub: sub, incluirTemplate: true, transaction: transaction!.NpgsqlTransaction()))!;
+				NormaSuscrita obligacion = (await Obtener(id, validarVigencia: true, validarSub: sub, incluirTemplate: true, incluirCargo: true, transaction: transaction!.NpgsqlTransaction()))!;
 				if (!normaSuscritaBcp.EstaActiva(obligacion)) {
 					TipoPeriodicidad periodicidad = await tipoPeriodicidadBcp.ObtenerValidandoVigencia(obligacion.IdTipoPeriodicidad ?? obligacion.TemplateNorma?.IdTipoPeriodicidad, transaction!.NpgsqlTransaction());
 
@@ -723,6 +728,8 @@ namespace TanatosAPI.UseCases {
 					obligacion.HistorialesNormaSuscrita = [];
 					obligacion.HistorialesNormaSuscrita.Add(await historialNormaSuscritaBcp.Crear(obligacion.Id, proximoVencimiento, transaction!.NpgsqlTransaction()));
 					(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction);
+
+					if (obligacion.Cargo != null) await EnviarNotificacionesObligacionAsignada(obligacion.Id, transaction);
 				}
 
 				if (ownsTransaction) {
@@ -834,7 +841,119 @@ namespace TanatosAPI.UseCases {
 							normaSuscrita!.Id,
 							normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre ?? "Sin nombre",
 							normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
-							proximoVencimiento!.FechaVencimiento,
+							DateTimeHelper.TransformarFechaUTCATimezone(proximoVencimiento!.FechaVencimiento),
+							normaSuscrita.TipoPeriodicidad ?? normaSuscrita.TemplateNorma?.TipoPeriodicidad!
+						);
+					}
+				}
+
+				if (ownsTransaction) {
+					await transaction!.CommitAsync();
+				}
+			} catch {
+				if (ownsTransaction && transaction != null) {
+					await transaction.RollbackAsync();
+				}
+				throw;
+			} finally {
+				if (ownsTransaction) {
+					if (transaction != null) await transaction.DisposeAsync();
+					if (connection != null) await connection.DisposeAsync();
+				}
+			}
+		}
+
+		public async Task EnviarNotificacionesObligacionModificada(long idNormaSuscrita, IDatabaseTransaction? transaction = null) {
+			bool ownsTransaction = transaction == null;
+			IDatabaseConnection? connection = null;
+			try {
+				if (ownsTransaction) {
+					connection = await connectionHelper.ObtenerConexionWrapper();
+					transaction = await connection.BeginTransactionAsync();
+				}
+
+				NormaSuscrita? normaSuscrita = await Obtener(
+					idNormaSuscrita,
+					incluirTemplate: true,
+					incluirPeriodicidad: true,
+					incluirCargo: true,
+					incluirHistorialVencimientos: true,
+					transaction: transaction!.NpgsqlTransaction()
+				);
+
+				// Solo se notifican la asignación si la obligación está vigente y activa...
+				if (!normaSuscritaBcp.EstaVigente(normaSuscrita)) {
+					return;
+				}
+
+				if (!normaSuscritaBcp.EstaActiva(normaSuscrita!)) {
+					return;
+				}
+
+				// Si no tiene plan empresa, no se envía notificación dado que asignación de cargo responsable es funcionalidad del plan...
+				bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita!.Sub, transaction!.NpgsqlTransaction());
+				if (!tienePlanEmpresa) return;
+
+				// Si no tiene cargo responsable asignado, no se envía notificación de asignación...
+				if (normaSuscrita!.Cargo == null) {
+					return;
+				}
+
+				HistorialNormaSuscrita? proximoVencimiento = historialNormaSuscritaBcp.FiltrarUltimoVencimiento(normaSuscrita!.HistorialesNormaSuscrita ?? []);
+				if (proximoVencimiento == null) return;
+
+				Dictionary<long, Empleado> empleados = (await empleadoBcp.ObtenerPorSubYNegocio(
+					normaSuscrita.Sub,
+					normaSuscrita.IdNegocio,
+					filtrarVigente: true,
+					filtrarIdCargo: normaSuscrita!.Cargo.Id,
+					transaction: transaction!.NpgsqlTransaction()
+				)).ToDictionary(e => e.Id, e => e);
+
+				List<DestinatarioNotificacion> destinatarios = destinatarioNotificacionBcp.FiltrarPorEmpleado(
+					await destinatarioNotificacionBcp.ObtenerPorSubYNegocio(
+						normaSuscrita.Sub,
+						normaSuscrita.IdNegocio,
+						filtrarVigente: true,
+						filtrarValidado: true,
+						transaction: transaction!.NpgsqlTransaction()
+					),
+					[.. empleados.Keys.Select(e => (long?)e)]
+				);
+
+				foreach (DestinatarioNotificacion destinatario in destinatarios) {
+					Empleado empleado = empleados[destinatario.IdEmpleado!.Value];
+
+					(_, string codigoAcceso) = await accesoUseCase.HabilitarAcceso([
+							new RecursoSolicitado {
+							Tipo = "norma_suscrita",
+							IdInterno = normaSuscrita.Id.ToString(),
+							Acciones = [ "consultar" ]
+						}],
+						TimeSpan.FromDays(30),
+						transaction
+					);
+
+					if (destinatario.IdTipoReceptor == 1 /* Correo Electrónico */) {
+						await normaSuscritaBcp.EnviarCorreoObligacionModificada(
+							codigoAcceso,
+							destinatario.Destino,
+							empleado.Nombre,
+							normaSuscrita!.Id,
+							normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre ?? "Sin nombre",
+							normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
+							DateTimeHelper.TransformarFechaUTCATimezone(proximoVencimiento!.FechaVencimiento),
+							normaSuscrita.TipoPeriodicidad ?? normaSuscrita.TemplateNorma?.TipoPeriodicidad!
+						);
+					} else if (destinatario.IdTipoReceptor == 2 /* Whatsapp */) {
+						await normaSuscritaBcp.EnviarWhatsappObligacionModificada(
+							codigoAcceso,
+							destinatario.Destino,
+							empleado.Nombre,
+							normaSuscrita!.Id,
+							normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre ?? "Sin nombre",
+							normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
+							DateTimeHelper.TransformarFechaUTCATimezone(proximoVencimiento!.FechaVencimiento),
 							normaSuscrita.TipoPeriodicidad ?? normaSuscrita.TemplateNorma?.TipoPeriodicidad!
 						);
 					}
