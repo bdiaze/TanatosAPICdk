@@ -1369,6 +1369,7 @@ namespace TanatosAPI.Test.UseCases {
 			cargoBcp.ObtenerPorSubYNegocio("sub-test", 10, filtrarVigente: true, transaction: Arg.Any<NpgsqlTransaction?>()).Returns([
 				CargoBcpTest.CargoDummy(id: 300, sub: "sub-test", idNegocio: 10)
 			]);
+			suscripcionBcp.ConsultaTienePlanEmpresa("sub-test", Arg.Any<NpgsqlTransaction?>()).Returns(false);
 
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActualizarNormaSuscrita(
 				"sub-test",
@@ -1379,7 +1380,7 @@ namespace TanatosAPI.Test.UseCases {
 				"otra-multa-test",
 				100,
 				200,
-				300,
+				null,
 				false,
 				null,
 				[1000, 2000],
