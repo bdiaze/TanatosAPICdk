@@ -22,6 +22,7 @@ namespace TanatosAPI.Test.UseCases {
         private readonly IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         private readonly IHistorialNormaSuscritaUseCase historialNormaSuscritaUseCase = Substitute.For<IHistorialNormaSuscritaUseCase>();
         private readonly INotificacionNormaSuscritaUseCase notificacionNormaSuscritaUseCase = Substitute.For<INotificacionNormaSuscritaUseCase>();
+		private readonly IAccesoUseCase accesoUseCase = Substitute.For<IAccesoUseCase>();
 		private readonly INormaSuscritaProcesoNotificacionUseCase normaSuscritaProcesoNotificacionUseCase = Substitute.For<INormaSuscritaProcesoNotificacionUseCase>();
 		private readonly INormaSuscritaBcp normaSuscritaBcp = Substitute.For<INormaSuscritaBcp>();
         private readonly IHistorialNormaSuscritaBcp historialNormaSuscritaBcp = Substitute.For<IHistorialNormaSuscritaBcp>();
@@ -40,7 +41,9 @@ namespace TanatosAPI.Test.UseCases {
         private readonly INegocioBcp negocioBcp = Substitute.For<INegocioBcp>();
         private readonly ISuscripcionBcp suscripcionBcp = Substitute.For<ISuscripcionBcp>();
         private readonly IDocumentoAdjuntoBcp documentoAdjuntoBcp = Substitute.For<IDocumentoAdjuntoBcp>();
-        private readonly NormaSuscritaUseCase normaSuscritaUseCase;
+		private readonly IEmpleadoBcp empleadoBcp = Substitute.For<IEmpleadoBcp>();
+		private readonly IDestinatarioNotificacionBcp destinatarioNotificacionBcp = Substitute.For<IDestinatarioNotificacionBcp>();
+		private readonly NormaSuscritaUseCase normaSuscritaUseCase;
 
         private readonly IDatabaseConnection connection = Substitute.For<IDatabaseConnection>();
         private readonly IDatabaseTransaction transaction = Substitute.For<IDatabaseTransaction>();
@@ -54,12 +57,16 @@ namespace TanatosAPI.Test.UseCases {
             connectionHelper.ObtenerConexionWrapper().Returns(connection);
 
             normaSuscritaUseCase = new(
-                connectionHelper, dateTimeProvider, historialNormaSuscritaUseCase, notificacionNormaSuscritaUseCase, normaSuscritaProcesoNotificacionUseCase,
-				normaSuscritaBcp, historialNormaSuscritaBcp, historialNotificacionBcp, fiscalizadorNormaSuscritaBcp,
-                notificacionNormaSuscritaBcp, templateBcp, templateNormaBcp, templateNormaNotificacionBcp, 
-                templateNormaFiscalizadorBcp, tipoPeriodicidadBcp, categoriaNormaBcp, tipoFiscalizadorBcp, 
-                tipoUnidadTiempoBcp, cargoBcp, negocioBcp, suscripcionBcp, documentoAdjuntoBcp
-            );
+                connectionHelper, dateTimeProvider, historialNormaSuscritaUseCase, 
+				notificacionNormaSuscritaUseCase, normaSuscritaProcesoNotificacionUseCase,
+				accesoUseCase, normaSuscritaBcp, historialNormaSuscritaBcp, 
+				historialNotificacionBcp, fiscalizadorNormaSuscritaBcp,
+                notificacionNormaSuscritaBcp, templateBcp, templateNormaBcp, 
+				templateNormaNotificacionBcp, templateNormaFiscalizadorBcp, 
+				tipoPeriodicidadBcp, categoriaNormaBcp, tipoFiscalizadorBcp, 
+                tipoUnidadTiempoBcp, cargoBcp, negocioBcp, suscripcionBcp, 
+				documentoAdjuntoBcp, empleadoBcp, destinatarioNotificacionBcp
+			);
         }
 
         [Fact]
@@ -948,7 +955,14 @@ namespace TanatosAPI.Test.UseCases {
 			notificacionNormaSuscritaUseCase.GenerarCrons(FECHA_DUMMY.AddMonths(1), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
 				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
-		
+
+			// Para EnviarNotificacionesObligacionAsignada
+			tipoPeriodicidadBcp.ObtenerVigentes(Arg.Any<NpgsqlTransaction?>()).Returns([TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 100)]);
+			cargoBcp.ObtenerPorSubYNegocio("sub-test", 10, filtrarVigente: true, transaction: Arg.Any<NpgsqlTransaction?>()).Returns([
+				CargoBcpTest.CargoDummy(id: 300, sub: "sub-test", idNegocio: 10)
+			]);
+
+
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.CrearNormaSuscrita(
 				"sub-test",
 				10,

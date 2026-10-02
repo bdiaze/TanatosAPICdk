@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Npgsql;
+using Scriban.Runtime;
 using System.Collections.Specialized;
 using System.Globalization;
+using System.Net;
 using System.Text.Json;
 using System.Transactions;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Entities.Others.Hermes;
 using TanatosAPI.Entities.Others.Kairos;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
@@ -15,7 +18,7 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class NormaSuscritaBcp(IDateTimeProvider dateTimeProvider, INormaSuscritaDao normaSuscritaDao) : INormaSuscritaBcp {
+	public class NormaSuscritaBcp(IVariableEntornoHelper variableEntorno, IDateTimeProvider dateTimeProvider, INormaSuscritaDao normaSuscritaDao, IHermesHelper hermesHelper, IHtmlRenderer renderer) : INormaSuscritaBcp {
 		public bool EstaVigente(NormaSuscrita? normaSuscrita) {
 			return normaSuscrita != null && normaSuscrita.Vigencia;
 		}
@@ -130,5 +133,51 @@ namespace TanatosAPI.Business {
                 await normaSuscritaDao.Actualizar(normaSuscrita, transaction);
             }
 		}
-    }
+
+		public async Task<string> EnviarCorreoNuevaObligacion(string? codigoAcceso, string correoElectronico, string? nombreEmpleado, long? idNormaSuscrita, string nombreObligacion, string? multa, DateTime proximoVencimientoChile, TipoPeriodicidad periodicidad) {
+			SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+				De = new DireccionCorreo() {
+					Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
+					Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
+				},
+				Para = [
+					new DireccionCorreo() {
+						Correo = correoElectronico
+					}
+				],
+				Asunto = $"Tienes una nueva obligación asignada - Todo en Orden",
+				Cuerpo = await renderer.GenerarHtml("NuevaObligacion.html", new ScriptObject() {
+					["NOMBRE_EMPLEADO"] = nombreEmpleado != null ? WebUtility.HtmlEncode(nombreEmpleado) : null,
+					["NOMBRE_OBLIGACION"] = WebUtility.HtmlEncode(nombreObligacion),
+					["PROXIMO_VENCIMIENTO"] = WebUtility.HtmlEncode(proximoVencimientoChile.ToString("dd/MM/yyyy HH:mm")),
+					["PERIODICIDAD"] = WebUtility.HtmlEncode(periodicidad.Nombre),
+					["MULTA"] = multa != null ? WebUtility.HtmlEncode(multa) : null,
+					["ID_NORMA_SUSCRITA"] = idNormaSuscrita,
+					["CODIGO_ACCESO"] = codigoAcceso != null ? Uri.EscapeDataString(codigoAcceso) : null
+				})
+			});
+
+			return retorno.IdMensaje;
+		}
+
+		public async Task<string> EnviarWhatsappNuevaObligacion(string? codigoAcceso, string numeroWhatsapp, string? nombreEmpleado, long? idNormaSuscrita, string nombreObligacion, string? multa, DateTime proximoVencimientoChile, TipoPeriodicidad periodicidad) {
+			SalHermesEnviar retorno = await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {
+				De = variableEntorno.Obtener("HERMES_DE_WHATSAPP"),
+				Para = numeroWhatsapp,
+				NombreTemplate = "nueva_obligacion",
+				ParametrosCuerpo = [
+					nombreEmpleado ?? "",
+					nombreObligacion,
+					proximoVencimientoChile.ToString("dd/MM/yyyy HH:mm"),
+					periodicidad.Nombre,
+					multa ?? "Sin multa"
+				],
+				ParametrosBoton = [
+					$"{idNormaSuscrita}?codigo={Uri.EscapeDataString(codigoAcceso ?? "")}"
+				]
+			});
+
+			return retorno.IdMensaje;
+		}
+	}
 }

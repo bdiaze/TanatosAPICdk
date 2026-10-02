@@ -18,5 +18,8 @@ namespace TanatosAPI.Interfaces.Business {
 		public Task Activar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null);
 		public Task Desactivar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null);
 		public Task Eliminar(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null);
-    }
+		public Task<string> EnviarCorreoNuevaObligacion(string? codigoAcceso, string correoElectronico, string? nombreEmpleado, long? idNormaSuscrita, string nombreObligacion, string? multa, DateTime proximoVencimientoChile, TipoPeriodicidad periodicidad);
+		public Task<string> EnviarWhatsappNuevaObligacion(string? codigoAcceso, string numeroWhatsapp, string? nombreEmpleado, long? idNormaSuscrita, string nombreObligacion, string? multa, DateTime proximoVencimientoChile, TipoPeriodicidad periodicidad);
+
+	}
 }

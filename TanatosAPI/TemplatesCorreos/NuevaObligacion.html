@@ -1,0 +1,59 @@
+﻿<table cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <th align="center" style="padding-bottom: 16px;">
+            <span style="mso-color-alt: #f5f5f5; font-weight: 600; font-size: 24px; line-height: 34px; font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;">
+                ¡Tienes una nueva obligación!
+            </span>
+        </th>
+    </tr>
+    <tr>
+        <td>
+            <table align="center" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                <tr>
+                    <td align="center" class="border-cell" style="mso-color-alt: #f5f5f5; padding: 12px; padding-top: 0; font-size: 14px; line-height: 20px; vertical-align: top; text-align: center; text-wrap: balance; font-weight: 400;">
+                        {{ if NOMBRE_EMPLEADO }}
+                        {{ NOMBRE_EMPLEADO }}, se
+                        {{ else }}
+                        Se
+                        {{ end }} te ha asignado la siguiente obligación:
+                    </td>
+                </tr>
+                <tr>
+                    <td align="center" class="border-cell" style="vertical-align: top; text-align: center;">
+                        <table align="center" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                            <tr>
+                                <td align="center" class="border-cell" style="mso-color-alt: #f5f5f5; padding: 12px; padding-top: 0; font-size: 18px; line-height: 24px; vertical-align: top; text-align: center; text-wrap: balance; font-weight: 500;">
+                                    {{ NOMBRE_OBLIGACION }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" class="border-cell" style="mso-color-alt: #f5f5f5; padding: 12px; padding-top: 0; font-size: 14px; line-height: 20px; vertical-align: top; text-align: center; text-wrap: balance; font-weight: 400;">
+                                    Próximo vencimiento: {{ PROXIMO_VENCIMIENTO }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" class="border-cell" style="mso-color-alt: #f5f5f5; padding: 12px; padding-top: 0; font-size: 14px; line-height: 20px; vertical-align: top; text-align: center; text-wrap: balance; font-weight: 400; ">
+                                    Periodicidad: {{ PERIODICIDAD }}
+                                </td>
+                            </tr>
+                            {{ if MULTA }}
+                            <tr>
+                                <td align="center" class="border-cell" style="mso-color-alt: #f5f5f5; padding: 12px; padding-top: 0; font-size: 14px; line-height: 20px; vertical-align: top; text-align: center; text-wrap: balance; font-weight: 400; ">
+                                    Posible multa: {{ MULTA }}
+                                </td>
+                            </tr>
+                            {{ end }}
+                        </table>
+                    </td>
+                </tr>
+                {{ if ID_NORMA_SUSCRITA && CODIGO_ACCESO }}
+                <tr>
+                    <td align="center" style="vertical-align: top;">
+                        <a href="https://www.todoenorden.cl/ver-obligacion/{{ID_NORMA_SUSCRITA}}?codigo={{ CODIGO_ACCESO }}" style="font-weight: 600; font-size: 14px; line-height: 20px; mso-color-alt: #f5f5f5;">Ver detalle de la obligación</a>
+                    </td>
+                </tr>
+                {{ end }}
+            </table>
+        </td>
+    </tr>
+</table>

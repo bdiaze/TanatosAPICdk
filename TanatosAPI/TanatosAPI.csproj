@@ -45,6 +45,9 @@
     <None Update="TemplatesCorreos\MensajeRecibido.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TemplatesCorreos\NuevaObligacion.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TemplatesCorreos\TemplateBase.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

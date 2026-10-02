@@ -21,9 +21,12 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TanatosAPI.Test.Business {
     public class NormaSuscritaBcpTest {
-        private readonly IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
+        private readonly IVariableEntornoHelper variableEntorno = Substitute.For<IVariableEntornoHelper>();
+		private readonly IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         private readonly INormaSuscritaDao normaSuscritaDao = Substitute.For<INormaSuscritaDao>();
-        private readonly NormaSuscritaBcp normaSuscritaBcp;
+		private readonly IHermesHelper hermesHelper = Substitute.For<IHermesHelper>();
+		private readonly IHtmlRenderer renderer = Substitute.For<IHtmlRenderer>();
+		private readonly NormaSuscritaBcp normaSuscritaBcp;
 
         private static readonly DateTime FECHA_DUMMY = new(2026, 1, 15, 14, 0, 0, DateTimeKind.Utc);
 		private static readonly DateTime FECHA_DUMMY_CHILE = new(2026, 1, 15, 11, 0, 0, DateTimeKind.Unspecified);
@@ -31,7 +34,7 @@ namespace TanatosAPI.Test.Business {
 		public NormaSuscritaBcpTest() {
             dateTimeProvider.UtcNow.Returns(FECHA_DUMMY);
 
-            normaSuscritaBcp = new(dateTimeProvider, normaSuscritaDao);
+            normaSuscritaBcp = new(variableEntorno, dateTimeProvider, normaSuscritaDao, hermesHelper, renderer);
         }
 
         public static NormaSuscrita NormaSuscritaDummy(
