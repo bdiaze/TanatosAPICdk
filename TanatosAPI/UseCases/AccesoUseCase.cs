@@ -3,9 +3,10 @@ using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.UseCases;
 
 namespace TanatosAPI.UseCases {
-	public class AccesoUseCase(IDatabaseConnectionHelper connectionHelper, IAccesoBcp accesoBcp, IRecursoBcp recursoBcp, IPermisoBcp permisoBcp) {
+	public class AccesoUseCase(IDatabaseConnectionHelper connectionHelper, IAccesoBcp accesoBcp, IRecursoBcp recursoBcp, IPermisoBcp permisoBcp) : IAccesoUseCase {
 		public async Task<(Acceso, string CodigoAcceso)> HabilitarAcceso(List<RecursoSolicitado> recursosSolicitados, TimeSpan? duracion = null, IDatabaseTransaction? transaction = null) {
 			if (recursosSolicitados.Count == 0) throw new InvalidOperationException("No se puede solicitar un acceso sin definir los recursos asociados.");
 

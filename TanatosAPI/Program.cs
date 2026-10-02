@@ -274,7 +274,7 @@ builder.Services.AddScoped<INormaSuscritaProcesoNotificacionUseCase, NormaSuscri
 builder.Services.AddScoped<PerfilUseCase>();
 builder.Services.AddScoped<ProcesoAutomaticoUseCase>();
 builder.Services.AddScoped<ModeloCanvasUseCase>();
-builder.Services.AddScoped<AccesoUseCase>();
+builder.Services.AddScoped<IAccesoUseCase, AccesoUseCase>();
 #endregion
 
 string cognitoRegion;
