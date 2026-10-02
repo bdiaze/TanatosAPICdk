@@ -1,8 +1,8 @@
 ﻿using Npgsql;
-using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.Kairos;
 using TanatosAPI.Exceptions;
+using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.UseCases;
@@ -511,6 +511,10 @@ namespace TanatosAPI.UseCases {
 
 				_ = await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub, transaction: transaction!.NpgsqlTransaction())!;
 
+				// Se determina si el cargo responsable está siendo modificado para envío de notificación...
+				bool enviarNotificacionAsignacion = cargo != null && obligacion.IdCargo != cargo.Id;
+				
+				// Si se modifica algún atributo de la obligación, se actualiza...
 				if (obligacion.Nombre != nombre || obligacion.Descripcion != descripcion || obligacion.Multa != multa ||
 					obligacion.IdTipoPeriodicidad != idTipoPeriodicidad || obligacion.IdCategoriaNorma != idCategoriaNorma ||
 					obligacion.IdCargo != idCargo) {
@@ -562,6 +566,8 @@ namespace TanatosAPI.UseCases {
 				}
 
 				(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction);
+
+				if (enviarNotificacionAsignacion) await EnviarNotificacionesObligacionAsignada(obligacion.Id, transaction);
 
 				if (ownsTransaction) {
 					await transaction!.CommitAsync();
@@ -817,7 +823,7 @@ namespace TanatosAPI.UseCases {
 							normaSuscrita!.Id,
 							normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre ?? "Sin nombre",
 							normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
-							proximoVencimiento!.FechaVencimiento,
+							DateTimeHelper.TransformarFechaUTCATimezone(proximoVencimiento!.FechaVencimiento),
 							normaSuscrita.TipoPeriodicidad ?? normaSuscrita.TemplateNorma?.TipoPeriodicidad!
 						);
 					} else if (destinatario.IdTipoReceptor == 2 /* Whatsapp */) {

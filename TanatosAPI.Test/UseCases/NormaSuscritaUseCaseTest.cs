@@ -1199,7 +1199,13 @@ namespace TanatosAPI.Test.UseCases {
 			notificacionNormaSuscritaUseCase.GenerarCrons(FECHA_DUMMY.AddDays(14), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
 				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
-			
+
+			// Para EnviarNotificacionesObligacionAsignada
+			tipoPeriodicidadBcp.ObtenerVigentes(Arg.Any<NpgsqlTransaction?>()).Returns([TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 100)]);
+			cargoBcp.ObtenerPorSubYNegocio("sub-test", 10, filtrarVigente: true, transaction: Arg.Any<NpgsqlTransaction?>()).Returns([
+				CargoBcpTest.CargoDummy(id: 300, sub: "sub-test", idNegocio: 10)
+			]);
+
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActualizarNormaSuscrita(
 				"sub-test",	
 				999,
@@ -1283,6 +1289,12 @@ namespace TanatosAPI.Test.UseCases {
 				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
 
+			// Para EnviarNotificacionesObligacionAsignada
+			tipoPeriodicidadBcp.ObtenerVigentes(Arg.Any<NpgsqlTransaction?>()).Returns([TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 100)]);
+			cargoBcp.ObtenerPorSubYNegocio("sub-test", 10, filtrarVigente: true, transaction: Arg.Any<NpgsqlTransaction?>()).Returns([
+				CargoBcpTest.CargoDummy(id: 300, sub: "sub-test", idNegocio: 10)
+			]);
+
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActualizarNormaSuscrita(
 				"sub-test",
 				999,
@@ -1351,7 +1363,13 @@ namespace TanatosAPI.Test.UseCases {
 			normaSuscritaBcp.Obtener(999, transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
 				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, sub: "sub-test", idNegocio: 10, idTemplate: null, idNorma: null, idTipoPeriodicidad: 100, idCategoriaNorma: 200, idCargo: 300, activado: false)
 			);
-			
+
+			// Para EnviarNotificacionesObligacionAsignada
+			tipoPeriodicidadBcp.ObtenerVigentes(Arg.Any<NpgsqlTransaction?>()).Returns([TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 100)]);
+			cargoBcp.ObtenerPorSubYNegocio("sub-test", 10, filtrarVigente: true, transaction: Arg.Any<NpgsqlTransaction?>()).Returns([
+				CargoBcpTest.CargoDummy(id: 300, sub: "sub-test", idNegocio: 10)
+			]);
+
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActualizarNormaSuscrita(
 				"sub-test",
 				999,
@@ -1430,7 +1448,13 @@ namespace TanatosAPI.Test.UseCases {
 			notificacionNormaSuscritaUseCase.GenerarCrons(FECHA_DUMMY.AddDays(14), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
 				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
-			
+
+			// Para EnviarNotificacionesObligacionAsignada
+			tipoPeriodicidadBcp.ObtenerVigentes(Arg.Any<NpgsqlTransaction?>()).Returns([TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 100)]);
+			cargoBcp.ObtenerPorSubYNegocio("sub-test", 10, filtrarVigente: true, transaction: Arg.Any<NpgsqlTransaction?>()).Returns([
+				CargoBcpTest.CargoDummy(id: 300, sub: "sub-test", idNegocio: 10)
+			]);
+
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActualizarNormaSuscrita(
 				"sub-test",
 				999,
@@ -1510,7 +1534,13 @@ namespace TanatosAPI.Test.UseCases {
 			notificacionNormaSuscritaUseCase.GenerarCrons(FECHA_DUMMY.AddDays(14), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
 				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
-			
+
+			// Para EnviarNotificacionesObligacionAsignada
+			tipoPeriodicidadBcp.ObtenerVigentes(Arg.Any<NpgsqlTransaction?>()).Returns([TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 100)]);
+			cargoBcp.ObtenerPorSubYNegocio("sub-test", 10, filtrarVigente: true, transaction: Arg.Any<NpgsqlTransaction?>()).Returns([
+				CargoBcpTest.CargoDummy(id: 300, sub: "sub-test", idNegocio: 10)
+			]);
+
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActualizarNormaSuscrita(
 				"sub-test",
 				999,
@@ -1613,7 +1643,13 @@ namespace TanatosAPI.Test.UseCases {
 			notificacionNormaSuscritaUseCase.GenerarCrons(FECHA_DUMMY.AddDays(14), "MI HO DM * ? *", Arg.Any<List<(TipoUnidadTiempo, int)>>(), Arg.Any<TipoPeriodicidad>()).Returns([
 				("0 11 15 * ? *", FECHA_DUMMY.AddMonths(1).AddHours(-1), TipoUnidadTiempoBcpTest.TipoUnidadTiempoDummy(id: 5000, cantSegundos: 3600, cantMinutos: 60, cantHoras: 1), 1, false)
 			]);
-			
+
+			// Para EnviarNotificacionesObligacionAsignada
+			tipoPeriodicidadBcp.ObtenerVigentes(Arg.Any<NpgsqlTransaction?>()).Returns([TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 100)]);
+			cargoBcp.ObtenerPorSubYNegocio("sub-test", 10, filtrarVigente: true, transaction: Arg.Any<NpgsqlTransaction?>()).Returns([
+				CargoBcpTest.CargoDummy(id: 300, sub: "sub-test", idNegocio: 10)
+			]);
+
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActualizarNormaSuscrita(
 				"sub-test",
 				999,
