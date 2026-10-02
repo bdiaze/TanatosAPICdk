@@ -225,5 +225,40 @@ namespace TanatosAPI.Business {
 
 			return retorno.IdMensaje;
 		}
+
+		public async Task<string> EnviarCorreoObligacionQuitada(string correoElectronico, string? nombreEmpleado, string nombreObligacion) {
+			SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
+				De = new DireccionCorreo() {
+					Nombre = variableEntorno.Obtener("HERMES_DE_NOMBRE"),
+					Correo = variableEntorno.Obtener("HERMES_DE_CORREO"),
+				},
+				Para = [
+					new DireccionCorreo() {
+						Correo = correoElectronico
+					}
+				],
+				Asunto = $"Tienes una obligación menos - Todo en Orden",
+				Cuerpo = await renderer.GenerarHtml("ObligacionQuitada.html", new ScriptObject() {
+					["NOMBRE_EMPLEADO"] = nombreEmpleado != null ? WebUtility.HtmlEncode(nombreEmpleado) : null,
+					["NOMBRE_OBLIGACION"] = WebUtility.HtmlEncode(nombreObligacion),
+				})
+			});
+
+			return retorno.IdMensaje;
+		}
+
+		public async Task<string> EnviarWhatsappObligacionQuitada(string numeroWhatsapp, string? nombreEmpleado, string nombreObligacion) {
+			SalHermesEnviar retorno = await hermesHelper.EnviarWhatsapp(new EntHermesWhatsappEnviar() {
+				De = variableEntorno.Obtener("HERMES_DE_WHATSAPP"),
+				Para = numeroWhatsapp,
+				NombreTemplate = "obligacion_quitada",
+				ParametrosCuerpo = [
+					nombreEmpleado ?? "",
+					nombreObligacion
+				]
+			});
+
+			return retorno.IdMensaje;
+		}
 	}
 }

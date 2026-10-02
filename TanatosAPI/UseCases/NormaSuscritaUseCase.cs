@@ -313,6 +313,8 @@ namespace TanatosAPI.UseCases {
 			List<SalKairosIngresarProceso> procesosProgramados = [];
 			List<NormaSuscritaProcesoNotificacion> procesosDesprogramados = [];
 
+			bool activadaPreviamente = normaSuscrita.Activado;
+
 			if (normaSuscrita.Vigencia) {
 				await normaSuscritaBcp.Eliminar(normaSuscrita, transaction!.NpgsqlTransaction());
 
@@ -321,6 +323,8 @@ namespace TanatosAPI.UseCases {
 				await fiscalizadorNormaSuscritaBcp.EliminarPorNormaSuscrita(normaSuscrita.Id, transaction!.NpgsqlTransaction());
 				await notificacionNormaSuscritaBcp.EliminarPorNormaSuscrita(normaSuscrita.Id, transaction!.NpgsqlTransaction());
 				await historialNormaSuscritaUseCase.EliminarPorNormaSuscrita(normaSuscrita.Id, false, transaction!.NpgsqlTransaction());
+
+				if (activadaPreviamente) await EnviarNotificacionesObligacionQuitada(normaSuscrita.Id, transaction);
 			}
 
 			return (procesosProgramados, procesosDesprogramados);
@@ -341,7 +345,7 @@ namespace TanatosAPI.UseCases {
 				NormaSuscrita? obligacion = await normaSuscritaBcp.Obtener(idNormaSuscrita, filtrarVigente: true, validarSub: sub, validarEditable: true, transaction: transaction!.NpgsqlTransaction());
                 if (obligacion != null) {
 					(procesosProgramados, procesosDesprogramados) = await EliminarNormaSuscrita(obligacion, transaction);
-                }
+				}
 
                 if (ownsTransaction) {
                     await transaction!.CommitAsync();
@@ -418,7 +422,7 @@ namespace TanatosAPI.UseCases {
 				
 				(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction);
 
-				if (obligacion.Cargo != null) await EnviarNotificacionesObligacionAsignada(obligacion.Id, transaction);
+				await EnviarNotificacionesObligacionAsignada(obligacion.Id, transaction);
 
 				if (ownsTransaction) {
                     await transaction!.CommitAsync();
@@ -512,13 +516,16 @@ namespace TanatosAPI.UseCases {
 				_ = await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub, transaction: transaction!.NpgsqlTransaction())!;
 
 				// Se determina si el cargo responsable está siendo modificado para envío de notificación...
-				bool enviarNotificacionAsignacion = cargo != null && obligacion.IdCargo != cargo.Id;
+				bool enviarNotificacionAsignacion = false;
 				bool enviarNotificacionModificacion = false;
+				bool enviarNotificacionEliminacion = false;
 				
 				// Si se modifica algún atributo de la obligación, se actualiza...
 				if (obligacion.Nombre != nombre || obligacion.Descripcion != descripcion || obligacion.Multa != multa ||
 					obligacion.IdTipoPeriodicidad != idTipoPeriodicidad || obligacion.IdCategoriaNorma != idCategoriaNorma ||
 					obligacion.IdCargo != idCargo) {
+
+					if (obligacion.IdCargo != idCargo) enviarNotificacionAsignacion = true;
 
 					obligacion.Nombre = nombre;
 					obligacion.Descripcion = descripcion;
@@ -539,8 +546,10 @@ namespace TanatosAPI.UseCases {
 				if (obligacion.Activado != activado) {
 					if (activado) {
 						await normaSuscritaBcp.Activar(obligacion, transaction!.NpgsqlTransaction());
+						enviarNotificacionAsignacion = true;
 					} else {
 						await normaSuscritaBcp.Desactivar(obligacion, transaction!.NpgsqlTransaction());
+						enviarNotificacionEliminacion = true;
 					}
 				}
 
@@ -571,7 +580,8 @@ namespace TanatosAPI.UseCases {
 
 				(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction);
 
-				if (enviarNotificacionAsignacion) await EnviarNotificacionesObligacionAsignada(obligacion.Id, transaction);
+				if (enviarNotificacionEliminacion) await EnviarNotificacionesObligacionQuitada(obligacion.Id, transaction);
+				else if (enviarNotificacionAsignacion) await EnviarNotificacionesObligacionAsignada(obligacion.Id, transaction);
 				else if (enviarNotificacionModificacion) await EnviarNotificacionesObligacionModificada(obligacion.Id, transaction);
 
 				if (ownsTransaction) {
@@ -676,8 +686,10 @@ namespace TanatosAPI.UseCases {
 					await historialNormaSuscritaUseCase.EliminarPorNormaSuscrita(obligacion.Id, false, transaction!.NpgsqlTransaction());
 					obligacion.HistorialesNormaSuscrita = [];
 					(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction);
+					
+					await EnviarNotificacionesObligacionQuitada(obligacion.Id, transaction);
 				}
-
+				
 				if (ownsTransaction) {
 					await transaction!.CommitAsync();
 				}
@@ -729,7 +741,7 @@ namespace TanatosAPI.UseCases {
 					obligacion.HistorialesNormaSuscrita.Add(await historialNormaSuscritaBcp.Crear(obligacion.Id, proximoVencimiento, transaction!.NpgsqlTransaction()));
 					(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(obligacion.Id, transaction);
 
-					if (obligacion.Cargo != null) await EnviarNotificacionesObligacionAsignada(obligacion.Id, transaction);
+					await EnviarNotificacionesObligacionAsignada(obligacion.Id, transaction);
 				}
 
 				if (ownsTransaction) {
@@ -778,14 +790,14 @@ namespace TanatosAPI.UseCases {
 					return;
 				}
 
-				// Si no tiene plan empresa, no se envía notificación dado que asignación de cargo responsable es funcionalidad del plan...
-				bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita!.Sub, transaction!.NpgsqlTransaction());
-				if (!tienePlanEmpresa) return;
-
 				// Si no tiene cargo responsable asignado, no se envía notificación de asignación...
 				if (normaSuscrita!.Cargo == null) {
 					return;
 				}
+
+				// Si no tiene plan empresa, no se envía notificación dado que asignación de cargo responsable es funcionalidad del plan...
+				bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita!.Sub, transaction!.NpgsqlTransaction());
+				if (!tienePlanEmpresa) return;
 
 				HistorialNormaSuscrita? proximoVencimiento = historialNormaSuscritaBcp.FiltrarUltimoVencimiento(normaSuscrita!.HistorialesNormaSuscrita ?? []);
 				if (proximoVencimiento == null) return;
@@ -881,7 +893,7 @@ namespace TanatosAPI.UseCases {
 					transaction: transaction!.NpgsqlTransaction()
 				);
 
-				// Solo se notifican la asignación si la obligación está vigente y activa...
+				// Solo se notifican las modificaciones si la obligación está vigente y activa...
 				if (!normaSuscritaBcp.EstaVigente(normaSuscrita)) {
 					return;
 				}
@@ -890,14 +902,14 @@ namespace TanatosAPI.UseCases {
 					return;
 				}
 
-				// Si no tiene plan empresa, no se envía notificación dado que asignación de cargo responsable es funcionalidad del plan...
-				bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita!.Sub, transaction!.NpgsqlTransaction());
-				if (!tienePlanEmpresa) return;
-
-				// Si no tiene cargo responsable asignado, no se envía notificación de asignación...
+				// Si no tiene cargo responsable asignado, no se envía notificación...
 				if (normaSuscrita!.Cargo == null) {
 					return;
 				}
+
+				// Si no tiene plan empresa, no se envía notificación dado que asignación de cargo responsable es funcionalidad del plan...
+				bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita!.Sub, transaction!.NpgsqlTransaction());
+				if (!tienePlanEmpresa) return;
 
 				HistorialNormaSuscrita? proximoVencimiento = historialNormaSuscritaBcp.FiltrarUltimoVencimiento(normaSuscrita!.HistorialesNormaSuscrita ?? []);
 				if (proximoVencimiento == null) return;
@@ -955,6 +967,91 @@ namespace TanatosAPI.UseCases {
 							normaSuscrita.Multa ?? normaSuscrita.TemplateNorma?.Multa,
 							DateTimeHelper.TransformarFechaUTCATimezone(proximoVencimiento!.FechaVencimiento),
 							normaSuscrita.TipoPeriodicidad ?? normaSuscrita.TemplateNorma?.TipoPeriodicidad!
+						);
+					}
+				}
+
+				if (ownsTransaction) {
+					await transaction!.CommitAsync();
+				}
+			} catch {
+				if (ownsTransaction && transaction != null) {
+					await transaction.RollbackAsync();
+				}
+				throw;
+			} finally {
+				if (ownsTransaction) {
+					if (transaction != null) await transaction.DisposeAsync();
+					if (connection != null) await connection.DisposeAsync();
+				}
+			}
+		}
+		
+		public async Task EnviarNotificacionesObligacionQuitada(long idNormaSuscrita, IDatabaseTransaction? transaction = null) {
+			bool ownsTransaction = transaction == null;
+			IDatabaseConnection? connection = null;
+			try {
+				if (ownsTransaction) {
+					connection = await connectionHelper.ObtenerConexionWrapper();
+					transaction = await connection.BeginTransactionAsync();
+				}
+
+				NormaSuscrita? normaSuscrita = await Obtener(
+					idNormaSuscrita,
+					incluirTemplate: true,
+					incluirCargo: true,
+					transaction: transaction!.NpgsqlTransaction()
+				);
+
+				if (normaSuscrita == null) return;
+
+				// Solo se notifica la eliminación si la obligación no está vigente o no está activa...
+				if (normaSuscritaBcp.EstaVigente(normaSuscrita) && normaSuscritaBcp.EstaActiva(normaSuscrita!)) {
+					return;
+				}
+
+				// Si no tiene cargo responsable asignado, no se envía notificación de asignación...
+				if (normaSuscrita!.Cargo == null) {
+					return;
+				}
+
+				// Si no tiene plan empresa, no se envía notificación dado que asignación de cargo responsable es funcionalidad del plan...
+				bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita!.Sub, transaction!.NpgsqlTransaction());
+				if (!tienePlanEmpresa) return;
+
+				Dictionary<long, Empleado> empleados = (await empleadoBcp.ObtenerPorSubYNegocio(
+					normaSuscrita.Sub,
+					normaSuscrita.IdNegocio,
+					filtrarVigente: true,
+					filtrarIdCargo: normaSuscrita!.Cargo.Id,
+					transaction: transaction!.NpgsqlTransaction()
+				)).ToDictionary(e => e.Id, e => e);
+
+				List<DestinatarioNotificacion> destinatarios = destinatarioNotificacionBcp.FiltrarPorEmpleado(
+					await destinatarioNotificacionBcp.ObtenerPorSubYNegocio(
+						normaSuscrita.Sub,
+						normaSuscrita.IdNegocio,
+						filtrarVigente: true,
+						filtrarValidado: true,
+						transaction: transaction!.NpgsqlTransaction()
+					),
+					[.. empleados.Keys.Select(e => (long?)e)]
+				);
+
+				foreach (DestinatarioNotificacion destinatario in destinatarios) {
+					Empleado empleado = empleados[destinatario.IdEmpleado!.Value];
+
+					if (destinatario.IdTipoReceptor == 1 /* Correo Electrónico */) {
+						await normaSuscritaBcp.EnviarCorreoObligacionQuitada(
+							destinatario.Destino,
+							empleado.Nombre,
+							normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre ?? "Sin nombre"
+						);
+					} else if (destinatario.IdTipoReceptor == 2 /* Whatsapp */) {
+						await normaSuscritaBcp.EnviarWhatsappObligacionQuitada(
+							destinatario.Destino,
+							empleado.Nombre,
+							normaSuscrita.Nombre ?? normaSuscrita.TemplateNorma?.Nombre ?? "Sin nombre"
 						);
 					}
 				}

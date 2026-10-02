@@ -1965,15 +1965,21 @@ namespace TanatosAPI.Test.UseCases {
 		[Fact]
 		public async Task DesactivarNormaSuscritaTest() {
 			normaSuscritaBcp.Obtener(999, validarVigencia: true, validarSub: "sub-test", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
-				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idTemplate: null, idNorma: null, activado: true)
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idNegocio: 10, idTemplate: null, idNorma: null, activado: true)
 			);
 			normaSuscritaBcp.EstaActiva(Arg.Any<NormaSuscrita>()).Returns(true);
 
 			// Para ActualizarProgramacionProcesosNormaSuscrita
 			normaSuscritaBcp.Obtener(999, transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
-				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, sub: "sub-test", idTemplate: null, idNorma: null, activado: false)
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idNegocio: 10, sub: "sub-test", idTemplate: null, idNorma: null, activado: false)
 			);
-			
+
+			// Para EnviarNotificacionesObligacionAsignada
+			tipoPeriodicidadBcp.ObtenerVigentes(Arg.Any<NpgsqlTransaction?>()).Returns([TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 100)]);
+			cargoBcp.ObtenerPorSubYNegocio("sub-test", 10, filtrarVigente: true, transaction: Arg.Any<NpgsqlTransaction?>()).Returns([
+				CargoBcpTest.CargoDummy(id: 300, sub: "sub-test", idNegocio: 10)
+			]);
+
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.DesactivarNormaSuscrita(999, "sub-test");
 			Assert.NotNull(retorno.obligacion.HistorialesNormaSuscrita);
 			Assert.Empty(retorno.obligacion.HistorialesNormaSuscrita);
@@ -2004,7 +2010,7 @@ namespace TanatosAPI.Test.UseCases {
 		[Fact]
 		public async Task ActivarNormaSuscritaTest() {
 			normaSuscritaBcp.Obtener(999, validarVigencia: true, validarSub: "sub-test", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
-				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idTemplate: null, idNorma: null, idTipoPeriodicidad: 1, activado: false)
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idNegocio: 10, idTemplate: null, idNorma: null, idTipoPeriodicidad: 1, activado: false)
 			);
 			normaSuscritaBcp.EstaActiva(Arg.Any<NormaSuscrita>()).Returns(false);
 			tipoPeriodicidadBcp.ObtenerValidandoVigencia(1, Arg.Any<NpgsqlTransaction?>()).Returns(
@@ -2016,9 +2022,15 @@ namespace TanatosAPI.Test.UseCases {
 
 			// Para ActualizarProgramacionProcesosNormaSuscrita
 			normaSuscritaBcp.Obtener(999, transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
-				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, sub: "sub-test", idTemplate: null, idNorma: null, activado: true)
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idNegocio: 10, sub: "sub-test", idTemplate: null, idNorma: null, activado: true)
 			);
-			
+
+			// Para EnviarNotificacionesObligacionAsignada
+			tipoPeriodicidadBcp.ObtenerVigentes(Arg.Any<NpgsqlTransaction?>()).Returns([TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 100)]);
+			cargoBcp.ObtenerPorSubYNegocio("sub-test", 10, filtrarVigente: true, transaction: Arg.Any<NpgsqlTransaction?>()).Returns([
+				CargoBcpTest.CargoDummy(id: 300, sub: "sub-test", idNegocio: 10)
+			]);
+
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActivarNormaSuscrita(999, "sub-test", FECHA_DUMMY.AddDays(14));
 			Assert.NotNull(retorno.obligacion.HistorialesNormaSuscrita);
 			Assert.Single(retorno.obligacion.HistorialesNormaSuscrita);
@@ -2036,7 +2048,7 @@ namespace TanatosAPI.Test.UseCases {
 		[Fact]
 		public async Task ActivarNormaSuscritaTest_ProximoVencimientoPasado() {
 			normaSuscritaBcp.Obtener(999, validarVigencia: true, validarSub: "sub-test", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
-				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idTemplate: null, idNorma: null, idTipoPeriodicidad: 1, activado: false)
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idNegocio: 10, idTemplate: null, idNorma: null, idTipoPeriodicidad: 1, activado: false)
 			);
 			normaSuscritaBcp.EstaActiva(Arg.Any<NormaSuscrita>()).Returns(false);
 			tipoPeriodicidadBcp.ObtenerValidandoVigencia(1, Arg.Any<NpgsqlTransaction?>()).Returns(
@@ -2049,9 +2061,15 @@ namespace TanatosAPI.Test.UseCases {
 
 			// Para ActualizarProgramacionProcesosNormaSuscrita
 			normaSuscritaBcp.Obtener(999, transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
-				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, sub: "sub-test", idTemplate: null, idNorma: null, activado: true)
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idNegocio: 10, sub: "sub-test", idTemplate: null, idNorma: null, activado: true)
 			);
-			
+
+			// Para EnviarNotificacionesObligacionAsignada
+			tipoPeriodicidadBcp.ObtenerVigentes(Arg.Any<NpgsqlTransaction?>()).Returns([TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 100)]);
+			cargoBcp.ObtenerPorSubYNegocio("sub-test", 10, filtrarVigente: true, transaction: Arg.Any<NpgsqlTransaction?>()).Returns([
+				CargoBcpTest.CargoDummy(id: 300, sub: "sub-test", idNegocio: 10)
+			]);
+
 			(NormaSuscrita obligacion, List<SalKairosIngresarProceso> programados, List<NormaSuscritaProcesoNotificacion> desprogramados) retorno = await normaSuscritaUseCase.ActivarNormaSuscrita(999, "sub-test", FECHA_DUMMY.AddDays(-1));
 			Assert.NotNull(retorno.obligacion.HistorialesNormaSuscrita);
 			Assert.Single(retorno.obligacion.HistorialesNormaSuscrita);
@@ -2082,12 +2100,18 @@ namespace TanatosAPI.Test.UseCases {
 		[Fact]
 		public async Task ActivarNormaSuscritaTest_ProximoVencimientoPasadoSinDeltas() {
 			normaSuscritaBcp.Obtener(999, validarVigencia: true, validarSub: "sub-test", transaction: Arg.Any<NpgsqlTransaction?>()).Returns(
-				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idTemplate: null, idNorma: null, idTipoPeriodicidad: 1, activado: false)
+				NormaSuscritaBcpTest.NormaSuscritaDummy(id: 999, idNegocio: 10, idTemplate: null, idNorma: null, idTipoPeriodicidad: 1, activado: false)
 			);
 			normaSuscritaBcp.EstaActiva(Arg.Any<NormaSuscrita>()).Returns(false);
 			tipoPeriodicidadBcp.ObtenerValidandoVigencia(1, Arg.Any<NpgsqlTransaction?>()).Returns(
 				TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 1, deltaDias: null, deltaMeses: null, deltaAnnos: null)
 			);
+
+			// Para EnviarNotificacionesObligacionAsignada
+			tipoPeriodicidadBcp.ObtenerVigentes(Arg.Any<NpgsqlTransaction?>()).Returns([TipoPeriodicidadBcpTest.TipoPeriodicidadDummy(id: 100)]);
+			cargoBcp.ObtenerPorSubYNegocio("sub-test", 10, filtrarVigente: true, transaction: Arg.Any<NpgsqlTransaction?>()).Returns([
+				CargoBcpTest.CargoDummy(id: 300, sub: "sub-test", idNegocio: 10)
+			]);
 
 			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => normaSuscritaUseCase.ActivarNormaSuscrita(999, "sub-test", FECHA_DUMMY.AddDays(-1)));
 			Assert.Equal(TipoErrorValidacion.ValorNoValido, ex.TipoErrorValidacion);
