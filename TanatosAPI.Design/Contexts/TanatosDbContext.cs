@@ -752,6 +752,28 @@ namespace TanatosAPI.Design.Contexts {
 					.HasForeignKey(o => o.IdRecurso)
 					.OnDelete(DeleteBehavior.Restrict);
 			});
+
+			modelBuilder.Entity<AccesoDestinatario>(entity => {
+				entity.ToTable(o => o.HasComment("Tabla que contiene los accesos asociados a un destinatario de notificación."));
+				entity.Property(o => o.Id).HasComment("Identificador de la relación.");
+				entity.Property(o => o.IdAcceso).HasComment("Identificador del acceso.");
+				entity.Property(o => o.IdDestinatarioNotificacion).HasComment("Identificador del destinatario de notificación.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó la relación.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó la relación.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia de la relación.");
+
+				entity
+					.HasOne(o => o.Acceso)
+					.WithMany(o => o.AccesoDestinatarios)
+					.HasForeignKey(o => o.IdAcceso)
+					.OnDelete(DeleteBehavior.Restrict);
+
+				entity
+					.HasOne(o => o.DestinatarioNotificacion)
+					.WithMany(o => o.AccesosDestinatario)
+					.HasForeignKey(o => o.IdDestinatarioNotificacion)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -831,5 +853,7 @@ namespace TanatosAPI.Design.Contexts {
 		public DbSet<Recurso> Recursos { get; set; }
 
 		public DbSet<Permiso> AccesosRecursos { get; set; }
+
+		public DbSet<AccesoDestinatario> AccesosDestinatarios { get; set; }
 	}
 }

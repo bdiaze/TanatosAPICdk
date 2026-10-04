@@ -78,5 +78,8 @@ namespace TanatosAPI.Entities.Models {
 		[JsonIgnore]
 		[ForeignKey(nameof(IdEmpleado))]
 		public Empleado? Empleado { get; set; }
+
+		[JsonIgnore]
+		public List<AccesoDestinatario>? AccesosDestinatario { get; set; }
 	}
 }

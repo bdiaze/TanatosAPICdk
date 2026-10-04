@@ -5,8 +5,8 @@ using System.Text.Json.Serialization;
 
 namespace TanatosAPI.Entities.Models {
 	[ExcludeFromCodeCoverage]
-	[Table("acceso", Schema = "tanatos")]
-	public class Acceso {
+	[Table("acceso_destinatario", Schema = "tanatos")]
+	public class AccesoDestinatario {
 		[Required]
 		[Column("id")]
 		[Key]
@@ -14,11 +14,12 @@ namespace TanatosAPI.Entities.Models {
 		public required long Id { get; set; }
 
 		[Required]
-		[Column("hash_codigo")]
-		public required string HashCodigo { get; set; }
+		[Column("id_acceso")]
+		public required long IdAcceso { get; set; }
 
-		[Column("fecha_expiracion", TypeName = "timestamp with time zone")]
-		public DateTime? FechaExpiracion { get; set; }
+		[Required]
+		[Column("id_destinatario_notificacion")]
+		public required long IdDestinatarioNotificacion { get; set; }
 
 		[Required]
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
@@ -32,9 +33,11 @@ namespace TanatosAPI.Entities.Models {
 		public required bool Vigencia { get; set; }
 
 		[JsonIgnore]
-		public List<Permiso>? Permisos { get; set; }
+		[ForeignKey(nameof(IdAcceso))]
+		public Acceso? Acceso { get; set; }
 
 		[JsonIgnore]
-		public List<AccesoDestinatario>? AccesoDestinatarios { get; set; }
+		[ForeignKey(nameof(IdDestinatarioNotificacion))]
+		public DestinatarioNotificacion? DestinatarioNotificacion { get; set; }
 	}
 }
