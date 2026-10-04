@@ -199,7 +199,8 @@ namespace TanatosAPI.UseCases {
 				incluirCargo: true,
 				incluirFiscalizadores: true,
 				incluirNotificaciones: true,
-				incluirHistorialVencimientos: true
+				incluirHistorialVencimientos: true,
+				transaction: transaction
 			))!;
 
 			HistorialNormaSuscrita? proximoVencimiento = historialNormaSuscritaBcp.FiltrarUltimoVencimiento(obligacion.HistorialesNormaSuscrita ?? []);
@@ -209,8 +210,59 @@ namespace TanatosAPI.UseCases {
 			
 			return obligacion;
 		}
-		
-        public async Task<(HistorialNormaSuscrita, bool tienePlanEmpresa)> ObtenerVencimientoConDocumentosYPlan(long? idNormaSuscrita, long idHistorialNormaSuscrita, string? sub, NpgsqlTransaction? transaction = null) {
+
+		public async Task<NormaSuscrita> ObtenerConCodigoAccesoIncluyendoProximoVencimiento(long idNormaSuscrita, string codigoAcceso, NpgsqlTransaction? transaction = null) {
+			// Se valida que el código de acceso tenga permisos sobre la obligación...
+			DestinatarioNotificacion destinatario = await accesoDestinatarioUseCase.ValidarAccesoDestinatario(
+				codigoAcceso, 
+				"norma_suscrita", 
+				idNormaSuscrita.ToString(),
+				"consultar", 
+				transaction
+			);
+						
+			NormaSuscrita obligacion = (await Obtener(
+				idNormaSuscrita,
+				validarVigencia: true,
+				incluirTemplate: true,
+				incluirPeriodicidad: true,
+				incluirCategoria: true,
+				incluirCargo: true,
+				incluirFiscalizadores: true,
+				incluirNotificaciones: true,
+				incluirHistorialVencimientos: true,
+				transaction: transaction
+			))!;
+
+			// Se valida que la obligación tenga un cargo asignado...
+			if (obligacion.Cargo == null) 
+				throw new ErrorValidacion(TipoErrorValidacion.AccesoCaducado, "La obligación no tiene un cargo asociado", "El código de acceso es inválido.");
+
+			// Se valida que exista un empleado vigente asociado al cargo de la obligación y al código de acceso...
+			List<Empleado> empleados = (await empleadoBcp.ObtenerPorSubYNegocio(
+				obligacion.Sub,
+				obligacion.IdNegocio,
+				filtrarVigente: true,
+				filtrarIdCargo: obligacion.Cargo.Id,
+				transaction: transaction
+			));
+			if (!empleados.Any(e => e.Id == destinatario.IdEmpleado)) 
+				throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El código de acceso no pertenece a un empleado vigente con el cargo asignado a la obligación", "El código de acceso es inválido.");
+
+			// Si no tiene plan empresa, no se permite consultar por código de acceso a cargo asociado...
+			bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(obligacion.Sub, transaction);
+			if (!tienePlanEmpresa) 
+				throw new ErrorValidacion(TipoErrorValidacion.RestringidoPorPlan, "No se permiten consultas por código de acceso de destinatario para obligaciones sin plan Empresa", "El código de acceso es inválido.");
+
+			HistorialNormaSuscrita? proximoVencimiento = historialNormaSuscritaBcp.FiltrarUltimoVencimiento(obligacion.HistorialesNormaSuscrita ?? []);
+
+			obligacion.HistorialesNormaSuscrita = [];
+			if (proximoVencimiento != null) obligacion.HistorialesNormaSuscrita.Add(proximoVencimiento);
+
+			return obligacion;
+		}
+
+		public async Task<(HistorialNormaSuscrita, bool tienePlanEmpresa)> ObtenerVencimientoConDocumentosYPlan(long? idNormaSuscrita, long idHistorialNormaSuscrita, string? sub, NpgsqlTransaction? transaction = null) {
 			HistorialNormaSuscrita vencimiento = (await historialNormaSuscritaBcp.Obtener(idHistorialNormaSuscrita, validarVigencia: true, validarIdNormaSuscrita: idNormaSuscrita, transaction: transaction))!;
 
 			vencimiento.NormaSuscrita = await Obtener(
