@@ -29,6 +29,7 @@ namespace TanatosAPI.Endpoints {
 			group.MapProcesarNotificacionEndpoint();
 
 			RouteGroupBuilder publicGroup = routes.MapGroup("/public/NormaSuscrita");
+			publicGroup.MapObtenerPorIdConCodigoAcceso();
 			publicGroup.MapObtenerPorCodigoAccesoConVencimiento();
 			publicGroup.MapCompletarNormaPorCodigoAccesoEndpoint();
 
@@ -738,6 +739,92 @@ namespace TanatosAPI.Endpoints {
 
             return routes;
         }
+
+		private static void MapObtenerPorIdConCodigoAcceso(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/ObtenerPorIdConCodigoAcceso/{idNormaSuscrita}", async (long idNormaSuscrita, [FromQuery] string codigoAcceso, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaUseCase normaSuscritaUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					NormaSuscrita obligacion = await normaSuscritaUseCase.ObtenerConCodigoAccesoIncluyendoProximoVencimiento(idNormaSuscrita, codigoAcceso);
+
+					SalNormaSuscrita retorno = new() {
+						Id = obligacion.Id,
+						Nombre = obligacion.Nombre,
+						Descripcion = obligacion.Descripcion,
+						Multa = obligacion.Multa,
+						IdTipoPeriodicidad = obligacion.TipoPeriodicidad?.Id,
+						NombreTipoPeriodicidad = obligacion.TipoPeriodicidad?.Nombre,
+						IdCategoriaNorma = obligacion.CategoriaNorma?.Id,
+						NombreCategoriaNorma = obligacion.CategoriaNorma?.Nombre,
+						IdCargo = obligacion.Cargo?.Id,
+						NombreCargo = obligacion.Cargo?.Nombre,
+						OrdenVisual = obligacion.OrdenVisual,
+						Editable = obligacion.Editable,
+						Activado = obligacion.Activado,
+						Fiscalizadores = [.. (obligacion.FiscalizadoresNormaSuscrita ?? []).Select(fns => {
+							return new SalFiscalizadorNormaSuscrita() {
+								Id = fns.Id,
+								IdTipoFiscalizador = fns.TipoFiscalizador!.Id,
+								NombreTipoFiscalizador = fns.TipoFiscalizador!.Nombre
+							};
+						})],
+						Notificaciones = [.. (obligacion.NotificacionesNormaSuscrita ?? []).Select(nns => {
+							return new SalNotificacionNormaSuscrita() {
+								Id = nns.Id,
+								IdTipoUnidadTiempoAntelacion = nns.TipoUnidadTiempo!.Id,
+								NombreTipoUnidadTiempoAntelacion = nns.TipoUnidadTiempo!.Nombre,
+								CantAntelacion = nns.CantAntelacion
+							};
+						})],
+						ProximoVencimiento = obligacion.HistorialesNormaSuscrita?.FirstOrDefault()?.FechaVencimiento,
+						TemplateNorma = (obligacion.TemplateNorma == null) ? null : new SalTemplateNorma() {
+							IdTemplate = obligacion.TemplateNorma!.Template!.Id,
+							NombreTemplate = obligacion.TemplateNorma!.Template!.Nombre,
+							Nombre = obligacion.TemplateNorma!.Nombre,
+							Descripcion = obligacion.TemplateNorma!.Descripcion,
+							Multa = obligacion.TemplateNorma!.Multa,
+							IdTipoPeriodicidad = obligacion.TemplateNorma!.TipoPeriodicidad?.Id,
+							NombreTipoPeriodicidad = obligacion.TemplateNorma!.TipoPeriodicidad?.Nombre,
+							IdCategoriaNorma = obligacion.TemplateNorma!.CategoriaNorma?.Id,
+							NombreCategoriaNorma = obligacion.TemplateNorma!.CategoriaNorma?.Nombre,
+							Fiscalizadores = [.. (obligacion.TemplateNorma!.TemplateNormaFiscalizadores ?? []).Select(fns => {
+								return new SalFiscalizadorNormaSuscrita() {
+									Id = 0,
+									IdTipoFiscalizador = fns.TipoFiscalizador!.Id,
+									NombreTipoFiscalizador = fns.TipoFiscalizador!.Nombre
+								};
+							})],
+							Notificaciones = [.. (obligacion.TemplateNorma!.TemplateNormaNotificaciones ?? []).Select(nns => {
+								return new SalNotificacionNormaSuscrita() {
+									Id = 0,
+									IdTipoUnidadTiempoAntelacion = nns.TipoUnidadTiempoAntelacion!.Id,
+									NombreTipoUnidadTiempoAntelacion = nns.TipoUnidadTiempoAntelacion!.Nombre,
+									CantAntelacion = nns.CantAntelacion
+								};
+							})],
+						},
+					};
+
+					LambdaLogger.Log(
+						$"[GET] - [NormaSuscrita] - [ObtenerPorIdConCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de la norma suscrita por ID: {idNormaSuscrita}.");
+					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [NormaSuscrita] - [ObtenerPorIdConCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [NormaSuscrita] - [ObtenerPorIdConCodigoAcceso] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener la norma suscrita por ID: {idNormaSuscrita}. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).AllowAnonymous();
+		}
+
 
 		private static IEndpointRouteBuilder MapObtenerPorCodigoAccesoConVencimiento(this IEndpointRouteBuilder routes) {
 			routes.MapGet("/ObtenerPorCodigoAccesoConVencimiento", async ([FromQuery] string codigoAcceso, IHostEnvironment environment, ClaimsPrincipal user, NormaSuscritaUseCase normaSuscritaUseCase) => {
