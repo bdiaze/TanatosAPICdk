@@ -1009,11 +1009,6 @@ namespace TanatosAPI.UseCases {
 
 				if (normaSuscrita == null) return;
 
-				// Solo se notifica la eliminación si la obligación no está vigente o no está activa...
-				if (normaSuscritaBcp.EstaVigente(normaSuscrita) && normaSuscritaBcp.EstaActiva(normaSuscrita!)) {
-					return;
-				}
-
 				// Si no tiene plan empresa, no se envía notificación dado que asignación de cargo responsable es funcionalidad del plan...
 				bool tienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita!.Sub, transaction!.NpgsqlTransaction());
 				if (!tienePlanEmpresa) return;
