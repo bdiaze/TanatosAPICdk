@@ -22,7 +22,7 @@ namespace TanatosAPI.Test.UseCases {
         private readonly IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         private readonly IHistorialNormaSuscritaUseCase historialNormaSuscritaUseCase = Substitute.For<IHistorialNormaSuscritaUseCase>();
         private readonly INotificacionNormaSuscritaUseCase notificacionNormaSuscritaUseCase = Substitute.For<INotificacionNormaSuscritaUseCase>();
-		private readonly IAccesoUseCase accesoUseCase = Substitute.For<IAccesoUseCase>();
+		private readonly IAccesoDestinatarioUseCase accesoDestinatarioUseCase = Substitute.For<IAccesoDestinatarioUseCase>();
 		private readonly INormaSuscritaProcesoNotificacionUseCase normaSuscritaProcesoNotificacionUseCase = Substitute.For<INormaSuscritaProcesoNotificacionUseCase>();
 		private readonly INormaSuscritaBcp normaSuscritaBcp = Substitute.For<INormaSuscritaBcp>();
         private readonly IHistorialNormaSuscritaBcp historialNormaSuscritaBcp = Substitute.For<IHistorialNormaSuscritaBcp>();
@@ -59,7 +59,7 @@ namespace TanatosAPI.Test.UseCases {
             normaSuscritaUseCase = new(
                 connectionHelper, dateTimeProvider, historialNormaSuscritaUseCase, 
 				notificacionNormaSuscritaUseCase, normaSuscritaProcesoNotificacionUseCase,
-				accesoUseCase, normaSuscritaBcp, historialNormaSuscritaBcp, 
+				accesoDestinatarioUseCase, normaSuscritaBcp, historialNormaSuscritaBcp, 
 				historialNotificacionBcp, fiscalizadorNormaSuscritaBcp,
                 notificacionNormaSuscritaBcp, templateBcp, templateNormaBcp, 
 				templateNormaNotificacionBcp, templateNormaFiscalizadorBcp, 

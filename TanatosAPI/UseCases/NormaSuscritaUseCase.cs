@@ -10,7 +10,7 @@ using TanatosAPI.Interfaces.UseCases;
 namespace TanatosAPI.UseCases {
 	public class NormaSuscritaUseCase(IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, IHistorialNormaSuscritaUseCase historialNormaSuscritaUseCase, 
 									  INotificacionNormaSuscritaUseCase notificacionNormaSuscritaUseCase, INormaSuscritaProcesoNotificacionUseCase normaSuscritaProcesoNotificacionUseCase, 
-									  IAccesoUseCase accesoUseCase, INormaSuscritaBcp normaSuscritaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, 
+									  IAccesoDestinatarioUseCase accesoDestinatarioUseCase, INormaSuscritaBcp normaSuscritaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, 
 									  IHistorialNotificacionBcp historialNotificacionBcp, IFiscalizadorNormaSuscritaBcp fiscalizadorNormaSuscritaBcp, 
 									  INotificacionNormaSuscritaBcp notificacionNormaSuscritaBcp, ITemplateBcp templateBcp, ITemplateNormaBcp templateNormaBcp, 
 									  ITemplateNormaNotificacionBcp templateNormaNotificacionBcp, ITemplateNormaFiscalizadorBcp templateNormaFiscalizadorBcp, 
@@ -829,12 +829,15 @@ namespace TanatosAPI.UseCases {
 				foreach (DestinatarioNotificacion destinatario in destinatarios) {
 					Empleado empleado = empleados[destinatario.IdEmpleado!.Value];
 
-					(_, string codigoAcceso) = await accesoUseCase.HabilitarAcceso([
+					(_, string codigoAcceso) = await accesoDestinatarioUseCase.HabilitarAccesoDestinatario(
+						destinatario.Id,
+						[
 							new RecursoSolicitado {
-							Tipo = "norma_suscrita",
-							IdInterno = normaSuscrita.Id.ToString(),
-							Acciones = [ "consultar" ]
-						}],
+								Tipo = "norma_suscrita",
+								IdInterno = normaSuscrita.Id.ToString(),
+								Acciones = [ "consultar" ]
+							}
+						],
 						TimeSpan.FromDays(30),
 						transaction
 					);
@@ -941,12 +944,15 @@ namespace TanatosAPI.UseCases {
 				foreach (DestinatarioNotificacion destinatario in destinatarios) {
 					Empleado empleado = empleados[destinatario.IdEmpleado!.Value];
 
-					(_, string codigoAcceso) = await accesoUseCase.HabilitarAcceso([
+					(_, string codigoAcceso) = await accesoDestinatarioUseCase.HabilitarAccesoDestinatario(
+						destinatario.Id,
+						[
 							new RecursoSolicitado {
-							Tipo = "norma_suscrita",
-							IdInterno = normaSuscrita.Id.ToString(),
-							Acciones = [ "consultar" ]
-						}],
+								Tipo = "norma_suscrita",
+								IdInterno = normaSuscrita.Id.ToString(),
+								Acciones = [ "consultar" ]
+							}
+						],
 						TimeSpan.FromDays(30),
 						transaction
 					);
