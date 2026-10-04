@@ -47,7 +47,7 @@ namespace TanatosAPI.UseCases {
 			}
 		}
 
-		public async Task ValidarAcceso(string codigoAcceso, string tipoRecurso, string idRecurso, string accion, NpgsqlTransaction? transaction = null) {
+		public async Task<Acceso> ValidarAcceso(string codigoAcceso, string tipoRecurso, string idRecurso, string accion, NpgsqlTransaction? transaction = null) {
 			Acceso acceso = (await accesoBcp.ObtenerPorCodigo(codigoAcceso, validarVigencia: true, validarExpiracion: true, transaction: transaction))!;
 			List<Permiso> permisos = [.. 
 				(await permisoBcp.ObtenerPorIdAcceso(acceso.Id, filtrarVigentes: true, transaction: transaction))
@@ -59,6 +59,7 @@ namespace TanatosAPI.UseCases {
 			];
 
 			if (recursos.Count == 0) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El código de acceso no tiene permiso sobre el recurso", "El código de acceso es inválido.");
+			return acceso;
 		}
 	}
 

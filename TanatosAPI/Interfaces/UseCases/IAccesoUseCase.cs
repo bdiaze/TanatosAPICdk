@@ -6,6 +6,6 @@ using TanatosAPI.UseCases;
 namespace TanatosAPI.Interfaces.UseCases {
 	public interface IAccesoUseCase {
 		public Task<(Acceso, string CodigoAcceso)> HabilitarAcceso(List<RecursoSolicitado> recursosSolicitados, TimeSpan? duracion = null, IDatabaseTransaction? transaction = null);
-		public Task ValidarAcceso(string codigoAcceso, string tipoRecurso, string idRecurso, string accion, NpgsqlTransaction? transaction = null);
+		public Task<Acceso> ValidarAcceso(string codigoAcceso, string tipoRecurso, string idRecurso, string accion, NpgsqlTransaction? transaction = null);
 	}
 }
