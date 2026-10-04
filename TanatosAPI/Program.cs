@@ -210,6 +210,7 @@ builder.Services.AddScoped<IModeloCanvasDao, ModeloCanvasDao>();
 builder.Services.AddScoped<IAccesoDao, AccesoDao>();
 builder.Services.AddScoped<IRecursoDao, RecursoDao>();
 builder.Services.AddScoped<IPermisoDao, PermisoDao>();
+builder.Services.AddScoped<IAccesoDestinatarioDao, AccesoDestinatarioDao>();
 #endregion
 
 #region Singleton BCP
@@ -249,6 +250,7 @@ builder.Services.AddScoped<IModeloCanvasBcp, ModeloCanvasBcp>();
 builder.Services.AddScoped<IAccesoBcp, AccesoBcp>();
 builder.Services.AddScoped<IRecursoBcp, RecursoBcp>();
 builder.Services.AddScoped<IPermisoBcp, PermisoBcp>();
+builder.Services.AddScoped<IAccesoDestinatarioBcp, AccesoDestinatarioBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -275,6 +277,7 @@ builder.Services.AddScoped<PerfilUseCase>();
 builder.Services.AddScoped<ProcesoAutomaticoUseCase>();
 builder.Services.AddScoped<ModeloCanvasUseCase>();
 builder.Services.AddScoped<IAccesoUseCase, AccesoUseCase>();
+builder.Services.AddScoped<IAccesoDestinatarioUseCase, AccesoDestinatarioUseCase>();
 #endregion
 
 string cognitoRegion;
