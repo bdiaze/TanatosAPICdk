@@ -25,6 +25,9 @@ namespace TanatosAPI.Entities.Models {
 		[Column("correo_electronico")]
 		public string? CorreoElectronico { get; set; }
 
+		[Column("whatsapp")]
+		public string? Whatsapp { get; set; }
+
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
 		public required DateTime FechaCreacion { get; set; }
 	}
