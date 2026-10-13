@@ -35,6 +35,23 @@ namespace TanatosAPI.UseCases {
 						destinatarios.Add(nuevoDestinatario);
 					}
 				}
+
+                if (usuario.Whatsapp != null) {
+					bool destinoUsuarioYaCreado = destinatarios.Any(d => d.IdEmpleado == null && d.IdTipoReceptor == 2 /* WhatsApp */ && d.Destino == usuario.Whatsapp);
+					if (!destinoUsuarioYaCreado) {
+						(DestinatarioNotificacion nuevoDestinatario, _) = await destinatarioNotificacionBcp.Insertar(
+							sub,
+							idNegocio,
+							null,
+							2, // WhatsApp
+							"Mi número de WhatsApp",
+							usuario.Whatsapp,
+							true,
+							transaction
+						);
+						destinatarios.Add(nuevoDestinatario);
+					}
+				}
             }
 
             return destinatarios;
