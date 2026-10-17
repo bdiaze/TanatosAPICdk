@@ -29,6 +29,10 @@ namespace TanatosAPI.Business {
 			return nuevo;
 		}
 
+		public async Task Actualizar(Usuario usuario, NpgsqlTransaction? transaction = null) {
+			await usuarioDao.Actualizar(usuario, transaction);
+		}
+
 		public async Task<Usuario> CargarDesdeCognitoSiNoExiste(string userName, NpgsqlTransaction? transaction = null) {
 			Usuario? usuario = await usuarioDao.ObtenerPorUserName(userName, transaction);
 			if (usuario == null) {
