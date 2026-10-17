@@ -60,6 +60,10 @@ namespace TanatosAPI.Business {
             return [.. destinatarios.Where(d => PerteneceEmpleado(d, idsEmpleados))];
         }
 
+		public List<DestinatarioNotificacion> FiltrarPorTipoReceptor(List<DestinatarioNotificacion> destinatarios, long idTipoReceptor) {
+			return [.. destinatarios.Where(d => d.IdTipoReceptor == idTipoReceptor)];
+		}
+
         public async Task<string> GenerarCodigoValidacion(NpgsqlTransaction? transaction = null) {
             string codigoValidacion = CryptoHelper.GenerarToken();
             DestinatarioNotificacion? mismoCodigo = await ObtenerPorCodigoValidacion(codigoValidacion, transaction: transaction);
@@ -91,10 +95,11 @@ namespace TanatosAPI.Business {
 			return destinatario;
 		}
 
-        public async Task<List<DestinatarioNotificacion>> ObtenerPorSubYNegocio(string sub, long idNegocio, bool filtrarVigente = false, bool filtrarValidado = false, NpgsqlTransaction? transaction = null) {
+        public async Task<List<DestinatarioNotificacion>> ObtenerPorSubYNegocio(string sub, long? idNegocio = null, bool filtrarVigente = false, bool filtrarValidado = false, long? filtrarIdTipoReceptor = null, NpgsqlTransaction? transaction = null) {
 			List<DestinatarioNotificacion> destinatarios = await destinatarioNotificacionDao.ObtenerPorSub(sub, idNegocio, null, transaction);
             if (filtrarVigente) destinatarios = FiltrarVigentes(destinatarios);
 			if (filtrarValidado) destinatarios = FiltrarValidados(destinatarios);
+			if (filtrarIdTipoReceptor != null) destinatarios = FiltrarPorTipoReceptor(destinatarios, filtrarIdTipoReceptor.Value);
 			return destinatarios;
 		}
 

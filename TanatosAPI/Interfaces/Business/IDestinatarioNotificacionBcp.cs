@@ -14,10 +14,11 @@ namespace TanatosAPI.Interfaces.Business {
         public List<DestinatarioNotificacion> FiltrarValidados(List<DestinatarioNotificacion> destinatarios);
         public List<DestinatarioNotificacion> FiltrarPorEmpleado(List<DestinatarioNotificacion> destinatarios, long? idEmpleado);
         public List<DestinatarioNotificacion> FiltrarPorEmpleado(List<DestinatarioNotificacion> destinatarios, HashSet<long?> idsEmpleados);
-        public Task<string> GenerarCodigoValidacion(NpgsqlTransaction? transaction = null);
+        public List<DestinatarioNotificacion> FiltrarPorTipoReceptor(List<DestinatarioNotificacion> destinatarios, long idTipoReceptor);
+		public Task<string> GenerarCodigoValidacion(NpgsqlTransaction? transaction = null);
         public Task<DestinatarioNotificacion?> Obtener(long idDestinatarioNotificacion, bool filtrarVigente = false, bool filtrarValidado = false, string? filtrarSub = null, long? filtrarIdNegocio = null, NpgsqlTransaction? transaction = null);
         public Task<DestinatarioNotificacion?> ObtenerPorCodigoValidacion(string codigoValidacion, bool validarVigencia = false, bool validarCodigoValidacionVigente = false, NpgsqlTransaction? transaction = null);
-		public Task<List<DestinatarioNotificacion>> ObtenerPorSubYNegocio(string sub, long idNegocio, bool filtrarVigente = false, bool filtrarValidado = false, NpgsqlTransaction? transaction = null);
+		public Task<List<DestinatarioNotificacion>> ObtenerPorSubYNegocio(string sub, long? idNegocio = null, bool filtrarVigente = false, bool filtrarValidado = false, long? filtrarIdTipoReceptor = null, NpgsqlTransaction? transaction = null);
         public Task<(DestinatarioNotificacion nuevoDestinatario, string codigoValidacion)> Insertar(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null);
         public Task<string> EnviarCorreoValidacionDestinatario(string correoDestino, string nombreUsuario, string nombreNegocio, string codigoValidacion);
         public Task<string> EnviarWhatsappValidacionDestinatario(string whatsappDestino, string nombreUsuario, string nombreNegocio, string codigoValidacion);
