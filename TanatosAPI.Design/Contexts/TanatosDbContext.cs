@@ -775,6 +775,27 @@ namespace TanatosAPI.Design.Contexts {
 					.HasForeignKey(o => o.IdDestinatarioNotificacion)
 					.OnDelete(DeleteBehavior.Restrict);
 			});
+
+			modelBuilder.Entity<WhatsappUsuario>(entity => {
+				entity.HasIndex(o => new { o.Sub });
+				entity.ToTable(o => o.HasComment("Tabla que contiene números de Whatsapp asociados a un usuario."));
+				entity.Property(o => o.Id).HasComment("Identificador del número de Whatsapp.");
+				entity.Property(o => o.Sub).HasComment("Usuario al que pertenece el número de Whatsapp.");
+				entity.Property(o => o.Whatsapp).HasComment("Número de Whatsapp.");
+				entity.Property(o => o.IdAccesoValidacion).HasComment("Identificador del acceso generado para la validación.");
+				entity.Property(o => o.FechaValidacion).HasComment("Fecha en que se validó el número de Whatsapp.");
+				entity.Property(o => o.Validado).HasComment("Indicador de si el número de Whatsapp fue validado.");
+				entity.Property(o => o.HermesIdMensaje).HasComment("ID del mensaje en Hermes asociado a la notificación para validación.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el número de Whatsapp.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el número de Whatsapp.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del número de Whatsapp.");
+
+				entity
+					.HasOne(o => o.Acceso)
+					.WithMany(o => o.WhatsappsUsuario)
+					.HasForeignKey(o => o.IdAccesoValidacion)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -856,5 +877,7 @@ namespace TanatosAPI.Design.Contexts {
 		public DbSet<Permiso> AccesosRecursos { get; set; }
 
 		public DbSet<AccesoDestinatario> AccesosDestinatarios { get; set; }
+
+        public DbSet<WhatsappUsuario> WhatsappsUsuarios { get; set; }
 	}
 }

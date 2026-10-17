@@ -36,5 +36,8 @@ namespace TanatosAPI.Entities.Models {
 
 		[JsonIgnore]
 		public List<AccesoDestinatario>? AccesoDestinatarios { get; set; }
+
+		[JsonIgnore]
+		public List<WhatsappUsuario>? WhatsappsUsuario { get; set; }
 	}
 }

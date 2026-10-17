@@ -2314,6 +2314,75 @@ namespace TanatosAPI.Design.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.WhatsappUsuario", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id")
+                        .HasComment("Identificador del número de Whatsapp.");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_creacion")
+                        .HasComment("Fecha en que se creó el número de Whatsapp.");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_eliminacion")
+                        .HasComment("Fecha en que se eliminó el número de Whatsapp.");
+
+                    b.Property<DateTime?>("FechaValidacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_validacion")
+                        .HasComment("Fecha en que se validó el número de Whatsapp.");
+
+                    b.Property<string>("HermesIdMensaje")
+                        .HasColumnType("text")
+                        .HasColumnName("hermes_id_mensaje")
+                        .HasComment("ID del mensaje en Hermes asociado a la notificación para validación.");
+
+                    b.Property<long>("IdAccesoValidacion")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_acceso_validacion")
+                        .HasComment("Identificador del acceso generado para la validación.");
+
+                    b.Property<string>("Sub")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sub")
+                        .HasComment("Usuario al que pertenece el número de Whatsapp.");
+
+                    b.Property<bool>("Validado")
+                        .HasColumnType("boolean")
+                        .HasColumnName("validado")
+                        .HasComment("Indicador de si el número de Whatsapp fue validado.");
+
+                    b.Property<bool>("Vigencia")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vigencia")
+                        .HasComment("Vigencia del número de Whatsapp.");
+
+                    b.Property<string>("Whatsapp")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("whatsapp")
+                        .HasComment("Número de Whatsapp.");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdAccesoValidacion");
+
+                    b.HasIndex("Sub");
+
+                    b.ToTable("whatsapp_usuario", "tanatos", t =>
+                        {
+                            t.HasComment("Tabla que contiene números de Whatsapp asociados a un usuario.");
+                        });
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.AccesoDestinatario", b =>
                 {
                     b.HasOne("TanatosAPI.Entities.Models.Acceso", "Acceso")
@@ -2721,11 +2790,24 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("TipoRubro");
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.WhatsappUsuario", b =>
+                {
+                    b.HasOne("TanatosAPI.Entities.Models.Acceso", "Acceso")
+                        .WithMany("WhatsappsUsuario")
+                        .HasForeignKey("IdAccesoValidacion")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Acceso");
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.Acceso", b =>
                 {
                     b.Navigation("AccesoDestinatarios");
 
                     b.Navigation("Permisos");
+
+                    b.Navigation("WhatsappsUsuario");
                 });
 
             modelBuilder.Entity("TanatosAPI.Entities.Models.Cargo", b =>
