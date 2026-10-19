@@ -211,6 +211,7 @@ builder.Services.AddScoped<IAccesoDao, AccesoDao>();
 builder.Services.AddScoped<IRecursoDao, RecursoDao>();
 builder.Services.AddScoped<IPermisoDao, PermisoDao>();
 builder.Services.AddScoped<IAccesoDestinatarioDao, AccesoDestinatarioDao>();
+builder.Services.AddScoped<IWhatsappUsuarioDao, WhatsappUsuarioDao>();
 #endregion
 
 #region Singleton BCP
@@ -251,6 +252,8 @@ builder.Services.AddScoped<IAccesoBcp, AccesoBcp>();
 builder.Services.AddScoped<IRecursoBcp, RecursoBcp>();
 builder.Services.AddScoped<IPermisoBcp, PermisoBcp>();
 builder.Services.AddScoped<IAccesoDestinatarioBcp, AccesoDestinatarioBcp>();
+builder.Services.AddScoped<ITipoReceptorNotificacionBcp, TipoReceptorNotificacionBcp>();
+builder.Services.AddScoped<IWhatsappUsuarioBcp, WhatsappUsuarioBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -278,6 +281,8 @@ builder.Services.AddScoped<ProcesoAutomaticoUseCase>();
 builder.Services.AddScoped<ModeloCanvasUseCase>();
 builder.Services.AddScoped<IAccesoUseCase, AccesoUseCase>();
 builder.Services.AddScoped<IAccesoDestinatarioUseCase, AccesoDestinatarioUseCase>();
+builder.Services.AddScoped<UsuarioUseCase>();
+builder.Services.AddScoped<IWhatsappUsuarioUseCase, WhatsappUsuarioUseCase>();
 #endregion
 
 string cognitoRegion;
@@ -406,6 +411,7 @@ app.MapEvaluacionEndpoints();
 app.MapTipoProcesoAutomaticoEndpoints();
 app.MapProcesoAutomaticoEndpoints();
 app.MapModeloCanvasEndpoints();
+app.MapUsuarioEndpoints();
 
 await app.RunAsync();
 
