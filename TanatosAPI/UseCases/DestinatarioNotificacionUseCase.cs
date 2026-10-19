@@ -8,53 +8,77 @@ using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
+using TanatosAPI.Interfaces.UseCases;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-    public class DestinatarioNotificacionUseCase(IDatabaseConnectionHelper connectionHelper, NegocioUseCase negocioUseCase, IDestinatarioNotificacionBcp destinatarioNotificacionBcp, INegocioBcp negocioBcp, IUsuarioBcp usuarioBcp, ISuscripcionBcp suscripcionBcp, ICargoBcp cargoBcp, IEmpleadoBcp empleadoBcp, ITipoReceptorNotificacionDao tipoReceptorNotificacionDao) {
+    public class DestinatarioNotificacionUseCase(IDatabaseConnectionHelper connectionHelper, NegocioUseCase negocioUseCase, IWhatsappUsuarioUseCase whatsappUsuarioUseCase, IDestinatarioNotificacionBcp destinatarioNotificacionBcp, INegocioBcp negocioBcp, IUsuarioBcp usuarioBcp, ISuscripcionBcp suscripcionBcp, ICargoBcp cargoBcp, IEmpleadoBcp empleadoBcp, ITipoReceptorNotificacionBcp tipoReceptorNotificacionBcp) {
         public const short HORAS_CADUCIDAD_CODIGO_VALIDACION = 24;
 
-        public async Task<List<DestinatarioNotificacion>> ObtenerPorSubYNegocio(string sub, long idNegocio, bool filtrarVigente = false, bool filtrarValidado = false, bool crearDestinoUsuario = false, NpgsqlTransaction? transaction = null) {
-            List<DestinatarioNotificacion> destinatarios = await destinatarioNotificacionBcp.ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigente: filtrarVigente, filtrarValidado: filtrarValidado, transaction: transaction);
+        public async Task CrearDestinatarioUsuarioCorreoElectronico(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {
+			Usuario usuario = await usuarioBcp.Obtener(sub, transaction) ?? throw new InvalidOperationException("No se encuentra registro del usuario.");
+            if (string.IsNullOrWhiteSpace(usuario.CorreoElectronico)) return;
 
-            if (crearDestinoUsuario) {
-                Usuario usuario = await usuarioBcp.Obtener(sub, transaction) ?? throw new InvalidOperationException("No se encuentra registro del usuario."); ;
-                if (usuario.CorreoElectronico != null) {
-					bool destinoUsuarioYaCreado = destinatarios.Any(d => d.IdEmpleado == null && d.IdTipoReceptor == 1 /* Correo electrónico */ && d.Destino == usuario.CorreoElectronico);
-                    if (!destinoUsuarioYaCreado) {
-						(DestinatarioNotificacion nuevoDestinatario, _) = await destinatarioNotificacionBcp.Insertar(
-						    sub,
-						    idNegocio,
-						    null,
-						    1, // Correo electrónico
-						    "Mi correo electrónico",
-						    usuario.CorreoElectronico,
-						    true,
-						    transaction
-					    );
-						destinatarios.Add(nuevoDestinatario);
-					}
-				}
+            // Se buscan los destinatarios de correo electrónico correspondiente al usuario (IdEmpleado null)...
+            List<DestinatarioNotificacion> destinatarios = await destinatarioNotificacionBcp.ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigente: true, filtrarValidado: true, filtrarIdTipoReceptor: 1 /* Correo electrónico */, transaction: transaction);
+            destinatarios = destinatarioNotificacionBcp.FiltrarPorEmpleado(destinatarios, (long?)null);
 
-                if (usuario.Whatsapp != null) {
-					bool destinoUsuarioYaCreado = destinatarios.Any(d => d.IdEmpleado == null && d.IdTipoReceptor == 2 /* WhatsApp */ && d.Destino == usuario.Whatsapp);
-					if (!destinoUsuarioYaCreado) {
-						(DestinatarioNotificacion nuevoDestinatario, _) = await destinatarioNotificacionBcp.Insertar(
-							sub,
-							idNegocio,
-							null,
-							2, // WhatsApp
-							"Mi número de WhatsApp",
-							usuario.Whatsapp,
-							true,
-							transaction
-						);
-						destinatarios.Add(nuevoDestinatario);
-					}
-				}
+            // Se eliminan correos anteriores que ya no aplican al usuario...
+			foreach (DestinatarioNotificacion destinatarioEliminar in destinatarios.Where(d => d.Destino != usuario.CorreoElectronico)) {
+                await destinatarioNotificacionBcp.Eliminar(destinatarioEliminar, transaction);
             }
+            destinatarios.RemoveAll(d => d.Destino != usuario.CorreoElectronico);
 
-            return destinatarios;
+            // Si no existe un destinatario para el correo electrónico del usuario, se crea ya validado...
+			if (!destinatarios.Any(d => d.Destino == usuario.CorreoElectronico)) {
+				(DestinatarioNotificacion nuevoDestinatario, _) = await destinatarioNotificacionBcp.Insertar(
+					sub,
+					idNegocio,
+					null,
+					1, // Correo electrónico
+					"Mi correo electrónico",
+					usuario.CorreoElectronico,
+					true,
+					transaction
+				);
+			}
+		}
+
+		public async Task CrearDestinatarioUsuarioWhatsapp(string sub, long idNegocio, NpgsqlTransaction? transaction = null) {
+            WhatsappUsuario? whatsappUsuario = await whatsappUsuarioUseCase.ObtenerUltimoVigente(sub, transaction);
+
+			// Se buscan los destinatarios de Whatsapp correspondiente al usuario (IdEmpleado null)...
+			List<DestinatarioNotificacion> destinatarios = await destinatarioNotificacionBcp.ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigente: true, filtrarValidado: true, filtrarIdTipoReceptor: 2 /* Whatsapp */, transaction: transaction);
+			destinatarios = destinatarioNotificacionBcp.FiltrarPorEmpleado(destinatarios, (long?)null);
+
+			// Se eliminan Whatsapp anteriores que ya no aplican al usuario...
+			foreach (DestinatarioNotificacion destinatarioEliminar in destinatarios.Where(d => d.Destino != whatsappUsuario?.Whatsapp)) {
+				await destinatarioNotificacionBcp.Eliminar(destinatarioEliminar, transaction);
+			}
+			destinatarios.RemoveAll(d => d.Destino != whatsappUsuario?.Whatsapp);
+
+			// Si no existe un destinatario para el Whatsapp del usuario, se crea solo si el número de Whatsapp ya fue validado...
+			if (whatsappUsuario != null && whatsappUsuario.Validado && !destinatarios.Any(d => d.Destino == whatsappUsuario.Whatsapp)) {
+				(DestinatarioNotificacion nuevoDestinatario, _) = await destinatarioNotificacionBcp.Insertar(
+					sub,
+					idNegocio,
+					null,
+					2, // Whatsapp
+					"Mi WhatsApp",
+					whatsappUsuario.Whatsapp,
+					true,
+					transaction
+				);
+			}
+		}
+
+		public async Task<List<DestinatarioNotificacion>> ObtenerPorSubYNegocio(string sub, long idNegocio, bool filtrarVigente = false, bool filtrarValidado = false, bool crearDestinoUsuario = false, NpgsqlTransaction? transaction = null) {
+			if (crearDestinoUsuario) {
+		        await CrearDestinatarioUsuarioCorreoElectronico(sub, idNegocio, transaction);
+                await CrearDestinatarioUsuarioWhatsapp(sub, idNegocio, transaction);
+			}
+
+			return await destinatarioNotificacionBcp.ObtenerPorSubYNegocio(sub, idNegocio, filtrarVigente: filtrarVigente, filtrarValidado: filtrarValidado, transaction: transaction);
 		}
 
         public async Task<List<DestinatarioNotificacion>> ObtenerDestinatariosNormaSuscrita(NormaSuscrita normaSuscrita, NpgsqlTransaction? transaction = null) {
@@ -170,8 +194,8 @@ namespace TanatosAPI.UseCases {
             DestinatarioNotificacion? destinatarioSeleccionado = await destinatarioNotificacionBcp.Obtener(idDestinatario, filtrarVigente: true, filtrarValidado: true, filtrarSub: sub, filtrarIdNegocio: idNegocio, transaction: transaction);
 			if (destinatarioSeleccionado == null) return false;
 
-			// Se valida que el tipo de receptor esté vigente...
-			TipoReceptorNotificacion? tipoReceptorDestinatario = await tipoReceptorNotificacionDao.ObtenerPorId(destinatarioSeleccionado.IdTipoReceptor, transaction);
+            // Se valida que el tipo de receptor esté vigente...
+            TipoReceptorNotificacion? tipoReceptorDestinatario = await tipoReceptorNotificacionBcp.Obtener(destinatarioSeleccionado.IdTipoReceptor, transaction: transaction);
 			if (tipoReceptorDestinatario == null || !tipoReceptorDestinatario.Vigencia) {
 				return false;
 			}
