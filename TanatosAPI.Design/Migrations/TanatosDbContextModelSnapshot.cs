@@ -2235,11 +2235,6 @@ namespace TanatosAPI.Design.Migrations
                         .HasColumnName("user_name")
                         .HasComment("User name del usuario.");
 
-                    b.Property<string>("Whatsapp")
-                        .HasColumnType("text")
-                        .HasColumnName("whatsapp")
-                        .HasComment("Número de WhatsApp del usuario.");
-
                     b.HasKey("Sub");
 
                     b.HasIndex("FlowCustomerId")

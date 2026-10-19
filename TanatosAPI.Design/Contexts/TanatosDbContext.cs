@@ -587,7 +587,6 @@ namespace TanatosAPI.Design.Contexts {
                 entity.Property(o => o.Nombre).HasComment("Nombre del usuario.");
                 entity.Property(o => o.Apellido).HasComment("Apellido del usuario.");
                 entity.Property(o => o.CorreoElectronico).HasComment("Correo electrónico del usuario.");
-				entity.Property(o => o.Whatsapp).HasComment("Número de WhatsApp del usuario.");
 				entity.Property(o => o.FechaCreacion).HasComment("Fecha de creación del usuario.");
 			});
 
