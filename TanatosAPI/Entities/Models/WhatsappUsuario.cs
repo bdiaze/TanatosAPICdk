@@ -21,9 +21,8 @@ namespace TanatosAPI.Entities.Models {
 		[Column("whatsapp")]
 		public required string Whatsapp { get; set; }
 
-		[Required]
 		[Column("id_acceso_validacion")]
-		public required long IdAccesoValidacion { get; set; }
+		public long? IdAccesoValidacion { get; set; }
 
 		[Column("fecha_validacion", TypeName = "timestamp with time zone")]
 		public DateTime? FechaValidacion { get; set; }

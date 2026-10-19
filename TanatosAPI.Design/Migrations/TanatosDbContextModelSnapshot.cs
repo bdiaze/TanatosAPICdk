@@ -2339,7 +2339,7 @@ namespace TanatosAPI.Design.Migrations
                         .HasColumnName("hermes_id_mensaje")
                         .HasComment("ID del mensaje en Hermes asociado a la notificación para validación.");
 
-                    b.Property<long>("IdAccesoValidacion")
+                    b.Property<long?>("IdAccesoValidacion")
                         .HasColumnType("bigint")
                         .HasColumnName("id_acceso_validacion")
                         .HasComment("Identificador del acceso generado para la validación.");
@@ -2790,8 +2790,7 @@ namespace TanatosAPI.Design.Migrations
                     b.HasOne("TanatosAPI.Entities.Models.Acceso", "Acceso")
                         .WithMany("WhatsappsUsuario")
                         .HasForeignKey("IdAccesoValidacion")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Acceso");
                 });
