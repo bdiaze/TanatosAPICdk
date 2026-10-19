@@ -12,7 +12,7 @@ namespace TanatosAPI.Repositories {
     public class UsuarioDao(IDatabaseConnectionHelper connectionHelper) : IUsuarioDao {
 		public async Task<Usuario?> Obtener(string sub, NpgsqlTransaction? transaction = null) {
 			string query =
-				"SELECT SUB, USER_NAME, FLOW_CUSTOMER_ID, NOMBRE, APELLIDO, CORREO_ELECTRONICO, WHATSAPP, FECHA_CREACION FROM TANATOS.USUARIO " +
+				"SELECT SUB, USER_NAME, FLOW_CUSTOMER_ID, NOMBRE, APELLIDO, CORREO_ELECTRONICO, FECHA_CREACION FROM TANATOS.USUARIO " +
                 "WHERE SUB = @SUB";
 
 			bool disposeConnection = transaction?.Connection == null;
@@ -33,7 +33,6 @@ namespace TanatosAPI.Repositories {
 						Nombre = await reader.IsDBNullAsync(reader.GetOrdinal("NOMBRE")) ? null : reader.GetString(reader.GetOrdinal("NOMBRE")),
 						Apellido = await reader.IsDBNullAsync(reader.GetOrdinal("APELLIDO")) ? null : reader.GetString(reader.GetOrdinal("APELLIDO")),
 						CorreoElectronico = await reader.IsDBNullAsync(reader.GetOrdinal("CORREO_ELECTRONICO")) ? null : reader.GetString(reader.GetOrdinal("CORREO_ELECTRONICO")),
-						Whatsapp = await reader.IsDBNullAsync(reader.GetOrdinal("WHATSAPP")) ? null : reader.GetString(reader.GetOrdinal("WHATSAPP")),
 						FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
 					};
 				}
@@ -48,7 +47,7 @@ namespace TanatosAPI.Repositories {
 
 		public async Task<Usuario?> ObtenerPorUserName(string userName, NpgsqlTransaction? transaction = null) {
 			string query =
-				"SELECT SUB, USER_NAME, FLOW_CUSTOMER_ID, NOMBRE, APELLIDO, CORREO_ELECTRONICO, WHATSAPP, FECHA_CREACION FROM TANATOS.USUARIO " +
+				"SELECT SUB, USER_NAME, FLOW_CUSTOMER_ID, NOMBRE, APELLIDO, CORREO_ELECTRONICO, FECHA_CREACION FROM TANATOS.USUARIO " +
 				"WHERE USER_NAME = @USERNAME";
 
 			bool disposeConnection = transaction?.Connection == null;
@@ -69,7 +68,6 @@ namespace TanatosAPI.Repositories {
 						Nombre = await reader.IsDBNullAsync(reader.GetOrdinal("NOMBRE")) ? null : reader.GetString(reader.GetOrdinal("NOMBRE")),
 						Apellido = await reader.IsDBNullAsync(reader.GetOrdinal("APELLIDO")) ? null : reader.GetString(reader.GetOrdinal("APELLIDO")),
 						CorreoElectronico = await reader.IsDBNullAsync(reader.GetOrdinal("CORREO_ELECTRONICO")) ? null : reader.GetString(reader.GetOrdinal("CORREO_ELECTRONICO")),
-						Whatsapp = await reader.IsDBNullAsync(reader.GetOrdinal("WHATSAPP")) ? null : reader.GetString(reader.GetOrdinal("WHATSAPP")),
 						FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
 					};
 				}
@@ -84,7 +82,7 @@ namespace TanatosAPI.Repositories {
 
 		public async Task<Usuario?> ObtenerPorFlowCustomerId(string flowCustomerId, NpgsqlTransaction? transaction = null) {
 			string query =
-				"SELECT SUB, USER_NAME, FLOW_CUSTOMER_ID, NOMBRE, APELLIDO, CORREO_ELECTRONICO, WHATSAPP, FECHA_CREACION FROM TANATOS.USUARIO " +
+				"SELECT SUB, USER_NAME, FLOW_CUSTOMER_ID, NOMBRE, APELLIDO, CORREO_ELECTRONICO, FECHA_CREACION FROM TANATOS.USUARIO " +
 				"WHERE FLOW_CUSTOMER_ID = @FLOWCUSTOMERID";
 
             bool disposeConnection = transaction?.Connection == null;
@@ -105,7 +103,6 @@ namespace TanatosAPI.Repositories {
 						Nombre = await reader.IsDBNullAsync(reader.GetOrdinal("NOMBRE")) ? null : reader.GetString(reader.GetOrdinal("NOMBRE")),
 						Apellido = await reader.IsDBNullAsync(reader.GetOrdinal("APELLIDO")) ? null : reader.GetString(reader.GetOrdinal("APELLIDO")),
 						CorreoElectronico = await reader.IsDBNullAsync(reader.GetOrdinal("CORREO_ELECTRONICO")) ? null : reader.GetString(reader.GetOrdinal("CORREO_ELECTRONICO")),
-						Whatsapp = await reader.IsDBNullAsync(reader.GetOrdinal("WHATSAPP")) ? null : reader.GetString(reader.GetOrdinal("WHATSAPP")),
 						FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
 					};
                 }
@@ -120,8 +117,8 @@ namespace TanatosAPI.Repositories {
 
 		public async Task Insertar(Usuario item, NpgsqlTransaction? transaction = null) {
 			string query =
-				"INSERT INTO TANATOS.USUARIO(SUB, USER_NAME, FLOW_CUSTOMER_ID, NOMBRE, APELLIDO, CORREO_ELECTRONICO, WHATSAPP, FECHA_CREACION) " +
-				"VALUES (@SUB, @USERNAME, @FLOWCUSTOMERID, @NOMBRE, @APELLIDO, @CORREOELECTRONICO, @WHATSAPP, @FECHACREACION)";
+				"INSERT INTO TANATOS.USUARIO(SUB, USER_NAME, FLOW_CUSTOMER_ID, NOMBRE, APELLIDO, CORREO_ELECTRONICO, FECHA_CREACION) " +
+				"VALUES (@SUB, @USERNAME, @FLOWCUSTOMERID, @NOMBRE, @APELLIDO, @CORREOELECTRONICO, @FECHACREACION)";
 
             bool disposeConnection = transaction?.Connection == null;
             NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
@@ -134,7 +131,6 @@ namespace TanatosAPI.Repositories {
                 command.Parameters.AddWithValue("NOMBRE", (object?)item.Nombre ?? DBNull.Value);
                 command.Parameters.AddWithValue("APELLIDO", (object?)item.Apellido ?? DBNull.Value);
                 command.Parameters.AddWithValue("CORREOELECTRONICO", (object?)item.CorreoElectronico ?? DBNull.Value);
-				command.Parameters.AddWithValue("WHATSAPP", (object?)item.Whatsapp ?? DBNull.Value);
 				command.Parameters.AddWithValue("FECHACREACION", item.FechaCreacion);
 				await command.ExecuteNonQueryAsync();
             } finally {
@@ -147,7 +143,7 @@ namespace TanatosAPI.Repositories {
 		public async Task Actualizar(Usuario item, NpgsqlTransaction? transaction = null) {
 			string query =
 				"UPDATE TANATOS.USUARIO SET USER_NAME = @USERNAME, FLOW_CUSTOMER_ID = @FLOWCUSTOMERID, NOMBRE = @NOMBRE, " +
-				"APELLIDO = @APELLIDO, CORREO_ELECTRONICO = @CORREOELECTRONICO, WHATSAPP = @WHATSAPP, FECHA_CREACION = @FECHACREACION " +
+				"APELLIDO = @APELLIDO, CORREO_ELECTRONICO = @CORREOELECTRONICO, FECHA_CREACION = @FECHACREACION " +
 				"WHERE SUB = @SUB";
 
             bool disposeConnection = transaction?.Connection == null;
@@ -160,7 +156,6 @@ namespace TanatosAPI.Repositories {
                 command.Parameters.AddWithValue("NOMBRE", (object?)item.Nombre ?? DBNull.Value);
                 command.Parameters.AddWithValue("APELLIDO", (object?)item.Apellido ?? DBNull.Value);
                 command.Parameters.AddWithValue("CORREOELECTRONICO", (object?)item.CorreoElectronico ?? DBNull.Value);
-				command.Parameters.AddWithValue("WHATSAPP", (object?)item.Whatsapp ?? DBNull.Value);
 				command.Parameters.AddWithValue("FECHACREACION", item.FechaCreacion);
 				command.Parameters.AddWithValue("SUB", item.Sub);
                 await command.ExecuteNonQueryAsync();
