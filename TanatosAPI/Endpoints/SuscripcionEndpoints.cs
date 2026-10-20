@@ -23,7 +23,6 @@ namespace TanatosAPI.Endpoints {
 		public static IEndpointRouteBuilder MapSuscripcionEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/Suscripcion");
 			group.MapObtenerResumenEndpoint();
-			group.MapObtenerVigentesEndpoint();
 			group.MapCrearEndpoint();
 			group.MapCancelarEndpoint();
 
@@ -69,52 +68,6 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [Suscripcion] - [ObtenerResumen] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener el resumen de suscripción del cliente. " +
-						$"{ex}");
-					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
-				}
-			}).RequireAuthorization("Suscripciones.Read.Self");
-
-			return routes;
-		}
-
-		private static IEndpointRouteBuilder MapObtenerVigentesEndpoint(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, ClaimsPrincipal user, SuscripcionUseCase suscripcionUseCase) => {
-				Stopwatch stopwatch = Stopwatch.StartNew();
-
-				try {
-					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
-
-					List<Suscripcion> suscripciones = await suscripcionUseCase.ObtenerVigentesPorSubConPlan(sub);
-					List<SalSuscripcion> retorno = [.. suscripciones.Select(s => {
-						return new SalSuscripcion {
-							Id = s.Id,
-							IdPlan = s.Plan!.Id,
-							NombrePlan = s.Plan!.Nombre,
-							PrecioPlan = s.Plan!.Precio,
-							DuracionMesesPlan = s.Plan!.DuracionMeses,
-							FechaInicio = s.FechaInicio,
-							FechaExpiracion = s.FechaExpiracion,
-							FechaCancelacion = s.FechaCancelacion,
-							Estado = s.Estado,
-							TieneFlowSubscriptionId = !string.IsNullOrWhiteSpace(s.FlowSubscriptionId)
-						};
-					})];
-
-					LambdaLogger.Log(
-						$"[GET] - [Suscripcion] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Obtención exitosa de las suscripciones del cliente - Cant. Registros: {retorno.Count}.");
-
-					return Results.Ok(retorno);
-				} catch (ErrorValidacion ex) {
-					LambdaLogger.Log(
-						$"[GET] - [Suscripcion] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
-						$"Ocurrió un error de validación. " +
-						$"{ex}");
-					return Results.BadRequest(ex.MensajeGenerico);
-				} catch (Exception ex) {
-					LambdaLogger.Log(
-						$"[GET] - [Suscripcion] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error al obtener las suscripciones del cliente. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}

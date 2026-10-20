@@ -18,45 +18,11 @@ namespace TanatosAPI.Endpoints {
 	public static class NegocioEndpoints {
 		public static IEndpointRouteBuilder MapNegocioEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/Negocio");
-			group.MapObtenerInformacionUsuario();
 			group.MapObtenerVigentes();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
 			group.MapActualizarMisionVisionValoresEndpoint();
 			group.MapEliminarEndpoint();
-
-			return routes;
-		}
-
-		private static IEndpointRouteBuilder MapObtenerInformacionUsuario(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/InformacionUsuario", async (IHostEnvironment environment, ClaimsPrincipal user, ISuscripcionBcp suscripcionBcp, IUsuarioBcp usuarioBcp) => {
-				Stopwatch stopwatch = Stopwatch.StartNew();
-
-				try {
-					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
-
-					Usuario usuario = await usuarioBcp.Obtener(sub) ?? throw new InvalidOperationException("No se encuentra registro del usuario.");
-
-					SalNegocioInformacionUsuario retorno = new() {
-						Nombre = usuario.Nombre,
-						Apellido = usuario.Apellido,
-						Email = usuario.CorreoElectronico,
-						TienePlanEmpresa = await suscripcionBcp.ConsultaTienePlanEmpresa(sub)
-					};
-
-					LambdaLogger.Log(
-						$"[GET] - [Negocio] - [InformacionUsuario] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Obtención exitosa de la información del usuario.");
-
-					return Results.Ok(retorno);
-				} catch (Exception ex) {
-					LambdaLogger.Log(
-						$"[GET] - [Negocio] - [InformacionUsuario] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error al obtener la información del usuario. " +
-						$"{ex}");
-					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
-				}
-			}).RequireAuthorization("Negocios.Read.Self");
 
 			return routes;
 		}
