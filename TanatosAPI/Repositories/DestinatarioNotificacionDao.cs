@@ -34,8 +34,8 @@ namespace TanatosAPI.Repositories {
 						IdTipoReceptor = reader.GetInt64(4),
 						Alias = await reader.IsDBNullAsync(5) ? null : reader.GetString(5),
 						Destino = reader.GetString(6),
-						CodigoValidacion = reader.GetString(7),
-						FechaCaducidadCodigoValidacion = reader.GetDateTime(8),
+						CodigoValidacion = await reader.IsDBNullAsync(7) ? null : reader.GetString(7),
+						FechaCaducidadCodigoValidacion = await reader.IsDBNullAsync(8) ? null : reader.GetDateTime(8),
 						FechaValidacion = await reader.IsDBNullAsync(9) ? null : reader.GetDateTime(9),
 						Validado = reader.GetBoolean(10),
 						HermesIdMensaje = await reader.IsDBNullAsync(11) ? null : reader.GetString(11),
@@ -77,8 +77,8 @@ namespace TanatosAPI.Repositories {
 						IdTipoReceptor = reader.GetInt64(4),
 						Alias = await reader.IsDBNullAsync(5) ? null : reader.GetString(5),
 						Destino = reader.GetString(6),
-						CodigoValidacion = reader.GetString(7),
-						FechaCaducidadCodigoValidacion = reader.GetDateTime(8),
+						CodigoValidacion = await reader.IsDBNullAsync(7) ? null : reader.GetString(7),
+						FechaCaducidadCodigoValidacion = await reader.IsDBNullAsync(8) ? null : reader.GetDateTime(8),
 						FechaValidacion = await reader.IsDBNullAsync(9) ? null : reader.GetDateTime(9),
 						Validado = reader.GetBoolean(10),
 						HermesIdMensaje = await reader.IsDBNullAsync(11) ? null : reader.GetString(11),
@@ -122,8 +122,8 @@ namespace TanatosAPI.Repositories {
 						IdTipoReceptor = reader.GetInt64(4),
 						Alias = await reader.IsDBNullAsync(5) ? null : reader.GetString(5),
 						Destino = reader.GetString(6),
-						CodigoValidacion = reader.GetString(7),
-						FechaCaducidadCodigoValidacion = reader.GetDateTime(8),
+						CodigoValidacion = await reader.IsDBNullAsync(7) ? null : reader.GetString(7),
+						FechaCaducidadCodigoValidacion = await reader.IsDBNullAsync(8) ? null : reader.GetDateTime(8),
 						FechaValidacion = await reader.IsDBNullAsync(9) ? null : reader.GetDateTime(9),
 						Validado = reader.GetBoolean(10),
 						HermesIdMensaje = await reader.IsDBNullAsync(11) ? null : reader.GetString(11),
@@ -158,8 +158,8 @@ namespace TanatosAPI.Repositories {
                 command.Parameters.AddWithValue("IDTIPORECEPTOR", item.IdTipoReceptor);
                 command.Parameters.AddWithValue("ALIAS", (object?)item.Alias ?? DBNull.Value);
                 command.Parameters.AddWithValue("DESTINO", item.Destino);
-                command.Parameters.AddWithValue("CODIGOVALIDACION", item.CodigoValidacion);
-                command.Parameters.AddWithValue("FECHACADUCIDADCODIGOVALIDACION", item.FechaCaducidadCodigoValidacion);
+                command.Parameters.AddWithValue("CODIGOVALIDACION", (object?)item.CodigoValidacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("FECHACADUCIDADCODIGOVALIDACION", (object?)item.FechaCaducidadCodigoValidacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("FECHAVALIDACION", (object?)item.FechaValidacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("VALIDADO", item.Validado);
                 command.Parameters.AddWithValue("HERMESIDMENSAJE", (object?)item.HermesIdMensaje ?? DBNull.Value);
@@ -194,8 +194,8 @@ namespace TanatosAPI.Repositories {
                 command.Parameters.AddWithValue("IDTIPORECEPTOR", item.IdTipoReceptor);
                 command.Parameters.AddWithValue("ALIAS", (object?)item.Alias ?? DBNull.Value);
                 command.Parameters.AddWithValue("DESTINO", item.Destino);
-                command.Parameters.AddWithValue("CODIGOVALIDACION", item.CodigoValidacion);
-                command.Parameters.AddWithValue("FECHACADUCIDADCODIGOVALIDACION", item.FechaCaducidadCodigoValidacion);
+                command.Parameters.AddWithValue("CODIGOVALIDACION", (object?)item.CodigoValidacion ?? DBNull.Value);
+                command.Parameters.AddWithValue("FECHACADUCIDADCODIGOVALIDACION", (object?)item.FechaCaducidadCodigoValidacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("FECHAVALIDACION", (object?)item.FechaValidacion ?? DBNull.Value);
                 command.Parameters.AddWithValue("VALIDADO", item.Validado);
                 command.Parameters.AddWithValue("HERMESIDMENSAJE", (object?)item.HermesIdMensaje ?? DBNull.Value);
