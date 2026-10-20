@@ -27,7 +27,7 @@ namespace TanatosAPI.Repositories {
 						Id = reader.GetInt64(reader.GetOrdinal("ID")),
 						Sub = reader.GetString(reader.GetOrdinal("SUB")),
 						Whatsapp = reader.GetString(reader.GetOrdinal("WHATSAPP")),
-						IdAccesoValidacion = reader.GetInt64(reader.GetOrdinal("ID_ACCESO_VALIDACION")),
+						IdAccesoValidacion = await reader.IsDBNullAsync(reader.GetOrdinal("ID_ACCESO_VALIDACION")) ? null : reader.GetInt64(reader.GetOrdinal("ID_ACCESO_VALIDACION")),
 						FechaValidacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_VALIDACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_VALIDACION")),
 						Validado = reader.GetBoolean(reader.GetOrdinal("VALIDADO")),
 						HermesIdMensaje = await reader.IsDBNullAsync(reader.GetOrdinal("HERMES_ID_MENSAJE")) ? null : reader.GetString(reader.GetOrdinal("HERMES_ID_MENSAJE")),
@@ -66,7 +66,7 @@ namespace TanatosAPI.Repositories {
 						Id = reader.GetInt64(reader.GetOrdinal("ID")),
 						Sub = reader.GetString(reader.GetOrdinal("SUB")),
 						Whatsapp = reader.GetString(reader.GetOrdinal("WHATSAPP")),
-						IdAccesoValidacion = reader.GetInt64(reader.GetOrdinal("ID_ACCESO_VALIDACION")),
+						IdAccesoValidacion = await reader.IsDBNullAsync(reader.GetOrdinal("ID_ACCESO_VALIDACION")) ? null : reader.GetInt64(reader.GetOrdinal("ID_ACCESO_VALIDACION")),
 						FechaValidacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_VALIDACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_VALIDACION")),
 						Validado = reader.GetBoolean(reader.GetOrdinal("VALIDADO")),
 						HermesIdMensaje = await reader.IsDBNullAsync(reader.GetOrdinal("HERMES_ID_MENSAJE")) ? null : reader.GetString(reader.GetOrdinal("HERMES_ID_MENSAJE")),
@@ -96,7 +96,7 @@ namespace TanatosAPI.Repositories {
 				await using NpgsqlCommand command = new(query, connection, transaction);
 				command.Parameters.AddWithValue("SUB", item.Sub);
 				command.Parameters.AddWithValue("WHATSAPP", item.Whatsapp);
-				command.Parameters.AddWithValue("IDACCESOVALIDACION", item.IdAccesoValidacion);
+				command.Parameters.AddWithValue("IDACCESOVALIDACION", (object?)item.IdAccesoValidacion ?? DBNull.Value);
 				command.Parameters.AddWithValue("FECHAVALIDACION", (object?)item.FechaValidacion ?? DBNull.Value);
 				command.Parameters.AddWithValue("VALIDADO", item.Validado);
 				command.Parameters.AddWithValue("HERMESIDMENSAJE", (object?)item.HermesIdMensaje ?? DBNull.Value);
@@ -125,7 +125,7 @@ namespace TanatosAPI.Repositories {
 				await using NpgsqlCommand command = new(query, connection, transaction);
 				command.Parameters.AddWithValue("SUB", item.Sub);
 				command.Parameters.AddWithValue("WHATSAPP", item.Whatsapp);
-				command.Parameters.AddWithValue("IDACCESOVALIDACION", item.IdAccesoValidacion);
+				command.Parameters.AddWithValue("IDACCESOVALIDACION", (object?)item.IdAccesoValidacion ?? DBNull.Value);
 				command.Parameters.AddWithValue("FECHAVALIDACION", (object?)item.FechaValidacion ?? DBNull.Value);
 				command.Parameters.AddWithValue("VALIDADO", item.Validado);
 				command.Parameters.AddWithValue("HERMESIDMENSAJE", (object?)item.HermesIdMensaje ?? DBNull.Value);
