@@ -1,8 +1,6 @@
 ﻿using Npgsql;
 using System.Text.RegularExpressions;
-using TanatosAPI.Business;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Entities.Others.Hermes;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
@@ -18,7 +16,7 @@ namespace TanatosAPI.UseCases {
 			return whatsappUsuario;
 		}
 
-		public async Task<WhatsappUsuario?> ActualizarWhatsapp(string sub, string? whatsapp, IDatabaseTransaction? transaction = null) {
+		public async Task ActualizarWhatsapp(string sub, string? whatsapp, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
 			IDatabaseConnection? connection = null;
 			try {
@@ -84,8 +82,43 @@ namespace TanatosAPI.UseCases {
 				if (ownsTransaction) {
 					await transaction!.CommitAsync();
 				}
+			} catch {
+				if (ownsTransaction && transaction != null) {
+					await transaction.RollbackAsync();
+				}
+				throw;
+			} finally {
+				if (ownsTransaction) {
+					if (transaction != null) await transaction.DisposeAsync();
+					if (connection != null) await connection.DisposeAsync();
+				}
+			}
+		}
 
-				return whatsappUsuario;
+		public async Task ValidarWhatsapp(long idWhatsappUsuario, string codigoAcceso, IDatabaseTransaction? transaction = null) {
+			bool ownsTransaction = transaction == null;
+			IDatabaseConnection? connection = null;
+			try {
+				if (ownsTransaction) {
+					connection = await connectionHelper.ObtenerConexionWrapper();
+					transaction = await connection.BeginTransactionAsync();
+				}
+
+				// Se valida que el código de acceso tenga permisos para validar el número de Whatsapp...
+				_ = await accesoUseCase.ValidarAcceso(codigoAcceso, "whatsapp_usuario", idWhatsappUsuario.ToString(), "validar", transaction!.NpgsqlTransaction());
+				
+				// Se valida que el número de Whatsapp esté vigente...
+				WhatsappUsuario? whatsappUsuario = await whatsappUsuarioBcp.Obtener(idWhatsappUsuario, transaction: transaction!.NpgsqlTransaction());
+				if (!whatsappUsuarioBcp.EstaVigente(whatsappUsuario)) {
+					throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El número de Whatsapp no existe o no está vigente", "El código de acceso es inválido.");
+				}
+
+				// Se procede a validar el número de Whatsapp...
+				await whatsappUsuarioBcp.Validar(whatsappUsuario!, transaction!.NpgsqlTransaction());
+
+				if (ownsTransaction) {
+					await transaction!.CommitAsync();
+				}
 			} catch {
 				if (ownsTransaction && transaction != null) {
 					await transaction.RollbackAsync();
