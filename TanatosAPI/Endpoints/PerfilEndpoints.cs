@@ -1,29 +1,101 @@
 ﻿using Amazon.Lambda.Core;
+using Microsoft.AspNetCore.Mvc;
 using Scriban.Runtime;
 using System.Diagnostics;
 using System.Net;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.Hermes;
 using TanatosAPI.Entities.Others.Perfil;
-using TanatosAPI.Entities.Others.Suscripcion;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Helpers;
+using TanatosAPI.Interfaces.UseCases;
 using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
 	public static class PerfilEndpoints {
 		public static void MapPerfilEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/Perfil");
+			group.MapObtenerEndpoint();
+			group.MapActualizarWhatsappEndpoint();
 			group.MapConfiguracionInicialEndpoint();
 			group.MapEnviarCodigoVerificacion();
 
             RouteGroupBuilder publicGroup = routes.MapGroup("/public/Perfil");
+			publicGroup.MapValidarWhatsappEndpoint();
             publicGroup.MapConfirmarRegistro();
             publicGroup.MapReenviarCodigoVerificacion();
         }
+
+		private static void MapObtenerEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/", async (IHostEnvironment environment, ClaimsPrincipal user, UsuarioUseCase usuarioUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+
+					(Usuario usuario, WhatsappUsuario? whatsappUsuario, bool tienePlanEmpresa) = await usuarioUseCase.ObtenerConWhatsappYPlanEmpresa(sub);
+
+					SalPerfil retorno = new() {
+						Nombre = usuario.Nombre,
+						Apellido = usuario.Apellido,
+						Email = usuario.CorreoElectronico,
+						Whatsapp = whatsappUsuario?.Whatsapp,
+						WhatsappValidado = whatsappUsuario?.Validado,
+						TienePlanEmpresa = tienePlanEmpresa
+					};
+
+					LambdaLogger.Log(
+						$"[GET] - [Perfil] - [Obtener] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de la información del usuario.");
+					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Perfil] - [Obtener] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [Perfil] - [Obtener] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener la información del usuario. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Perfil.Read.Self");
+		}
+
+		private static void MapActualizarWhatsappEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPut("/Whatsapp", async (EntPerfilActualizarWhatsapp entrada, IHostEnvironment environment, ClaimsPrincipal user, IWhatsappUsuarioUseCase whatsappUsuarioUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+
+					await whatsappUsuarioUseCase.ActualizarWhatsapp(sub, entrada.Whatsapp);
+
+					LambdaLogger.Log(
+						$"[PUT] - [Perfil] - [ActualizarWhatsapp] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Actualización exitosa del número de WhatsApp del usuario.");
+					return Results.Ok();
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [Perfil] - [ActualizarWhatsapp] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [Perfil] - [ActualizarWhatsapp] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al actualizar el número de WhatsApp del usuario. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Perfil.Read.Self", "Perfil.Write.Self");
+		}
 
 		private static IEndpointRouteBuilder MapConfiguracionInicialEndpoint(this IEndpointRouteBuilder routes) {
 			routes.MapPost("/ConfiguracionInicial", async (EntPerfilConfiguracionInicial entrada, IHostEnvironment environment, PerfilUseCase perfilUseCase) => {
@@ -160,7 +232,34 @@ namespace TanatosAPI.Endpoints {
 			);
 		}
 
-        private static void MapConfirmarRegistro(this IEndpointRouteBuilder routes) {
+		private static void MapValidarWhatsappEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPut("/ValidarWhatsapp", async (EntPerfilValidarWhatsapp entrada, IHostEnvironment environment, IWhatsappUsuarioUseCase whatsappUsuarioUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					await whatsappUsuarioUseCase.ValidarWhatsapp(entrada.IdWhatsappUsuario, entrada.CodigoAcceso);
+
+					LambdaLogger.Log(
+						$"[PUT] - [Perfil] - [ValidarWhatsapp] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Validación exitosa del número de WhatsApp del usuario.");
+					return Results.Ok();
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [Perfil] - [ValidarWhatsapp] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. " +
+						$"{ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[PUT] - [Perfil] - [ValidarWhatsapp] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al validar el número de WhatsApp del usuario. " +
+						$"{ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).AllowAnonymous();
+		}
+
+		private static void MapConfirmarRegistro(this IEndpointRouteBuilder routes) {
             routes.MapPost("/ConfirmarRegistro", async (EntPerfilConfirmarRegistro entrada, IHostEnvironment environment, ICognitoHelper cognitoHelper) => {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 

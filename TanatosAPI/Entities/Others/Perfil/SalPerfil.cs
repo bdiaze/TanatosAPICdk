@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace TanatosAPI.Entities.Others.Usuario {
+namespace TanatosAPI.Entities.Others.Perfil {
 	[ExcludeFromCodeCoverage]
-	public class SalUsuario {
+	public class SalPerfil {
 		public string? Nombre { get; set; }
 		public string? Apellido { get; set; }
 		public string? Email { get; set; }
