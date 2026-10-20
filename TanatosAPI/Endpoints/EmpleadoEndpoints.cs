@@ -202,7 +202,6 @@ namespace TanatosAPI.Endpoints {
 								destinatario.IdTipoReceptor,
 								$"{tipoReceptor.Nombre} de {nuevo.Nombre}",
 								destinatario.Destino,
-								false,
 								transaction
 							);
 
@@ -361,7 +360,6 @@ namespace TanatosAPI.Endpoints {
 								destinatario.IdTipoReceptor,
 								$"{tipoReceptor.Nombre} de {existente.Nombre}",
 								destinatario.Destino,
-								false,
 								transaction
 							);
 
