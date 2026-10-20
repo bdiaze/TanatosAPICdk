@@ -222,7 +222,6 @@ namespace TanatosAPI.Design.Migrations
                         .HasComment("Alias del destinatario.");
 
                     b.Property<string>("CodigoValidacion")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("codigo_validacion")
                         .HasComment("Código generado para validar que el destinatario se suscribe a la notificación.");
@@ -233,7 +232,7 @@ namespace TanatosAPI.Design.Migrations
                         .HasColumnName("destino")
                         .HasComment("Destino de la notificación. Puede ser un correo o un número de Whatsapp.");
 
-                    b.Property<DateTime>("FechaCaducidadCodigoValidacion")
+                    b.Property<DateTime?>("FechaCaducidadCodigoValidacion")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fecha_caducidad_codigo_validacion")

@@ -35,13 +35,11 @@ namespace TanatosAPI.Entities.Models {
         [Column("destino")]
         public required string Destino { get; set; }
 
-		[Required]
         [Column("codigo_validacion")]
-        public required string CodigoValidacion { get; set; }
+        public string? CodigoValidacion { get; set; }
 
-		[Required]
 		[Column("fecha_caducidad_codigo_validacion", TypeName = "timestamp with time zone")]
-		public required DateTime FechaCaducidadCodigoValidacion { get; set; }
+		public DateTime? FechaCaducidadCodigoValidacion { get; set; }
 
 		[Column("fecha_validacion", TypeName = "timestamp with time zone")]
 		public DateTime? FechaValidacion { get; set; }

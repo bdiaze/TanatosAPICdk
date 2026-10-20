@@ -3341,3 +3341,28 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261020205659_ColumnOpcionalCodigoValidacionDestinatarioNotificacion') THEN
+    ALTER TABLE tanatos.destinatario_notificacion ALTER COLUMN fecha_caducidad_codigo_validacion DROP NOT NULL;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261020205659_ColumnOpcionalCodigoValidacionDestinatarioNotificacion') THEN
+    ALTER TABLE tanatos.destinatario_notificacion ALTER COLUMN codigo_validacion DROP NOT NULL;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261020205659_ColumnOpcionalCodigoValidacionDestinatarioNotificacion') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261020205659_ColumnOpcionalCodigoValidacionDestinatarioNotificacion', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+
