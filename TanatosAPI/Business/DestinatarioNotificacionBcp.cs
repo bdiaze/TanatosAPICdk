@@ -103,26 +103,26 @@ namespace TanatosAPI.Business {
 			return destinatarios;
 		}
 
-		public async Task<(DestinatarioNotificacion nuevoDestinatario, string codigoValidacion)> Insertar(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null) {
-			string codigoValidacion = await GenerarCodigoValidacion(transaction);
+		public async Task<(DestinatarioNotificacion nuevoDestinatario, string? codigoValidacion)> Insertar(string sub, long idNegocio, long? idEmpleado, long idTipoReceptor, string? alias, string destino, bool yaValidado = false, NpgsqlTransaction? transaction = null) {
+			string? codigoValidacion = yaValidado ? null : await GenerarCodigoValidacion(transaction);
 			DateTime nowUtc = dateTimeProvider.UtcNow;
 
-            DestinatarioNotificacion nuevoDestinatario = new() {
-                Id = 0,
-                Sub = sub,
-                IdNegocio = idNegocio,
-                IdEmpleado = idEmpleado,
-                IdTipoReceptor = idTipoReceptor,
-                Alias = alias,
-                Destino = destino,
-                CodigoValidacion = CryptoHelper.HashSHA256(codigoValidacion),
-                FechaCaducidadCodigoValidacion = nowUtc.AddHours(HORAS_CADUCIDAD_CODIGO_VALIDACION),
-                Validado = yaValidado,
-                HermesIdMensaje = null,
-                FechaValidacion = yaValidado ? nowUtc : null,
-                FechaCreacion = nowUtc,
-                Vigencia = true
-            };
+			DestinatarioNotificacion nuevoDestinatario = new() {
+				Id = 0,
+				Sub = sub,
+				IdNegocio = idNegocio,
+				IdEmpleado = idEmpleado,
+				IdTipoReceptor = idTipoReceptor,
+				Alias = alias,
+				Destino = destino,
+				CodigoValidacion = yaValidado ? null : CryptoHelper.HashSHA256(codigoValidacion!),
+				FechaCaducidadCodigoValidacion = yaValidado ? null : nowUtc.AddHours(HORAS_CADUCIDAD_CODIGO_VALIDACION),
+				Validado = yaValidado,
+				HermesIdMensaje = null,
+				FechaValidacion = yaValidado ? nowUtc : null,
+				FechaCreacion = nowUtc,
+				Vigencia = true
+			};
             nuevoDestinatario.Id = await destinatarioNotificacionDao.Insertar(nuevoDestinatario, transaction);
 			return (nuevoDestinatario, codigoValidacion);
         }
