@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.Auth;
 using TanatosAPI.Entities.Others.Cargo;
+using TanatosAPI.Entities.Others.CuentaFinanciera;
 using TanatosAPI.Entities.Others.DestinatarioNotificacion;
 using TanatosAPI.Entities.Others.DocumentoAdjunto;
 using TanatosAPI.Entities.Others.Empleado;
@@ -24,6 +25,7 @@ using TanatosAPI.Entities.Others.Plan;
 using TanatosAPI.Entities.Others.PreguntaFrecuente;
 using TanatosAPI.Entities.Others.ProcesoAutomatico;
 using TanatosAPI.Entities.Others.Suscripcion;
+using TanatosAPI.Entities.Others.TipoCuentaFinanciera;
 using TanatosAPI.Entities.Others.TipoPeriodicidad;
 using TanatosAPI.Entities.Others.TipoProcesoAutomatico;
 using TanatosAPI.Entities.Others.VideoTutorial;
@@ -181,6 +183,13 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(SalPerfil))]
 	[JsonSerializable(typeof(EntPerfilActualizarWhatsapp))]
 	[JsonSerializable(typeof(EntPerfilValidarWhatsapp))]
+	[JsonSerializable(typeof(TipoCuentaFinanciera))]
+	[JsonSerializable(typeof(List<TipoCuentaFinanciera>))]
+	[JsonSerializable(typeof(List<SalTipoCuentaFinanciera>))]
+	[JsonSerializable(typeof(SalCuentaFinanciera))]
+	[JsonSerializable(typeof(List<SalCuentaFinanciera>))]
+	[JsonSerializable(typeof(EntCuentaFinancieraCrear))]
+	[JsonSerializable(typeof(EntCuentaFinancieraActualizar))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }
