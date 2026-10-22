@@ -170,6 +170,63 @@ namespace TanatosAPI.Design.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.CategoriaFinanciera", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id")
+                        .HasComment("Identificador de la categoría financiera.");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_creacion")
+                        .HasComment("Fecha en que se creó la categoría financiera.");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_eliminacion")
+                        .HasComment("Fecha en que se eliminó la categoría financiera.");
+
+                    b.Property<long>("IdNegocio")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_negocio")
+                        .HasComment("Identificador del negocio al que pertenece la categoría financiera.");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nombre")
+                        .HasComment("Nombre de la categoría financiera.");
+
+                    b.Property<string>("Sub")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sub")
+                        .HasComment("Identificador del usuario al que pertenece la categoría financiera.");
+
+                    b.Property<short>("TipoMovimiento")
+                        .HasColumnType("smallint")
+                        .HasColumnName("tipo_movimiento")
+                        .HasComment("Tipo de movimiento permitido por la categoría financiera - 1: Ingreso - 2: Gasto - 3: Ambos.");
+
+                    b.Property<bool>("Vigencia")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vigencia")
+                        .HasComment("Vigencia de la categoría financiera.");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdNegocio");
+
+                    b.ToTable("categoria_financiera", "tanatos", t =>
+                        {
+                            t.HasComment("Tabla que contiene las categorías financieras de un usuario.");
+                        });
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.CategoriaNorma", b =>
                 {
                     b.Property<long>("Id")
@@ -203,6 +260,82 @@ namespace TanatosAPI.Design.Migrations
                     b.ToTable("categoria_norma", "tanatos", t =>
                         {
                             t.HasComment("Tabla que contiene las categorías de las normas");
+                        });
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.CuentaFinanciera", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id")
+                        .HasComment("Identificador de la cuenta financiera.");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_creacion")
+                        .HasComment("Fecha en que se creó la cuenta financiera.");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_eliminacion")
+                        .HasComment("Fecha en que se eliminó la cuenta financiera.");
+
+                    b.Property<DateTime>("FechaSaldoInicial")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_saldo_inicial")
+                        .HasComment("Fecha en que se registra el saldo inicial.");
+
+                    b.Property<long>("IdNegocio")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_negocio")
+                        .HasComment("Identificador del negocio al que pertenece la cuenta financiera.");
+
+                    b.Property<long>("IdTipoCuentaFinanciera")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_tipo_cuenta_financiera")
+                        .HasComment("Identificador del tipo de cuenta financiera.");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nombre")
+                        .HasComment("Nombre de la cuenta financiera.");
+
+                    b.Property<decimal>("SaldoActual")
+                        .HasColumnType("numeric")
+                        .HasColumnName("saldo_actual")
+                        .HasComment("Saldo actual que tiene la cuenta.");
+
+                    b.Property<decimal>("SaldoInicial")
+                        .HasColumnType("numeric")
+                        .HasColumnName("saldo_inicial")
+                        .HasComment("Saldo inicial que tenía la cuenta.");
+
+                    b.Property<string>("Sub")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sub")
+                        .HasComment("Identificador del usuario al que pertenece la cuenta financiera.");
+
+                    b.Property<bool>("Vigencia")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vigencia")
+                        .HasComment("Vigencia de la cuenta financiera.");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdNegocio");
+
+                    b.HasIndex("IdTipoCuentaFinanciera");
+
+                    b.HasIndex("Sub", "IdNegocio");
+
+                    b.ToTable("cuenta_financiera", "tanatos", t =>
+                        {
+                            t.HasComment("Tabla que contiene las cuentas financieras de un usuario.");
                         });
                 });
 
@@ -948,6 +1081,78 @@ namespace TanatosAPI.Design.Migrations
                     b.ToTable("modelo_canvas", "tanatos", t =>
                         {
                             t.HasComment("Tabla que contiene los modelos Canvas asociados al negocio del usuario.");
+                        });
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.MovimientoFinanciero", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id")
+                        .HasComment("Identificador del movimiento financiero.");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Descripcion")
+                        .HasColumnType("text")
+                        .HasColumnName("descripcion")
+                        .HasComment("Descripción del movimiento.");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_creacion")
+                        .HasComment("Fecha en que se creó el movimiento.");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_eliminacion")
+                        .HasComment("Fecha en que se eliminó el movimiento.");
+
+                    b.Property<DateTime>("FechaMovimiento")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_movimiento")
+                        .HasComment("Fecha en que se lleva a cabo el movimiento.");
+
+                    b.Property<long?>("IdCategoriaFinanciera")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_categoria_financiera")
+                        .HasComment("Identificador de la categoría financiera a la que pertenece el movimiento.");
+
+                    b.Property<long>("IdCuentaFinanciera")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_cuenta_financiera")
+                        .HasComment("Identificador de la cuenta financiera a la que pertenece el movimiento.");
+
+                    b.Property<decimal>("Monto")
+                        .HasColumnType("numeric")
+                        .HasColumnName("monto")
+                        .HasComment("Monto del movimiento.");
+
+                    b.Property<decimal>("Saldo")
+                        .HasColumnType("numeric")
+                        .HasColumnName("saldo")
+                        .HasComment("Saldo resultante del movimiento.");
+
+                    b.Property<short>("TipoMovimiento")
+                        .HasColumnType("smallint")
+                        .HasColumnName("tipo_movimiento")
+                        .HasComment("Tipo de movimiento - 1: Ingreso - 2: Gasto.");
+
+                    b.Property<bool>("Vigencia")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vigencia")
+                        .HasComment("Vigencia del movimiento.");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdCategoriaFinanciera");
+
+                    b.HasIndex("IdCuentaFinanciera", "FechaMovimiento");
+
+                    b.ToTable("movimiento_financiero", "tanatos", t =>
+                        {
+                            t.HasComment("Tabla que contiene los movimientos de una cuenta financiera.");
                         });
                 });
 
@@ -1945,6 +2150,32 @@ namespace TanatosAPI.Design.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.TipoCuentaFinanciera", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id")
+                        .HasComment("Identificador del tipo de cuenta financiera.");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nombre")
+                        .HasComment("Nombre del tipo de cuenta financiera.");
+
+                    b.Property<bool>("Vigencia")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vigencia")
+                        .HasComment("Vigencia del tipo de cuenta financiera.");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tipo_cuenta_financiera", "tanatos", t =>
+                        {
+                            t.HasComment("Tabla que contiene los tipos de cuentas financieras.");
+                        });
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.TipoFiscalizador", b =>
                 {
                     b.Property<long>("Id")
@@ -2407,6 +2638,36 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("Negocio");
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.CategoriaFinanciera", b =>
+                {
+                    b.HasOne("TanatosAPI.Entities.Models.Negocio", "Negocio")
+                        .WithMany("CategoriasFinancieras")
+                        .HasForeignKey("IdNegocio")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Negocio");
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.CuentaFinanciera", b =>
+                {
+                    b.HasOne("TanatosAPI.Entities.Models.Negocio", "Negocio")
+                        .WithMany("CuentasFinancieras")
+                        .HasForeignKey("IdNegocio")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanatosAPI.Entities.Models.TipoCuentaFinanciera", "TipoCuentaFinanciera")
+                        .WithMany("CuentasFinancieras")
+                        .HasForeignKey("IdTipoCuentaFinanciera")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Negocio");
+
+                    b.Navigation("TipoCuentaFinanciera");
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.DestinatarioNotificacion", b =>
                 {
                     b.HasOne("TanatosAPI.Entities.Models.Empleado", "Empleado")
@@ -2539,6 +2800,24 @@ namespace TanatosAPI.Design.Migrations
                         .IsRequired();
 
                     b.Navigation("Negocio");
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.MovimientoFinanciero", b =>
+                {
+                    b.HasOne("TanatosAPI.Entities.Models.CategoriaFinanciera", "CategoriaFinanciera")
+                        .WithMany("MovimientosFinancieros")
+                        .HasForeignKey("IdCategoriaFinanciera")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanatosAPI.Entities.Models.CuentaFinanciera", "CuentaFinanciera")
+                        .WithMany("MovimientosFinancieros")
+                        .HasForeignKey("IdCuentaFinanciera")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CategoriaFinanciera");
+
+                    b.Navigation("CuentaFinanciera");
                 });
 
             modelBuilder.Entity("TanatosAPI.Entities.Models.Negocio", b =>
@@ -2810,11 +3089,21 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("NormasSuscritas");
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.CategoriaFinanciera", b =>
+                {
+                    b.Navigation("MovimientosFinancieros");
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.CategoriaNorma", b =>
                 {
                     b.Navigation("NormasSuscritas");
 
                     b.Navigation("TemplateNormas");
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.CuentaFinanciera", b =>
+                {
+                    b.Navigation("MovimientosFinancieros");
                 });
 
             modelBuilder.Entity("TanatosAPI.Entities.Models.DestinatarioNotificacion", b =>
@@ -2839,6 +3128,10 @@ namespace TanatosAPI.Design.Migrations
             modelBuilder.Entity("TanatosAPI.Entities.Models.Negocio", b =>
                 {
                     b.Navigation("Cargos");
+
+                    b.Navigation("CategoriasFinancieras");
+
+                    b.Navigation("CuentasFinancieras");
 
                     b.Navigation("DestinatariosNotificaciones");
 
@@ -2907,6 +3200,11 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("Negocios");
 
                     b.Navigation("TemplatesActividad");
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.TipoCuentaFinanciera", b =>
+                {
+                    b.Navigation("CuentasFinancieras");
                 });
 
             modelBuilder.Entity("TanatosAPI.Entities.Models.TipoFiscalizador", b =>

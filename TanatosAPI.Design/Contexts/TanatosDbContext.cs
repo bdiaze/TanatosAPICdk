@@ -795,6 +795,87 @@ namespace TanatosAPI.Design.Contexts {
 					.HasForeignKey(o => o.IdAccesoValidacion)
 					.OnDelete(DeleteBehavior.Restrict);
 			});
+
+			modelBuilder.Entity<TipoCuentaFinanciera>(entity => {
+				entity.ToTable(o => o.HasComment("Tabla que contiene los tipos de cuentas financieras."));
+				entity.Property(o => o.Id).HasComment("Identificador del tipo de cuenta financiera.");
+				entity.Property(o => o.Nombre).HasComment("Nombre del tipo de cuenta financiera.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del tipo de cuenta financiera.");
+			});
+
+			modelBuilder.Entity<CuentaFinanciera>(entity => {
+				entity.HasIndex(o => new { o.Sub, o.IdNegocio });
+				entity.ToTable(o => o.HasComment("Tabla que contiene las cuentas financieras de un usuario."));
+				entity.Property(o => o.Id).HasComment("Identificador de la cuenta financiera.");
+				entity.Property(o => o.Sub).HasComment("Identificador del usuario al que pertenece la cuenta financiera.");
+				entity.Property(o => o.IdNegocio).HasComment("Identificador del negocio al que pertenece la cuenta financiera.");
+				entity.Property(o => o.Nombre).HasComment("Nombre de la cuenta financiera.");
+				entity.Property(o => o.IdTipoCuentaFinanciera).HasComment("Identificador del tipo de cuenta financiera.");
+				entity.Property(o => o.SaldoInicial).HasComment("Saldo inicial que tenía la cuenta.");
+				entity.Property(o => o.FechaSaldoInicial).HasComment("Fecha en que se registra el saldo inicial.");
+				entity.Property(o => o.SaldoActual).HasComment("Saldo actual que tiene la cuenta.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó la cuenta financiera.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó la cuenta financiera.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia de la cuenta financiera.");
+
+				entity
+					.HasOne(o => o.TipoCuentaFinanciera)
+					.WithMany(o => o.CuentasFinancieras)
+					.HasForeignKey(o => o.IdTipoCuentaFinanciera)
+					.OnDelete(DeleteBehavior.Restrict);
+
+				entity
+					.HasOne(o => o.Negocio)
+					.WithMany(o => o.CuentasFinancieras)
+					.HasForeignKey(o => o.IdNegocio)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
+
+			modelBuilder.Entity<CategoriaFinanciera>(entity => {
+                entity.ToTable(o => o.HasComment("Tabla que contiene las categorías financieras de un usuario."));
+				entity.Property(o => o.Id).HasComment("Identificador de la categoría financiera.");
+				entity.Property(o => o.Sub).HasComment("Identificador del usuario al que pertenece la categoría financiera.");
+				entity.Property(o => o.IdNegocio).HasComment("Identificador del negocio al que pertenece la categoría financiera.");
+				entity.Property(o => o.Nombre).HasComment("Nombre de la categoría financiera.");
+				entity.Property(o => o.TipoMovimiento).HasComment("Tipo de movimiento permitido por la categoría financiera - 1: Ingreso - 2: Gasto - 3: Ambos.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó la categoría financiera.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó la categoría financiera.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia de la categoría financiera.");
+
+				entity
+					.HasOne(o => o.Negocio)
+					.WithMany(o => o.CategoriasFinancieras)
+					.HasForeignKey(o => o.IdNegocio)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
+
+			modelBuilder.Entity<MovimientoFinanciero>(entity => {
+				entity.HasIndex(o => new { o.IdCuentaFinanciera, o.FechaMovimiento });
+				entity.ToTable(o => o.HasComment("Tabla que contiene los movimientos de una cuenta financiera."));
+				entity.Property(o => o.Id).HasComment("Identificador del movimiento financiero.");
+				entity.Property(o => o.IdCuentaFinanciera).HasComment("Identificador de la cuenta financiera a la que pertenece el movimiento.");
+				entity.Property(o => o.IdCategoriaFinanciera).HasComment("Identificador de la categoría financiera a la que pertenece el movimiento.");
+				entity.Property(o => o.TipoMovimiento).HasComment("Tipo de movimiento - 1: Ingreso - 2: Gasto.");
+				entity.Property(o => o.Monto).HasComment("Monto del movimiento.");
+				entity.Property(o => o.Saldo).HasComment("Saldo resultante del movimiento.");
+				entity.Property(o => o.FechaMovimiento).HasComment("Fecha en que se lleva a cabo el movimiento.");
+				entity.Property(o => o.Descripcion).HasComment("Descripción del movimiento.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el movimiento.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el movimiento.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del movimiento.");
+
+				entity
+					.HasOne(o => o.CuentaFinanciera)
+					.WithMany(o => o.MovimientosFinancieros)
+					.HasForeignKey(o => o.IdCuentaFinanciera)
+					.OnDelete(DeleteBehavior.Restrict);
+
+				entity
+					.HasOne(o => o.CategoriaFinanciera)
+					.WithMany(o => o.MovimientosFinancieros)
+					.HasForeignKey(o => o.IdCategoriaFinanciera)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -878,5 +959,13 @@ namespace TanatosAPI.Design.Contexts {
 		public DbSet<AccesoDestinatario> AccesosDestinatarios { get; set; }
 
         public DbSet<WhatsappUsuario> WhatsappsUsuarios { get; set; }
+
+        public DbSet<TipoCuentaFinanciera> TiposCuentasFinancieras { get; set; }
+
+		public DbSet<CuentaFinanciera> CuentasFinancieras { get; set; }
+
+		public DbSet<CategoriaFinanciera> CategoriasFinancieras { get; set; }
+
+		public DbSet<MovimientoFinanciero> MovimientosFinancieros { get; set; }
 	}
 }
