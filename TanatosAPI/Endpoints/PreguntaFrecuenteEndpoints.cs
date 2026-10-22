@@ -92,7 +92,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Admin");
+			}).RequireAuthorization("Sistema.Read.All");
 		}
 
 		private static void MapCrearEndpoint(this IEndpointRouteBuilder routes) {
@@ -128,7 +128,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Admin");
+			}).RequireAuthorization("Sistema.Read.All", "Sistema.Write.All");
 		}
 
 		private static void MapActualizarEndpoint(this IEndpointRouteBuilder routes) {
@@ -164,7 +164,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Admin");
+			}).RequireAuthorization("Sistema.Read.All", "Sistema.Write.All");
 		}
 
 		private static void MapEliminarEndpoint(this IEndpointRouteBuilder routes) {
@@ -192,7 +192,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Admin");
+			}).RequireAuthorization("Sistema.Write.All");
 		}
 	}
 }

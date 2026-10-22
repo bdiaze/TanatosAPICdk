@@ -11,10 +11,8 @@ using Microsoft.OpenApi;
 using Npgsql;
 using Scalar.AspNetCore;
 using System.Security.Claims;
-using System.Text.Json;
 using TanatosAPI.Business;
 using TanatosAPI.Endpoints;
-using TanatosAPI.Entities.Others;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
@@ -212,6 +210,8 @@ builder.Services.AddScoped<IRecursoDao, RecursoDao>();
 builder.Services.AddScoped<IPermisoDao, PermisoDao>();
 builder.Services.AddScoped<IAccesoDestinatarioDao, AccesoDestinatarioDao>();
 builder.Services.AddScoped<IWhatsappUsuarioDao, WhatsappUsuarioDao>();
+builder.Services.AddScoped<ITipoCuentaFinancieraDao, TipoCuentaFinancieraDao>();
+builder.Services.AddScoped<ICuentaFinancieraDao, CuentaFinancieraDao>();
 #endregion
 
 #region Singleton BCP
@@ -254,6 +254,8 @@ builder.Services.AddScoped<IPermisoBcp, PermisoBcp>();
 builder.Services.AddScoped<IAccesoDestinatarioBcp, AccesoDestinatarioBcp>();
 builder.Services.AddScoped<ITipoReceptorNotificacionBcp, TipoReceptorNotificacionBcp>();
 builder.Services.AddScoped<IWhatsappUsuarioBcp, WhatsappUsuarioBcp>();
+builder.Services.AddScoped<ITipoCuentaFinancieraBcp, TipoCuentaFinancieraBcp>();
+builder.Services.AddScoped<ICuentaFinancieraBcp, CuentaFinancieraBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -283,6 +285,8 @@ builder.Services.AddScoped<IAccesoUseCase, AccesoUseCase>();
 builder.Services.AddScoped<IAccesoDestinatarioUseCase, AccesoDestinatarioUseCase>();
 builder.Services.AddScoped<UsuarioUseCase>();
 builder.Services.AddScoped<IWhatsappUsuarioUseCase, WhatsappUsuarioUseCase>();
+builder.Services.AddScoped<TipoCuentaFinancieraUseCase>();
+builder.Services.AddScoped<CuentaFinancieraUseCase>();
 #endregion
 
 string cognitoRegion;
@@ -340,33 +344,40 @@ builder.Services
 	});
 
 builder.Services.AddAuthorizationBuilder()
-	.AddPolicy("Admin", policy => policy.RequireRole("Admin"))
-	.AddPolicy("Perfil.Read.Self", policy => policy.RequireClaim("scope", "api/perfil.read.self"))
-	.AddPolicy("Perfil.Write.Self", policy => policy.RequireClaim("scope", "api/perfil.write.self"))
-	.AddPolicy("Obligaciones.Read.Self", policy => policy.RequireClaim("scope", "api/obligaciones.read.self"))
-	.AddPolicy("Obligaciones.Write.Self", policy => policy.RequireClaim("scope", "api/obligaciones.write.self"))
-	.AddPolicy("Negocios.Read.Self", policy => policy.RequireClaim("scope", "api/negocios.read.self"))
-	.AddPolicy("Negocios.Write.Self", policy => policy.RequireClaim("scope", "api/negocios.write.self"))
-	.AddPolicy("Vencimientos.Read.Self", policy => policy.RequireClaim("scope", "api/vencimientos.read.self"))
-	.AddPolicy("Vencimientos.Write.Self", policy => policy.RequireClaim("scope", "api/vencimientos.write.self"))
-	.AddPolicy("Suscripciones.Read.Self", policy => policy.RequireClaim("scope", "api/suscripciones.read.self"))
-	.AddPolicy("Suscripciones.Write.Self", policy => policy.RequireClaim("scope", "api/suscripciones.write.self"))
-	.AddPolicy("Templates.Read.Public", policy => policy.RequireClaim("scope", "api/templates.read.public"))
-	.AddPolicy("Sistema.Read.Public", policy => policy.RequireClaim("scope", "api/sistema.read.public"))
-	.AddPolicy("Perfil.Read.All", policy => policy.RequireClaim("scope", "api/perfil.read.all"))
-	.AddPolicy("Perfil.Write.All", policy => policy.RequireClaim("scope", "api/perfil.write.all"))
-	.AddPolicy("Obligaciones.Read.All", policy => policy.RequireClaim("scope", "api/obligaciones.read.all"))
-	.AddPolicy("Obligaciones.Write.All", policy => policy.RequireClaim("scope", "api/obligaciones.write.all"))
-	.AddPolicy("Negocios.Read.All", policy => policy.RequireClaim("scope", "api/negocios.read.all"))
-	.AddPolicy("Negocios.Write.All", policy => policy.RequireClaim("scope", "api/negocios.write.all"))
-	.AddPolicy("Vencimientos.Read.All", policy => policy.RequireClaim("scope", "api/vencimientos.read.all"))
-	.AddPolicy("Vencimientos.Write.All", policy => policy.RequireClaim("scope", "api/vencimientos.write.all"))
-	.AddPolicy("Templates.Read.All", policy => policy.RequireClaim("scope", "api/templates.read.all"))
-	.AddPolicy("Templates.Write.All", policy => policy.RequireClaim("scope", "api/templates.write.all"))
-	.AddPolicy("Sistema.Read.All", policy => policy.RequireClaim("scope", "api/sistema.read.all"))
-	.AddPolicy("Sistema.Write.All", policy => policy.RequireClaim("scope", "api/sistema.write.all"))
-	.AddPolicy("Suscripciones.Read.All", policy => policy.RequireClaim("scope", "api/suscripciones.read.all"))
-	.AddPolicy("Suscripciones.Write.All", policy => policy.RequireClaim("scope", "api/suscripciones.write.all"));
+	.AddPolicy("Perfil.Read.Self",			policy => policy.RequireScopeOrAnyRole("api/perfil.read.self"))
+	.AddPolicy("Perfil.Write.Self",			policy => policy.RequireScopeOrAnyRole("api/perfil.write.self"))
+	.AddPolicy("Obligaciones.Read.Self",	policy => policy.RequireScopeOrAnyRole("api/obligaciones.read.self"))
+	.AddPolicy("Obligaciones.Write.Self",	policy => policy.RequireScopeOrAnyRole("api/obligaciones.write.self"))
+	.AddPolicy("Negocios.Read.Self",		policy => policy.RequireScopeOrAnyRole("api/negocios.read.self"))
+	.AddPolicy("Negocios.Write.Self",		policy => policy.RequireScopeOrAnyRole("api/negocios.write.self"))
+	.AddPolicy("Vencimientos.Read.Self",	policy => policy.RequireScopeOrAnyRole("api/vencimientos.read.self"))
+	.AddPolicy("Vencimientos.Write.Self",	policy => policy.RequireScopeOrAnyRole("api/vencimientos.write.self"))
+	.AddPolicy("Suscripciones.Read.Self",	policy => policy.RequireScopeOrAnyRole("api/suscripciones.read.self"))
+	.AddPolicy("Suscripciones.Write.Self",	policy => policy.RequireScopeOrAnyRole("api/suscripciones.write.self"))
+	.AddPolicy("Documentos.Read.Self",		policy => policy.RequireScopeOrAnyRole("api/documentos.read.self"))
+	.AddPolicy("Documentos.Write.Self",		policy => policy.RequireScopeOrAnyRole("api/documentos.write.self"))
+	.AddPolicy("Finanzas.Read.Self",		policy => policy.RequireScopeOrAnyRole("api/finanzas.read.self"))
+	.AddPolicy("Finanzas.Write.Self",		policy => policy.RequireScopeOrAnyRole("api/finanzas.write.self"))
+	.AddPolicy("Templates.Read.Public",		policy => policy.RequireScopeOrAnyRole("api/templates.read.public"))
+	.AddPolicy("Sistema.Read.Public",		policy => policy.RequireScopeOrAnyRole("api/sistema.read.public"))
+	.AddPolicy("Perfil.Read.All",			policy => policy.RequireScopeOrAnyRole("api/perfil.read.all", "Admin"))
+	.AddPolicy("Perfil.Write.All",			policy => policy.RequireScopeOrAnyRole("api/perfil.write.all", "Admin"))
+	.AddPolicy("Obligaciones.Read.All",		policy => policy.RequireScopeOrAnyRole("api/obligaciones.read.all", "Admin"))
+	.AddPolicy("Obligaciones.Write.All",	policy => policy.RequireScopeOrAnyRole("api/obligaciones.write.all", "Admin"))
+	.AddPolicy("Negocios.Read.All",			policy => policy.RequireScopeOrAnyRole("api/negocios.read.all", "Admin"))
+	.AddPolicy("Negocios.Write.All",		policy => policy.RequireScopeOrAnyRole("api/negocios.write.all", "Admin"))
+	.AddPolicy("Vencimientos.Read.All",		policy => policy.RequireScopeOrAnyRole("api/vencimientos.read.all", "Admin"))
+	.AddPolicy("Vencimientos.Write.All",	policy => policy.RequireScopeOrAnyRole("api/vencimientos.write.all", "Admin"))
+	.AddPolicy("Templates.Read.All",		policy => policy.RequireScopeOrAnyRole("api/templates.read.all", "Admin"))
+	.AddPolicy("Templates.Write.All",		policy => policy.RequireScopeOrAnyRole("api/templates.write.all", "Admin"))
+	.AddPolicy("Sistema.Read.All",			policy => policy.RequireScopeOrAnyRole("api/sistema.read.all", "Admin"))
+	.AddPolicy("Sistema.Write.All",			policy => policy.RequireScopeOrAnyRole("api/sistema.write.all", "Admin"))
+	.AddPolicy("Suscripciones.Read.All",	policy => policy.RequireScopeOrAnyRole("api/suscripciones.read.all", "Admin"))
+	.AddPolicy("Suscripciones.Write.All",	policy => policy.RequireScopeOrAnyRole("api/suscripciones.write.all", "Admin"))
+	.AddPolicy("Documentos.Read.All",		policy => policy.RequireScopeOrAnyRole("api/documentos.read.all", "Admin"))
+	.AddPolicy("Documentos.Write.All",		policy => policy.RequireScopeOrAnyRole("api/documentos.write.all", "Admin"))
+	.AddPolicy("Finanzas.Read.All",			policy => policy.RequireScopeOrAnyRole("api/finanzas.read.all", "Admin"))
+	.AddPolicy("Finanzas.Write.All",		policy => policy.RequireScopeOrAnyRole("api/finanzas.write.all", "Admin"));
 
 
 
@@ -411,6 +422,7 @@ app.MapEvaluacionEndpoints();
 app.MapTipoProcesoAutomaticoEndpoints();
 app.MapProcesoAutomaticoEndpoints();
 app.MapModeloCanvasEndpoints();
+app.MapTipoCuentaFinancieraEndpoints();
 
 await app.RunAsync();
 

@@ -51,7 +51,7 @@ namespace TanatosAPI.Endpoints {
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Admin");
+			}).RequireAuthorization("Perfil.Read.All");
 		}
 
 		private static void MapCrearEndpoint(this IEndpointRouteBuilder routes) {
