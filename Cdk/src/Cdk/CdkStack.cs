@@ -322,6 +322,24 @@ namespace Cdk
 				ScopeName = "suscripciones.write.self",
 				ScopeDescription = "Acceso de escritura a las suscripciones del usuario"
 			});
+
+			ResourceServerScope scopeDocumentosReadSelf = new(new ResourceServerScopeProps {
+				ScopeName = "documentos.read.self",
+				ScopeDescription = "Acceso de lectura a los documentos del usuario"
+			});
+			ResourceServerScope scopeDocumentosWriteSelf = new(new ResourceServerScopeProps {
+				ScopeName = "documentos.write.self",
+				ScopeDescription = "Acceso de escritura a los documentos del usuario"
+			});
+
+			ResourceServerScope scopeFinanzasReadSelf = new(new ResourceServerScopeProps {
+				ScopeName = "finanzas.read.self",
+				ScopeDescription = "Acceso de lectura a las finanzas del usuario"
+			});
+			ResourceServerScope scopeFinanzasWriteSelf = new(new ResourceServerScopeProps {
+				ScopeName = "finanzas.write.self",
+				ScopeDescription = "Acceso de escritura a las finanzas del usuario"
+			});
 			#endregion
 
 			#region Public Scopes
@@ -399,6 +417,24 @@ namespace Cdk
 				ScopeName = "suscripciones.write.all",
 				ScopeDescription = "Acceso de escritura a todas las suscripciones"
 			});
+
+			ResourceServerScope scopeDocumentosReadAll = new(new ResourceServerScopeProps {
+				ScopeName = "documentos.read.all",
+				ScopeDescription = "Acceso de lectura a todos los documentos"
+			});
+			ResourceServerScope scopeDocumentosWriteAll = new(new ResourceServerScopeProps {
+				ScopeName = "documentos.write.all",
+				ScopeDescription = "Acceso de escritura a todos los documentos"
+			});
+
+			ResourceServerScope scopeFinanzasReadAll = new(new ResourceServerScopeProps {
+				ScopeName = "finanzas.read.all",
+				ScopeDescription = "Acceso de lectura a todas las finanzas"
+			});
+			ResourceServerScope scopeFinanzasWriteAll = new(new ResourceServerScopeProps {
+				ScopeName = "finanzas.write.all",
+				ScopeDescription = "Acceso de escritura a todas las finanzas"
+			});
 			#endregion
 
 
@@ -415,6 +451,10 @@ namespace Cdk
                     scopeVencimientosWriteSelf,
 					scopeSuscripcionesReadSelf,
 					scopeSuscripcionesWriteSelf,
+					scopeDocumentosReadSelf,
+					scopeDocumentosWriteSelf,
+					scopeFinanzasReadSelf,
+					scopeFinanzasWriteSelf,
                     scopeTemplatesReadPublic,
                     scopeSistemaReadPublic,
 					scopePerfilReadAll,
@@ -431,7 +471,11 @@ namespace Cdk
                     scopeSistemaWriteAll,
 					scopeSuscripcionesReadAll,
 					scopeSuscripcionesWriteAll,
-                ]
+					scopeDocumentosReadAll,
+					scopeDocumentosWriteAll,
+					scopeFinanzasReadAll,
+					scopeFinanzasWriteAll,
+				]
 			});
 
 			UserPoolClient userPoolClient = new(this, $"{appName}UserPoolClient", new UserPoolClientProps {
@@ -462,6 +506,10 @@ namespace Cdk
 						OAuthScope.ResourceServer(resourceServer, scopeVencimientosWriteSelf),
 						OAuthScope.ResourceServer(resourceServer, scopeSuscripcionesReadSelf),
 						OAuthScope.ResourceServer(resourceServer, scopeSuscripcionesWriteSelf),
+						OAuthScope.ResourceServer(resourceServer, scopeDocumentosReadSelf),
+						OAuthScope.ResourceServer(resourceServer, scopeDocumentosWriteSelf),
+						OAuthScope.ResourceServer(resourceServer, scopeFinanzasReadSelf),
+						OAuthScope.ResourceServer(resourceServer, scopeFinanzasWriteSelf),
 						OAuthScope.ResourceServer(resourceServer, scopeTemplatesReadPublic),
 						OAuthScope.ResourceServer(resourceServer, scopeSistemaReadPublic),
 					]
