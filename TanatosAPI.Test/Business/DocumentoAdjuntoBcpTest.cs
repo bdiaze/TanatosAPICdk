@@ -12,16 +12,19 @@ using TanatosAPI.Interfaces.Repositories;
 namespace TanatosAPI.Test.Business {
     public class DocumentoAdjuntoBcpTest {
         private readonly IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
+		private readonly IVariableEntornoHelper variableEntorno = Substitute.For<IVariableEntornoHelper>();
 		private readonly IDocumentoAdjuntoDao documentoAdjuntoDao = Substitute.For<IDocumentoAdjuntoDao>();
-		private readonly IDocumentoAdjuntoHelper documentoAdjuntoHelper = Substitute.For<IDocumentoAdjuntoHelper>();
-        private readonly DocumentoAdjuntoBcp documentoAdjuntoBcp;
+		private readonly IS3Helper s3Helper = Substitute.For<IS3Helper>();
+		private readonly DocumentoAdjuntoBcp documentoAdjuntoBcp;
 
 		private static readonly DateTime FECHA_DUMMY = new(2026, 1, 15, 14, 0, 0, DateTimeKind.Utc);
+		private const string BUCKET_NAME_TEST = "bucket-name-test";
 
 		public DocumentoAdjuntoBcpTest() {
 			dateTimeProvider.UtcNow.Returns(FECHA_DUMMY);
+			variableEntorno.Obtener("BUCKET_NAME_DOCUMENTOS_ADJUNTOS").Returns(BUCKET_NAME_TEST);
 
-			documentoAdjuntoBcp = new(dateTimeProvider, documentoAdjuntoDao, documentoAdjuntoHelper);
+			documentoAdjuntoBcp = new(dateTimeProvider, variableEntorno, documentoAdjuntoDao, s3Helper);
 		}
 
 		public static DocumentoAdjunto DocumentoAdjuntoDummy(
@@ -149,10 +152,14 @@ namespace TanatosAPI.Test.Business {
 
         [Fact]
         public async Task GenerarUrlSubidaTest() {
-            documentoAdjuntoHelper.ObtenerPostPreSignedUrl(Arg.Any<string>(), Arg.Any<long>(), Arg.Any<long>(), Arg.Any<long>(), Arg.Any<string>(), Arg.Any<long>())
-                .Returns(("bucket-name-test", "bucket-key-test", "https://pre-signed-url.test", new Dictionary<string, string>() { { "field-name-test", "field-value-test" } }));
-            documentoAdjuntoDao.Insertar(Arg.Any<DocumentoAdjunto>()).Returns(99L);
+			s3Helper.ObtenerPostPreSignedUrl(BUCKET_NAME_TEST, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>()).Returns((
+				"https://pre-signed-url.test",
+				new Dictionary<string, string>() {
+					{ "field-name-test", "field-value-test" }
+				}
+			));
 
+			documentoAdjuntoDao.Insertar(Arg.Any<DocumentoAdjunto>()).Returns(99L);
 
             (string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto) = await documentoAdjuntoBcp.GenerarUrlSubida(
                 "sub-test-123", 
@@ -179,9 +186,8 @@ namespace TanatosAPI.Test.Business {
         public async Task ConfirmarSubidaTest_NoConfirmado() {            
             DocumentoAdjunto documento = DocumentoAdjuntoDummy(estadoSubida: 0);
 
-			documentoAdjuntoHelper.ObtenerMetadata(documento.BucketKey)
-                .Returns((2048, "mime-real/test"));
-
+			s3Helper.ObtenerObjectMetadata(BUCKET_NAME_TEST, documento.BucketKey).Returns((2048, "mime-real/test"));
+			
             await documentoAdjuntoBcp.ConfirmarSubida(documento);
 
             Assert.Equal(1, documento.EstadoSubida);
@@ -198,14 +204,13 @@ namespace TanatosAPI.Test.Business {
             await documentoAdjuntoBcp.ConfirmarSubida(documento);
 
             await documentoAdjuntoDao.DidNotReceive().Actualizar(Arg.Any<DocumentoAdjunto>());
-            await documentoAdjuntoHelper.DidNotReceive().ObtenerMetadata(Arg.Any<string>());
-        }
+			await s3Helper.DidNotReceive().ObtenerObjectMetadata(Arg.Any<string>(), Arg.Any<string>());
+		}
 
         [Fact]
         public async Task GenerarUrlBajadaTest() {
             DocumentoAdjunto documento = DocumentoAdjuntoDummy();
-			documentoAdjuntoHelper.ObtenerGetPreSignedUrl(documento.BucketKey, documento.NombreArchivo)
-                .Returns("https://url.download");
+			s3Helper.ObtenerGetPreSignedUrl(BUCKET_NAME_TEST, documento.BucketKey, documento.NombreArchivo).Returns("https://url.download");
 
             string url = await documentoAdjuntoBcp.GenerarUrlBajada(documento);
             Assert.Equal("https://url.download", url);
@@ -220,8 +225,8 @@ namespace TanatosAPI.Test.Business {
             Assert.False(documento.Vigencia);
             Assert.Equal(FECHA_DUMMY, documento.FechaEliminacion);
             await documentoAdjuntoDao.Received(1).Actualizar(documento, null);
-            await documentoAdjuntoHelper.Received(1).AgregarTagEstadoEliminado(documento.BucketKey);
-        }
+			await s3Helper.Received(1).AgregarTag(BUCKET_NAME_TEST, documento.BucketKey, "Estado", "Eliminado");
+		}
 
         [Fact]
         public async Task EliminarTest_NoVigente() {
@@ -230,8 +235,8 @@ namespace TanatosAPI.Test.Business {
             await documentoAdjuntoBcp.Eliminar(documento);
 
             await documentoAdjuntoDao.DidNotReceive().Actualizar(Arg.Any<DocumentoAdjunto>());
-            await documentoAdjuntoHelper.DidNotReceive().AgregarTagEstadoEliminado(Arg.Any<string>());
-        }
+			await s3Helper.DidNotReceive().AgregarTag(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
+		}
 
         [Fact]
         public async Task EliminarPorHistorialTest_ConDocumentos() {
@@ -244,8 +249,8 @@ namespace TanatosAPI.Test.Business {
             await documentoAdjuntoBcp.EliminarPorHistorialNormaSuscrita(10);
 
             await documentoAdjuntoDao.Received(documentos.Count).Actualizar(Arg.Any<DocumentoAdjunto>(), null);
-            await documentoAdjuntoHelper.Received(documentos.Count).AgregarTagEstadoEliminado(Arg.Any<string>());
-        }
+			await s3Helper.Received(documentos.Count).AgregarTag(BUCKET_NAME_TEST, Arg.Any<string>(), "Estado", "Eliminado");
+		}
 
         [Fact]
         public async Task EliminarPorHistorialTest_SinDocumentos() {
@@ -254,8 +259,8 @@ namespace TanatosAPI.Test.Business {
             await documentoAdjuntoBcp.EliminarPorHistorialNormaSuscrita(999);
 
             await documentoAdjuntoDao.DidNotReceive().Actualizar(Arg.Any<DocumentoAdjunto>(), null);
-            await documentoAdjuntoHelper.DidNotReceive().AgregarTagEstadoEliminado(Arg.Any<string>());
+			await s3Helper.DidNotReceive().AgregarTag(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
 
-        }
+		}
     }
 }

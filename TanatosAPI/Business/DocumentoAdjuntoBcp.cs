@@ -8,11 +8,12 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
-	public class DocumentoAdjuntoBcp(IDateTimeProvider dateTimeProvider, IDocumentoAdjuntoDao documentoAdjuntoDao, IDocumentoAdjuntoHelper documentoAdjuntoHelper) : IDocumentoAdjuntoBcp {
+	public class DocumentoAdjuntoBcp(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntorno, IDocumentoAdjuntoDao documentoAdjuntoDao, IS3Helper s3Helper) : IDocumentoAdjuntoBcp {
+		public readonly string BUCKET_NAME = variableEntorno.Obtener("BUCKET_NAME_DOCUMENTOS_ADJUNTOS");
 		public const long MAX_FILE_SIZE = 10 * 1024 * 1024;
 		public static readonly string[] ALLOWED_FILES_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
-
-        public bool TamannoValido(long tamanno) {
+		
+		public bool TamannoValido(long tamanno) {
 			return tamanno <= MAX_FILE_SIZE;
 		}
 
@@ -53,22 +54,16 @@ namespace TanatosAPI.Business {
 		}
 
         public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string sub, long idNegocio, long idNormaSuscrita, long idHistorialNormaSuscrita, string nombreArchivo, string mimeArchivo, long tamannoArchivo) {
-            (string bucketName, string bucketKey, string preSignedUrl, Dictionary<string, string> fields) presignedPost = await documentoAdjuntoHelper.ObtenerPostPreSignedUrl(
-                sub,
-                idNegocio,
-                idNormaSuscrita,
-                idHistorialNormaSuscrita,
-                mimeArchivo,
-                tamannoArchivo
-            );
-
+            string bucketKey = $"Sub-{sub}/Negocio-{idNegocio}/NormaSuscrita-{idNormaSuscrita}/HistorialNormaSuscrita-{idHistorialNormaSuscrita}/{Guid.NewGuid()}";
+			(string preSignedUrl, Dictionary<string, string> fields) = await s3Helper.ObtenerPostPreSignedUrl(BUCKET_NAME, bucketKey, mimeArchivo, tamannoArchivo);
+			
             DateTime utcNow = dateTimeProvider.UtcNow;
 
             DocumentoAdjunto nuevo = new() {
                 Id = 0,
                 IdHistorialNormaSuscrita = idHistorialNormaSuscrita,
-                BucketName = presignedPost.bucketName,
-                BucketKey = presignedPost.bucketKey,
+                BucketName = BUCKET_NAME,
+                BucketKey = bucketKey,
                 NombreArchivo = nombreArchivo,
                 MimeEsperado = mimeArchivo,
                 TamannoEsperado = tamannoArchivo,
@@ -83,14 +78,14 @@ namespace TanatosAPI.Business {
             };
             nuevo.Id = await documentoAdjuntoDao.Insertar(nuevo);
             
-            return (presignedPost.preSignedUrl, presignedPost.fields, nuevo);
+            return (preSignedUrl, fields, nuevo);
         }
 
         public async Task ConfirmarSubida(DocumentoAdjunto documentoAdjunto) {
             if (documentoAdjunto.EstadoSubida != 1 /* Documento recepcionado */) {
-                (long contentLength, string contentType) = await documentoAdjuntoHelper.ObtenerMetadata(documentoAdjunto.BucketKey);
+                (long contentLength, string contentType) = await s3Helper.ObtenerObjectMetadata(BUCKET_NAME, documentoAdjunto.BucketKey);
 
-                documentoAdjunto.MimeReal = contentType;
+				documentoAdjunto.MimeReal = contentType;
                 documentoAdjunto.TamannoReal = contentLength;
                 documentoAdjunto.EstadoSubida = 1 /* Documento recepcionado */;
                 documentoAdjunto.FechaConfirmacionSubida = dateTimeProvider.UtcNow;
@@ -100,8 +95,9 @@ namespace TanatosAPI.Business {
         }
 
         public async Task<string> GenerarUrlBajada(DocumentoAdjunto documentoAdjunto, bool paraVisualizacion = false) {
-            return await documentoAdjuntoHelper.ObtenerGetPreSignedUrl(documentoAdjunto.BucketKey, documentoAdjunto.NombreArchivo, paraVisualizacion);
-        }
+            return await s3Helper.ObtenerGetPreSignedUrl(BUCKET_NAME, documentoAdjunto.BucketKey, documentoAdjunto.NombreArchivo, paraVisualizacion);
+
+		}
 
 		public async Task Eliminar(DocumentoAdjunto documentoAdjunto, NpgsqlTransaction? transaction = null) {
 			if (documentoAdjunto.Vigencia) {
@@ -109,7 +105,7 @@ namespace TanatosAPI.Business {
 				documentoAdjunto.FechaEliminacion = dateTimeProvider.UtcNow;
 
 				await documentoAdjuntoDao.Actualizar(documentoAdjunto, transaction);
-				await documentoAdjuntoHelper.AgregarTagEstadoEliminado(documentoAdjunto.BucketKey);
+                await s3Helper.AgregarTag(BUCKET_NAME, documentoAdjunto.BucketKey, "Estado", "Eliminado");
 			}
 		}
 

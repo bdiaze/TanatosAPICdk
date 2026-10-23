@@ -162,7 +162,6 @@ builder.Services.AddSingleton(serviceProvider => {
 builder.Services.AddSingleton<IDatabaseConnectionHelper, DatabaseConnectionHelper>();
 builder.Services.AddSingleton<IHtmlRenderer, HtmlRenderer>();
 builder.Services.AddSingleton<IS3Helper, S3Helper>();
-builder.Services.AddSingleton<IDocumentoAdjuntoHelper, DocumentoAdjuntoHelper>();
 builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 builder.Services.AddSingleton<IRateLimiter, DynamoRateLimiter>();
 builder.Services.AddSingleton<IKMSHelper, KMSHelper>();
