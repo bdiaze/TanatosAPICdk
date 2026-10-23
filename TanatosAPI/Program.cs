@@ -212,6 +212,8 @@ builder.Services.AddScoped<IAccesoDestinatarioDao, AccesoDestinatarioDao>();
 builder.Services.AddScoped<IWhatsappUsuarioDao, WhatsappUsuarioDao>();
 builder.Services.AddScoped<ITipoCuentaFinancieraDao, TipoCuentaFinancieraDao>();
 builder.Services.AddScoped<ICuentaFinancieraDao, CuentaFinancieraDao>();
+builder.Services.AddScoped<ICategoriaFinancieraDao, CategoriaFinancieraDao>();
+builder.Services.AddScoped<IMovimientoFinancieroDao, MovimientoFinancieroDao>();
 #endregion
 
 #region Singleton BCP
@@ -256,6 +258,8 @@ builder.Services.AddScoped<ITipoReceptorNotificacionBcp, TipoReceptorNotificacio
 builder.Services.AddScoped<IWhatsappUsuarioBcp, WhatsappUsuarioBcp>();
 builder.Services.AddScoped<ITipoCuentaFinancieraBcp, TipoCuentaFinancieraBcp>();
 builder.Services.AddScoped<ICuentaFinancieraBcp, CuentaFinancieraBcp>();
+builder.Services.AddScoped<ICategoriaFinancieraBcp, CategoriaFinancieraBcp>();
+builder.Services.AddScoped<IMovimientoFinancieroBcp, MovimientoFinancieroBcp>();
 #endregion
 
 #region Singleton UseCases
@@ -287,6 +291,8 @@ builder.Services.AddScoped<UsuarioUseCase>();
 builder.Services.AddScoped<IWhatsappUsuarioUseCase, WhatsappUsuarioUseCase>();
 builder.Services.AddScoped<TipoCuentaFinancieraUseCase>();
 builder.Services.AddScoped<CuentaFinancieraUseCase>();
+builder.Services.AddScoped<CategoriaFinancieraUseCase>();
+builder.Services.AddScoped<MovimientoFinancieroUseCase>();
 #endregion
 
 string cognitoRegion;
@@ -423,6 +429,9 @@ app.MapTipoProcesoAutomaticoEndpoints();
 app.MapProcesoAutomaticoEndpoints();
 app.MapModeloCanvasEndpoints();
 app.MapTipoCuentaFinancieraEndpoints();
+app.MapCuentaFinancieraEndpoints();
+app.MapCategoriaFinancieraEndpoints();
+app.MapMovimientoFinancieroEndpoints();
 
 await app.RunAsync();
 

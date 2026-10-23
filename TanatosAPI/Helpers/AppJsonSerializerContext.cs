@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.Auth;
 using TanatosAPI.Entities.Others.Cargo;
+using TanatosAPI.Entities.Others.CategoriaFinanciera;
 using TanatosAPI.Entities.Others.CuentaFinanciera;
 using TanatosAPI.Entities.Others.DestinatarioNotificacion;
 using TanatosAPI.Entities.Others.DocumentoAdjunto;
@@ -18,6 +19,7 @@ using TanatosAPI.Entities.Others.InscripcionTemplate;
 using TanatosAPI.Entities.Others.Kairos;
 using TanatosAPI.Entities.Others.Mensaje;
 using TanatosAPI.Entities.Others.ModeloCanvas;
+using TanatosAPI.Entities.Others.MovimientoFinanciero;
 using TanatosAPI.Entities.Others.Negocio;
 using TanatosAPI.Entities.Others.NormaSuscrita;
 using TanatosAPI.Entities.Others.Perfil;
@@ -190,6 +192,14 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(List<SalCuentaFinanciera>))]
 	[JsonSerializable(typeof(EntCuentaFinancieraCrear))]
 	[JsonSerializable(typeof(EntCuentaFinancieraActualizar))]
+	[JsonSerializable(typeof(SalCategoriaFinanciera))]
+	[JsonSerializable(typeof(List<SalCategoriaFinanciera>))]
+	[JsonSerializable(typeof(EntCategoriaFinancieraCrear))]
+	[JsonSerializable(typeof(EntCategoriaFinancieraActualizar))]
+	[JsonSerializable(typeof(SalMovimientoFinancieroObtenerPorPaginacion))]
+	[JsonSerializable(typeof(SalMovimientoFinanciero))]
+	[JsonSerializable(typeof(EntMovimientoFinancieroCrear))]
+	[JsonSerializable(typeof(EntMovimientoFinancieroActualizar))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }
