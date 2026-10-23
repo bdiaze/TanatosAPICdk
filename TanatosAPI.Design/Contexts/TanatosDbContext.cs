@@ -832,7 +832,8 @@ namespace TanatosAPI.Design.Contexts {
 			});
 
 			modelBuilder.Entity<CategoriaFinanciera>(entity => {
-                entity.ToTable(o => o.HasComment("Tabla que contiene las categorías financieras de un usuario."));
+				entity.HasIndex(o => new { o.Sub, o.IdNegocio });
+				entity.ToTable(o => o.HasComment("Tabla que contiene las categorías financieras de un usuario."));
 				entity.Property(o => o.Id).HasComment("Identificador de la categoría financiera.");
 				entity.Property(o => o.Sub).HasComment("Identificador del usuario al que pertenece la categoría financiera.");
 				entity.Property(o => o.IdNegocio).HasComment("Identificador del negocio al que pertenece la categoría financiera.");
@@ -850,7 +851,7 @@ namespace TanatosAPI.Design.Contexts {
 			});
 
 			modelBuilder.Entity<MovimientoFinanciero>(entity => {
-				entity.HasIndex(o => new { o.IdCuentaFinanciera, o.FechaMovimiento });
+				entity.HasIndex(o => new { o.IdCuentaFinanciera, o.FechaMovimiento, o.Id });
 				entity.ToTable(o => o.HasComment("Tabla que contiene los movimientos de una cuenta financiera."));
 				entity.Property(o => o.Id).HasComment("Identificador del movimiento financiero.");
 				entity.Property(o => o.IdCuentaFinanciera).HasComment("Identificador de la cuenta financiera a la que pertenece el movimiento.");

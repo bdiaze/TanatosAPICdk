@@ -221,6 +221,8 @@ namespace TanatosAPI.Design.Migrations
 
                     b.HasIndex("IdNegocio");
 
+                    b.HasIndex("Sub", "IdNegocio");
+
                     b.ToTable("categoria_financiera", "tanatos", t =>
                         {
                             t.HasComment("Tabla que contiene las categorías financieras de un usuario.");
@@ -1148,7 +1150,7 @@ namespace TanatosAPI.Design.Migrations
 
                     b.HasIndex("IdCategoriaFinanciera");
 
-                    b.HasIndex("IdCuentaFinanciera", "FechaMovimiento");
+                    b.HasIndex("IdCuentaFinanciera", "FechaMovimiento", "Id");
 
                     b.ToTable("movimiento_financiero", "tanatos", t =>
                         {

@@ -3541,3 +3541,35 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261022190150_AlterIndexMovimientoFinanciero') THEN
+    DROP INDEX tanatos."IX_movimiento_financiero_id_cuenta_financiera_fecha_movimiento";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261022190150_AlterIndexMovimientoFinanciero') THEN
+    CREATE INDEX "IX_movimiento_financiero_id_cuenta_financiera_fecha_movimiento~" ON tanatos.movimiento_financiero (id_cuenta_financiera, fecha_movimiento, id);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261022190150_AlterIndexMovimientoFinanciero') THEN
+    CREATE INDEX "IX_categoria_financiera_sub_id_negocio" ON tanatos.categoria_financiera (sub, id_negocio);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261022190150_AlterIndexMovimientoFinanciero') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261022190150_AlterIndexMovimientoFinanciero', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+

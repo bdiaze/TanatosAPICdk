@@ -22,6 +22,7 @@ namespace TanatosAPI.Entities.Models {
 
 		[Required]
 		[Column("tipo_movimiento")]
+		// 1: Ingreso - 2: Gasto
 		public required short TipoMovimiento { get; set; }
 
 		[Required]
