@@ -23,8 +23,8 @@ namespace TanatosAPI.Business {
 			return [.. items.Where(c => EstaVigente(c))];
 		}
 
-		public async Task<CuentaFinanciera?> Obtener(long id, bool validarVigencia = false, string? validarSub = null, long? validarIdNegocio = null, NpgsqlTransaction? transaction = null) {
-			CuentaFinanciera? item = await cuentaFinancieraDao.Obtener(id, transaction);
+		public async Task<CuentaFinanciera?> Obtener(long id, bool validarVigencia = false, string? validarSub = null, long? validarIdNegocio = null, bool forUpdate = false, NpgsqlTransaction? transaction = null) {
+			CuentaFinanciera? item = await cuentaFinancieraDao.Obtener(id, forUpdate, transaction);
 			if (validarVigencia && !EstaVigente(item)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "La cuenta financiera no existe o no está vigente", "La cuenta es inválida.");
 			if (item != null) {
 				if (validarSub != null && !Pertenece(item, validarSub)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "La cuenta financiera no pertenece al usuario", "La cuenta es inválida.");

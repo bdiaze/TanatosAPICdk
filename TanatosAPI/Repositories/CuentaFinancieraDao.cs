@@ -5,13 +5,14 @@ using TanatosAPI.Interfaces.Repositories;
 
 namespace TanatosAPI.Repositories {
 	public class CuentaFinancieraDao(IDatabaseConnectionHelper connectionHelper) : ICuentaFinancieraDao {
-		public async Task<CuentaFinanciera?> Obtener(long id, NpgsqlTransaction? transaction = null) {
+		public async Task<CuentaFinanciera?> Obtener(long id, bool forUpdate = false, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, SUB, ID_NEGOCIO, NOMBRE, ID_TIPO_CUENTA_FINANCIERA, " +
 				"SALDO_INICIAL, FECHA_SALDO_INICIAL, SALDO_ACTUAL, " +
 				"FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA " +
 				"FROM TANATOS.CUENTA_FINANCIERA " +
 				"WHERE ID = @ID";
+			if (forUpdate) query += " FOR UPDATE";
 
 			bool disposeConnection = transaction?.Connection == null;
 			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
