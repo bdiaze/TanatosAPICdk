@@ -39,12 +39,13 @@ namespace TanatosAPI.Business {
 			return vencimientos.OrderByDescending(hns => hns.FechaVencimiento).FirstOrDefault();
 		}
 
-		public async Task<HistorialNormaSuscrita?> Obtener(long idHistorialNormaSuscrita, bool validarVigencia = false, long? validarIdNormaSuscrita = null, NpgsqlTransaction? transaction = null) {
+		public async Task<HistorialNormaSuscrita?> Obtener(long idHistorialNormaSuscrita, bool validarVigencia = false, bool validarSinCompletitud = false, long? validarIdNormaSuscrita = null, NpgsqlTransaction? transaction = null) {
 			HistorialNormaSuscrita? vencimiento = await historialNormaSuscritaDao.ObtenerPorId(idHistorialNormaSuscrita, transaction);
 			// Se aplican todas las validaciones...
-			if (validarVigencia && !EstaVigente(vencimiento)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El vencimiento no está vigente.");
+			if (validarVigencia && !EstaVigente(vencimiento)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El vencimiento no existe o no está vigente", "El vencimiento es inválido.");
 			if (vencimiento != null) {
-				if (validarIdNormaSuscrita != null && !Pertenece(vencimiento, validarIdNormaSuscrita.Value)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El vencimiento no pertenece a la obligación", "El vencimiento no está vigente.");
+				if (validarSinCompletitud && EstaCompletada(vencimiento)) throw new ErrorValidacion(TipoErrorValidacion.TipoNoValido, "El vencimiento ya se encuentra completado", "El vencimiento es inválido.");
+				if (validarIdNormaSuscrita != null && !Pertenece(vencimiento, validarIdNormaSuscrita.Value)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El vencimiento no pertenece a la obligación", "El vencimiento no está vigente.");				
 			}
 
 			return vencimiento;

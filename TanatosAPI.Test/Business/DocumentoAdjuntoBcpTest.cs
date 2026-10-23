@@ -166,8 +166,8 @@ namespace TanatosAPI.Test.Business {
                 1, 
                 2, 
                 3, 
-                "nombreArchivoTest", 
-                "mime/test", 
+                "nombreArchivoTest",
+				"image/png", 
                 1024
             );
 

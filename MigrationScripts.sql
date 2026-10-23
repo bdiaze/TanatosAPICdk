@@ -3573,3 +3573,21 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261023185131_NullableIdHistorialNormaSuscritaDocumentoAdjunto') THEN
+    ALTER TABLE tanatos.documento_adjunto ALTER COLUMN id_historial_norma_suscrita DROP NOT NULL;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261023185131_NullableIdHistorialNormaSuscritaDocumentoAdjunto') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261023185131_NullableIdHistorialNormaSuscritaDocumentoAdjunto', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+

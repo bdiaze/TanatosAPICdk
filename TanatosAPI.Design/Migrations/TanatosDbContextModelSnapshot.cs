@@ -491,7 +491,7 @@ namespace TanatosAPI.Design.Migrations
                         .HasColumnName("fecha_emision_url_prefirmada_put")
                         .HasComment("Fecha en que se emitió la URL prefirmada para método PUT.");
 
-                    b.Property<long>("IdHistorialNormaSuscrita")
+                    b.Property<long?>("IdHistorialNormaSuscrita")
                         .HasColumnType("bigint")
                         .HasColumnName("id_historial_norma_suscrita")
                         .HasComment("Identificador del historial de ejecución de una norma suscrita.");
@@ -2701,8 +2701,7 @@ namespace TanatosAPI.Design.Migrations
                     b.HasOne("TanatosAPI.Entities.Models.HistorialNormaSuscrita", "HistorialNormaSuscrita")
                         .WithMany("DocumentosAdjuntos")
                         .HasForeignKey("IdHistorialNormaSuscrita")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("HistorialNormaSuscrita");
                 });

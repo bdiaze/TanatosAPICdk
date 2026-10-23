@@ -13,9 +13,8 @@ namespace TanatosAPI.Entities.Models {
 		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public required long Id { get; set; }
 
-		[Required]
 		[Column("id_historial_norma_suscrita")]
-		public required long IdHistorialNormaSuscrita { get; set; }
+		public long? IdHistorialNormaSuscrita { get; set; }
 
 		[Required]
 		[Column("bucket_name")]

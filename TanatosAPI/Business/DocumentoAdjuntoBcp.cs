@@ -1,11 +1,9 @@
 ﻿using Npgsql;
-using System.Runtime.CompilerServices;
 using TanatosAPI.Entities.Models;
-using TanatosAPI.Helpers;
+using TanatosAPI.Exceptions;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
-using TanatosAPI.Repositories;
 
 namespace TanatosAPI.Business {
 	public class DocumentoAdjuntoBcp(IDateTimeProvider dateTimeProvider, IVariableEntornoHelper variableEntorno, IDocumentoAdjuntoDao documentoAdjuntoDao, IS3Helper s3Helper) : IDocumentoAdjuntoBcp {
@@ -41,8 +39,16 @@ namespace TanatosAPI.Business {
 			return [.. documentos.Where(FueRecepcionado)];
 		}
 
-		public async Task<DocumentoAdjunto?> Obtener(long idDocumentoAdjunto, NpgsqlTransaction? transaction = null) {
-            return await documentoAdjuntoDao.ObtenerPorId(idDocumentoAdjunto, transaction);
+		public async Task<DocumentoAdjunto?> Obtener(long idDocumentoAdjunto, bool filtrarVigente = false, bool validarVigencia = false, long? validarIdHistorialNormaSuscrita = null, NpgsqlTransaction? transaction = null) {
+            DocumentoAdjunto? item = await documentoAdjuntoDao.ObtenerPorId(idDocumentoAdjunto, transaction);
+			if (validarVigencia && !EstaVigente(item)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El documento adjunto no existe o no está vigente", "El documento adjunto es inválido.");
+            if (item != null) {
+                if (validarIdHistorialNormaSuscrita != null && !Pertenece(item, validarIdHistorialNormaSuscrita.Value)) throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "El documento adjunto no pertenece al vencimiento indicado", "El documento adjunto es inválido.");
+			}
+
+			if (filtrarVigente && !EstaVigente(item)) return null;
+
+			return item;
         }
 
         public async Task<List<DocumentoAdjunto>> ObtenerPorVencimiento(long idHistorialNormaSuscrita, bool filtrarVigentes = false, bool filtrarRecepcionados = false, NpgsqlTransaction? transaction = null) {
@@ -53,8 +59,20 @@ namespace TanatosAPI.Business {
 			return documentos;
 		}
 
-        public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string sub, long idNegocio, long idNormaSuscrita, long idHistorialNormaSuscrita, string nombreArchivo, string mimeArchivo, long tamannoArchivo) {
-            string bucketKey = $"Sub-{sub}/Negocio-{idNegocio}/NormaSuscrita-{idNormaSuscrita}/HistorialNormaSuscrita-{idHistorialNormaSuscrita}/{Guid.NewGuid()}";
+        public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string sub, long idNegocio, long idNormaSuscrita, long? idHistorialNormaSuscrita, string nombreArchivo, string mimeArchivo, long tamannoArchivo) {
+            nombreArchivo = nombreArchivo.Trim();
+            mimeArchivo = mimeArchivo.Trim();
+
+            if (!TamannoValido(tamannoArchivo)) throw new ErrorValidacion(TipoErrorValidacion.TamannoNoValido, $"El tamaño del archivo es inválido.");
+            if (!MimeValido(mimeArchivo)) throw new ErrorValidacion(TipoErrorValidacion.TipoNoValido, $"El MIME del archivo es inválido.");
+
+			string bucketKey;
+			if (idHistorialNormaSuscrita != null) {
+				bucketKey = $"Sub-{sub}/Negocio-{idNegocio}/NormaSuscrita-{idNormaSuscrita}/HistorialNormaSuscrita-{idHistorialNormaSuscrita}/{Guid.NewGuid()}";
+			} else {
+                throw new InvalidOperationException("Se debe incluir el ID del Historial Norma Suscrita.");
+            }
+            
 			(string preSignedUrl, Dictionary<string, string> fields) = await s3Helper.ObtenerPostPreSignedUrl(BUCKET_NAME, bucketKey, mimeArchivo, tamannoArchivo);
 			
             DateTime utcNow = dateTimeProvider.UtcNow;
