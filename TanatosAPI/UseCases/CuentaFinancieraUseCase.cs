@@ -5,6 +5,9 @@ using TanatosAPI.Interfaces.Business;
 namespace TanatosAPI.UseCases {
 	public class CuentaFinancieraUseCase(ICuentaFinancieraBcp cuentaFinancieraBcp, ITipoCuentaFinancieraBcp tipoCuentaFinancieraBcp, INegocioBcp negocioBcp) {
 		public async Task<List<CuentaFinanciera>> ObtenerVigentes(string sub, long idNegocio) {
+			// Se valida que el negocio este vigente y pertenezca al usuario...
+			_ = (await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub))!;
+
 			List<CuentaFinanciera> items = await cuentaFinancieraBcp.ObtenerPorSub(sub, idNegocio, filtrarVigentes: true);
 			if (items.Count > 0) {
 				Dictionary<long, TipoCuentaFinanciera> tipos = (await tipoCuentaFinancieraBcp.ObtenerTodos(filtrarVigentes: true)).ToDictionary(t => t.Id, t => t);
@@ -41,6 +44,9 @@ namespace TanatosAPI.UseCases {
 			// Se valida que la cuenta esté vigente y pertenezca al usuario...
 			CuentaFinanciera existente = (await cuentaFinancieraBcp.Obtener(idCuentaFinanciera, validarVigencia: true, validarSub: sub))!;
 
+			// Se valida que el negocio este vigente y pertenezca al usuario...
+			_ = (await negocioBcp.Obtener(existente.IdNegocio, validarVigencia: true, validarSub: sub))!;
+
 			// Se valida que el tipo de cuenta este vigente...
 			TipoCuentaFinanciera tipo = (await tipoCuentaFinancieraBcp.Obtener(idTipoCuentaFinanciera, validarVigencia: true))!;
 
@@ -64,7 +70,11 @@ namespace TanatosAPI.UseCases {
 		public async Task Eliminar(string sub, long idCuentaFinanciera) {
 			// Se valida que la cuenta pertenezca al usuario...
 			CuentaFinanciera? existente = await cuentaFinancieraBcp.Obtener(idCuentaFinanciera, validarSub: sub);
+
 			if (existente != null) {
+				// Se valida que el negocio este vigente y pertenezca al usuario...
+				_ = (await negocioBcp.Obtener(existente.IdNegocio, validarVigencia: true, validarSub: sub))!;
+
 				await cuentaFinancieraBcp.Eliminar(existente);
 			}
 		}

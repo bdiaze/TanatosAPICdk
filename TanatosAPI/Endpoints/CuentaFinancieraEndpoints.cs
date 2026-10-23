@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Security.Claims;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.CuentaFinanciera;
-using TanatosAPI.Entities.Others.ModeloCanvas;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.UseCases;
