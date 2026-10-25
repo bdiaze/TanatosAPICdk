@@ -369,11 +369,8 @@ namespace TanatosAPI.UseCases {
 
 			if (normaSuscrita.Vigencia) {
 				await normaSuscritaBcp.Eliminar(normaSuscrita, transaction!.NpgsqlTransaction());
-
 				(procesosProgramados, procesosDesprogramados) = await ActualizarProgramacionProcesosNormaSuscrita(normaSuscrita.Id, transaction);
 
-				await fiscalizadorNormaSuscritaBcp.EliminarPorNormaSuscrita(normaSuscrita.Id, transaction!.NpgsqlTransaction());
-				await notificacionNormaSuscritaBcp.EliminarPorNormaSuscrita(normaSuscrita.Id, transaction!.NpgsqlTransaction());
 				await historialNormaSuscritaUseCase.EliminarPorNormaSuscrita(normaSuscrita.Id, false, transaction!.NpgsqlTransaction());
 
 				if (activadaPreviamente && normaSuscrita.IdCargo != null) await EnviarNotificacionesObligacionQuitada(normaSuscrita.Id, normaSuscrita.IdCargo.Value, transaction);
