@@ -3591,3 +3591,76 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261023192218_ColumnIdMovimientoFinancieroDocumentoAdjunto') THEN
+    COMMENT ON COLUMN tanatos.documento_adjunto.id_historial_norma_suscrita IS 'Identificador del vencimiento asociado al documento.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261023192218_ColumnIdMovimientoFinancieroDocumentoAdjunto') THEN
+    ALTER TABLE tanatos.documento_adjunto ADD id_movimiento_financiero bigint;
+    COMMENT ON COLUMN tanatos.documento_adjunto.id_movimiento_financiero IS 'Identificador del movimiento financiero asociado al documento.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261023192218_ColumnIdMovimientoFinancieroDocumentoAdjunto') THEN
+    CREATE INDEX "IX_documento_adjunto_id_movimiento_financiero" ON tanatos.documento_adjunto (id_movimiento_financiero);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261023192218_ColumnIdMovimientoFinancieroDocumentoAdjunto') THEN
+    ALTER TABLE tanatos.documento_adjunto ADD CONSTRAINT "FK_documento_adjunto_movimiento_financiero_id_movimiento_finan~" FOREIGN KEY (id_movimiento_financiero) REFERENCES tanatos.movimiento_financiero (id) ON DELETE RESTRICT;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261023192218_ColumnIdMovimientoFinancieroDocumentoAdjunto') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261023192218_ColumnIdMovimientoFinancieroDocumentoAdjunto', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024183547_ColumnIdNegocioDocumentoAdjunto') THEN
+    ALTER TABLE tanatos.documento_adjunto ADD id_negocio bigint;
+    COMMENT ON COLUMN tanatos.documento_adjunto.id_negocio IS 'Identificador del negocio al que pertenece el documento.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024183547_ColumnIdNegocioDocumentoAdjunto') THEN
+    CREATE INDEX "IX_documento_adjunto_id_negocio" ON tanatos.documento_adjunto (id_negocio);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024183547_ColumnIdNegocioDocumentoAdjunto') THEN
+    ALTER TABLE tanatos.documento_adjunto ADD CONSTRAINT "FK_documento_adjunto_negocio_id_negocio" FOREIGN KEY (id_negocio) REFERENCES tanatos.negocio (id) ON DELETE RESTRICT;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024183547_ColumnIdNegocioDocumentoAdjunto') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261024183547_ColumnIdNegocioDocumentoAdjunto', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+

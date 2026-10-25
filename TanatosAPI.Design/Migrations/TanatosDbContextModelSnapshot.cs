@@ -494,7 +494,17 @@ namespace TanatosAPI.Design.Migrations
                     b.Property<long?>("IdHistorialNormaSuscrita")
                         .HasColumnType("bigint")
                         .HasColumnName("id_historial_norma_suscrita")
-                        .HasComment("Identificador del historial de ejecución de una norma suscrita.");
+                        .HasComment("Identificador del vencimiento asociado al documento.");
+
+                    b.Property<long?>("IdMovimientoFinanciero")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_movimiento_financiero")
+                        .HasComment("Identificador del movimiento financiero asociado al documento.");
+
+                    b.Property<long?>("IdNegocio")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_negocio")
+                        .HasComment("Identificador del negocio al que pertenece el documento.");
 
                     b.Property<string>("MimeEsperado")
                         .IsRequired()
@@ -531,6 +541,10 @@ namespace TanatosAPI.Design.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IdHistorialNormaSuscrita");
+
+                    b.HasIndex("IdMovimientoFinanciero");
+
+                    b.HasIndex("IdNegocio");
 
                     b.HasIndex("BucketName", "BucketKey");
 
@@ -2703,7 +2717,21 @@ namespace TanatosAPI.Design.Migrations
                         .HasForeignKey("IdHistorialNormaSuscrita")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("TanatosAPI.Entities.Models.MovimientoFinanciero", "MovimientoFinanciero")
+                        .WithMany("DocumentosAdjuntos")
+                        .HasForeignKey("IdMovimientoFinanciero")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanatosAPI.Entities.Models.Negocio", "Negocio")
+                        .WithMany("DocumentosAdjuntos")
+                        .HasForeignKey("IdNegocio")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("HistorialNormaSuscrita");
+
+                    b.Navigation("MovimientoFinanciero");
+
+                    b.Navigation("Negocio");
                 });
 
             modelBuilder.Entity("TanatosAPI.Entities.Models.Empleado", b =>
@@ -3126,6 +3154,11 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("HistorialNotificaciones");
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.MovimientoFinanciero", b =>
+                {
+                    b.Navigation("DocumentosAdjuntos");
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.Negocio", b =>
                 {
                     b.Navigation("Cargos");
@@ -3135,6 +3168,8 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("CuentasFinancieras");
 
                     b.Navigation("DestinatariosNotificaciones");
+
+                    b.Navigation("DocumentosAdjuntos");
 
                     b.Navigation("Empleados");
 

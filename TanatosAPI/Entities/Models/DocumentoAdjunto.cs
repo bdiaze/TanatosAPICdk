@@ -13,8 +13,14 @@ namespace TanatosAPI.Entities.Models {
 		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public required long Id { get; set; }
 
+		[Column("id_negocio")]
+		public required long? IdNegocio { get; set; }
+
 		[Column("id_historial_norma_suscrita")]
 		public long? IdHistorialNormaSuscrita { get; set; }
+
+		[Column("id_movimiento_financiero")]
+		public long? IdMovimientoFinanciero { get; set; }
 
 		[Required]
 		[Column("bucket_name")]
@@ -66,7 +72,15 @@ namespace TanatosAPI.Entities.Models {
 		public required bool Vigencia { get; set; }
 
 		[JsonIgnore]
+		[ForeignKey(nameof(IdNegocio))]
+		public Negocio? Negocio { get; set; }
+
+		[JsonIgnore]
 		[ForeignKey(nameof(IdHistorialNormaSuscrita))]
 		public HistorialNormaSuscrita? HistorialNormaSuscrita { get; set; }
+
+		[JsonIgnore]
+		[ForeignKey(nameof(IdMovimientoFinanciero))]
+		public MovimientoFinanciero? MovimientoFinanciero { get; set; }
 	}
 }
