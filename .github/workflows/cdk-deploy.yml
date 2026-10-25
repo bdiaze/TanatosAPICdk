@@ -17,12 +17,12 @@ jobs:
                   fetch-depth: 0
                   
             - name: Instalar .NET
-              uses: actions/setup-dotnet@v5
+              uses: actions/setup-dotnet@v6
               with:
                   dotnet-version: ${{ vars.VERSION_DOTNET }}
                 
             - name: Instalar JDK
-              uses: actions/setup-java@v5
+              uses: actions/setup-java@v6
               with:
                   java-version: ${{ vars.VERSION_JAVA }}
                   distribution: 'temurin'
@@ -169,12 +169,12 @@ jobs:
               uses: actions/checkout@v7
       
             - name: Instalar .NET
-              uses: actions/setup-dotnet@v5
+              uses: actions/setup-dotnet@v6
               with:
                   dotnet-version: ${{ vars.VERSION_DOTNET }}
       
             - name: Instalar Node.js
-              uses: actions/setup-node@v6
+              uses: actions/setup-node@v7
               with:
                   node-version: ${{ vars.VERSION_NODEJS }}
                            
@@ -218,7 +218,7 @@ jobs:
                   zip -X -r -q -T publish.zip .
             
             - name: Log in to registry
-              uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+              uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
               with:
                   registry: ${{ vars.DOCKER_IMAGE_REGISTRY }}
                   username: ${{ github.actor }}
@@ -234,7 +234,7 @@ jobs:
                     zip -X -r -q -T publish.zip ."
       
             - name: Configure AWS Credentials
-              uses: aws-actions/configure-aws-credentials@517a711dbcd0e402f90c77e7e2f81e849156e31d # v6.2.2
+              uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
               with:
                   aws-region: ${{ vars.REGION_AWS }}
                   role-to-assume: ${{ vars.ARN_GITHUB_ROLE }}
