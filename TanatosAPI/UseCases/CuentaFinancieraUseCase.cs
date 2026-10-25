@@ -3,7 +3,7 @@ using TanatosAPI.Exceptions;
 using TanatosAPI.Interfaces.Business;
 
 namespace TanatosAPI.UseCases {
-	public class CuentaFinancieraUseCase(ICuentaFinancieraBcp cuentaFinancieraBcp, ITipoCuentaFinancieraBcp tipoCuentaFinancieraBcp, INegocioBcp negocioBcp) {
+	public class CuentaFinancieraUseCase(ICuentaFinancieraBcp cuentaFinancieraBcp, ITipoCuentaFinancieraBcp tipoCuentaFinancieraBcp, INegocioBcp negocioBcp, IMovimientoFinancieroBcp movimientoFinancieroBcp) {
 		public async Task<List<CuentaFinanciera>> ObtenerVigentes(string sub, long idNegocio) {
 			// Se valida que el negocio este vigente y pertenezca al usuario...
 			_ = (await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub))!;
@@ -74,6 +74,17 @@ namespace TanatosAPI.UseCases {
 			if (existente != null) {
 				// Se valida que el negocio este vigente y pertenezca al usuario...
 				_ = (await negocioBcp.Obtener(existente.IdNegocio, validarVigencia: true, validarSub: sub))!;
+
+				// Se valida que la cuenta no tenga movimientos vigentes...
+				List<MovimientoFinanciero> movimientos = await movimientoFinancieroBcp.ObtenerConPaginacion(
+					idCuentaFinanciera, 
+					fechaDesde: null, 
+					fechaHasta: null, 
+					vigencia: true, 
+					primeraFecha: null, 
+					primerId: null, 
+					cantidad: 1);
+				if (movimientos.Count > 0) throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La cuenta no puede ser eliminada");
 
 				await cuentaFinancieraBcp.Eliminar(existente);
 			}
