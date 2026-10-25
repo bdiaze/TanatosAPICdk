@@ -365,8 +365,10 @@ namespace TanatosAPI.Design.Contexts {
                 entity.HasIndex(o => new { o.BucketName, o.BucketKey });
                 entity.ToTable(o => o.HasComment("Tabla que contiene la metadata de los documentos adjuntos asociados al historial de ejecución de una norma suscrita."));
                 entity.Property(o => o.Id).HasComment("Identificador del documento adjunto.");
-                entity.Property(o => o.IdHistorialNormaSuscrita).HasComment("Identificador del historial de ejecución de una norma suscrita.");
-                entity.Property(o => o.BucketName).HasComment("Nombre del bucket donde está almacenado el documento.");
+				entity.Property(o => o.IdNegocio).HasComment("Identificador del negocio al que pertenece el documento.");
+				entity.Property(o => o.IdHistorialNormaSuscrita).HasComment("Identificador del vencimiento asociado al documento.");
+				entity.Property(o => o.IdMovimientoFinanciero).HasComment("Identificador del movimiento financiero asociado al documento.");
+				entity.Property(o => o.BucketName).HasComment("Nombre del bucket donde está almacenado el documento.");
                 entity.Property(o => o.BucketKey).HasComment("Identificador del objeto dentro del bucket.");
                 entity.Property(o => o.NombreArchivo).HasComment("Nombre original del archivo.");
                 entity.Property(o => o.MimeEsperado).HasComment("Mime esperado del archivo.");
@@ -385,7 +387,19 @@ namespace TanatosAPI.Design.Contexts {
                     .WithMany(o => o.DocumentosAdjuntos)
                     .HasForeignKey(o => o.IdHistorialNormaSuscrita)
                     .OnDelete(DeleteBehavior.Restrict);
-            });
+
+                entity
+                    .HasOne(o => o.MovimientoFinanciero)
+					.WithMany(o => o.DocumentosAdjuntos)
+					.HasForeignKey(o => o.IdMovimientoFinanciero)
+					.OnDelete(DeleteBehavior.Restrict);
+
+				entity
+					.HasOne(o => o.Negocio)
+					.WithMany(o => o.DocumentosAdjuntos)
+					.HasForeignKey(o => o.IdNegocio)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
 
             modelBuilder.Entity<Suscripcion>(entity => {
                 entity.HasIndex(o => new { o.Sub });
