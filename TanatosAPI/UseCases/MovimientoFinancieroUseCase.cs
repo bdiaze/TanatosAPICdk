@@ -1,15 +1,11 @@
-﻿using System.Text.RegularExpressions;
-using System.Transactions;
-using TanatosAPI.Business;
-using TanatosAPI.Entities.Models;
+﻿using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
-using TanatosAPI.Interfaces.UseCases;
 
 namespace TanatosAPI.UseCases {
-	public class MovimientoFinancieroUseCase(IDatabaseConnectionHelper connectionHelper, IMovimientoFinancieroBcp movimientoFinancieroBcp, ICuentaFinancieraBcp cuentaFinancieraBcp, INegocioBcp negocioBcp, ICategoriaFinancieraBcp categoriaFinancieraBcp) {
+	public class MovimientoFinancieroUseCase(IDatabaseConnectionHelper connectionHelper, IMovimientoFinancieroBcp movimientoFinancieroBcp, ICuentaFinancieraBcp cuentaFinancieraBcp, INegocioBcp negocioBcp, ICategoriaFinancieraBcp categoriaFinancieraBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp) {
 		public async Task<(List<MovimientoFinanciero> items, (DateTime siguienteFecha, long siguienteId)?)> ObtenerConPaginacion(string sub, long idNegocio, long idCuentaFinanciera, DateTime fechaDesde, DateTime fechaHasta, DateTime? primeraFecha = null, long? primerId = null) {
 			// Se valida que el negocio este vigente y pertenezca al usuario...
 			_ = await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub);
@@ -201,6 +197,7 @@ namespace TanatosAPI.UseCases {
 
 					// Se elimina el movimiento en cuestión...
 					await movimientoFinancieroBcp.Eliminar(movimiento, transaction!.NpgsqlTransaction());
+					await documentoAdjuntoBcp.EliminarPorMovimientoFinanciero(movimiento.Id, transaction!.NpgsqlTransaction());
 				}
 
 
