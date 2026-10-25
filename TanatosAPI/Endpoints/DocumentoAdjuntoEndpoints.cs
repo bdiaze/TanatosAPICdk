@@ -77,10 +77,11 @@ namespace TanatosAPI.Endpoints {
 
 					(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto) = await documentoAdjuntoUseCase.GenerarUrlSubida(
 						sub,
-						entrada.IdHistorialNormaSuscrita,
 						entrada.NombreArchivo,
 						entrada.Mime,
-						entrada.Tamanno
+						entrada.Tamanno,
+						idHistorialNormaSuscrita: entrada.IdHistorialNormaSuscrita,
+						idMovimientoFinanciero: entrada.IdMovimientoFinanciero
 					);
 
                     SalDocumentoAdjuntoGenerarUrlSubida retorno = new() {
