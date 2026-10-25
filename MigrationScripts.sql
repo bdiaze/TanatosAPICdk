@@ -3664,3 +3664,23 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261025205059_IdNegocioNotNullableDocumentoAdjunto') THEN
+    UPDATE tanatos.documento_adjunto SET id_negocio = 0 WHERE id_negocio IS NULL;
+    ALTER TABLE tanatos.documento_adjunto ALTER COLUMN id_negocio SET NOT NULL;
+    ALTER TABLE tanatos.documento_adjunto ALTER COLUMN id_negocio SET DEFAULT 0;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261025205059_IdNegocioNotNullableDocumentoAdjunto') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261025205059_IdNegocioNotNullableDocumentoAdjunto', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+

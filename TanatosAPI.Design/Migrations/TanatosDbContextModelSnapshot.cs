@@ -501,7 +501,7 @@ namespace TanatosAPI.Design.Migrations
                         .HasColumnName("id_movimiento_financiero")
                         .HasComment("Identificador del movimiento financiero asociado al documento.");
 
-                    b.Property<long?>("IdNegocio")
+                    b.Property<long>("IdNegocio")
                         .HasColumnType("bigint")
                         .HasColumnName("id_negocio")
                         .HasComment("Identificador del negocio al que pertenece el documento.");
@@ -2725,7 +2725,8 @@ namespace TanatosAPI.Design.Migrations
                     b.HasOne("TanatosAPI.Entities.Models.Negocio", "Negocio")
                         .WithMany("DocumentosAdjuntos")
                         .HasForeignKey("IdNegocio")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("HistorialNormaSuscrita");
 

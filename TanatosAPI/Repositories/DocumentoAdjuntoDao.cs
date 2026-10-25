@@ -26,7 +26,7 @@ namespace TanatosAPI.Repositories {
 				while (await reader.ReadAsync()) {
 					retorno.Add(new DocumentoAdjunto {
 						Id = reader.GetInt64(reader.GetOrdinal("ID")),
-						IdNegocio = await reader.IsDBNullAsync(reader.GetOrdinal("ID_NEGOCIO")) ? null : reader.GetInt64(reader.GetOrdinal("ID_NEGOCIO")),
+						IdNegocio = reader.GetInt64(reader.GetOrdinal("ID_NEGOCIO")),
 						IdHistorialNormaSuscrita = await reader.IsDBNullAsync(reader.GetOrdinal("ID_HISTORIAL_NORMA_SUSCRITA")) ? null : reader.GetInt64(reader.GetOrdinal("ID_HISTORIAL_NORMA_SUSCRITA")),
 						IdMovimientoFinanciero = await reader.IsDBNullAsync(reader.GetOrdinal("ID_MOVIMIENTO_FINANCIERO")) ? null : reader.GetInt64(reader.GetOrdinal("ID_MOVIMIENTO_FINANCIERO")),
 						BucketName = reader.GetString(reader.GetOrdinal("BUCKET_NAME")),
@@ -72,7 +72,7 @@ namespace TanatosAPI.Repositories {
 				while (await reader.ReadAsync()) {
 					retorno.Add(new DocumentoAdjunto {
 						Id = reader.GetInt64(reader.GetOrdinal("ID")),
-						IdNegocio = await reader.IsDBNullAsync(reader.GetOrdinal("ID_NEGOCIO")) ? null : reader.GetInt64(reader.GetOrdinal("ID_NEGOCIO")),
+						IdNegocio = reader.GetInt64(reader.GetOrdinal("ID_NEGOCIO")),
 						IdHistorialNormaSuscrita = await reader.IsDBNullAsync(reader.GetOrdinal("ID_HISTORIAL_NORMA_SUSCRITA")) ? null : reader.GetInt64(reader.GetOrdinal("ID_HISTORIAL_NORMA_SUSCRITA")),
 						IdMovimientoFinanciero = await reader.IsDBNullAsync(reader.GetOrdinal("ID_MOVIMIENTO_FINANCIERO")) ? null : reader.GetInt64(reader.GetOrdinal("ID_MOVIMIENTO_FINANCIERO")),
 						BucketName = reader.GetString(reader.GetOrdinal("BUCKET_NAME")),
@@ -117,7 +117,7 @@ namespace TanatosAPI.Repositories {
 				while (await reader.ReadAsync()) {
 					retorno.Add(new DocumentoAdjunto {
 						Id = reader.GetInt64(reader.GetOrdinal("ID")),
-						IdNegocio = await reader.IsDBNullAsync(reader.GetOrdinal("ID_NEGOCIO")) ? null : reader.GetInt64(reader.GetOrdinal("ID_NEGOCIO")),
+						IdNegocio = reader.GetInt64(reader.GetOrdinal("ID_NEGOCIO")),
 						IdHistorialNormaSuscrita = await reader.IsDBNullAsync(reader.GetOrdinal("ID_HISTORIAL_NORMA_SUSCRITA")) ? null : reader.GetInt64(reader.GetOrdinal("ID_HISTORIAL_NORMA_SUSCRITA")),
 						IdMovimientoFinanciero = await reader.IsDBNullAsync(reader.GetOrdinal("ID_MOVIMIENTO_FINANCIERO")) ? null : reader.GetInt64(reader.GetOrdinal("ID_MOVIMIENTO_FINANCIERO")),
 						BucketName = reader.GetString(reader.GetOrdinal("BUCKET_NAME")),
@@ -162,7 +162,7 @@ namespace TanatosAPI.Repositories {
 				if (await reader.ReadAsync()) {
 					retorno = new DocumentoAdjunto {
 						Id = reader.GetInt64(reader.GetOrdinal("ID")),
-						IdNegocio = await reader.IsDBNullAsync(reader.GetOrdinal("ID_NEGOCIO")) ? null : reader.GetInt64(reader.GetOrdinal("ID_NEGOCIO")),
+						IdNegocio = reader.GetInt64(reader.GetOrdinal("ID_NEGOCIO")),
 						IdHistorialNormaSuscrita = await reader.IsDBNullAsync(reader.GetOrdinal("ID_HISTORIAL_NORMA_SUSCRITA")) ? null : reader.GetInt64(reader.GetOrdinal("ID_HISTORIAL_NORMA_SUSCRITA")),
 						IdMovimientoFinanciero = await reader.IsDBNullAsync(reader.GetOrdinal("ID_MOVIMIENTO_FINANCIERO")) ? null : reader.GetInt64(reader.GetOrdinal("ID_MOVIMIENTO_FINANCIERO")),
 						BucketName = reader.GetString(reader.GetOrdinal("BUCKET_NAME")),
@@ -201,7 +201,7 @@ namespace TanatosAPI.Repositories {
 
             try {
                 await using NpgsqlCommand command = new(query, connection, transaction);
-				command.Parameters.AddWithValue("IDNEGOCIO", (object?)item.IdNegocio ?? DBNull.Value);
+				command.Parameters.AddWithValue("IDNEGOCIO", item.IdNegocio);
 				command.Parameters.AddWithValue("IDHISTORIALNORMASUSCRITA", (object?)item.IdHistorialNormaSuscrita ?? DBNull.Value);
 				command.Parameters.AddWithValue("IDMOVIMIENTOFINANCIERO", (object?)item.IdMovimientoFinanciero ?? DBNull.Value);
 				command.Parameters.AddWithValue("BUCKETNAME", item.BucketName);
@@ -238,7 +238,7 @@ namespace TanatosAPI.Repositories {
 
             try {
                 await using NpgsqlCommand command = new(query, connection, transaction);
-				command.Parameters.AddWithValue("IDNEGOCIO", (object?)item.IdNegocio ?? DBNull.Value);
+				command.Parameters.AddWithValue("IDNEGOCIO", item.IdNegocio);
 				command.Parameters.AddWithValue("IDHISTORIALNORMASUSCRITA", (object?)item.IdHistorialNormaSuscrita ?? DBNull.Value);
 				command.Parameters.AddWithValue("IDMOVIMIENTOFINANCIERO", (object?)item.IdMovimientoFinanciero ?? DBNull.Value);
 				command.Parameters.AddWithValue("BUCKETNAME", item.BucketName);
