@@ -6,7 +6,7 @@ using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.UseCases {
-	public class NegocioUseCase(IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, NormaSuscritaUseCase normaSuscritaUseCase, INegocioBcp negocioBcp, ISuscripcionBcp suscripcionBcp, ITipoActividadBcp tipoActividadBcp, ITipoRubroBcp tipoRubroBcp) {
+	public class NegocioUseCase(IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, NormaSuscritaUseCase normaSuscritaUseCase, INegocioBcp negocioBcp, ISuscripcionBcp suscripcionBcp, ITipoActividadBcp tipoActividadBcp, ITipoRubroBcp tipoRubroBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp) {
 		public async Task IncluirActivididad(Negocio negocio, NpgsqlTransaction? transaction = null) {
 			await IncluirActivididad([negocio], transaction);
 		}
@@ -74,6 +74,7 @@ namespace TanatosAPI.UseCases {
 					negocio.FechaEliminacion = dateTimeProvider.UtcNow;
 					negocio.Vigencia = false;
 					await negocioBcp.Actualizar(negocio, transaction!.NpgsqlTransaction());
+					await documentoAdjuntoBcp.EliminarPorNegocio(negocio.Id, transaction!.NpgsqlTransaction());
 
 					List<NormaSuscrita> normasSuscritas = await normaSuscritaUseCase.ObtenerPorSubYNegocio(negocio.Sub, negocio.Id, filtrarVigentes: true, transaction: transaction!.NpgsqlTransaction());
 					foreach (NormaSuscrita normaSuscrita in normasSuscritas) {
