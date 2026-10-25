@@ -46,15 +46,15 @@ namespace TanatosAPI.Repositories {
 			}
 		}
 
-		public async Task<List<MovimientoFinanciero>> ObtenerConPaginacion(long idCuentaFinanciera, DateTime fechaDesde, DateTime fechaHasta, bool? vigencia = true, DateTime? primeraFecha = null, long? primerId = null, int cantidad = 50, NpgsqlTransaction? transaction = null) {
+		public async Task<List<MovimientoFinanciero>> ObtenerConPaginacion(long idCuentaFinanciera, DateTime? fechaDesde = null, DateTime? fechaHasta = null, bool? vigencia = true, DateTime? primeraFecha = null, long? primerId = null, int cantidad = 50, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_CUENTA_FINANCIERA, ID_CATEGORIA_FINANCIERA, TIPO_MOVIMIENTO, " +
 				"MONTO, SALDO, FECHA_MOVIMIENTO, DESCRIPCION, " +
 				"FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA " +
 				"FROM TANATOS.MOVIMIENTO_FINANCIERO " +
 				"WHERE ID_CUENTA_FINANCIERA = @IDCUENTAFINANCIERA AND " +
-				"FECHA_MOVIMIENTO >= @FECHADESDE AND " +
-				"FECHA_MOVIMIENTO <= @FECHAHASTA AND " +
+				"(FECHA_MOVIMIENTO >= @FECHADESDE OR @FECHADESDE IS NULL) AND " +
+				"(FECHA_MOVIMIENTO <= @FECHAHASTA OR @FECHAHASTA IS NULL) AND " +
 				"(VIGENCIA = @VIGENCIA OR @VIGENCIA IS NULL) ";
 			
 			if (primeraFecha != null && primerId != null)
@@ -69,8 +69,8 @@ namespace TanatosAPI.Repositories {
 			try {
 				await using NpgsqlCommand command = new(query, connection, transaction);
 				command.Parameters.AddWithValue("IDCUENTAFINANCIERA", idCuentaFinanciera);
-				command.Parameters.AddWithValue("FECHADESDE", fechaDesde);
-				command.Parameters.AddWithValue("FECHAHASTA", fechaHasta);
+				command.Parameters.AddWithValue("FECHADESDE", (object?)fechaDesde ?? DBNull.Value);
+				command.Parameters.AddWithValue("FECHAHASTA", (object?)fechaHasta ?? DBNull.Value);
 				command.Parameters.AddWithValue("VIGENCIA", (object?)vigencia ?? DBNull.Value);
 				if (primeraFecha != null && primerId != null) {
 					command.Parameters.AddWithValue("PRIMERAFECHA", primeraFecha);
