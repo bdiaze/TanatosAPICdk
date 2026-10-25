@@ -29,6 +29,7 @@ namespace TanatosAPI.Test.Business {
 
 		public static DocumentoAdjunto DocumentoAdjuntoDummy(
             long id = 1,
+            long idNegocio = 1,
             long idHistorialNormaSuscrita = 1,
             string bucketName = "BucketNameTest",
             string bucketKey = "BucketKeyTest",
@@ -45,6 +46,7 @@ namespace TanatosAPI.Test.Business {
             bool vigencia = true
         ) => new() { 
             Id = id,
+            IdNegocio = idNegocio,
             IdHistorialNormaSuscrita = idHistorialNormaSuscrita,
             BucketName = bucketName,
             BucketKey = bucketKey,
@@ -164,12 +166,12 @@ namespace TanatosAPI.Test.Business {
             (string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto) = await documentoAdjuntoBcp.GenerarUrlSubida(
                 "sub-test-123", 
                 1, 
-                2, 
-                3, 
                 "nombreArchivoTest",
 				"image/png", 
-                1024
-            );
+                1024,
+				idNormaSuscrita: 2,
+				idHistorialNormaSuscrita: 3
+			);
 
             Assert.Equal("https://pre-signed-url.test", preSignedUrl);
             Assert.Equal("field-value-test", fields["field-name-test"]);

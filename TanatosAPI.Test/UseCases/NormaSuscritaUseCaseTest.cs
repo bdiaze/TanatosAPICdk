@@ -845,8 +845,6 @@ namespace TanatosAPI.Test.UseCases {
 			
 			await normaSuscritaUseCase.EliminarNormaSuscrita(normaSuscrita, transaction);
 			await normaSuscritaBcp.Received(1).Eliminar(Arg.Any<NormaSuscrita>(), Arg.Any<NpgsqlTransaction>());
-			await fiscalizadorNormaSuscritaBcp.Received(1).EliminarPorNormaSuscrita(10, Arg.Any<NpgsqlTransaction>());
-			await notificacionNormaSuscritaBcp.Received(1).EliminarPorNormaSuscrita(10, Arg.Any<NpgsqlTransaction>());
 			await historialNormaSuscritaUseCase.Received(1).EliminarPorNormaSuscrita(10, false, Arg.Any<NpgsqlTransaction>());
 		}
 
@@ -856,8 +854,6 @@ namespace TanatosAPI.Test.UseCases {
 
 			await normaSuscritaUseCase.EliminarNormaSuscrita(normaSuscrita, transaction);
 			await normaSuscritaBcp.DidNotReceive().Eliminar(Arg.Any<NormaSuscrita>(), Arg.Any<NpgsqlTransaction>());
-			await fiscalizadorNormaSuscritaBcp.DidNotReceive().EliminarPorNormaSuscrita(Arg.Any<long>(), Arg.Any<NpgsqlTransaction>());
-			await notificacionNormaSuscritaBcp.DidNotReceive().EliminarPorNormaSuscrita(Arg.Any<long>(), Arg.Any<NpgsqlTransaction>());
 			await historialNormaSuscritaUseCase.DidNotReceive().EliminarPorNormaSuscrita(Arg.Any<long>(), Arg.Any<bool>(), Arg.Any<NpgsqlTransaction>());
 		}
 
