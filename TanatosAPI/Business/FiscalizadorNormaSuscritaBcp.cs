@@ -19,13 +19,6 @@ namespace TanatosAPI.Business {
 			}
 		}
 		
-		public async Task EliminarPorNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			List<FiscalizadorNormaSuscrita> fiscalizadoresVigentes = await fiscalizadorNormaSuscritaDao.ObtenerPorNormaSuscrita(idNormaSuscrita, true, transaction);
-			foreach (FiscalizadorNormaSuscrita fiscalizador in fiscalizadoresVigentes) {
-				await Eliminar(fiscalizador, transaction);
-			}
-		}
-
 		public async Task<FiscalizadorNormaSuscrita> Insertar(long idNormaSuscrita, long idTipoFiscalizador, NpgsqlTransaction? transaction = null) {
 			FiscalizadorNormaSuscrita nuevo = new() {
 				Id = 0,
