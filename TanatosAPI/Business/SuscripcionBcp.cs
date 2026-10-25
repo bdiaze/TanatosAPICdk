@@ -121,6 +121,11 @@ namespace TanatosAPI.Business {
 			return TienePlanEmpresa(suscripciones);
 		}
 
+		public async Task ValidarTienePlanEmpresa(string sub, NpgsqlTransaction? transaction = null) {
+			bool tienePlanEmpresa = await ConsultaTienePlanEmpresa(sub, transaction);
+			if (!tienePlanEmpresa) throw new ErrorValidacion(TipoErrorValidacion.RestringidoPorPlan, $"Tu plan restringe el uso de esta funcionalidad.");
+		}
+
 		public async Task Cancelar(Suscripcion suscripcion, NpgsqlTransaction? transaction = null) {
 			if (suscripcion.FlowSubscriptionId == null) {
 				throw new ErrorValidacion(TipoErrorValidacion.TipoNoValido, "La suscripción no está asociada a un subscription de Flow", "No se puede cancelar una suscripción gratuita.");
