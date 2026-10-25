@@ -64,9 +64,6 @@ namespace TanatosAPI.UseCases {
 				// Se valida que el negocio este vigente y pertenezca al usuario...
 				_ = (await negocioBcp.Obtener(existente.IdNegocio, validarVigencia: true, validarSub: sub))!;
 
-				// Se valida que el usuario no tenga movimientos con dicha categoría...
-				// TODO
-
 				await categoriaFinancieraBcp.Eliminar(existente);
 			}
 		}
