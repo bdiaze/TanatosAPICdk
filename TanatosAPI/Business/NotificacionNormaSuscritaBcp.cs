@@ -27,13 +27,6 @@ namespace TanatosAPI.Business {
 			}
 		}
 
-		public async Task EliminarPorNormaSuscrita(long idNormaSuscrita, NpgsqlTransaction? transaction = null) {
-			List<NotificacionNormaSuscrita> notificacionesVigentes = await notificacionNormaSuscritaDao.ObtenerPorNormaSuscrita(idNormaSuscrita, true);
-			foreach (NotificacionNormaSuscrita notificacion in notificacionesVigentes) {
-				await Eliminar(notificacion, transaction);
-			}
-		}
-
 		public async Task<NotificacionNormaSuscrita> Insertar(long idNormaSuscrita, long idTipoUnidadTiempoAntelacion, int cantAntelacion, NpgsqlTransaction? transaction = null) {
 			NotificacionNormaSuscrita nuevo = new() {
 				Id = 0,
