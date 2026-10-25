@@ -8,78 +8,87 @@ using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Repositories;
 
 namespace TanatosAPI.UseCases {
-    public class DocumentoAdjuntoUseCase(ISuscripcionBcp suscripcionBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp, INormaSuscritaBcp normaSuscritaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionBcp historialNotificacionBcp) {
+    public class DocumentoAdjuntoUseCase(ISuscripcionBcp suscripcionBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp, INegocioBcp negocioBcp, INormaSuscritaBcp normaSuscritaBcp, IHistorialNormaSuscritaBcp historialNormaSuscritaBcp, IHistorialNotificacionBcp historialNotificacionBcp, ICuentaFinancieraBcp cuentaFinancieraBcp, IMovimientoFinancieroBcp movimientoFinancieroBcp) {
         public async Task<List<DocumentoAdjunto>> ObtenerVigentes(string sub, long idHistorialNormaSuscrita) {
-            HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.Obtener(idHistorialNormaSuscrita);
-            if (!historialNormaSuscritaBcp.EstaVigente(historialNormaSuscrita)) {
-                throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El vencimiento no está vigente", "El vencimiento es inválido.");
-            }
+            HistorialNormaSuscrita historialNormaSuscrita = (await historialNormaSuscritaBcp.Obtener(idHistorialNormaSuscrita, validarVigencia: true))!;
 
-            NormaSuscrita? normaSuscrita = await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita);
-            if (!normaSuscritaBcp.EstaVigente(normaSuscrita) && !historialNormaSuscritaBcp.EstaCompletada(historialNormaSuscrita)) {
+            NormaSuscrita normaSuscrita = await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita, validarSub: sub) ?? throw new InvalidOperationException("No existe la obligación.");
+			if (!normaSuscritaBcp.EstaVigente(normaSuscrita) && !historialNormaSuscritaBcp.EstaCompletada(historialNormaSuscrita)) {
                 throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La obligación no está vigente ni el vencimiento completado", "El vencimiento es inválido.");
             }
 
-            if (sub != null && !normaSuscritaBcp.Pertenece(normaSuscrita!, sub)) {
-                throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "La obligación no pertenece al usuario", "El vencimiento es inválido.");
-            }
+            _ = await negocioBcp.Obtener(normaSuscrita.IdNegocio, validarVigencia: true, validarSub: sub);
 
             return await documentoAdjuntoBcp.ObtenerPorVencimiento(historialNormaSuscrita!.Id, filtrarVigentes: true, filtrarRecepcionados: true);
         }
+
+        public async Task<List<DocumentoAdjunto>> ObtenerVigentesPorMovimiento(string sub, long idMovimientoFinanciero) {
+            MovimientoFinanciero movimientoFinanciero = (await movimientoFinancieroBcp.Obtener(idMovimientoFinanciero, validarVigencia: true))!;
+            CuentaFinanciera cuentaFinanciera = (await cuentaFinancieraBcp.Obtener(movimientoFinanciero.IdCuentaFinanciera, validarVigencia: true, validarSub: sub))!;
+			_ = await negocioBcp.Obtener(cuentaFinanciera.IdNegocio, validarVigencia: true, validarSub: sub);
+
+            return await documentoAdjuntoBcp.ObtenerPorMovimiento(idMovimientoFinanciero, filtrarVigentes: true, filtrarRecepcionados: true);
+		}
         
-        public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string? sub, long idHistorialNormaSuscrita, string nombreArchivo, string mime, long tamanno) {
+        public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string? sub, string nombreArchivo, string mime, long tamanno, long? idHistorialNormaSuscrita = null, long? idMovimientoFinanciero = null) {
             nombreArchivo = nombreArchivo.Trim();
             mime = mime.Trim();
 
-            HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.Obtener(idHistorialNormaSuscrita);
-            if (!historialNormaSuscritaBcp.EstaVigente(historialNormaSuscrita)) {
-                throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El vencimiento no existe o no está vigente", "El vencimiento es inválido.");
-            }
+            if (idHistorialNormaSuscrita != null) {
+				HistorialNormaSuscrita historialNormaSuscrita = (await historialNormaSuscritaBcp.Obtener(idHistorialNormaSuscrita.Value, validarVigencia: true, validarSinCompletitud: true))!;
+				NormaSuscrita normaSuscrita = (await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita, validarVigencia: true, validarSub: sub))!;
+                _ = await negocioBcp.Obtener(normaSuscrita.IdNegocio, validarVigencia: true, validarSub: sub);
+                await suscripcionBcp.ValidarTienePlanEmpresa(normaSuscrita.Sub);
 
-            if (historialNormaSuscritaBcp.EstaCompletada(historialNormaSuscrita!)) {
-                throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "El vencimiento ya está completado", "El vencimiento es inválido.");
-            }
+				return await documentoAdjuntoBcp.GenerarUrlSubida(
+				    normaSuscrita.Sub,
+				    normaSuscrita.IdNegocio,
+					nombreArchivo,
+					mime,
+					tamanno,
+					idNormaSuscrita: normaSuscrita.Id,
+				    idHistorialNormaSuscrita: historialNormaSuscrita.Id
+			    );
+			} else if (idMovimientoFinanciero != null) {
+                MovimientoFinanciero movimientoFinanciero = (await movimientoFinancieroBcp.Obtener(idMovimientoFinanciero.Value, validarVigencia: true))!;
+                CuentaFinanciera cuentaFinanciera = (await cuentaFinancieraBcp.Obtener(movimientoFinanciero.IdCuentaFinanciera, validarVigencia: true, validarSub: sub))!;
+				_ = await negocioBcp.Obtener(cuentaFinanciera.IdNegocio, validarVigencia: true, validarSub: sub);
+				await suscripcionBcp.ValidarTienePlanEmpresa(cuentaFinanciera.Sub);
 
-            NormaSuscrita? normaSuscrita = await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita);
-            if (!normaSuscritaBcp.EstaVigente(normaSuscrita)) {
-                throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "La obligación no existe o no está vigente", "El vencimiento es inválido.");
-            }
-
-            // Si no se especifica el sub, se omite validación de pertenencia...
-            if (sub != null && !normaSuscritaBcp.Pertenece(normaSuscrita!, sub)) {
-                throw new ErrorValidacion(TipoErrorValidacion.NoPertenece, "La obligación no pertenece al usuario", "El vencimiento es inválido.");
-            }
-
-            if (!await suscripcionBcp.ConsultaTienePlanEmpresa(normaSuscrita!.Sub)) {
-                throw new ErrorValidacion(TipoErrorValidacion.RestringidoPorPlan, $"Tu plan no permite adjuntar documentos.");
-            }
-
-            return await documentoAdjuntoBcp.GenerarUrlSubida(
-                normaSuscrita!.Sub,
-                normaSuscrita!.IdNegocio,
-                normaSuscrita!.Id,
-                historialNormaSuscrita.Id,
-                nombreArchivo,
-                mime,
-                tamanno
-            );
+				return await documentoAdjuntoBcp.GenerarUrlSubida(
+					cuentaFinanciera.Sub,
+					cuentaFinanciera.IdNegocio,
+					nombreArchivo,
+					mime,
+					tamanno,
+					idCuentaFinanciera: cuentaFinanciera.Id,
+					idMovimientoFinanciero: movimientoFinanciero.Id
+				);
+			} else {
+				throw new InvalidOperationException("Se debe incluir el ID del vencimiento o el ID del movimiento.");
+			}
         }
 
         public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubidaPorCodigoAcceso(string codigoAcceso, string nombreArchivo, string mime, long tamanno) {
             nombreArchivo = nombreArchivo.Trim();
             mime = mime.Trim();
 
-            HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAccesoValidandoVigencia(codigoAcceso);
+            HistorialNotificacion historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAccesoValidandoVigencia(codigoAcceso);
 
-            return await GenerarUrlSubida(null, historialNotificacion!.IdHistorialNormaSuscrita, nombreArchivo, mime, tamanno);
+            return await GenerarUrlSubida(null, nombreArchivo, mime, tamanno, idHistorialNormaSuscrita: historialNotificacion.IdHistorialNormaSuscrita);
         }
 
-        public async Task ConfirmarSubida(string? sub, long idDocumentoAdjunto, long? idHistorialNormaSuscrita = null) {
-            DocumentoAdjunto documentoAdjunto = (await documentoAdjuntoBcp.Obtener(idDocumentoAdjunto, validarVigencia: true, validarIdHistorialNormaSuscrita: idHistorialNormaSuscrita))!;
+        public async Task ConfirmarSubida(string? sub, long idDocumentoAdjunto, long? idHistorialNormaSuscrita = null, long? idMovimientoFinanciero = null) {
+            DocumentoAdjunto documentoAdjunto = (await documentoAdjuntoBcp.Obtener(idDocumentoAdjunto, validarVigencia: true, validarIdHistorialNormaSuscrita: idHistorialNormaSuscrita, validarIdMovimientoFinanciero: idMovimientoFinanciero))!;
            
             if (documentoAdjunto.IdHistorialNormaSuscrita != null) {
 				HistorialNormaSuscrita historialNormaSuscrita = (await historialNormaSuscritaBcp.Obtener(documentoAdjunto.IdHistorialNormaSuscrita.Value, validarVigencia: true, validarSinCompletitud: true))!;
-				_ = await normaSuscritaBcp.Obtener(historialNormaSuscrita.IdNormaSuscrita, validarVigencia: true, validarSub: sub);
+				NormaSuscrita normaSuscrita = (await normaSuscritaBcp.Obtener(historialNormaSuscrita.IdNormaSuscrita, validarVigencia: true, validarSub: sub))!;
+				_ = await negocioBcp.Obtener(normaSuscrita.IdNegocio, validarVigencia: true, validarSub: sub);
+			} else if (documentoAdjunto.IdMovimientoFinanciero != null) {
+                MovimientoFinanciero movimientoFinanciero = (await movimientoFinancieroBcp.Obtener(documentoAdjunto.IdMovimientoFinanciero.Value, validarVigencia: true))!;
+				CuentaFinanciera cuentaFinanciera = (await cuentaFinancieraBcp.Obtener(movimientoFinanciero.IdCuentaFinanciera, validarVigencia: true, validarSub: sub))!;
+				_ = await negocioBcp.Obtener(cuentaFinanciera.IdNegocio, validarVigencia: true, validarSub: sub);
 			}
             
             await documentoAdjuntoBcp.ConfirmarSubida(documentoAdjunto);
@@ -88,20 +97,26 @@ namespace TanatosAPI.UseCases {
         public async Task ConfirmarSubidaPorCodigoAcceso(string codigoAcceso, long idDocumentoAdjunto) {
             HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAccesoValidandoVigencia(codigoAcceso);
 
-            await ConfirmarSubida(null, idDocumentoAdjunto, historialNotificacion!.IdHistorialNormaSuscrita);
+            await ConfirmarSubida(null, idDocumentoAdjunto, idHistorialNormaSuscrita: historialNotificacion!.IdHistorialNormaSuscrita);
         }
 
-        public async Task<string> GenerarUrlBajada(string? sub, long idDocumentoAdjunto, long? idHistorialNormaSuscrita = null, bool paraVisualizacion = false) {
-            DocumentoAdjunto documentoAdjunto = (await documentoAdjuntoBcp.Obtener(idDocumentoAdjunto, validarVigencia: true, validarIdHistorialNormaSuscrita: idHistorialNormaSuscrita))!;
+        public async Task<string> GenerarUrlBajada(string? sub, long idDocumentoAdjunto, long? idHistorialNormaSuscrita = null, long? idMovimientoFinanciero = null, bool paraVisualizacion = false) {
+            DocumentoAdjunto documentoAdjunto = (await documentoAdjuntoBcp.Obtener(idDocumentoAdjunto, validarVigencia: true, validarIdHistorialNormaSuscrita: idHistorialNormaSuscrita, validarIdMovimientoFinanciero: idMovimientoFinanciero))!;
 
             if (documentoAdjunto.IdHistorialNormaSuscrita != null) {
                 HistorialNormaSuscrita historialNormaSuscrita = (await historialNormaSuscritaBcp.Obtener(documentoAdjunto.IdHistorialNormaSuscrita.Value, validarVigencia: true))!;
                 
-                NormaSuscrita? normaSuscrita = await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita, validarSub: sub);
+                NormaSuscrita normaSuscrita = await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita, validarSub: sub) ?? throw new InvalidOperationException("No existe la obligación."); ;
                 if (!normaSuscritaBcp.EstaVigente(normaSuscrita) && !historialNormaSuscritaBcp.EstaCompletada(historialNormaSuscrita!)) {
                     throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La obligación no está vigente ni el vencimiento completado", "El documento adjunto es inválido.");
                 }
-            }
+
+				_ = await negocioBcp.Obtener(normaSuscrita.IdNegocio, validarVigencia: true, validarSub: sub);
+			} else if (documentoAdjunto.IdMovimientoFinanciero != null) {
+				MovimientoFinanciero movimientoFinanciero = (await movimientoFinancieroBcp.Obtener(documentoAdjunto.IdMovimientoFinanciero.Value, validarVigencia: true))!;
+				CuentaFinanciera cuentaFinanciera = (await cuentaFinancieraBcp.Obtener(movimientoFinanciero.IdCuentaFinanciera, validarVigencia: true, validarSub: sub))!;
+				_ = await negocioBcp.Obtener(cuentaFinanciera.IdNegocio, validarVigencia: true, validarSub: sub);
+			}
 
             return await documentoAdjuntoBcp.GenerarUrlBajada(documentoAdjunto, paraVisualizacion);
         }
@@ -109,17 +124,22 @@ namespace TanatosAPI.UseCases {
         public async Task<string> GenerarUrlBajadaPorCodigoAcceso(string codigoAcceso, long idDocumentoAdjunto, bool paraVisualizacion = false) {
             HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAccesoValidandoVigencia(codigoAcceso);
 
-            return await GenerarUrlBajada(null, idDocumentoAdjunto, historialNotificacion!.IdHistorialNormaSuscrita, paraVisualizacion);
+            return await GenerarUrlBajada(null, idDocumentoAdjunto, idHistorialNormaSuscrita: historialNotificacion!.IdHistorialNormaSuscrita, paraVisualizacion: paraVisualizacion);
         }
 
-        public async Task Eliminar(string? sub, long idDocumentoAdjunto, long? idHistorialNormaSuscrita = null) {
-            DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoBcp.Obtener(idDocumentoAdjunto, filtrarVigente: true, validarIdHistorialNormaSuscrita: idHistorialNormaSuscrita);
+        public async Task Eliminar(string? sub, long idDocumentoAdjunto, long? idHistorialNormaSuscrita = null, long? idMovimientoFinanciero = null) {
+            DocumentoAdjunto? documentoAdjunto = await documentoAdjuntoBcp.Obtener(idDocumentoAdjunto, filtrarVigente: true, validarIdHistorialNormaSuscrita: idHistorialNormaSuscrita, validarIdMovimientoFinanciero: idMovimientoFinanciero);
             
             if (documentoAdjunto != null) {
                 if (documentoAdjunto.IdHistorialNormaSuscrita != null) {
-                    HistorialNormaSuscrita? historialNormaSuscrita = await historialNormaSuscritaBcp.Obtener(documentoAdjunto.IdHistorialNormaSuscrita.Value, validarVigencia: true, validarSinCompletitud: true);
-                    _ = await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita, validarVigencia: true, validarSub: sub);
-                }
+                    HistorialNormaSuscrita historialNormaSuscrita = (await historialNormaSuscritaBcp.Obtener(documentoAdjunto.IdHistorialNormaSuscrita.Value, validarVigencia: true, validarSinCompletitud: true))!;
+					NormaSuscrita normaSuscrita = (await normaSuscritaBcp.Obtener(historialNormaSuscrita!.IdNormaSuscrita, validarVigencia: true, validarSub: sub))!;
+					_ = await negocioBcp.Obtener(normaSuscrita.IdNegocio, validarVigencia: true, validarSub: sub);
+				} else if (documentoAdjunto.IdMovimientoFinanciero != null) {
+					MovimientoFinanciero movimientoFinanciero = (await movimientoFinancieroBcp.Obtener(documentoAdjunto.IdMovimientoFinanciero.Value, validarVigencia: true))!;
+					CuentaFinanciera cuentaFinanciera = (await cuentaFinancieraBcp.Obtener(movimientoFinanciero.IdCuentaFinanciera, validarVigencia: true, validarSub: sub))!;
+					_ = await negocioBcp.Obtener(cuentaFinanciera.IdNegocio, validarVigencia: true, validarSub: sub);
+				}
 
                 await documentoAdjuntoBcp.Eliminar(documentoAdjunto!);
 			}
@@ -128,7 +148,7 @@ namespace TanatosAPI.UseCases {
         public async Task EliminarPorCodigoAcceso(string codigoAcceso, long idDocumentoAdjunto) {
             HistorialNotificacion? historialNotificacion = await historialNotificacionBcp.ObtenerPorCodigoAccesoValidandoVigencia(codigoAcceso);
 
-            await Eliminar(null, idDocumentoAdjunto, historialNotificacion!.IdHistorialNormaSuscrita);
+            await Eliminar(null, idDocumentoAdjunto, idHistorialNormaSuscrita: historialNotificacion!.IdHistorialNormaSuscrita);
         }
     }
 }
