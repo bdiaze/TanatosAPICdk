@@ -84,7 +84,7 @@ namespace TanatosAPI.UseCases {
 					primeraFecha: null, 
 					primerId: null, 
 					cantidad: 1);
-				if (movimientos.Count > 0) throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La cuenta no puede ser eliminada");
+				if (movimientos.Count > 0) throw new ErrorValidacion(TipoErrorValidacion.EstadoNoValido, "La cuenta no puede ser eliminada mientras tenga movimientos asociados.");
 
 				await cuentaFinancieraBcp.Eliminar(existente);
 			}
