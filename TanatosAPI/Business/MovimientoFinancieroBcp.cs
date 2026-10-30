@@ -12,6 +12,10 @@ namespace TanatosAPI.Business {
 			return item != null && item.Vigencia;
 		}
 
+		public bool EstaConfirmado(MovimientoFinanciero item) {
+			return item.Estado == 1 /* Confirmado */;
+		}
+
 		public bool PerteneceCuenta(MovimientoFinanciero item, long idCuentaFinanciera) {
 			return item.IdCuentaFinanciera == idCuentaFinanciera;
 		}
@@ -20,7 +24,11 @@ namespace TanatosAPI.Business {
 			return [.. items.Where(c => EstaVigente(c))];
 		}
 
-		public async Task<MovimientoFinanciero?> Obtener(long id, bool filtrarVigente = false, bool validarVigencia = false, long? validarIdCuentaFinanciera = null, NpgsqlTransaction? transaction = null) {
+		public List<MovimientoFinanciero> FiltrarConfirmados(List<MovimientoFinanciero> items) {
+			return [.. items.Where(c => EstaConfirmado(c))];
+		}
+
+		public async Task<MovimientoFinanciero?> Obtener(long id, bool filtrarVigente = false, bool filtrarConfirmado = false, bool validarVigencia = false, long? validarIdCuentaFinanciera = null, NpgsqlTransaction? transaction = null) {
 			MovimientoFinanciero? item = await movimientoFinancieroDao.Obtener(id, transaction);
 			if (validarVigencia && !EstaVigente(item)) throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El movimiento financiero no existe o no está vigente", "El movimiento es inválido.");
 			
@@ -30,23 +38,26 @@ namespace TanatosAPI.Business {
 
 			// Se aplican los filtros...
 			if (filtrarVigente && !EstaVigente(item)) return null;
+			if (item != null) {
+				if (filtrarConfirmado && !EstaConfirmado(item)) return null;
+			}
 
 			return item;
 		}
 
-		public async Task<List<MovimientoFinanciero>> ObtenerConPaginacion(long idCuentaFinanciera, DateTime? fechaDesde = null, DateTime? fechaHasta = null, bool? vigencia = true, DateTime? primeraFecha = null, long? primerId = null, int cantidad = 50, NpgsqlTransaction? transaction = null) {
-			return await movimientoFinancieroDao.ObtenerConPaginacion(idCuentaFinanciera, fechaDesde, fechaHasta, vigencia, primeraFecha, primerId, cantidad, transaction);
+		public async Task<List<MovimientoFinanciero>> ObtenerConPaginacion(long idCuentaFinanciera, DateTime? fechaDesde = null, DateTime? fechaHasta = null, short estado = 1, bool? vigencia = true, DateTime? primeraFecha = null, long? primerId = null, int cantidad = 50, NpgsqlTransaction? transaction = null) {
+			return await movimientoFinancieroDao.ObtenerConPaginacion(idCuentaFinanciera, fechaDesde, fechaHasta, estado, vigencia, primeraFecha, primerId, cantidad, transaction);
 		}
 
-		public async Task<List<MovimientoFinanciero>> ObtenerPrevios(long idCuentaFinanciera, DateTime fechaReferencia, long? idReferencia = null, bool? vigencia = true, int cantidad = 1, NpgsqlTransaction? transaction = null) {
-			return await movimientoFinancieroDao.ObtenerPrevios(idCuentaFinanciera, fechaReferencia, idReferencia, vigencia, cantidad, transaction);
+		public async Task<List<MovimientoFinanciero>> ObtenerPrevios(long idCuentaFinanciera, DateTime fechaReferencia, long? idReferencia = null, short estado = 1, bool? vigencia = true, int cantidad = 1, NpgsqlTransaction? transaction = null) {
+			return await movimientoFinancieroDao.ObtenerPrevios(idCuentaFinanciera, fechaReferencia, idReferencia, estado, vigencia, cantidad, transaction);
 		}
 
-		public async Task<List<MovimientoFinanciero>> ObtenerPosteriores(long idCuentaFinanciera, DateTime fechaReferencia, long idReferencia, bool? vigencia = true, bool incluirReferencia = false, NpgsqlTransaction? transaction = null) {
-			return await movimientoFinancieroDao.ObtenerPosteriores(idCuentaFinanciera, fechaReferencia, idReferencia, vigencia, incluirReferencia, transaction);
+		public async Task<List<MovimientoFinanciero>> ObtenerPosteriores(long idCuentaFinanciera, DateTime fechaReferencia, long idReferencia, short estado = 1, bool? vigencia = true, bool incluirReferencia = false, NpgsqlTransaction? transaction = null) {
+			return await movimientoFinancieroDao.ObtenerPosteriores(idCuentaFinanciera, fechaReferencia, idReferencia, estado, vigencia, incluirReferencia, transaction);
 		}
 
-		public async Task<MovimientoFinanciero> Crear(long idCuentaFinanciera, long? idCategoriaFinanciera, short tipoMovimiento, decimal monto, decimal saldo, DateTime fechaMovimientoUtc, string? descripcion, NpgsqlTransaction? transaction = null) {
+		public async Task<MovimientoFinanciero> Crear(long idCuentaFinanciera, long? idCategoriaFinanciera, short tipoMovimiento, decimal monto, decimal saldo, DateTime fechaMovimientoUtc, string? descripcion, short estado = 1, NpgsqlTransaction? transaction = null) {
 			MovimientoFinanciero nuevo = new() {
 				Id = 0,
 				IdCuentaFinanciera = idCuentaFinanciera,
@@ -56,6 +67,7 @@ namespace TanatosAPI.Business {
 				Saldo = saldo,
 				FechaMovimiento = fechaMovimientoUtc,
 				Descripcion = descripcion,
+				Estado = estado,
 				FechaCreacion = dateTimeProvider.UtcNow,
 				FechaEliminacion = null,
 				Vigencia = true
