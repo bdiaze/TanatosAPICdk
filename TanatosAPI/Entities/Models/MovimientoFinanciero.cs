@@ -41,6 +41,11 @@ namespace TanatosAPI.Entities.Models {
 		public string? Descripcion { get; set; }
 
 		[Required]
+		[Column("estado")]
+		// 0: Preliminar - 1: Confirmado
+		public short Estado { get; set; } = 1;
+
+		[Required]
 		[Column("fecha_creacion", TypeName = "timestamp with time zone")]
 		public required DateTime FechaCreacion { get; set; }
 

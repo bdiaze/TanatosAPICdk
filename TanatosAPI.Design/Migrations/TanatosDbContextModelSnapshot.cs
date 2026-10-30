@@ -1115,6 +1115,13 @@ namespace TanatosAPI.Design.Migrations
                         .HasColumnName("descripcion")
                         .HasComment("Descripción del movimiento.");
 
+                    b.Property<short>("Estado")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasDefaultValue((short)1)
+                        .HasColumnName("estado")
+                        .HasComment("Estado del movimiento - 0: Preliminar - 1: Confirmado.");
+
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fecha_creacion")

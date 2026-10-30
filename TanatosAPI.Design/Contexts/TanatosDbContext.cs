@@ -875,6 +875,7 @@ namespace TanatosAPI.Design.Contexts {
 				entity.Property(o => o.Saldo).HasComment("Saldo resultante del movimiento.");
 				entity.Property(o => o.FechaMovimiento).HasComment("Fecha en que se lleva a cabo el movimiento.");
 				entity.Property(o => o.Descripcion).HasComment("Descripción del movimiento.");
+				entity.Property(o => o.Estado).HasComment("Estado del movimiento - 0: Preliminar - 1: Confirmado.").HasDefaultValue(1);
 				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el movimiento.");
 				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el movimiento.");
 				entity.Property(o => o.Vigencia).HasComment("Vigencia del movimiento.");

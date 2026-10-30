@@ -3684,3 +3684,22 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261029132538_ColumnEstadoMovimientoFinanciero') THEN
+    ALTER TABLE tanatos.movimiento_financiero ADD estado smallint NOT NULL DEFAULT 1;
+    COMMENT ON COLUMN tanatos.movimiento_financiero.estado IS 'Estado del movimiento - 0: Preliminar - 1: Confirmado.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261029132538_ColumnEstadoMovimientoFinanciero') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261029132538_ColumnEstadoMovimientoFinanciero', '10.0.9');
+    END IF;
+END $EF$;
+COMMIT;
+
