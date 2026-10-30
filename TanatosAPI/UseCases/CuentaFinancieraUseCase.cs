@@ -80,6 +80,7 @@ namespace TanatosAPI.UseCases {
 					idCuentaFinanciera, 
 					fechaDesde: null, 
 					fechaHasta: null, 
+					estado: 1 /* Confirmado */,
 					vigencia: true, 
 					primeraFecha: null, 
 					primerId: null, 
