@@ -8,5 +8,6 @@
 		public required decimal Saldo { get; set; }
 		public required DateTime FechaMovimiento { get; set; }
 		public required string? Descripcion { get; set; }
+		public required short Estado { get; set; } // 0: Preliminar - 1: Confirmado
 	}
 }

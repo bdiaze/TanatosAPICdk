@@ -45,7 +45,8 @@ namespace TanatosAPI.Endpoints {
 								Monto = m.Monto,
 								Saldo = m.Saldo,
 								FechaMovimiento = m.FechaMovimiento,
-								Descripcion = m.Descripcion
+								Descripcion = m.Descripcion,
+								Estado = m.Estado
 							};
 						})],
 						SiguienteFecha = siguiente?.Fecha,
@@ -84,7 +85,8 @@ namespace TanatosAPI.Endpoints {
 						entrada.TipoMovimiento, 
 						entrada.Monto,
 						entrada.FechaMovimientoUtc, 
-						entrada.Descripcion
+						entrada.Descripcion,
+						entrada.Estado
 					);
 
 					SalMovimientoFinanciero retorno = new() {
@@ -95,7 +97,8 @@ namespace TanatosAPI.Endpoints {
 						Monto = nuevo.Monto,
 						Saldo = nuevo.Saldo,
 						FechaMovimiento = nuevo.FechaMovimiento,
-						Descripcion = nuevo.Descripcion
+						Descripcion = nuevo.Descripcion,
+						Estado = nuevo.Estado
 					};
 
 					LambdaLogger.Log(
@@ -132,7 +135,8 @@ namespace TanatosAPI.Endpoints {
 						entrada.TipoMovimiento,
 						entrada.Monto,
 						entrada.FechaMovimiento,
-						entrada.Descripcion
+						entrada.Descripcion,
+						entrada.Estado
 					);
 
 					SalMovimientoFinanciero retorno = new() {
@@ -143,7 +147,8 @@ namespace TanatosAPI.Endpoints {
 						Monto = existente.Monto,
 						Saldo = existente.Saldo,
 						FechaMovimiento = existente.FechaMovimiento,
-						Descripcion = existente.Descripcion
+						Descripcion = existente.Descripcion,
+						Estado = existente.Estado
 					};
 
 					LambdaLogger.Log(

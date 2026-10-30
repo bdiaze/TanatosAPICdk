@@ -8,5 +8,6 @@
 		public required decimal Monto { get; set; }
 		public required DateTime FechaMovimiento { get; set; }
 		public required string? Descripcion { get; set; }
+		public short Estado { get; set; } = 1; // 0: Preliminar - 1: Confirmado
 	}
 }
