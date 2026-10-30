@@ -110,7 +110,7 @@ namespace TanatosAPI.Repositories {
 		public async Task<List<MovimientoFinanciero>> ObtenerPrevios(long idCuentaFinanciera, DateTime fechaReferencia, long? idReferencia = null, short estado = 1, bool? vigencia = true, int cantidad = 1, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_CUENTA_FINANCIERA, ID_CATEGORIA_FINANCIERA, TIPO_MOVIMIENTO, " +
-				"MONTO, SALDO, FECHA_MOVIMIENTO, DESCRIPCION, " +
+				"MONTO, SALDO, FECHA_MOVIMIENTO, DESCRIPCION, ESTADO, " +
 				"FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA " +
 				"FROM TANATOS.MOVIMIENTO_FINANCIERO " +
 				"WHERE ID_CUENTA_FINANCIERA = @IDCUENTAFINANCIERA AND " +
@@ -167,7 +167,7 @@ namespace TanatosAPI.Repositories {
 		public async Task<List<MovimientoFinanciero>> ObtenerPosteriores(long idCuentaFinanciera, DateTime fechaReferencia, long idReferencia, short estado = 1, bool? vigencia = true, bool incluirReferencia = false, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_CUENTA_FINANCIERA, ID_CATEGORIA_FINANCIERA, TIPO_MOVIMIENTO, " +
-				"MONTO, SALDO, FECHA_MOVIMIENTO, DESCRIPCION, " +
+				"MONTO, SALDO, FECHA_MOVIMIENTO, DESCRIPCION, ESTADO, " +
 				"FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA " +
 				"FROM TANATOS.MOVIMIENTO_FINANCIERO " +
 				"WHERE ID_CUENTA_FINANCIERA = @IDCUENTAFINANCIERA AND " +
