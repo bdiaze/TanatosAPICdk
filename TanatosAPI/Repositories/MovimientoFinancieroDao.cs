@@ -8,7 +8,7 @@ namespace TanatosAPI.Repositories {
 		public async Task<MovimientoFinanciero?> Obtener(long id, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_CUENTA_FINANCIERA, ID_CATEGORIA_FINANCIERA, TIPO_MOVIMIENTO, " +
-				"MONTO, SALDO, FECHA_MOVIMIENTO, DESCRIPCION, " +
+				"MONTO, SALDO, FECHA_MOVIMIENTO, DESCRIPCION, ESTADO, " +
 				"FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA " +
 				"FROM TANATOS.MOVIMIENTO_FINANCIERO " +
 				"WHERE ID = @ID";
@@ -33,6 +33,7 @@ namespace TanatosAPI.Repositories {
 						Saldo = reader.GetDecimal(reader.GetOrdinal("SALDO")),
 						FechaMovimiento = reader.GetDateTime(reader.GetOrdinal("FECHA_MOVIMIENTO")),
 						Descripcion = await reader.IsDBNullAsync(reader.GetOrdinal("DESCRIPCION")) ? null : reader.GetString(reader.GetOrdinal("DESCRIPCION")),
+						Estado = reader.GetInt16(reader.GetOrdinal("ESTADO")),
 						FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
 						FechaEliminacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_ELIMINACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_ELIMINACION")),
 						Vigencia = reader.GetBoolean(reader.GetOrdinal("VIGENCIA"))
