@@ -17,6 +17,7 @@ namespace TanatosAPI.Endpoints {
 		public static IEndpointRouteBuilder MapDocumentoAdjuntoEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/DocumentoAdjunto");
 			group.MapObtenerVigentes();
+			group.MapObtenerVigentesPorMovimiento();
 			group.MapGenerarUrlSubidaEndpoint();
 			group.MapConfirmarSubidaEndpoint();
 			group.MapGenerarUrlBajadaEndpoint();
@@ -50,7 +51,7 @@ namespace TanatosAPI.Endpoints {
 
 					LambdaLogger.Log(
 						$"[GET] - [DocumentoAdjunto] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Obtención exitosa de los tipos de unidad de tiempo vigentes - Cant. Registros: {retorno.Count}.");
+						$"Obtención exitosa de los documentos vigentes por vencimiento - Cant. Registros: {retorno.Count}.");
 					return Results.Ok(retorno);
                 } catch (ErrorValidacion ex) {
                     LambdaLogger.Log(
@@ -61,11 +62,46 @@ namespace TanatosAPI.Endpoints {
                 } catch (Exception ex) {
 					LambdaLogger.Log(
 						$"[GET] - [DocumentoAdjunto] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error al obtener los tipos de unidad de tiempo vigentes. " +
+						$"Ocurrió un error al obtener los documentos vigentes por vencimiento. " +
 						$"{ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
-			}).RequireAuthorization("Vencimientos.Read.Self");
+			}).RequireAuthorization("Documentos.Read.Self");
+		}
+
+		private static void MapObtenerVigentesPorMovimiento(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/VigentesPorMovimiento/{idMovimientoFinanciero}", async (long idMovimientoFinanciero, IHostEnvironment environment, ClaimsPrincipal user, DocumentoAdjuntoUseCase documentoAdjuntoUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+
+					List<DocumentoAdjunto> documentoAdjuntos = await documentoAdjuntoUseCase.ObtenerVigentesPorMovimiento(sub, idMovimientoFinanciero);
+
+					List<SalDocumentoAdjunto> retorno = [.. documentoAdjuntos.Select(da => new SalDocumentoAdjunto {
+						Id = da.Id,
+						NombreArchivo = da.NombreArchivo,
+						Mime = da.MimeReal ?? da.MimeEsperado,
+						Tamanno = da.TamannoReal ?? da.TamannoEsperado,
+						FechaSubida = da.FechaConfirmacionSubida
+					})];
+
+					LambdaLogger.Log(
+						$"[GET] - [DocumentoAdjunto] - [ObtenerVigentesPorMovimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de los documentos vigentes por movimiento - Cant. Registros: {retorno.Count}.");
+					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [DocumentoAdjunto] - [ObtenerVigentesPorMovimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. {ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [DocumentoAdjunto] - [ObtenerVigentesPorMovimiento] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener los documentos vigentes por movimiento. {ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Documentos.Read.Self");
 		}
 
 		private static void MapGenerarUrlSubidaEndpoint(this IEndpointRouteBuilder routes) {
