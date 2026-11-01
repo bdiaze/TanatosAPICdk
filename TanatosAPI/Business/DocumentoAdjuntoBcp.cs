@@ -104,6 +104,7 @@ namespace TanatosAPI.Business {
                 Id = 0,
 				IdNegocio = idNegocio,
                 IdHistorialNormaSuscrita = idHistorialNormaSuscrita,
+				IdMovimientoFinanciero = idMovimientoFinanciero,
                 BucketName = BUCKET_NAME,
                 BucketKey = bucketKey,
                 NombreArchivo = nombreArchivo,
