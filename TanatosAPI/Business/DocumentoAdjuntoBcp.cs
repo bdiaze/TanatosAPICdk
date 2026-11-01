@@ -72,8 +72,8 @@ namespace TanatosAPI.Business {
 			return documentos;
 		}
 
-		public async Task<List<DocumentoAdjunto>> ObtenerPorMovimiento(long idMovimientoFinanciero, bool filtrarVigentes = false, bool filtrarRecepcionados = false, NpgsqlTransaction? transaction = null) {
-			List<DocumentoAdjunto> documentos = await documentoAdjuntoDao.ObtenerPorMovimiento(idMovimientoFinanciero, transaction);
+		public async Task<List<DocumentoAdjunto>> ObtenerPorMovimiento(HashSet<long> idsMovimientosFinancieros, bool filtrarVigentes = false, bool filtrarRecepcionados = false, NpgsqlTransaction? transaction = null) {
+			List<DocumentoAdjunto> documentos = await documentoAdjuntoDao.ObtenerPorMovimiento(idsMovimientosFinancieros, transaction);
 			if (filtrarVigentes) documentos = FiltrarVigentes(documentos);
 			if (filtrarRecepcionados) documentos = FiltrarRecepcionados(documentos);
 
@@ -167,7 +167,7 @@ namespace TanatosAPI.Business {
 		}
 
 		public async Task EliminarPorMovimientoFinanciero(long idMovimientoFinanciero, NpgsqlTransaction? transaction = null) {
-			List<DocumentoAdjunto> documentosAdjuntosEliminar = await ObtenerPorMovimiento(idMovimientoFinanciero, filtrarVigentes: true, transaction: transaction);
+			List<DocumentoAdjunto> documentosAdjuntosEliminar = await ObtenerPorMovimiento([idMovimientoFinanciero], filtrarVigentes: true, transaction: transaction);
 			foreach (DocumentoAdjunto documentoAdjuntoEliminar in documentosAdjuntosEliminar) {
 				await Eliminar(documentoAdjuntoEliminar, transaction);
 			}

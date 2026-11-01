@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Security.Claims;
 using TanatosAPI.Entities.Models;
 using TanatosAPI.Entities.Others.CuentaFinanciera;
+using TanatosAPI.Entities.Others.DocumentoAdjunto;
 using TanatosAPI.Entities.Others.MovimientoFinanciero;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
@@ -46,7 +47,14 @@ namespace TanatosAPI.Endpoints {
 								Saldo = m.Saldo,
 								FechaMovimiento = m.FechaMovimiento,
 								Descripcion = m.Descripcion,
-								Estado = m.Estado
+								Estado = m.Estado,
+								DocumentoAdjuntos = [.. m.DocumentosAdjuntos?.Select(da => new SalDocumentoAdjunto() {
+									Id = da.Id,
+									NombreArchivo = da.NombreArchivo,
+									Mime = da.MimeReal ?? da.MimeEsperado,
+									Tamanno = da.TamannoReal ?? da.TamannoEsperado,
+									FechaSubida = da.FechaConfirmacionSubida
+								}) ?? []]
 							};
 						})],
 						SiguienteFecha = siguiente?.Fecha,

@@ -1,4 +1,6 @@
-﻿namespace TanatosAPI.Entities.Others.MovimientoFinanciero {
+﻿using TanatosAPI.Entities.Others.DocumentoAdjunto;
+
+namespace TanatosAPI.Entities.Others.MovimientoFinanciero {
 	public class SalMovimientoFinanciero {
 		public required long Id { get; set; }
 		public required long? IdCategoriaFinanciera { get; set; }
@@ -9,5 +11,6 @@
 		public required DateTime FechaMovimiento { get; set; }
 		public required string? Descripcion { get; set; }
 		public required short Estado { get; set; } // 0: Preliminar - 1: Confirmado
+		public List<SalDocumentoAdjunto> DocumentoAdjuntos { get; set; } = [];
 	}
 }

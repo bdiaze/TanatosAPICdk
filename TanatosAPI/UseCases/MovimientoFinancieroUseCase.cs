@@ -33,6 +33,11 @@ namespace TanatosAPI.UseCases {
 				items.ForEach(i => {
 					i.CategoriaFinanciera = i.IdCategoriaFinanciera != null ? categorias.GetValueOrDefault(i.IdCategoriaFinanciera.Value) : null;
 				});
+
+				List<DocumentoAdjunto> documentos = await documentoAdjuntoBcp.ObtenerPorMovimiento([.. items.Select(i => i.Id)], filtrarVigentes: true, filtrarRecepcionados: true);
+				items.ForEach(i => {
+					i.DocumentosAdjuntos = [.. documentos.Where(d => d.IdMovimientoFinanciero == i.Id)];
+				});
 			}
 
 			return (items, siguiente);

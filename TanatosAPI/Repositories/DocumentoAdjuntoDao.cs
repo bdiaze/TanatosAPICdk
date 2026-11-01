@@ -98,18 +98,18 @@ namespace TanatosAPI.Repositories {
 			}
 		}
 
-		public async Task<List<DocumentoAdjunto>> ObtenerPorMovimiento(long idMovimientoFinanciero, NpgsqlTransaction? transaction = null) {
+		public async Task<List<DocumentoAdjunto>> ObtenerPorMovimiento(HashSet<long> idsMovimientosFinancieros, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_NEGOCIO, ID_HISTORIAL_NORMA_SUSCRITA, ID_MOVIMIENTO_FINANCIERO, BUCKET_NAME, BUCKET_KEY, NOMBRE_ARCHIVO, MIME_ESPERADO, TAMANNO_ESPERADO, MIME_REAL, TAMANNO_REAL, " +
 				"ESTADO_SUBIDA, FECHA_EMISION_URL_PREFIRMADA_PUT, FECHA_CONFIRMACION_SUBIDA, FECHA_CREACION, FECHA_ELIMINACION, VIGENCIA FROM TANATOS.DOCUMENTO_ADJUNTO " +
-				"WHERE ID_MOVIMIENTO_FINANCIERO = @IDMOVIMIENTOFINANCIERO";
+				"WHERE ID_MOVIMIENTO_FINANCIERO = ANY(@IDSMOVIMIENTOSFINANCIEROS)";
 
 			bool disposeConnection = transaction?.Connection == null;
 			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
 
 			try {
 				await using NpgsqlCommand command = new(query, connection, transaction);
-				command.Parameters.AddWithValue("IDMOVIMIENTOFINANCIERO", idMovimientoFinanciero);
+				command.Parameters.AddWithValue("IDSMOVIMIENTOSFINANCIEROS", idsMovimientosFinancieros.ToArray());
 
 				await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
 

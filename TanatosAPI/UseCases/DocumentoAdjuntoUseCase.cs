@@ -27,7 +27,7 @@ namespace TanatosAPI.UseCases {
             CuentaFinanciera cuentaFinanciera = (await cuentaFinancieraBcp.Obtener(movimientoFinanciero.IdCuentaFinanciera, validarVigencia: true, validarSub: sub))!;
 			_ = await negocioBcp.Obtener(cuentaFinanciera.IdNegocio, validarVigencia: true, validarSub: sub);
 
-            return await documentoAdjuntoBcp.ObtenerPorMovimiento(idMovimientoFinanciero, filtrarVigentes: true, filtrarRecepcionados: true);
+            return await documentoAdjuntoBcp.ObtenerPorMovimiento([idMovimientoFinanciero], filtrarVigentes: true, filtrarRecepcionados: true);
 		}
         
         public async Task<(string preSignedUrl, Dictionary<string, string> fields, DocumentoAdjunto documentoAdjunto)> GenerarUrlSubida(string? sub, string nombreArchivo, string mime, long tamanno, long? idHistorialNormaSuscrita = null, long? idMovimientoFinanciero = null) {
