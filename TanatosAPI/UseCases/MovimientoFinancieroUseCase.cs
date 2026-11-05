@@ -100,7 +100,7 @@ namespace TanatosAPI.UseCases {
 			preamble.CopyTo(resultado, 0);
 			UTF8.GetBytes(contenido, 0, contenido.Length, resultado, preamble.Length);
 
-			return (resultado, "text/csv; charset=utf-8", $"Movimiento_{DateTimeHelper.TransformarFechaUTCATimezone(dateTimeProvider.UtcNow):yyyyMMdd_HHmmss}.csv");
+			return (resultado, "text/csv; charset=utf-8", $"Movimientos_{DateTimeHelper.TransformarFechaUTCATimezone(dateTimeProvider.UtcNow):yyyyMMdd_HHmmss}.csv");
 		}
 
 		public async Task<MovimientoFinanciero> Crear(string sub, long idCuentaFinanciera, long? idCategoriaFinanciera, short tipoMovimiento, decimal monto, DateTime fechaMovimientoUtc, string? descripcion, short estado = 1, IDatabaseTransaction? transaction = null) {
