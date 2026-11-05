@@ -11,6 +11,7 @@ using Microsoft.OpenApi;
 using Npgsql;
 using Scalar.AspNetCore;
 using System.Security.Claims;
+using System.Text;
 using TanatosAPI.Business;
 using TanatosAPI.Endpoints;
 using TanatosAPI.Helpers;
@@ -20,6 +21,8 @@ using TanatosAPI.Interfaces.Repositories;
 using TanatosAPI.Interfaces.UseCases;
 using TanatosAPI.Repositories;
 using TanatosAPI.UseCases;
+
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
 WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
 
