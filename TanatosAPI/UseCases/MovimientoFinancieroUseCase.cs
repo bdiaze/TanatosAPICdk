@@ -7,7 +7,7 @@ using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.UseCases {
-	public class MovimientoFinancieroUseCase(IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, IMovimientoFinancieroBcp movimientoFinancieroBcp, ICuentaFinancieraBcp cuentaFinancieraBcp, INegocioBcp negocioBcp, ICategoriaFinancieraBcp categoriaFinancieraBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp) {
+	public class MovimientoFinancieroUseCase(IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, IMovimientoFinancieroBcp movimientoFinancieroBcp, ICuentaFinancieraBcp cuentaFinancieraBcp, INegocioBcp negocioBcp, ICategoriaFinancieraBcp categoriaFinancieraBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp, ISuscripcionBcp suscripcionBcp) {
 		public async Task<(List<MovimientoFinanciero> items, (DateTime siguienteFecha, long siguienteId)?)> ObtenerConPaginacion(string sub, long idNegocio, long idCuentaFinanciera, DateTime fechaDesde, DateTime fechaHasta, DateTime? primeraFecha = null, long? primerId = null) {
 			// Se valida que el negocio este vigente y pertenezca al usuario...
 			_ = await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub);
@@ -49,6 +49,9 @@ namespace TanatosAPI.UseCases {
 
 			// Se valida que la cuenta este vigente y pertenezca al usuario y negocio...
 			_ = await cuentaFinancieraBcp.Obtener(idCuentaFinanciera, validarVigencia: true, validarSub: sub, validarIdNegocio: idNegocio);
+
+			// Se valida que el usuario cuente con Plan Empresa..
+			await suscripcionBcp.ValidarTienePlanEmpresa(sub);
 
 			List<MovimientoFinanciero> items = await movimientoFinancieroBcp.ObtenerConPaginacion(
 				idCuentaFinanciera, 
