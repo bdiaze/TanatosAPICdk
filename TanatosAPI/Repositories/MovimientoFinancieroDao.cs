@@ -47,7 +47,7 @@ namespace TanatosAPI.Repositories {
 			}
 		}
 
-		public async Task<List<MovimientoFinanciero>> ObtenerConPaginacion(long idCuentaFinanciera, DateTime? fechaDesde = null, DateTime? fechaHasta = null, short estado = 1, bool? vigencia = true, DateTime? primeraFecha = null, long? primerId = null, int cantidad = 50, NpgsqlTransaction? transaction = null) {
+		public async Task<List<MovimientoFinanciero>> ObtenerConPaginacion(long idCuentaFinanciera, DateTime? fechaDesde = null, DateTime? fechaHasta = null, short estado = 1, bool? vigencia = true, DateTime? primeraFecha = null, long? primerId = null, int? cantidad = 50, NpgsqlTransaction? transaction = null) {
 			string query =
 				"SELECT ID, ID_CUENTA_FINANCIERA, ID_CATEGORIA_FINANCIERA, TIPO_MOVIMIENTO, " +
 				"MONTO, SALDO, FECHA_MOVIMIENTO, DESCRIPCION, ESTADO, " +
@@ -62,8 +62,10 @@ namespace TanatosAPI.Repositories {
 			if (primeraFecha != null && primerId != null)
 				query += "AND (FECHA_MOVIMIENTO, ID) <= (@PRIMERAFECHA, @PRIMERID) ";
 
-			query += "ORDER BY FECHA_MOVIMIENTO DESC, ID DESC " +
-					 "LIMIT @CANTIDAD";
+			query += "ORDER BY FECHA_MOVIMIENTO DESC, ID DESC ";
+
+			if (cantidad != null)
+				query += "LIMIT @CANTIDAD";
 
 			bool disposeConnection = transaction?.Connection == null;
 			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
@@ -79,7 +81,8 @@ namespace TanatosAPI.Repositories {
 					command.Parameters.AddWithValue("PRIMERAFECHA", primeraFecha);
 					command.Parameters.AddWithValue("PRIMERID", primerId.Value);
 				}
-				command.Parameters.AddWithValue("CANTIDAD", cantidad);
+				if (cantidad != null)
+					command.Parameters.AddWithValue("CANTIDAD", cantidad);
 
 				await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
 

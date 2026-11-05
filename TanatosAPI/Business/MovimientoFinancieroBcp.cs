@@ -45,7 +45,7 @@ namespace TanatosAPI.Business {
 			return item;
 		}
 
-		public async Task<List<MovimientoFinanciero>> ObtenerConPaginacion(long idCuentaFinanciera, DateTime? fechaDesde = null, DateTime? fechaHasta = null, short estado = 1, bool? vigencia = true, DateTime? primeraFecha = null, long? primerId = null, int cantidad = 50, NpgsqlTransaction? transaction = null) {
+		public async Task<List<MovimientoFinanciero>> ObtenerConPaginacion(long idCuentaFinanciera, DateTime? fechaDesde = null, DateTime? fechaHasta = null, short estado = 1, bool? vigencia = true, DateTime? primeraFecha = null, long? primerId = null, int? cantidad = 50, NpgsqlTransaction? transaction = null) {
 			return await movimientoFinancieroDao.ObtenerConPaginacion(idCuentaFinanciera, fechaDesde, fechaHasta, estado, vigencia, primeraFecha, primerId, cantidad, transaction);
 		}
 
