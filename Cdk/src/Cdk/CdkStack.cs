@@ -1079,6 +1079,7 @@ namespace Cdk
 						CorsHttpMethod.DELETE
 					],
 					AllowHeaders = ["Content-Type", "Authorization", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Retry-After"],
+					ExposeHeaders = ["Content-Disposition"],
 					AllowCredentials = true,
 					MaxAge = Duration.Days(10),
 				},
