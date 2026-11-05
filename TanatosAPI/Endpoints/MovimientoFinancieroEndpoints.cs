@@ -8,6 +8,7 @@ using TanatosAPI.Entities.Others.DocumentoAdjunto;
 using TanatosAPI.Entities.Others.MovimientoFinanciero;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
+using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.UseCases;
 
 namespace TanatosAPI.Endpoints {
@@ -15,6 +16,7 @@ namespace TanatosAPI.Endpoints {
 		public static void MapMovimientoFinancieroEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/MovimientoFinanciero");
 			group.MapObtenerVigentes();
+			group.MapExportarCsv();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
 			group.MapEliminarEndpoint();
@@ -74,6 +76,38 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [MovimientoFinanciero] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener los movimientos financieros vigentes. {ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Finanzas.Read.Self");
+		}
+
+		private static void MapExportarCsv(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/ExportarCsv/{idNegocio}/{idCuentaFinanciera}", async (long idNegocio, long idCuentaFinanciera, [FromQuery] DateTime fechaDesde, [FromQuery] DateTime fechaHasta,
+																			   IHostEnvironment environment, ClaimsPrincipal user, MovimientoFinancieroUseCase movimientoFinancieroUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+
+					(byte[] csv, string contentType, string fileName) = await movimientoFinancieroUseCase.GenerarCsvMovimientos(sub, idNegocio, idCuentaFinanciera, fechaDesde, fechaHasta);
+
+					LambdaLogger.Log(
+						$"[GET] - [MovimientoFinanciero] - [ExportarCsv] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Exportación a CSV exitosa de los movimientos financieros vigentes - Bytes: {csv.Length}.");
+					return Results.File(
+						csv,
+						contentType,
+						fileName
+					);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [MovimientoFinanciero] - [ExportarCsv] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. {ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [MovimientoFinanciero] - [ExportarCsv] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al exportar a CSV los movimientos financieros vigentes. {ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 			}).RequireAuthorization("Finanzas.Read.Self");

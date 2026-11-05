@@ -1,11 +1,13 @@
-﻿using TanatosAPI.Entities.Models;
+﻿using System.Globalization;
+using System.Text;
+using TanatosAPI.Entities.Models;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
 
 namespace TanatosAPI.UseCases {
-	public class MovimientoFinancieroUseCase(IDatabaseConnectionHelper connectionHelper, IMovimientoFinancieroBcp movimientoFinancieroBcp, ICuentaFinancieraBcp cuentaFinancieraBcp, INegocioBcp negocioBcp, ICategoriaFinancieraBcp categoriaFinancieraBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp) {
+	public class MovimientoFinancieroUseCase(IDatabaseConnectionHelper connectionHelper, IDateTimeProvider dateTimeProvider, IMovimientoFinancieroBcp movimientoFinancieroBcp, ICuentaFinancieraBcp cuentaFinancieraBcp, INegocioBcp negocioBcp, ICategoriaFinancieraBcp categoriaFinancieraBcp, IDocumentoAdjuntoBcp documentoAdjuntoBcp) {
 		public async Task<(List<MovimientoFinanciero> items, (DateTime siguienteFecha, long siguienteId)?)> ObtenerConPaginacion(string sub, long idNegocio, long idCuentaFinanciera, DateTime fechaDesde, DateTime fechaHasta, DateTime? primeraFecha = null, long? primerId = null) {
 			// Se valida que el negocio este vigente y pertenezca al usuario...
 			_ = await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub);
@@ -14,11 +16,6 @@ namespace TanatosAPI.UseCases {
 			_ = await cuentaFinancieraBcp.Obtener(idCuentaFinanciera, validarVigencia: true, validarSub: sub, validarIdNegocio: idNegocio);
 
 			int cantRegistros = 50;
-
-			if (cantRegistros <= 0 || cantRegistros > 100) {
-				throw new ErrorValidacion(TipoErrorValidacion.ValorNoValido, "La cantidad de registros debe estar entre 1 y 100.");
-			}
-
 			List<MovimientoFinanciero> items = await movimientoFinancieroBcp.ObtenerConPaginacion(idCuentaFinanciera, fechaDesde, fechaHasta, estado: 1 /* Confirmado */, vigencia: true, primeraFecha, primerId, cantRegistros + 1);
 			bool hayMas = items.Count > cantRegistros;
 
@@ -41,6 +38,69 @@ namespace TanatosAPI.UseCases {
 			}
 
 			return (items, siguiente);
+		}
+
+		private const int MAX_BYTES = 5 * 1024 * 1024;
+		private static readonly UTF8Encoding UTF8 = new(true);
+
+		public async Task<(byte[], string contentType, string fileName)> GenerarCsvMovimientos(string sub, long idNegocio, long idCuentaFinanciera, DateTime fechaDesde, DateTime fechaHasta) {
+			// Se valida que el negocio este vigente y pertenezca al usuario...
+			_ = await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub);
+
+			// Se valida que la cuenta este vigente y pertenezca al usuario y negocio...
+			_ = await cuentaFinancieraBcp.Obtener(idCuentaFinanciera, validarVigencia: true, validarSub: sub, validarIdNegocio: idNegocio);
+
+			List<MovimientoFinanciero> items = await movimientoFinancieroBcp.ObtenerConPaginacion(
+				idCuentaFinanciera, 
+				fechaDesde, 
+				fechaHasta, 
+				estado: 1 /* Confirmado */, 
+				vigencia: true, 
+				cantidad: null
+			);
+
+			if (items.Count > 0) {
+				Dictionary<long, CategoriaFinanciera> categorias = (await categoriaFinancieraBcp.ObtenerPorSub(sub, idNegocio, filtrarVigentes: true)).ToDictionary(c => c.Id, c => c);
+				items.ForEach(i => {
+					i.CategoriaFinanciera = i.IdCategoriaFinanciera != null ? categorias.GetValueOrDefault(i.IdCategoriaFinanciera.Value) : null;
+				});
+			}
+
+			StringBuilder builder = new();
+			CsvGenerator.AgregarFila(
+				builder,
+				"Fecha",
+				"Categoría",
+				"Descripción",
+				"Monto",
+				"Saldo"
+			);
+
+			foreach (MovimientoFinanciero movimiento in items) {
+				CsvGenerator.AgregarFila(
+					builder,
+					DateTimeHelper.TransformarFechaUTCATimezone(movimiento.FechaMovimiento).ToString("dd-MM-yyyy", CultureInfo.InvariantCulture),
+					CsvGenerator.ProtegerTexto(movimiento.CategoriaFinanciera?.Nombre),
+					CsvGenerator.ProtegerTexto(movimiento.Descripcion),
+					(movimiento.TipoMovimiento == 2 ? -movimiento.Monto : movimiento.Monto).ToString(CultureInfo.InvariantCulture),
+					movimiento.Saldo.ToString(CultureInfo.InvariantCulture)
+				); 
+			}
+
+			string contenido = builder.ToString();
+
+			int contenidoBytes = UTF8.GetByteCount(contenido);
+			byte[] preamble = UTF8.GetPreamble();
+
+			if (contenidoBytes + preamble.Length > MAX_BYTES) {
+				throw new ErrorValidacion(TipoErrorValidacion.TamannoNoValido, "El archivo CSV excede el tamaño máximo permitido, elija un rango de fechas menor.");
+			}
+
+			byte[] resultado = new byte[preamble.Length + contenidoBytes];
+			preamble.CopyTo(resultado, 0);
+			UTF8.GetBytes(contenido, 0, contenido.Length, resultado, preamble.Length);
+
+			return (resultado, "text/csv; charset=utf-8", $"Movimiento_{DateTimeHelper.TransformarFechaUTCATimezone(dateTimeProvider.UtcNow):yyyyMMdd_HHmmss}.csv");
 		}
 
 		public async Task<MovimientoFinanciero> Crear(string sub, long idCuentaFinanciera, long? idCategoriaFinanciera, short tipoMovimiento, decimal monto, DateTime fechaMovimientoUtc, string? descripcion, short estado = 1, IDatabaseTransaction? transaction = null) {
