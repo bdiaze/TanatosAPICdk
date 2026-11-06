@@ -41,8 +41,7 @@ namespace TanatosAPI.UseCases {
 		}
 
 		private const int MAX_BYTES = 5 * 1024 * 1024;
-
-		private static readonly Encoding CsvEncoding = Encoding.GetEncoding(1252);
+		private static readonly UTF8Encoding UTF8 = new(true);
 
 		public async Task<(byte[], string contentType, string fileName)> GenerarCsvMovimientos(string sub, long idNegocio, long idCuentaFinanciera, DateTime fechaDesde, DateTime fechaHasta) {
 			// Se valida que el negocio este vigente y pertenezca al usuario...
@@ -91,13 +90,20 @@ namespace TanatosAPI.UseCases {
 				); 
 			}
 
-			byte[] resultado = CsvEncoding.GetBytes(builder.ToString());
+			string contenido = builder.ToString();
 
-			if (resultado.Length > MAX_BYTES) {
+			int contenidoBytes = UTF8.GetByteCount(contenido);
+			byte[] preamble = UTF8.GetPreamble();
+
+			if (contenidoBytes + preamble.Length > MAX_BYTES) {
 				throw new ErrorValidacion(TipoErrorValidacion.TamannoNoValido, "El archivo CSV excede el tamaño máximo permitido, elija un rango de fechas menor.");
 			}
 
-			return (resultado, "text/csv; charset=windows-1252", $"Movimientos_{DateTimeHelper.TransformarFechaUTCATimezone(dateTimeProvider.UtcNow):yyyyMMdd_HHmmss}.csv");
+			byte[] resultado = new byte[preamble.Length + contenidoBytes];
+			preamble.CopyTo(resultado, 0);
+			UTF8.GetBytes(contenido, 0, contenido.Length, resultado, preamble.Length);
+
+			return (resultado, "text/csv; charset=utf-8", $"Movimientos_{DateTimeHelper.TransformarFechaUTCATimezone(dateTimeProvider.UtcNow):yyyyMMdd_HHmmss}.csv");
 		}
 
 		public async Task<MovimientoFinanciero> Crear(string sub, long idCuentaFinanciera, long? idCategoriaFinanciera, short tipoMovimiento, decimal monto, DateTime fechaMovimientoUtc, string? descripcion, short estado = 1, IDatabaseTransaction? transaction = null) {
