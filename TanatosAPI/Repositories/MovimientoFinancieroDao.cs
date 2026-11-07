@@ -1,5 +1,6 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Entities.Others.MovimientoFinanciero;
 using TanatosAPI.Interfaces.Helpers;
 using TanatosAPI.Interfaces.Repositories;
 
@@ -211,6 +212,130 @@ namespace TanatosAPI.Repositories {
 						FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FECHA_CREACION")),
 						FechaEliminacion = await reader.IsDBNullAsync(reader.GetOrdinal("FECHA_ELIMINACION")) ? null : reader.GetDateTime(reader.GetOrdinal("FECHA_ELIMINACION")),
 						Vigencia = reader.GetBoolean(reader.GetOrdinal("VIGENCIA"))
+					});
+				}
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
+		}
+
+		public async Task<TotalIngresosGastos> ObtenerTotalIngresosGastos(HashSet<long> idsCuentasFinancieras, DateTime fechaDesde, DateTime fechaHasta, NpgsqlTransaction? transaction = null) {
+			string query =
+					"SELECT COALESCE(SUM(MONTO) FILTER (WHERE TIPO_MOVIMIENTO = 1), 0) AS TOTAL_INGRESOS, " +
+					"COALESCE(SUM(MONTO) FILTER (WHERE TIPO_MOVIMIENTO = 2), 0) AS TOTAL_GASTOS, " +
+					"COALESCE(SUM(MONTO) FILTER (WHERE TIPO_MOVIMIENTO = 1), 0) - COALESCE(SUM(MONTO) FILTER (WHERE TIPO_MOVIMIENTO = 2), 0) AS RESULTADO, " +
+					"COUNT(*) AS CANTIDAD_MOVIMIENTOS " +
+					"FROM TANATOS.MOVIMIENTO_FINANCIERO " +
+					"WHERE ID_CUENTA_FINANCIERA = ANY(@IDSCUENTASFINANCIERAS) " +
+					"AND FECHA_MOVIMIENTO >= @FECHADESDE " +
+					"AND FECHA_MOVIMIENTO <= @FECHAHASTA " +
+					"AND ESTADO = 1 " +
+					"AND VIGENCIA";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+				command.Parameters.AddWithValue("IDSCUENTASFINANCIERAS", idsCuentasFinancieras.ToArray());
+				command.Parameters.AddWithValue("FECHADESDE", fechaDesde);
+				command.Parameters.AddWithValue("FECHAHASTA", fechaHasta);
+
+				await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+				if (!await reader.ReadAsync()) throw new InvalidOperationException("Consulta de total de ingresos y gastos no retornó resultados");
+
+				TotalIngresosGastos retorno = new() {
+					TotalIngresos = reader.GetDecimal(reader.GetOrdinal("TOTAL_INGRESOS")),
+					TotalGastos = reader.GetDecimal(reader.GetOrdinal("TOTAL_GASTOS")),
+					Resultado = reader.GetDecimal(reader.GetOrdinal("RESULTADO")),
+					CantidadMovimientos = reader.GetInt32(reader.GetOrdinal("CANTIDAD_MOVIMIENTOS"))
+				};
+
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
+		}
+
+		public async Task<List<IngresosGastosPorPeriodo>> ObtenerIngresosGastosPorPeriodo(HashSet<long> idsCuentasFinancieras, DateTime fechaDesde, DateTime fechaHasta, string timezone = "America/Santiago", NpgsqlTransaction? transaction = null) {
+			string query =
+					"SELECT TO_CHAR(DATE_TRUNC('MONTH', FECHA_MOVIMIENTO AT TIME ZONE @TIMEZONE), 'YYYYMM') AS PERIODO, " +
+					"COALESCE(SUM(MONTO) FILTER (WHERE TIPO_MOVIMIENTO = 1), 0) AS TOTAL_INGRESOS, " +
+					"COALESCE(SUM(MONTO) FILTER (WHERE TIPO_MOVIMIENTO = 2), 0) AS TOTAL_GASTOS, " +
+					"COALESCE(SUM(MONTO) FILTER (WHERE TIPO_MOVIMIENTO = 1), 0) - COALESCE(SUM(MONTO) FILTER (WHERE TIPO_MOVIMIENTO = 2), 0) AS RESULTADO " +
+					"FROM TANATOS.MOVIMIENTO_FINANCIERO " +
+					"WHERE ID_CUENTA_FINANCIERA = ANY(@IDSCUENTASFINANCIERAS) " +
+					"AND FECHA_MOVIMIENTO >= @FECHADESDE " +
+					"AND FECHA_MOVIMIENTO <= @FECHAHASTA " +
+					"AND ESTADO = 1 " +
+					"AND VIGENCIA " +
+					"GROUP BY DATE_TRUNC('MONTH', FECHA_MOVIMIENTO AT TIME ZONE @TIMEZONE)";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+				command.Parameters.AddWithValue("IDSCUENTASFINANCIERAS", idsCuentasFinancieras.ToArray());
+				command.Parameters.AddWithValue("FECHADESDE", fechaDesde);
+				command.Parameters.AddWithValue("FECHAHASTA", fechaHasta);
+				command.Parameters.AddWithValue("TIMEZONE", timezone);
+
+				await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+
+				List<IngresosGastosPorPeriodo> retorno = [];
+				while (await reader.ReadAsync()) {
+					retorno.Add(new IngresosGastosPorPeriodo {
+						Periodo = reader.GetString(reader.GetOrdinal("PERIODO")),
+						TotalIngresos = reader.GetDecimal(reader.GetOrdinal("TOTAL_INGRESOS")),
+						TotalGastos = reader.GetDecimal(reader.GetOrdinal("TOTAL_GASTOS")),
+						Resultado = reader.GetDecimal(reader.GetOrdinal("RESULTADO"))
+					});
+				}
+				return retorno;
+			} finally {
+				if (disposeConnection && connection != null) {
+					await connection.DisposeAsync();
+				}
+			}
+		}
+
+		public async Task<List<IngresosGastosPorCategoria>> ObtenerIngresosGastosPorCategoria(HashSet<long> idsCuentasFinancieras, DateTime fechaDesde, DateTime fechaHasta, NpgsqlTransaction? transaction = null) {
+			string query =
+					"SELECT TIPO_MOVIMIENTO, ID_CATEGORIA_FINANCIERA, " +
+					"COALESCE(SUM(MONTO), 0) AS MONTO_TOTAL, " +
+					"COUNT(*) AS CANTIDAD_MOVIMIENTOS " +
+					"FROM TANATOS.MOVIMIENTO_FINANCIERO " +
+					"WHERE ID_CUENTA_FINANCIERA = ANY(@IDSCUENTASFINANCIERAS) " +
+					"AND FECHA_MOVIMIENTO >= @FECHADESDE " +
+					"AND FECHA_MOVIMIENTO <= @FECHAHASTA " +
+					"AND ESTADO = 1 " +
+					"AND VIGENCIA " +
+					"GROUP BY TIPO_MOVIMIENTO, ID_CATEGORIA_FINANCIERA";
+
+			bool disposeConnection = transaction?.Connection == null;
+			NpgsqlConnection connection = transaction?.Connection ?? await connectionHelper.ObtenerConexion();
+
+			try {
+				await using NpgsqlCommand command = new(query, connection, transaction);
+				command.Parameters.AddWithValue("IDSCUENTASFINANCIERAS", idsCuentasFinancieras.ToArray());
+				command.Parameters.AddWithValue("FECHADESDE", fechaDesde);
+				command.Parameters.AddWithValue("FECHAHASTA", fechaHasta);
+
+				await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+
+				List<IngresosGastosPorCategoria> retorno = [];
+				while (await reader.ReadAsync()) {
+					retorno.Add(new IngresosGastosPorCategoria {
+						TipoMovimiento = reader.GetInt16(reader.GetOrdinal("TIPO_MOVIMIENTO")),
+						IdCategoriaFinanciera = await reader.IsDBNullAsync(reader.GetOrdinal("ID_CATEGORIA_FINANCIERA")) ? null : reader.GetInt64(reader.GetOrdinal("ID_CATEGORIA_FINANCIERA")),
+						MontoTotal = reader.GetDecimal(reader.GetOrdinal("MONTO_TOTAL")),
+						CantidadMovimientos = reader.GetInt32(reader.GetOrdinal("CANTIDAD_MOVIMIENTOS"))
 					});
 				}
 				return retorno;
