@@ -1,6 +1,8 @@
-﻿using System.Globalization;
+﻿using Npgsql;
+using System.Globalization;
 using System.Text;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Entities.Others.MovimientoFinanciero;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Helpers;
 using TanatosAPI.Interfaces.Business;
@@ -104,6 +106,41 @@ namespace TanatosAPI.UseCases {
 			UTF8.GetBytes(contenido, 0, contenido.Length, resultado, preamble.Length);
 
 			return (resultado, "text/csv; charset=utf-8", $"Movimientos_{DateTimeHelper.TransformarFechaUTCATimezone(dateTimeProvider.UtcNow):yyyyMMdd_HHmmss}.csv");
+		}
+
+		public async Task<TotalIngresosGastos> ObtenerTotalIngresosGastos(string sub, long idNegocio, DateTime fechaDesde, DateTime fechaHasta) {
+			// Se valida que el negocio este vigente y pertenezca al usuario...
+			_ = await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub);
+
+			List<CuentaFinanciera> cuentas = await cuentaFinancieraBcp.ObtenerPorSub(sub, idNegocio, filtrarVigentes: true);
+			return await movimientoFinancieroBcp.ObtenerTotalIngresosGastos([.. cuentas.Select(c => c.Id)], fechaDesde, fechaHasta);
+		}
+
+		public async Task<List<IngresosGastosPorPeriodo>> ObtenerIngresosGastosPorPeriodo(string sub, long idNegocio, DateTime fechaDesde, DateTime fechaHasta) {
+			// Se valida que el negocio este vigente y pertenezca al usuario...
+			_ = await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub);
+
+			List<CuentaFinanciera> cuentas = await cuentaFinancieraBcp.ObtenerPorSub(sub, idNegocio, filtrarVigentes: true);
+			return await movimientoFinancieroBcp.ObtenerIngresosGastosPorPeriodo([.. cuentas.Select(c => c.Id)], fechaDesde, fechaHasta);
+		}
+
+		public async Task<List<IngresosGastosPorCategoria>> ObtenerIngresosGastosPorCategoria(string sub, long idNegocio, DateTime fechaDesde, DateTime fechaHasta) {
+			// Se valida que el negocio este vigente y pertenezca al usuario...
+			_ = await negocioBcp.Obtener(idNegocio, validarVigencia: true, validarSub: sub);
+
+			List<CuentaFinanciera> cuentas = await cuentaFinancieraBcp.ObtenerPorSub(sub, idNegocio, filtrarVigentes: true);
+			List<IngresosGastosPorCategoria> ingresosGastos = await movimientoFinancieroBcp.ObtenerIngresosGastosPorCategoria([.. cuentas.Select(c => c.Id)], fechaDesde, fechaHasta);
+			if (ingresosGastos.Count > 0) {
+				Dictionary<long, CategoriaFinanciera> categorias = (await categoriaFinancieraBcp.ObtenerPorSub(sub, idNegocio)).ToDictionary(c => c.Id, c => c);
+				
+				ingresosGastos.ForEach(ig => {
+					CategoriaFinanciera? categoriaFinanciera = ig.IdCategoriaFinanciera == null ? null : categorias.GetValueOrDefault(ig.IdCategoriaFinanciera.Value);
+					ig.IdCategoriaFinanciera = categoriaFinanciera?.Id;
+					ig.NombreCategoriaFinanciera = categoriaFinanciera?.Nombre;
+				});
+			}
+
+			return ingresosGastos;
 		}
 
 		public async Task<MovimientoFinanciero> Crear(string sub, long idCuentaFinanciera, long? idCategoriaFinanciera, short tipoMovimiento, decimal monto, DateTime fechaMovimientoUtc, string? descripcion, short estado = 1, IDatabaseTransaction? transaction = null) {
