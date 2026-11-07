@@ -200,6 +200,9 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(SalMovimientoFinanciero))]
 	[JsonSerializable(typeof(EntMovimientoFinancieroCrear))]
 	[JsonSerializable(typeof(EntMovimientoFinancieroActualizar))]
+	[JsonSerializable(typeof(TotalIngresosGastos))]
+	[JsonSerializable(typeof(List<IngresosGastosPorPeriodo>))]
+	[JsonSerializable(typeof(List<IngresosGastosPorCategoria>))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }

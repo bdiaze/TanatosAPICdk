@@ -16,6 +16,9 @@ namespace TanatosAPI.Endpoints {
 		public static void MapMovimientoFinancieroEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/MovimientoFinanciero");
 			group.MapObtenerVigentes();
+			group.MapObtenerTotalIngresosGastos();
+			group.MapObtenerIngresosGastosPorPeriodo();
+			group.MapObtenerIngresosGastosPorCategoria();
 			group.MapExportarCsv();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
@@ -76,6 +79,87 @@ namespace TanatosAPI.Endpoints {
 					LambdaLogger.Log(
 						$"[GET] - [MovimientoFinanciero] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
 						$"Ocurrió un error al obtener los movimientos financieros vigentes. {ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Finanzas.Read.Self");
+		}
+
+		private static void MapObtenerTotalIngresosGastos(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/TotalIngresosGastos/{idNegocio}", async (long idNegocio, [FromQuery] DateTime fechaDesde, [FromQuery] DateTime fechaHasta, IHostEnvironment environment, ClaimsPrincipal user, MovimientoFinancieroUseCase movimientoFinancieroUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+
+					TotalIngresosGastos retorno = await movimientoFinancieroUseCase.ObtenerTotalIngresosGastos(sub, idNegocio, fechaDesde, fechaHasta);				  
+
+					LambdaLogger.Log(
+						$"[GET] - [MovimientoFinanciero] - [ObtenerTotalIngresosGastos] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa del total de ingresos y gastos de un negocio.");
+					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [MovimientoFinanciero] - [ObtenerTotalIngresosGastos] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. {ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [MovimientoFinanciero] - [ObtenerTotalIngresosGastos] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener el total de ingresos y gastos de un negocio. {ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Finanzas.Read.Self");
+		}
+
+		private static void MapObtenerIngresosGastosPorPeriodo(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/IngresosGastosPorPeriodo/{idNegocio}", async (long idNegocio, [FromQuery] DateTime fechaDesde, [FromQuery] DateTime fechaHasta, IHostEnvironment environment, ClaimsPrincipal user, MovimientoFinancieroUseCase movimientoFinancieroUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+
+					List<IngresosGastosPorPeriodo> retorno = await movimientoFinancieroUseCase.ObtenerIngresosGastosPorPeriodo(sub, idNegocio, fechaDesde, fechaHasta);
+
+					LambdaLogger.Log(
+						$"[GET] - [MovimientoFinanciero] - [ObtenerIngresosGastosPorPeriodo] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de los ingresos y gastos por periodo - Cant. Registros: {retorno.Count}.");
+					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [MovimientoFinanciero] - [ObtenerIngresosGastosPorPeriodo] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. {ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [MovimientoFinanciero] - [ObtenerIngresosGastosPorPeriodo] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener los ingresos y gastos por periodo. {ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Finanzas.Read.Self");
+		}
+
+		private static void MapObtenerIngresosGastosPorCategoria(this IEndpointRouteBuilder routes) {
+			routes.MapGet("/IngresosGastosPorCategoria/{idNegocio}", async (long idNegocio, [FromQuery] DateTime fechaDesde, [FromQuery] DateTime fechaHasta, IHostEnvironment environment, ClaimsPrincipal user,MovimientoFinancieroUseCase movimientoFinancieroUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
+
+					List<IngresosGastosPorCategoria> retorno = await movimientoFinancieroUseCase.ObtenerIngresosGastosPorCategoria(sub, idNegocio, fechaDesde, fechaHasta);
+
+					LambdaLogger.Log(
+						$"[GET] - [MovimientoFinanciero] - [ObtenerIngresosGastosPorCategoria] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Obtención exitosa de los ingresos y gastos por categoría - Cant. Registros: {retorno.Count}.");
+					return Results.Ok(retorno);
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[GET] - [MovimientoFinanciero] - [ObtenerIngresosGastosPorCategoria] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. {ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[GET] - [MovimientoFinanciero] - [ObtenerIngresosGastosPorCategoria] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al obtener los ingresos y gastos por categoría. {ex}");
 					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
 				}
 			}).RequireAuthorization("Finanzas.Read.Self");
