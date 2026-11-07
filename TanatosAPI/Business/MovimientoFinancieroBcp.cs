@@ -1,5 +1,6 @@
 ﻿using Npgsql;
 using TanatosAPI.Entities.Models;
+using TanatosAPI.Entities.Others.MovimientoFinanciero;
 using TanatosAPI.Exceptions;
 using TanatosAPI.Interfaces.Business;
 using TanatosAPI.Interfaces.Helpers;
@@ -55,6 +56,18 @@ namespace TanatosAPI.Business {
 
 		public async Task<List<MovimientoFinanciero>> ObtenerPosteriores(long idCuentaFinanciera, DateTime fechaReferencia, long idReferencia, short estado = 1, bool? vigencia = true, bool incluirReferencia = false, NpgsqlTransaction? transaction = null) {
 			return await movimientoFinancieroDao.ObtenerPosteriores(idCuentaFinanciera, fechaReferencia, idReferencia, estado, vigencia, incluirReferencia, transaction);
+		}
+
+		public async Task<TotalIngresosGastos> ObtenerTotalIngresosGastos(HashSet<long> idsCuentasFinancieras, DateTime fechaDesde, DateTime fechaHasta, NpgsqlTransaction? transaction = null) { 
+			return await movimientoFinancieroDao.ObtenerTotalIngresosGastos(idsCuentasFinancieras, fechaDesde, fechaHasta, transaction);
+		}
+		
+		public async Task<List<IngresosGastosPorPeriodo>> ObtenerIngresosGastosPorPeriodo(HashSet<long> idsCuentasFinancieras, DateTime fechaDesde, DateTime fechaHasta, string timezone = "America/Santiago", NpgsqlTransaction? transaction = null) {
+			return await movimientoFinancieroDao.ObtenerIngresosGastosPorPeriodo(idsCuentasFinancieras, fechaDesde, fechaHasta, timezone, transaction);
+		}
+
+		public async Task<List<IngresosGastosPorCategoria>> ObtenerIngresosGastosPorCategoria(HashSet<long> idsCuentasFinancieras, DateTime fechaDesde, DateTime fechaHasta, NpgsqlTransaction? transaction = null) { 
+			return await movimientoFinancieroDao.ObtenerIngresosGastosPorCategoria(idsCuentasFinancieras, fechaDesde, fechaHasta, transaction);
 		}
 
 		public async Task<MovimientoFinanciero> Crear(long idCuentaFinanciera, long? idCategoriaFinanciera, short tipoMovimiento, decimal monto, decimal saldo, DateTime fechaMovimientoUtc, string? descripcion, short estado = 1, NpgsqlTransaction? transaction = null) {
