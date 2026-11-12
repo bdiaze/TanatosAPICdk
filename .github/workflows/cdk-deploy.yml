@@ -158,6 +158,8 @@ jobs:
             FLOW_URL_CALLBACK: ${{ vars.FLOW_URL_CALLBACK }}
             FLOW_URL_RETORNO: ${{ vars.FLOW_URL_RETORNO }}
             URL_CODIGO_VERIFICACION: ${{ vars.URL_CODIGO_VERIFICACION }}
+            NOMBRE_PUBLICO: ${{ vars.NOMBRE_PUBLICO }}
+            URL_BASE: ${{ vars.URL_BASE }}
             
             APP_SCHEMA_NAME: ${{ vars.APP_SCHEMA_NAME }}
             INITIAL_CREATION_HANDLER: ${{ vars.INITIAL_CREATION_HANDLER }}

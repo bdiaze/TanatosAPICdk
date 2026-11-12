@@ -165,9 +165,11 @@ namespace TanatosAPI.Endpoints {
 							),
 						TipoCodigoVerificacion.AdminCreateUser =>
 							(
-								entrada.Nombre != null ? $"¡{entrada.Nombre}, aquí tu contraseña temporal!" : "¡Ha llegado tu contraseña temporal!",
-								"Contraseña Temporal",
-								"A continuación, te dejamos tu contraseña temporal para que puedas iniciar sesión:"
+								entrada.Nombre != null ? 
+									$"¡Bienvenido {entrada.Nombre} a {variableEntorno.Obtener("NOMBRE_PUBLICO")}!" : 
+									$"¡Bienvenido a {variableEntorno.Obtener("NOMBRE_PUBLICO")}!",
+								$"El equipo de {variableEntorno.Obtener("NOMBRE_PUBLICO")} te da la bienvenida",
+								"Usa tu correo electrónico y la siguiente contraseña temporal para iniciar sesión en nuestra plataforma:"
 							),
 						TipoCodigoVerificacion.AccountTakeOverNotification or _ => throw new InvalidOperationException("Tipo de Código inválido")
 					};
@@ -186,7 +188,10 @@ namespace TanatosAPI.Endpoints {
 						string urlCodigoVerificacion = variableEntorno.Obtener("URL_CODIGO_VERIFICACION");
 						string base64Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(strPayload));
                         urlLink = $"{urlCodigoVerificacion}{Uri.EscapeDataString(base64Payload)}";
-                    }
+                    } else if (entrada.TipoCodigo == TipoCodigoVerificacion.AdminCreateUser) {
+						textoLink = "¡Ir a mi cuenta!";
+						urlLink = variableEntorno.Obtener("URL_BASE");
+					}
 
                     SalHermesEnviar retorno = await hermesHelper.EnviarCorreo(new EntHermesCorreoEnviar() {
 						De = new DireccionCorreo() {

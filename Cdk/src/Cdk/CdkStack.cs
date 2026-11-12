@@ -118,9 +118,11 @@ namespace Cdk
 			string flowUrlCallback = System.Environment.GetEnvironmentVariable("FLOW_URL_CALLBACK") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno FLOW_URL_CALLBACK");
 			string flowUrlRetorno = System.Environment.GetEnvironmentVariable("FLOW_URL_RETORNO") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno FLOW_URL_RETORNO");
             string urlCodigoVerificacion = System.Environment.GetEnvironmentVariable("URL_CODIGO_VERIFICACION") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno URL_CODIGO_VERIFICACION");
-            
-            // Variables de entorno para la lambda de ejecución inicial...
-            string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno APP_SCHEMA_NAME");
+			string nombrePublico = System.Environment.GetEnvironmentVariable("NOMBRE_PUBLICO") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno NOMBRE_PUBLICO");
+			string urlBase = System.Environment.GetEnvironmentVariable("URL_BASE") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno URL_BASE");
+
+			// Variables de entorno para la lambda de ejecución inicial...
+			string appSchemaName = System.Environment.GetEnvironmentVariable("APP_SCHEMA_NAME") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno APP_SCHEMA_NAME");
             string initialCreationHandler = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_HANDLER") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno INITIAL_CREATION_HANDLER");
             string initialCreationPublishZip = System.Environment.GetEnvironmentVariable("INITIAL_CREATION_PUBLISH_ZIP") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno INITIAL_CREATION_PUBLISH_ZIP");
             string migrationScript = System.Environment.GetEnvironmentVariable("MIGRATION_SCRIPT") ?? throw new InvalidOperationException("No se ha configurado la variable de entorno MIGRATION_SCRIPT");
@@ -1049,8 +1051,10 @@ namespace Cdk
 					{ "DYNAMODB_TABLE_NAME_RATE_LIMITS", tablaRateLimits.TableName },
 					{ "RATE_LIMITS_SUBS_TO_SKIP", string.Join(',', subsToSkip) },
 					{ "KMS_KEY_ARN", kmsKey.KeyArn },
-					{ "URL_CODIGO_VERIFICACION", urlCodigoVerificacion }
-                },
+					{ "URL_CODIGO_VERIFICACION", urlCodigoVerificacion },
+					{ "NOMBRE_PUBLICO", nombrePublico },
+					{ "URL_BASE", urlBase }
+				},
                 Vpc = vpc,
                 VpcSubnets = new SubnetSelection {
                     Subnets = [subnet1, subnet2]
