@@ -192,9 +192,9 @@ namespace TanatosAPI.Endpoints {
 						TipoCodigoVerificacion.AdminCreateUser =>
 							(
 								entrada.Nombre != null ? 
-									$"¡Bienvenido {entrada.Nombre} a {variableEntorno.Obtener("NOMBRE_PUBLICO")}!" : 
-									$"¡Bienvenido a {variableEntorno.Obtener("NOMBRE_PUBLICO")}!",
-								$"El equipo de {variableEntorno.Obtener("NOMBRE_PUBLICO")} te da la bienvenida",
+									$"Bienvenido {entrada.Nombre} a {variableEntorno.Obtener("NOMBRE_PUBLICO")}" : 
+									$"Bienvenido a {variableEntorno.Obtener("NOMBRE_PUBLICO")}",
+								$"¡El equipo de {variableEntorno.Obtener("NOMBRE_PUBLICO")} te da la bienvenida!",
 								"Usa tu correo electrónico y la siguiente contraseña temporal para iniciar sesión en nuestra plataforma:"
 							),
 						TipoCodigoVerificacion.AccountTakeOverNotification or _ => throw new InvalidOperationException("Tipo de Código inválido")
@@ -215,7 +215,7 @@ namespace TanatosAPI.Endpoints {
 						string base64Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(strPayload));
                         urlLink = $"{urlCodigoVerificacion}{Uri.EscapeDataString(base64Payload)}";
                     } else if (entrada.TipoCodigo == TipoCodigoVerificacion.AdminCreateUser) {
-						textoLink = "¡Ir a mi cuenta!";
+						textoLink = "¡Click aquí para ir a tu cuenta!";
 						urlLink = variableEntorno.Obtener("URL_BASE");
 					}
 
