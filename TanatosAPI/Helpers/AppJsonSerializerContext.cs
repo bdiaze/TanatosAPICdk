@@ -203,6 +203,7 @@ namespace TanatosAPI.Helpers {
 	[JsonSerializable(typeof(TotalIngresosGastos))]
 	[JsonSerializable(typeof(List<IngresosGastosPorPeriodo>))]
 	[JsonSerializable(typeof(List<IngresosGastosPorCategoria>))]
+	[JsonSerializable(typeof(EntPerfilCrearUsuario))]
 	internal partial class AppJsonSerializerContext : JsonSerializerContext {
     }
 }

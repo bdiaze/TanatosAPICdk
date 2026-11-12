@@ -68,6 +68,38 @@ namespace TanatosAPI.Helpers {
 			}
 		}
 
+		public async Task<string> CrearUsuario(string email, string nombre, string apellido) {
+			AdminCreateUserResponse response = await client.AdminCreateUserAsync(new AdminCreateUserRequest {
+				UserPoolId = variableEntorno.Obtener("COGNITO_USER_POOL_ID"),
+				Username = email,
+				DesiredDeliveryMediums = ["EMAIL"],
+				UserAttributes = [
+					new AttributeType {
+						Name = "email",
+						Value = email
+					},
+					new AttributeType {
+						Name = "email_verified",
+						Value = "true"
+					},
+					new AttributeType {
+						Name = "given_name",
+						Value = nombre
+					},
+					new AttributeType {
+						Name = "family_name",
+						Value = apellido
+					}
+				]
+			});
+
+			if (response.HttpStatusCode != HttpStatusCode.OK) {
+				throw new InvalidOperationException("Ocurrió un error al crear cuenta del usuario");
+			}
+
+			return response.User.Username;
+		}
+
 		public async Task<(string accessToken, string refreshToken, int expiresIn, int refreshExpiresIn)> ObtenerConAuthorizationCode(string code, string codeVerifier, string redirectUri) {
 			Dictionary<string, string> parametros = new() {
 				{ "grant_type", "authorization_code" },

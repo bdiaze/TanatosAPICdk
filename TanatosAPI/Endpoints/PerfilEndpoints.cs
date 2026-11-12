@@ -23,6 +23,7 @@ namespace TanatosAPI.Endpoints {
 			group.MapActualizarWhatsappEndpoint();
 			group.MapConfiguracionInicialEndpoint();
 			group.MapEnviarCodigoVerificacion();
+			group.MapCrearUsuarioEndpoint();
 
             RouteGroupBuilder publicGroup = routes.MapGroup("/public/Perfil");
 			publicGroup.MapValidarWhatsappEndpoint();
@@ -97,12 +98,37 @@ namespace TanatosAPI.Endpoints {
 			}).RequireAuthorization("Perfil.Read.Self", "Perfil.Write.Self");
 		}
 
+		private static void MapCrearUsuarioEndpoint(this IEndpointRouteBuilder routes) {
+			routes.MapPost("/CrearUsuario", async (EntPerfilCrearUsuario entrada, IHostEnvironment environment, ClaimsPrincipal user, PerfilUseCase perfilUseCase) => {
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try {
+					_ = await perfilUseCase.CrearUsuario(entrada.Email, entrada.Nombre, entrada.Apellido);
+
+					LambdaLogger.Log(
+						$"[POST] - [Perfil] - [CrearUsuario] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
+						$"Creación exitosa de la cuenta del usuario.");
+					return Results.Ok();
+				} catch (ErrorValidacion ex) {
+					LambdaLogger.Log(
+						$"[POST] - [Perfil] - [CrearUsuario] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status400BadRequest}] - " +
+						$"Ocurrió un error de validación. {ex}");
+					return Results.BadRequest(ex.MensajeGenerico);
+				} catch (Exception ex) {
+					LambdaLogger.Log(
+						$"[POST] - [Perfil] - [CrearUsuario] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
+						$"Ocurrió un error al crear la cuenta del usuario. {ex}");
+					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
+				}
+			}).RequireAuthorization("Perfil.Read.All", "Perfil.Write.All");
+		}
+
 		private static IEndpointRouteBuilder MapConfiguracionInicialEndpoint(this IEndpointRouteBuilder routes) {
 			routes.MapPost("/ConfiguracionInicial", async (EntPerfilConfiguracionInicial entrada, IHostEnvironment environment, PerfilUseCase perfilUseCase) => {
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try {
-					await perfilUseCase.ConfiguracionInicial(entrada.UserName);
+					_ = await perfilUseCase.ConfiguracionInicial(entrada.UserName);
 
 					LambdaLogger.Log(
 						$"[POST] - [Perfil] - [ConfiguracionInicial] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +

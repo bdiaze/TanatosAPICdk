@@ -958,7 +958,8 @@ namespace Cdk
 									Sid = $"{appName}AccessToCognito",
 									Actions = [
 										"cognito-idp:AdminGetUser",
-                                        "cognito-idp:ConfirmSignUp",
+										"cognito-idp:AdminCreateUser",
+										"cognito-idp:ConfirmSignUp",
 										"cognito-idp:ResendConfirmationCode"
                                     ],
 									Resources = [
