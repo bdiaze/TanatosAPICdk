@@ -57,7 +57,7 @@ namespace TanatosAPI.UseCases {
 			})];
 		}
 
-		public async Task<string?> SuscribirseAPlan(string sub, long idPlan, IDatabaseTransaction? transaction = null) {
+		public async Task<string?> SuscribirseAPlan(string sub, long idPlan, bool esConfiguracionInicial = false, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
 			IDatabaseConnection? connection = null;
 
@@ -72,6 +72,11 @@ namespace TanatosAPI.UseCases {
 
 				if (suscripcionBcp.AlgunaConPagoEnCurso(suscripciones)) {
 					throw new ErrorValidacion(TipoErrorValidacion.YaExiste, "El usuario ya tiene una suscripción con pago en curso", "Ya cuentas con una suscripción activa.");
+				}
+
+				// Se valida que el plan no sea solo para configuración inicial si no es una suscripción de configuración inicial...
+				if (!esConfiguracionInicial && plan.SoloConfiguracionInicial) {
+					throw new ErrorValidacion(TipoErrorValidacion.NoVigente, "El usuario no puede suscribirse a un plan de configuración inicial", "El plan es inválido.");
 				}
 
 				if (plan.SuscripcionUnica && suscripciones.Any(s => s.IdPlan == plan.Id)) {
@@ -132,19 +137,20 @@ namespace TanatosAPI.UseCases {
 				}
 
 				List<Suscripcion> suscripcion = await suscripcionBcp.ObtenerVigentesPorSub(sub, transaction!.NpgsqlTransaction());
-				List<Plan> planesGratuitos = [.. (await planBcp.ObtenerPlanesGratuitos(transaction!.NpgsqlTransaction()))
+				List<Plan> planesConfiguracionInicial = [.. (await planBcp.ObtenerPlanesSinFlow(transaction!.NpgsqlTransaction()))
+					.Where(p => p.SoloConfiguracionInicial)
 					.Where(p => !p.SuscripcionUnica || !suscripcion.Any(s => s.IdPlan == p.Id))
 				];
 
-				foreach (Plan plan in planesGratuitos) {
-					await SuscribirseAPlan(sub, plan.Id, transaction);
+				foreach (Plan plan in planesConfiguracionInicial) {
+					await SuscribirseAPlan(sub, plan.Id, esConfiguracionInicial: true, transaction);
 				}
 
 				if (ownsTransaction) {
 					await transaction!.CommitAsync();
 				}
 
-				return planesGratuitos;
+				return planesConfiguracionInicial;
 			} catch {
 				if (ownsTransaction && transaction != null) {
 					await transaction.RollbackAsync();

@@ -84,7 +84,7 @@ namespace TanatosAPI.Endpoints {
 					string sub = user.Identity?.Name ?? throw new InvalidOperationException(Constant.CONST_SIN_INFO_USUARIO);
 
 					SalSuscripcionCrear retorno = new() {
-						UrlSuscripcion = await suscripcionUseCase.SuscribirseAPlan(sub, entrada.IdPlan)
+						UrlSuscripcion = await suscripcionUseCase.SuscribirseAPlan(sub, entrada.IdPlan, esConfiguracionInicial: false)
 					};
 
 					LambdaLogger.Log(

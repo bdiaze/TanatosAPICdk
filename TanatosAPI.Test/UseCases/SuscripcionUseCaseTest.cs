@@ -246,10 +246,10 @@ namespace TanatosAPI.Test.UseCases {
 
 		[Fact]
 		public async Task SuscribirseAPlanesGratuitosTest() {
-			planBcp.ObtenerPlanesGratuitos(Arg.Any<NpgsqlTransaction?>()).Returns([
-				PlanBcpTest.PlanDummy(id: 1, precio: 0, duracionMeses: 1, suscripcionUnica: true, flowPlanId: null),
-				PlanBcpTest.PlanDummy(id: 2, precio: 0, duracionMeses: 2, suscripcionUnica: true, flowPlanId: null),
-				PlanBcpTest.PlanDummy(id: 3, precio: 0, duracionMeses: 3, suscripcionUnica: true, flowPlanId: null)
+			planBcp.ObtenerPlanesSinFlow(Arg.Any<NpgsqlTransaction?>()).Returns([
+				PlanBcpTest.PlanDummy(id: 1, precio: 0, duracionMeses: 1, suscripcionUnica: true, flowPlanId: null, soloConfiguracionInicial: true),
+				PlanBcpTest.PlanDummy(id: 2, precio: 0, duracionMeses: 2, suscripcionUnica: true, flowPlanId: null, soloConfiguracionInicial: true),
+				PlanBcpTest.PlanDummy(id: 3, precio: 0, duracionMeses: 3, suscripcionUnica: true, flowPlanId: null, soloConfiguracionInicial: true)
 			]);
 			planBcp.ObtenerPorIdValidandoVigencia(1, Arg.Any<NpgsqlTransaction?>()).Returns(PlanBcpTest.PlanDummy(id: 1, precio: 0, duracionMeses: 1, suscripcionUnica: true, flowPlanId: null));
 			planBcp.ObtenerPorIdValidandoVigencia(2, Arg.Any<NpgsqlTransaction?>()).Returns(PlanBcpTest.PlanDummy(id: 2, precio: 0, duracionMeses: 1, suscripcionUnica: true, flowPlanId: null));
@@ -276,8 +276,8 @@ namespace TanatosAPI.Test.UseCases {
 
 		[Fact]
 		public async Task SuscribirseAPlanesGratuitosTest_Invalido() {
-			planBcp.ObtenerPlanesGratuitos(Arg.Any<NpgsqlTransaction?>()).Returns([
-				PlanBcpTest.PlanDummy(id: 1, precio: 0, duracionMeses: 1, suscripcionUnica: true, flowPlanId: null),
+			planBcp.ObtenerPlanesSinFlow(Arg.Any<NpgsqlTransaction?>()).Returns([
+				PlanBcpTest.PlanDummy(id: 1, precio: 0, duracionMeses: 1, suscripcionUnica: true, flowPlanId: null, soloConfiguracionInicial: true),
 			]);
 			planBcp.ObtenerPorIdValidandoVigencia(1, Arg.Any<NpgsqlTransaction?>()).Returns(PlanBcpTest.PlanDummy(id: 1, precio: 0, duracionMeses: 1, suscripcionUnica: true, flowPlanId: null));
 			suscripcionBcp.ObtenerVigentesPorSub(Arg.Any<string>(), Arg.Any<NpgsqlTransaction?>()).Returns([]);

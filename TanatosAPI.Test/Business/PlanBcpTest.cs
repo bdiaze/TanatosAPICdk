@@ -116,13 +116,13 @@ namespace TanatosAPI.Test.Business {
 		[Fact]
 		public async Task ObtenerPlanesGratuitosTest() {
 			planDao.ObtenerPorVigencia(true).Returns([
-				PlanDummy(id: 1, precio: 0, vigencia: true),
+				PlanDummy(id: 1, precio: 0, flowPlanId: null, vigencia: true),
 				PlanDummy(id: 2, precio: 9990, vigencia: true),
 				PlanDummy(id: 3, precio: 24990, vigencia: true),
-				PlanDummy(id: 4, precio: 0, vigencia: true),
+				PlanDummy(id: 4, precio: 0, flowPlanId: null, vigencia: true),
 			]);
 
-			List<Plan> retorno = await planBcp.ObtenerPlanesGratuitos();
+			List<Plan> retorno = await planBcp.ObtenerPlanesSinFlow();
 			Assert.Equal(2, retorno.Count);
 			Assert.All(retorno, p => Assert.Equal(0, p.Precio));
 			await planDao.Received(1).ObtenerPorVigencia(true);
