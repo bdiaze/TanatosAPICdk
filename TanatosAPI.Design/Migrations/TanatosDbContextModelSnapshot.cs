@@ -17,7 +17,7 @@ namespace TanatosAPI.Design.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.9")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -1637,6 +1637,10 @@ namespace TanatosAPI.Design.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("precio")
                         .HasComment("Precio del plan.");
+
+                    b.Property<bool>("SoloConfiguracionInicial")
+                        .HasColumnType("boolean")
+                        .HasColumnName("solo_configuracion_inicial");
 
                     b.Property<bool>("SuscripcionUnica")
                         .HasColumnType("boolean")

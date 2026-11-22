@@ -31,6 +31,11 @@ namespace TanatosAPI.Entities.Models {
 		[DefaultValue(false)]
 		public required bool SuscripcionUnica { get; set; }
 
+		[Required]
+		[Column("solo_configuracion_inicial")] 
+		[DefaultValue(false)]
+		public required bool SoloConfiguracionInicial { get; set; }
+
 		[Column("flow_plan_id")]
 		public string? FlowPlanId { get; set; }
 
