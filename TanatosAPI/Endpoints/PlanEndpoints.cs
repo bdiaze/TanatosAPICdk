@@ -16,43 +16,11 @@ namespace TanatosAPI.Endpoints {
 	public static class PlanEndpoints {
 		public static IEndpointRouteBuilder MapPlanEndpoints(this IEndpointRouteBuilder routes) {
 			RouteGroupBuilder group = routes.MapGroup("/Plan");
-			group.MapObtenerVigentes(); 
 			group.MapObtenerDisponibles();
 			group.MapObtenerPorVigencia();
 			group.MapCrearEndpoint();
 			group.MapActualizarEndpoint();
 			group.MapEliminarEndpoint();
-
-			return routes;
-		}
-
-		private static IEndpointRouteBuilder MapObtenerVigentes(this IEndpointRouteBuilder routes) {
-			routes.MapGet("/Vigentes", async (IHostEnvironment environment, IPlanDao planDao) => {
-				Stopwatch stopwatch = Stopwatch.StartNew();
-
-				try {
-					List<Plan> planes = await planDao.ObtenerPorVigencia(true);
-					List<SalPlan> retorno = [.. planes.Select(p => new SalPlan() { 
-						Id = p.Id,
-						Nombre = p.Nombre,
-						Precio = p.Precio,
-						DuracionMeses = p.DuracionMeses,
-						SuscripcionUnica = p.SuscripcionUnica,
-					})];
-
-					LambdaLogger.Log(
-						$"[GET] - [Plan] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status200OK}] - " +
-						$"Obtención exitosa de los planes vigentes - Cant. Registros: {retorno.Count}.");
-
-					return Results.Ok(retorno);
-				} catch (Exception ex) {
-					LambdaLogger.Log(
-						$"[GET] - [Plan] - [ObtenerVigentes] - [{stopwatch.ElapsedMilliseconds} ms] - [{StatusCodes.Status500InternalServerError}] - " +
-						$"Ocurrió un error al obtener los planes vigentes. " +
-						$"{ex}");
-					return Results.Problem($"Ocurrió un error al procesar su solicitud. {(!environment.IsProduction() ? ex : "")}");
-				}
-			}).RequireAuthorization("Sistema.Read.Public");
 
 			return routes;
 		}
@@ -68,13 +36,13 @@ namespace TanatosAPI.Endpoints {
 					List<Plan> planes = await planDao.ObtenerPorVigencia(true);
 
 					List<SalPlan> retorno = [.. planes
+						.Where(p => !p.SoloConfiguracionInicial)
 						.Where(p => !p.SuscripcionUnica || !suscripcion.Any(s => s.IdPlan == p.Id))
 						.Select(p => new SalPlan() {
 							Id = p.Id,
 							Nombre = p.Nombre,
 							Precio = p.Precio,
 							DuracionMeses = p.DuracionMeses,
-							SuscripcionUnica = p.SuscripcionUnica,
 						})
 					];
 
@@ -153,6 +121,7 @@ namespace TanatosAPI.Endpoints {
 							Precio = entrada.Precio,
 							DuracionMeses = entrada.DuracionMeses,
 							SuscripcionUnica = entrada.SuscripcionUnica,
+							SoloConfiguracionInicial = entrada.SoloConfiguracionInicial,
 							Vigencia = entrada.Vigencia,
 						};
 						await planDao.Insertar(nuevo, transaction);
@@ -222,6 +191,7 @@ namespace TanatosAPI.Endpoints {
 						existente.Precio = entrada.Precio;
 						existente.DuracionMeses = entrada.DuracionMeses;
 						existente.SuscripcionUnica = entrada.SuscripcionUnica;
+						existente.SoloConfiguracionInicial = entrada.SoloConfiguracionInicial;
 						existente.Vigencia = entrada.Vigencia;
 						await planDao.Actualizar(existente, transaction);
 

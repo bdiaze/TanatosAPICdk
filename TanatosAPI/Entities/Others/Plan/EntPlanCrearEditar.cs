@@ -8,6 +8,7 @@ namespace TanatosAPI.Entities.Others.Plan {
 		public required decimal Precio { get; set; }
 		public required int DuracionMeses { get; set; }
 		public required bool SuscripcionUnica { get; set; }
+		public bool SoloConfiguracionInicial { get; set; } = false;
 		public required bool Vigencia { get; set; }
 	}
 }
