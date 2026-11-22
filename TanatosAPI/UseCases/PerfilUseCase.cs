@@ -18,7 +18,7 @@ namespace TanatosAPI.UseCases {
 				}
 
 				Usuario usuario = await usuarioBcp.CargarDesdeCognitoSiNoExiste(userName, transaction!.NpgsqlTransaction());
-				_ = await suscripcionUseCase.SuscribirseAPlanesGratuitos(usuario.Sub, transaction);
+				_ = await suscripcionUseCase.SuscribirseAPlanesConfiguracionInicial(usuario.Sub, transaction);
 
 				if (ownsTransaction) {
 					await transaction!.CommitAsync();

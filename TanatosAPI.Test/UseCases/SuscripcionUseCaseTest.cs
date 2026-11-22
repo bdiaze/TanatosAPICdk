@@ -258,7 +258,7 @@ namespace TanatosAPI.Test.UseCases {
 			suscripcionBcp.AlgunaConPagoEnCurso(Arg.Any<List<Suscripcion>>()).Returns(false);
 			suscripcionBcp.ProximaFechaSinSuscripcion(Arg.Any<List<Suscripcion>>()).Returns(FECHA_DUMMY);
 
-			List<Plan> retorno = await suscripcionUseCase.SuscribirseAPlanesGratuitos("sub-test");
+			List<Plan> retorno = await suscripcionUseCase.SuscribirseAPlanesConfiguracionInicial("sub-test");
 			Assert.Equal(3, retorno.Count);
 			await connection.Received(1).BeginTransactionAsync();
 			await suscripcionBcp.Received(3).EliminarCreacionNoConfirmada(Arg.Any<List<Suscripcion>>(), Arg.Any<NpgsqlTransaction?>());
@@ -283,7 +283,7 @@ namespace TanatosAPI.Test.UseCases {
 			suscripcionBcp.ObtenerVigentesPorSub(Arg.Any<string>(), Arg.Any<NpgsqlTransaction?>()).Returns([]);
 			suscripcionBcp.AlgunaConPagoEnCurso(Arg.Any<List<Suscripcion>>()).Returns(true);
 
-			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => suscripcionUseCase.SuscribirseAPlanesGratuitos("sub-test"));
+			ErrorValidacion ex = await Assert.ThrowsAsync<ErrorValidacion>(() => suscripcionUseCase.SuscribirseAPlanesConfiguracionInicial("sub-test"));
 			Assert.Equal(TipoErrorValidacion.YaExiste, ex.TipoErrorValidacion);
 			await connection.Received(1).BeginTransactionAsync();
 			await transaction.DidNotReceive().CommitAsync();

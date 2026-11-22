@@ -29,13 +29,15 @@ namespace TanatosAPI.Test.Business {
 			int duracionMeses = 1,
 			bool suscripcionUnica = false,
 			string? flowPlanId = "flow-plan-id-test",
-			bool vigencia = true
+			bool vigencia = true,
+			bool soloConfiguracionInicial = false
 		) => new() { 
 			Id = id,
 			Nombre = nombre,
 			Precio = precio,
 			DuracionMeses = duracionMeses,
 			SuscripcionUnica = suscripcionUnica,
+			SoloConfiguracionInicial = soloConfiguracionInicial,
 			FlowPlanId = flowPlanId,
 			Vigencia = vigencia
 		};

@@ -121,7 +121,7 @@ namespace TanatosAPI.UseCases {
 			}
 		}
 
-		public async Task<List<Plan>> SuscribirseAPlanesGratuitos(string sub, IDatabaseTransaction? transaction = null) {
+		public async Task<List<Plan>> SuscribirseAPlanesConfiguracionInicial(string sub, IDatabaseTransaction? transaction = null) {
 			bool ownsTransaction = transaction == null;
 			IDatabaseConnection? connection = null;
 
