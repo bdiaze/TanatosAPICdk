@@ -8,6 +8,6 @@ namespace TanatosAPI.Interfaces.Business {
 		public Task<Plan> ObtenerPorIdValidandoVigencia(long idPlan, NpgsqlTransaction? transaction = null);
 		public Task<List<Plan>> ObtenerTodos();
 		public Task<List<Plan>> ObtenerVigentes(NpgsqlTransaction? transaction = null);
-		public Task<List<Plan>> ObtenerPlanesGratuitos(NpgsqlTransaction? transaction = null);
+		public Task<List<Plan>> ObtenerPlanesSinFlow(NpgsqlTransaction? transaction = null);
 	}
 }

@@ -31,8 +31,8 @@ namespace TanatosAPI.Business {
 			return await planDao.ObtenerPorVigencia(true);
 		}
 
-		public async Task<List<Plan>> ObtenerPlanesGratuitos(NpgsqlTransaction? transaction = null) {
-			return [.. (await ObtenerVigentes(transaction)).Where(p => p.Precio == 0)];
+		public async Task<List<Plan>> ObtenerPlanesSinFlow(NpgsqlTransaction? transaction = null) {
+			return [.. (await ObtenerVigentes(transaction)).Where(p => p.FlowPlanId == null)];
 		}
 	}
 }
