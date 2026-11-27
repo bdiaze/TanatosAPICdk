@@ -213,6 +213,8 @@ builder.Services.AddScoped<ITipoCuentaFinancieraDao, TipoCuentaFinancieraDao>();
 builder.Services.AddScoped<ICuentaFinancieraDao, CuentaFinancieraDao>();
 builder.Services.AddScoped<ICategoriaFinancieraDao, CategoriaFinancieraDao>();
 builder.Services.AddScoped<IMovimientoFinancieroDao, MovimientoFinancieroDao>();
+builder.Services.AddScoped<ITipoContactoDao, TipoContactoDao>();
+builder.Services.AddScoped<ITipoInteraccionDao, TipoInteraccionDao>();
 #endregion
 
 #region Singleton BCP
