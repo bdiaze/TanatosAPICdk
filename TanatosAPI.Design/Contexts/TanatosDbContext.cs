@@ -892,6 +892,130 @@ namespace TanatosAPI.Design.Contexts {
 					.HasForeignKey(o => o.IdCategoriaFinanciera)
 					.OnDelete(DeleteBehavior.Restrict);
 			});
+
+			modelBuilder.Entity<TipoContacto>(entity => {
+				entity.ToTable(o => o.HasComment("Tabla que contiene los tipos de contactos."));
+				entity.Property(o => o.Id).HasComment("Identificador del tipo de contacto.");
+				entity.Property(o => o.Nombre).HasComment("Nombre del tipo de contacto.");
+				entity.Property(o => o.RegexValidacion).HasComment("Regex para validar el tipo de contacto.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del tipo de contacto.");
+			});
+
+			modelBuilder.Entity<TipoInteraccion>(entity => {
+				entity.ToTable(o => o.HasComment("Tabla que contiene los tipos de interacciones."));
+				entity.Property(o => o.Id).HasComment("Identificador del tipo de interacción.");
+				entity.Property(o => o.Nombre).HasComment("Nombre del tipo de interacción.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del tipo de interacción.");
+			});
+
+			modelBuilder.Entity<Cliente>(entity => {
+				entity.HasIndex(o => new { o.Sub, o.IdNegocio, o.TipoCliente });
+				entity.ToTable(o => o.HasComment("Tabla que contiene los clientes pertenecientes a un usuario."));
+				entity.Property(o => o.Id).HasComment("Identificador del cliente.");
+				entity.Property(o => o.Sub).HasComment("Identificador del usuario al que pertenece el cliente.");
+				entity.Property(o => o.IdNegocio).HasComment("Identificador del negocio al que pertenece el cliente.");
+				entity.Property(o => o.TipoPersona).HasComment("Tipo de persona a la que corresponde el cliente. 1: Persona natural - 2: Persona jurídica.");
+				entity.Property(o => o.TipoCliente).HasComment("Tipo de cliente. 1: Cliente - 2: Subcliente.");
+				entity.Property(o => o.Rut).HasComment("RUT del cliente.");
+				entity.Property(o => o.Nombre).HasComment("Nombre del cliente.");
+				entity.Property(o => o.IdClientePadre).HasComment("Identificador del cliente padre.");
+				entity.Property(o => o.Observacion).HasComment("Observación relacionada con el cliente.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el cliente.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el cliente.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del cliente.");
+
+				entity
+					.HasOne(o => o.Negocio)
+					.WithMany(o => o.Clientes)
+					.HasForeignKey(o => o.IdNegocio)
+					.OnDelete(DeleteBehavior.Restrict);
+
+				entity
+					.HasOne(o => o.ClientePadre)
+					.WithMany(o => o.ClientesHijos)
+					.HasForeignKey(o => o.IdClientePadre)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
+
+			modelBuilder.Entity<Contacto>(entity => {
+				entity.ToTable(o => o.HasComment("Tabla que contiene los datos de contacto pertenecientes a un cliente."));
+				entity.Property(o => o.Id).HasComment("Identificador del contacto.");
+				entity.Property(o => o.IdCliente).HasComment("Identificador del cliente al que pertenece el contacto.");
+				entity.Property(o => o.IdTipoContacto).HasComment("Identificador del tipo de contacto.");
+				entity.Property(o => o.Valor).HasComment("Valor del dato de contacto.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó el contacto.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó el contacto.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia del contacto.");
+
+				entity
+					.HasOne(o => o.Cliente)
+					.WithMany(o => o.Contactos)
+					.HasForeignKey(o => o.IdCliente)
+					.OnDelete(DeleteBehavior.Restrict);
+
+				entity
+					.HasOne(o => o.TipoContacto)
+					.WithMany(o => o.Contactos)
+					.HasForeignKey(o => o.IdTipoContacto)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
+
+			modelBuilder.Entity<Interaccion>(entity => {
+                entity.ToTable(o => o.HasComment("Tabla que contiene las interacciones que se han tenido con un cliente."));
+                entity.Property(o => o.Id).HasComment("Identificador de la interacción.");
+                entity.Property(o => o.IdCliente).HasComment("Identificador del cliente al que pertenece la interacción.");
+                entity.Property(o => o.IdClienteRelacionado).HasComment("Identificador del subcliente relacionado con la interacción.");
+                entity.Property(o => o.IdContactoRelacionado).HasComment("Identificador del contacto relacionado con la interacción.");
+                entity.Property(o => o.IdTipoInteraccion).HasComment("Identificador del tipo de interacción.");
+                entity.Property(o => o.FechaInteraccion).HasComment("Fecha en que se llevó a cabo la interacción.");
+                entity.Property(o => o.Detalle).HasComment("Detalle de la interacción.");
+                entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó la interacción.");
+                entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó la interacción.");
+                entity.Property(o => o.Vigencia).HasComment("Vigencia de la interacción.");
+
+                entity
+                    .HasOne(o => o.Cliente)
+                    .WithMany(o => o.Interacciones)
+                    .HasForeignKey(o => o.IdCliente)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity
+                    .HasOne(o => o.ClienteRelacionado)
+                    .WithMany(o => o.InteraccionesRelacionadas)
+                    .HasForeignKey(o => o.IdClienteRelacionado)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity
+                    .HasOne(o => o.ContactoRelacionado)
+                    .WithMany(o => o.InteraccionesRelacionadas)
+                    .HasForeignKey(o => o.IdContactoRelacionado)
+					.OnDelete(DeleteBehavior.Restrict);
+
+				entity
+					.HasOne(o => o.TipoInteraccion)
+					.WithMany(o => o.Interacciones)
+					.HasForeignKey(o => o.IdTipoInteraccion)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
+
+			modelBuilder.Entity<Tarea>(entity => {
+				entity.ToTable(o => o.HasComment("Tabla que contiene las tareas relacionadas con un cliente."));
+				entity.Property(o => o.Id).HasComment("Identificador de la tarea.");
+				entity.Property(o => o.IdCliente).HasComment("Identificador del cliente relacionado con la tarea.");
+				entity.Property(o => o.Descripcion).HasComment("Descripción de la tarea.");
+				entity.Property(o => o.FechaVencimiento).HasComment("Fecha en que vence la tarea");
+				entity.Property(o => o.Estado).HasComment("Estado de la tarea. 0: Pendiente - 1: Completada - 2: Cancelada.");
+				entity.Property(o => o.FechaCompletitud).HasComment("Fecha en que se completó la tarea.");
+				entity.Property(o => o.FechaCreacion).HasComment("Fecha en que se creó la tarea.");
+				entity.Property(o => o.FechaEliminacion).HasComment("Fecha en que se eliminó la tarea.");
+				entity.Property(o => o.Vigencia).HasComment("Vigencia de la tarea.");
+
+				entity
+					.HasOne(o => o.Cliente)
+					.WithMany(o => o.Tareas)
+					.HasForeignKey(o => o.IdCliente)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
 		}
 
         public DbSet<TipoReceptorNotificacion> TiposReceptoresNotificaciones { get; set; }
@@ -983,5 +1107,17 @@ namespace TanatosAPI.Design.Contexts {
 		public DbSet<CategoriaFinanciera> CategoriasFinancieras { get; set; }
 
 		public DbSet<MovimientoFinanciero> MovimientosFinancieros { get; set; }
+
+		public DbSet<TipoContacto> TiposContactos { get; set; }
+
+		public DbSet<TipoInteraccion> TiposInteracciones { get; set; }
+
+		public DbSet<Cliente> Clientes { get; set; }
+
+		public DbSet<Contacto> Contactos { get; set; }
+
+		public DbSet<Interaccion> Interacciones { get; set; }
+
+		public DbSet<Tarea> Tareas { get; set; }
 	}
 }

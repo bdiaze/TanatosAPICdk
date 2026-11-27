@@ -77,5 +77,8 @@ namespace TanatosAPI.Entities.Models {
 
 		[JsonIgnore]
 		public List<DocumentoAdjunto>? DocumentosAdjuntos { get; set; }
+
+		[JsonIgnore]
+		public List<Cliente>? Clientes { get; set; }
 	}
 }

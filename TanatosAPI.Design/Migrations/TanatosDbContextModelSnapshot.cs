@@ -17,7 +17,7 @@ namespace TanatosAPI.Design.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.14")
+                .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -262,6 +262,140 @@ namespace TanatosAPI.Design.Migrations
                     b.ToTable("categoria_norma", "tanatos", t =>
                         {
                             t.HasComment("Tabla que contiene las categorías de las normas");
+                        });
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.Cliente", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id")
+                        .HasComment("Identificador del cliente.");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_creacion")
+                        .HasComment("Fecha en que se creó el cliente.");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_eliminacion")
+                        .HasComment("Fecha en que se eliminó el cliente.");
+
+                    b.Property<long?>("IdClientePadre")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_cliente_padre")
+                        .HasComment("Identificador del cliente padre.");
+
+                    b.Property<long>("IdNegocio")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_negocio")
+                        .HasComment("Identificador del negocio al que pertenece el cliente.");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nombre")
+                        .HasComment("Nombre del cliente.");
+
+                    b.Property<string>("Observacion")
+                        .HasColumnType("text")
+                        .HasColumnName("observacion")
+                        .HasComment("Observación relacionada con el cliente.");
+
+                    b.Property<string>("Rut")
+                        .HasColumnType("text")
+                        .HasColumnName("rut")
+                        .HasComment("RUT del cliente.");
+
+                    b.Property<string>("Sub")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sub")
+                        .HasComment("Identificador del usuario al que pertenece el cliente.");
+
+                    b.Property<short>("TipoCliente")
+                        .HasColumnType("smallint")
+                        .HasColumnName("tipo_cliente")
+                        .HasComment("Tipo de cliente. 1: Cliente - 2: Subcliente.");
+
+                    b.Property<short>("TipoPersona")
+                        .HasColumnType("smallint")
+                        .HasColumnName("tipo_persona")
+                        .HasComment("Tipo de persona a la que corresponde el cliente. 1: Persona natural - 2: Persona jurídica.");
+
+                    b.Property<bool>("Vigencia")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vigencia")
+                        .HasComment("Vigencia del cliente.");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdClientePadre");
+
+                    b.HasIndex("IdNegocio");
+
+                    b.HasIndex("Sub", "IdNegocio", "TipoCliente");
+
+                    b.ToTable("cliente", "tanatos", t =>
+                        {
+                            t.HasComment("Tabla que contiene los clientes pertenecientes a un usuario.");
+                        });
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.Contacto", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id")
+                        .HasComment("Identificador del contacto.");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_creacion")
+                        .HasComment("Fecha en que se creó el contacto.");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_eliminacion")
+                        .HasComment("Fecha en que se eliminó el contacto.");
+
+                    b.Property<long>("IdCliente")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_cliente")
+                        .HasComment("Identificador del cliente al que pertenece el contacto.");
+
+                    b.Property<long>("IdTipoContacto")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_tipo_contacto")
+                        .HasComment("Identificador del tipo de contacto.");
+
+                    b.Property<string>("Valor")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("valor")
+                        .HasComment("Valor del dato de contacto.");
+
+                    b.Property<bool>("Vigencia")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vigencia")
+                        .HasComment("Vigencia del contacto.");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdCliente");
+
+                    b.HasIndex("IdTipoContacto");
+
+                    b.ToTable("contacto", "tanatos", t =>
+                        {
+                            t.HasComment("Tabla que contiene los datos de contacto pertenecientes a un cliente.");
                         });
                 });
 
@@ -947,6 +1081,78 @@ namespace TanatosAPI.Design.Migrations
                     b.ToTable("inscripcion_template", "tanatos", t =>
                         {
                             t.HasComment("Tabla que contiene los templates a los que un usuario está inscrito.");
+                        });
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.Interaccion", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id")
+                        .HasComment("Identificador de la interacción.");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Detalle")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("detalle")
+                        .HasComment("Detalle de la interacción.");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_creacion")
+                        .HasComment("Fecha en que se creó la interacción.");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_eliminacion")
+                        .HasComment("Fecha en que se eliminó la interacción.");
+
+                    b.Property<DateTime>("FechaInteraccion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_interaccion")
+                        .HasComment("Fecha en que se llevó a cabo la interacción.");
+
+                    b.Property<long>("IdCliente")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_cliente")
+                        .HasComment("Identificador del cliente al que pertenece la interacción.");
+
+                    b.Property<long?>("IdClienteRelacionado")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_cliente_relacionado")
+                        .HasComment("Identificador del subcliente relacionado con la interacción.");
+
+                    b.Property<long?>("IdContactoRelacionado")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_contacto_relacionado")
+                        .HasComment("Identificador del contacto relacionado con la interacción.");
+
+                    b.Property<long>("IdTipoInteraccion")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_tipo_interaccion")
+                        .HasComment("Identificador del tipo de interacción.");
+
+                    b.Property<bool>("Vigencia")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vigencia")
+                        .HasComment("Vigencia de la interacción.");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdCliente");
+
+                    b.HasIndex("IdClienteRelacionado");
+
+                    b.HasIndex("IdContactoRelacionado");
+
+                    b.HasIndex("IdTipoInteraccion");
+
+                    b.ToTable("interaccion", "tanatos", t =>
+                        {
+                            t.HasComment("Tabla que contiene las interacciones que se han tenido con un cliente.");
                         });
                 });
 
@@ -1954,6 +2160,67 @@ namespace TanatosAPI.Design.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.Tarea", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id")
+                        .HasComment("Identificador de la tarea.");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("descripcion")
+                        .HasComment("Descripción de la tarea.");
+
+                    b.Property<short>("Estado")
+                        .HasColumnType("smallint")
+                        .HasColumnName("estado")
+                        .HasComment("Estado de la tarea. 0: Pendiente - 1: Completada - 2: Cancelada.");
+
+                    b.Property<DateTime?>("FechaCompletitud")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_completitud")
+                        .HasComment("Fecha en que se completó la tarea.");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_creacion")
+                        .HasComment("Fecha en que se creó la tarea.");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_eliminacion")
+                        .HasComment("Fecha en que se eliminó la tarea.");
+
+                    b.Property<DateTime>("FechaVencimiento")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_vencimiento")
+                        .HasComment("Fecha en que vence la tarea");
+
+                    b.Property<long>("IdCliente")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_cliente")
+                        .HasComment("Identificador del cliente relacionado con la tarea.");
+
+                    b.Property<bool>("Vigencia")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vigencia")
+                        .HasComment("Vigencia de la tarea.");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdCliente");
+
+                    b.ToTable("tarea", "tanatos", t =>
+                        {
+                            t.HasComment("Tabla que contiene las tareas relacionadas con un cliente.");
+                        });
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.Template", b =>
                 {
                     b.Property<long>("Id")
@@ -2177,6 +2444,37 @@ namespace TanatosAPI.Design.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.TipoContacto", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id")
+                        .HasComment("Identificador del tipo de contacto.");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nombre")
+                        .HasComment("Nombre del tipo de contacto.");
+
+                    b.Property<string>("RegexValidacion")
+                        .HasColumnType("text")
+                        .HasColumnName("regex_validacion")
+                        .HasComment("Regex para validar el tipo de contacto.");
+
+                    b.Property<bool>("Vigencia")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vigencia")
+                        .HasComment("Vigencia del tipo de contacto.");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tipo_contacto", "tanatos", t =>
+                        {
+                            t.HasComment("Tabla que contiene los tipos de contactos.");
+                        });
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.TipoCuentaFinanciera", b =>
                 {
                     b.Property<long>("Id")
@@ -2231,6 +2529,32 @@ namespace TanatosAPI.Design.Migrations
                     b.ToTable("tipo_fiscalizador", "tanatos", t =>
                         {
                             t.HasComment("Tabla que contiene los tipos de fiscalizadores de las normas.");
+                        });
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.TipoInteraccion", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id")
+                        .HasComment("Identificador del tipo de interacción.");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nombre")
+                        .HasComment("Nombre del tipo de interacción.");
+
+                    b.Property<bool>("Vigencia")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vigencia")
+                        .HasComment("Vigencia del tipo de interacción.");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tipo_interaccion", "tanatos", t =>
+                        {
+                            t.HasComment("Tabla que contiene los tipos de interacciones.");
                         });
                 });
 
@@ -2676,6 +3000,43 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("Negocio");
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.Cliente", b =>
+                {
+                    b.HasOne("TanatosAPI.Entities.Models.Cliente", "ClientePadre")
+                        .WithMany("ClientesHijos")
+                        .HasForeignKey("IdClientePadre")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanatosAPI.Entities.Models.Negocio", "Negocio")
+                        .WithMany("Clientes")
+                        .HasForeignKey("IdNegocio")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ClientePadre");
+
+                    b.Navigation("Negocio");
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.Contacto", b =>
+                {
+                    b.HasOne("TanatosAPI.Entities.Models.Cliente", "Cliente")
+                        .WithMany("Contactos")
+                        .HasForeignKey("IdCliente")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanatosAPI.Entities.Models.TipoContacto", "TipoContacto")
+                        .WithMany("Contactos")
+                        .HasForeignKey("IdTipoContacto")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
+
+                    b.Navigation("TipoContacto");
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.CuentaFinanciera", b =>
                 {
                     b.HasOne("TanatosAPI.Entities.Models.Negocio", "Negocio")
@@ -2830,6 +3191,39 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("Negocio");
 
                     b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.Interaccion", b =>
+                {
+                    b.HasOne("TanatosAPI.Entities.Models.Cliente", "Cliente")
+                        .WithMany("Interacciones")
+                        .HasForeignKey("IdCliente")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanatosAPI.Entities.Models.Cliente", "ClienteRelacionado")
+                        .WithMany("InteraccionesRelacionadas")
+                        .HasForeignKey("IdClienteRelacionado")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanatosAPI.Entities.Models.Contacto", "ContactoRelacionado")
+                        .WithMany("InteraccionesRelacionadas")
+                        .HasForeignKey("IdContactoRelacionado")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanatosAPI.Entities.Models.TipoInteraccion", "TipoInteraccion")
+                        .WithMany("Interacciones")
+                        .HasForeignKey("IdTipoInteraccion")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
+
+                    b.Navigation("ClienteRelacionado");
+
+                    b.Navigation("ContactoRelacionado");
+
+                    b.Navigation("TipoInteraccion");
                 });
 
             modelBuilder.Entity("TanatosAPI.Entities.Models.ModeloCanvas", b =>
@@ -3000,6 +3394,17 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("Plan");
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.Tarea", b =>
+                {
+                    b.HasOne("TanatosAPI.Entities.Models.Cliente", "Cliente")
+                        .WithMany("Tareas")
+                        .HasForeignKey("IdCliente")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.Template", b =>
                 {
                     b.HasOne("TanatosAPI.Entities.Models.Template", "TemplatePadre")
@@ -3142,6 +3547,24 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("TemplateNormas");
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.Cliente", b =>
+                {
+                    b.Navigation("ClientesHijos");
+
+                    b.Navigation("Contactos");
+
+                    b.Navigation("Interacciones");
+
+                    b.Navigation("InteraccionesRelacionadas");
+
+                    b.Navigation("Tareas");
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.Contacto", b =>
+                {
+                    b.Navigation("InteraccionesRelacionadas");
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.CuentaFinanciera", b =>
                 {
                     b.Navigation("MovimientosFinancieros");
@@ -3176,6 +3599,8 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("Cargos");
 
                     b.Navigation("CategoriasFinancieras");
+
+                    b.Navigation("Clientes");
 
                     b.Navigation("CuentasFinancieras");
 
@@ -3250,6 +3675,11 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("TemplatesActividad");
                 });
 
+            modelBuilder.Entity("TanatosAPI.Entities.Models.TipoContacto", b =>
+                {
+                    b.Navigation("Contactos");
+                });
+
             modelBuilder.Entity("TanatosAPI.Entities.Models.TipoCuentaFinanciera", b =>
                 {
                     b.Navigation("CuentasFinancieras");
@@ -3260,6 +3690,11 @@ namespace TanatosAPI.Design.Migrations
                     b.Navigation("FiscalizadoresNormaSuscrita");
 
                     b.Navigation("TemplateNormasFiscalizador");
+                });
+
+            modelBuilder.Entity("TanatosAPI.Entities.Models.TipoInteraccion", b =>
+                {
+                    b.Navigation("Interacciones");
                 });
 
             modelBuilder.Entity("TanatosAPI.Entities.Models.TipoPeriodicidad", b =>

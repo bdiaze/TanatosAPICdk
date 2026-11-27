@@ -31,7 +31,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251113165331_InitialCreation') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251113165331_InitialCreation', '10.0.14');
+    VALUES ('20251113165331_InitialCreation', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -197,7 +197,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251117132506_TablasTipo') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251117132506_TablasTipo', '10.0.14');
+    VALUES ('20251117132506_TablasTipo', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -360,7 +360,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251117144252_TablasTemplates') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251117144252_TablasTemplates', '10.0.14');
+    VALUES ('20251117144252_TablasTemplates', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -378,7 +378,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251205214630_CorreccionVigencia') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251205214630_CorreccionVigencia', '10.0.14');
+    VALUES ('20251205214630_CorreccionVigencia', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -519,7 +519,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251206192642_CambioPKTemplateNorma') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251206192642_CambioPKTemplateNorma', '10.0.14');
+    VALUES ('20251206192642_CambioPKTemplateNorma', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -544,7 +544,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251209230256_DestCodValidUnique') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251209230256_DestCodValidUnique', '10.0.14');
+    VALUES ('20251209230256_DestCodValidUnique', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -562,7 +562,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251209235931_QuitaRequireFechaEliminacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251209235931_QuitaRequireFechaEliminacion', '10.0.14');
+    VALUES ('20251209235931_QuitaRequireFechaEliminacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -581,7 +581,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251210002949_RegexValidacionTipoReceptor') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251210002949_RegexValidacionTipoReceptor', '10.0.14');
+    VALUES ('20251210002949_RegexValidacionTipoReceptor', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -608,7 +608,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251212025425_CaducidadFechaValidacionDestinatario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251212025425_CaducidadFechaValidacionDestinatario', '10.0.14');
+    VALUES ('20251212025425_CaducidadFechaValidacionDestinatario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -650,7 +650,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251214144425_TablaNegocio') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251214144425_TablaNegocio', '10.0.14');
+    VALUES ('20251214144425_TablaNegocio', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -675,7 +675,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251214150946_UniqueNegocio') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251214150946_UniqueNegocio', '10.0.14');
+    VALUES ('20251214150946_UniqueNegocio', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -722,7 +722,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251214212505_RelacionNegocioDestinatario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251214212505_RelacionNegocioDestinatario', '10.0.14');
+    VALUES ('20251214212505_RelacionNegocioDestinatario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -818,7 +818,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251215173340_TablaNormaSuscrita') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251215173340_TablaNormaSuscrita', '10.0.14');
+    VALUES ('20251215173340_TablaNormaSuscrita', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -867,7 +867,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251217180256_TablaFiscalizadorNormaSuscrita') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251217180256_TablaFiscalizadorNormaSuscrita', '10.0.14');
+    VALUES ('20251217180256_TablaFiscalizadorNormaSuscrita', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -918,7 +918,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251218171902_TablaNotificacionesNormaSuscrita') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251218171902_TablaNotificacionesNormaSuscrita', '10.0.14');
+    VALUES ('20251218171902_TablaNotificacionesNormaSuscrita', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -943,7 +943,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251218212856_RemoveUniqueNegocio') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251218212856_RemoveUniqueNegocio', '10.0.14');
+    VALUES ('20251218212856_RemoveUniqueNegocio', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -993,7 +993,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251220132132_TablaHistorialNormaSuscrita') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251220132132_TablaHistorialNormaSuscrita', '10.0.14');
+    VALUES ('20251220132132_TablaHistorialNormaSuscrita', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1040,7 +1040,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20251222133226_AgregaIdNegocioInscripcionTemplate') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20251222133226_AgregaIdNegocioInscripcionTemplate', '10.0.14');
+    VALUES ('20251222133226_AgregaIdNegocioInscripcionTemplate', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1119,7 +1119,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260112193435_TablasRubroActividad') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260112193435_TablasRubroActividad', '10.0.14');
+    VALUES ('20260112193435_TablasRubroActividad', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1153,7 +1153,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260113192226_TablasTemplateActividad') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260113192226_TablasTemplateActividad', '10.0.14');
+    VALUES ('20260113192226_TablasTemplateActividad', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1172,7 +1172,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260119172016_CronTipoPeriodicidad') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260119172016_CronTipoPeriodicidad', '10.0.14');
+    VALUES ('20260119172016_CronTipoPeriodicidad', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1219,7 +1219,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260119232011_TablaHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260119232011_TablaHistorialNotificacion', '10.0.14');
+    VALUES ('20260119232011_TablaHistorialNotificacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1246,7 +1246,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260120231545_ColumnsHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260120231545_ColumnsHistorialNotificacion', '10.0.14');
+    VALUES ('20260120231545_ColumnsHistorialNotificacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1281,7 +1281,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260121144405_ColumnsMetadataHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260121144405_ColumnsMetadataHistorialNotificacion', '10.0.14');
+    VALUES ('20260121144405_ColumnsMetadataHistorialNotificacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1300,7 +1300,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260121213826_ColumnProcesoNotificacionNormaSuscrita') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260121213826_ColumnProcesoNotificacionNormaSuscrita', '10.0.14');
+    VALUES ('20260121213826_ColumnProcesoNotificacionNormaSuscrita', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1319,7 +1319,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260125163311_NombrePluralUnidadTiempo') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260125163311_NombrePluralUnidadTiempo', '10.0.14');
+    VALUES ('20260125163311_NombrePluralUnidadTiempo', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1354,7 +1354,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260125164127_DeltasPeriodicidad') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260125164127_DeltasPeriodicidad', '10.0.14');
+    VALUES ('20260125164127_DeltasPeriodicidad', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1373,7 +1373,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260127234100_ColumnHermesIdHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260127234100_ColumnHermesIdHistorialNotificacion', '10.0.14');
+    VALUES ('20260127234100_ColumnHermesIdHistorialNotificacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1439,7 +1439,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260202192025_TablaDocumentoAdjunto') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260202192025_TablaDocumentoAdjunto', '10.0.14');
+    VALUES ('20260202192025_TablaDocumentoAdjunto', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1493,7 +1493,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260214231636_TablaMensaje') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260214231636_TablaMensaje', '10.0.14');
+    VALUES ('20260214231636_TablaMensaje', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1518,7 +1518,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260220224806_RenameColumnHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260220224806_RenameColumnHistorialNotificacion', '10.0.14');
+    VALUES ('20260220224806_RenameColumnHistorialNotificacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1537,7 +1537,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260225000603_ColumnHermesIdMensajeEnMensaje') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260225000603_ColumnHermesIdMensajeEnMensaje', '10.0.14');
+    VALUES ('20260225000603_ColumnHermesIdMensajeEnMensaje', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1564,7 +1564,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260225003619_ColumnAliasHermesIdMensajeEnDestinatarioNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260225003619_ColumnAliasHermesIdMensajeEnDestinatarioNotificacion', '10.0.14');
+    VALUES ('20260225003619_ColumnAliasHermesIdMensajeEnDestinatarioNotificacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1742,7 +1742,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260309201207_TablasPlanSuscripcionPagoEvento') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260309201207_TablasPlanSuscripcionPagoEvento', '10.0.14');
+    VALUES ('20260309201207_TablasPlanSuscripcionPagoEvento', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1775,7 +1775,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260309203258_ColumnPrecioPlan') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260309203258_ColumnPrecioPlan', '10.0.14');
+    VALUES ('20260309203258_ColumnPrecioPlan', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1800,7 +1800,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260310201224_ColumnFechaInicioExpiracionSuscripcion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260310201224_ColumnFechaInicioExpiracionSuscripcion', '10.0.14');
+    VALUES ('20260310201224_ColumnFechaInicioExpiracionSuscripcion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1848,7 +1848,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260310213240_ColumnFlowPago') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260310213240_ColumnFlowPago', '10.0.14');
+    VALUES ('20260310213240_ColumnFlowPago', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1880,7 +1880,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260312173149_TablaUsuario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260312173149_TablaUsuario', '10.0.14');
+    VALUES ('20260312173149_TablaUsuario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1899,7 +1899,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260312175633_ColumnSuscripcionUnicaPlan') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260312175633_ColumnSuscripcionUnicaPlan', '10.0.14');
+    VALUES ('20260312175633_ColumnSuscripcionUnicaPlan', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1918,7 +1918,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260312190732_ColumnCorreoElectronicoUsuario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260312190732_ColumnCorreoElectronicoUsuario', '10.0.14');
+    VALUES ('20260312190732_ColumnCorreoElectronicoUsuario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1965,7 +1965,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260318190717_ColumnFlowInvoiceIdPago') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260318190717_ColumnFlowInvoiceIdPago', '10.0.14');
+    VALUES ('20260318190717_ColumnFlowInvoiceIdPago', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -1983,7 +1983,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260318193611_DropColumnCorreoElectronicoUsuario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260318193611_DropColumnCorreoElectronicoUsuario', '10.0.14');
+    VALUES ('20260318193611_DropColumnCorreoElectronicoUsuario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2002,7 +2002,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260406161935_AddColumnPlanEmpresaTipoReceptor') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260406161935_AddColumnPlanEmpresaTipoReceptor', '10.0.14');
+    VALUES ('20260406161935_AddColumnPlanEmpresaTipoReceptor', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2021,7 +2021,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260408232111_AddColumnEstadoHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260408232111_AddColumnEstadoHistorialNotificacion', '10.0.14');
+    VALUES ('20260408232111_AddColumnEstadoHistorialNotificacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2040,7 +2040,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260408233055_AddColumnObservacionHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260408233055_AddColumnObservacionHistorialNotificacion', '10.0.14');
+    VALUES ('20260408233055_AddColumnObservacionHistorialNotificacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2059,7 +2059,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260415233226_AddColumnRequierePlanEmpresaTemplate') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260415233226_AddColumnRequierePlanEmpresaTemplate', '10.0.14');
+    VALUES ('20260415233226_AddColumnRequierePlanEmpresaTemplate', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2078,7 +2078,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260422193647_AddColumnCronActivacionAutomaticaTemplateNorma') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260422193647_AddColumnCronActivacionAutomaticaTemplateNorma', '10.0.14');
+    VALUES ('20260422193647_AddColumnCronActivacionAutomaticaTemplateNorma', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2105,7 +2105,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260430201141_AddColumnCantHorasCantDiasTipoUnidadTiempo') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260430201141_AddColumnCantHorasCantDiasTipoUnidadTiempo', '10.0.14');
+    VALUES ('20260430201141_AddColumnCantHorasCantDiasTipoUnidadTiempo', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2124,7 +2124,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260430204204_AddColumnCantMinutosTipoUnidadTiempo') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260430204204_AddColumnCantMinutosTipoUnidadTiempo', '10.0.14');
+    VALUES ('20260430204204_AddColumnCantMinutosTipoUnidadTiempo', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2174,7 +2174,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260504212447_TableCargo') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260504212447_TableCargo', '10.0.14');
+    VALUES ('20260504212447_TableCargo', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2234,7 +2234,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260505202541_TableEmpleado') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260505202541_TableEmpleado', '10.0.14');
+    VALUES ('20260505202541_TableEmpleado', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2261,7 +2261,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260511193153_ColumnCodigoAccesoHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260511193153_ColumnCodigoAccesoHistorialNotificacion', '10.0.14');
+    VALUES ('20260511193153_ColumnCodigoAccesoHistorialNotificacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2279,7 +2279,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260511212839_IndexCodigoAccesoHistorialNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260511212839_IndexCodigoAccesoHistorialNotificacion', '10.0.14');
+    VALUES ('20260511212839_IndexCodigoAccesoHistorialNotificacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2326,7 +2326,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260514010908_ColumnIdEmpleadoDestinatarioNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260514010908_ColumnIdEmpleadoDestinatarioNotificacion', '10.0.14');
+    VALUES ('20260514010908_ColumnIdEmpleadoDestinatarioNotificacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2361,7 +2361,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260522214004_ColumnNombreApellidoCorreoUsuario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260522214004_ColumnNombreApellidoCorreoUsuario', '10.0.14');
+    VALUES ('20260522214004_ColumnNombreApellidoCorreoUsuario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2394,7 +2394,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260523201453_ColumnIdCargoNormaSuscrita') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260523201453_ColumnIdCargoNormaSuscrita', '10.0.14');
+    VALUES ('20260523201453_ColumnIdCargoNormaSuscrita', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2412,7 +2412,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260617221941_DiasActivacionAutomaticaTemplateNorma') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260617221941_DiasActivacionAutomaticaTemplateNorma', '10.0.14');
+    VALUES ('20260617221941_DiasActivacionAutomaticaTemplateNorma', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2430,7 +2430,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260617230916_CommentDiasActivacionAutomaticaTemplateNorma') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260617230916_CommentDiasActivacionAutomaticaTemplateNorma', '10.0.14');
+    VALUES ('20260617230916_CommentDiasActivacionAutomaticaTemplateNorma', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2467,7 +2467,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260619194618_TablePreguntaFrecuente') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260619194618_TablePreguntaFrecuente', '10.0.14');
+    VALUES ('20260619194618_TablePreguntaFrecuente', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2506,7 +2506,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260701214124_TablaVideoTutorial') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260701214124_TablaVideoTutorial', '10.0.14');
+    VALUES ('20260701214124_TablaVideoTutorial', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2524,7 +2524,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260701225153_NuloDescripcionVideoTutorial') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260701225153_NuloDescripcionVideoTutorial', '10.0.14');
+    VALUES ('20260701225153_NuloDescripcionVideoTutorial', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2543,7 +2543,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260712172552_ColumnProximoCobroSuscripcion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260712172552_ColumnProximoCobroSuscripcion', '10.0.14');
+    VALUES ('20260712172552_ColumnProximoCobroSuscripcion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2581,7 +2581,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260714213602_TableEvaluacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260714213602_TableEvaluacion', '10.0.14');
+    VALUES ('20260714213602_TableEvaluacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2600,7 +2600,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260717024150_CampoFrecuenciaDiasTipoPeriodicidad') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260717024150_CampoFrecuenciaDiasTipoPeriodicidad', '10.0.14');
+    VALUES ('20260717024150_CampoFrecuenciaDiasTipoPeriodicidad', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2619,7 +2619,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260719155715_CampoOrdenTipoPeriodicidad') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260719155715_CampoOrdenTipoPeriodicidad', '10.0.14');
+    VALUES ('20260719155715_CampoOrdenTipoPeriodicidad', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2754,7 +2754,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260824211944_ModeloProcesosAutomaticos') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260824211944_ModeloProcesosAutomaticos', '10.0.14');
+    VALUES ('20260824211944_ModeloProcesosAutomaticos', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2772,7 +2772,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260825205641_IndexNombreTipoProcesoAutomatico') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260825205641_IndexNombreTipoProcesoAutomatico', '10.0.14');
+    VALUES ('20260825205641_IndexNombreTipoProcesoAutomatico', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2797,7 +2797,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260825211824_RemoveIdentityTipoProcesoAutomatico') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260825211824_RemoveIdentityTipoProcesoAutomatico', '10.0.14');
+    VALUES ('20260825211824_RemoveIdentityTipoProcesoAutomatico', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2832,7 +2832,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902004028_ColumnMisionVisionValoresNegocio') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260902004028_ColumnMisionVisionValoresNegocio', '10.0.14');
+    VALUES ('20260902004028_ColumnMisionVisionValoresNegocio', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2850,7 +2850,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902172417_DropColumnProcesosNotificacionNormaSuscrita') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260902172417_DropColumnProcesosNotificacionNormaSuscrita', '10.0.14');
+    VALUES ('20260902172417_DropColumnProcesosNotificacionNormaSuscrita', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2875,7 +2875,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902195918_DropColumnFechaEliminacionVigenciaTipoProcesoAutomatico') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260902195918_DropColumnFechaEliminacionVigenciaTipoProcesoAutomatico', '10.0.14');
+    VALUES ('20260902195918_DropColumnFechaEliminacionVigenciaTipoProcesoAutomatico', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2909,7 +2909,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902212029_AddColumnUserNameFechaCreacionUsuario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260902212029_AddColumnUserNameFechaCreacionUsuario', '10.0.14');
+    VALUES ('20260902212029_AddColumnUserNameFechaCreacionUsuario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -2938,7 +2938,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260902225925_RequiredUsuario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260902225925_RequiredUsuario', '10.0.14');
+    VALUES ('20260902225925_RequiredUsuario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3004,7 +3004,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260914150834_TablaModeloCanvas') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260914150834_TablaModeloCanvas', '10.0.14');
+    VALUES ('20260914150834_TablaModeloCanvas', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3031,7 +3031,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260930193316_ColumnsFechaNotificacionHermesIdMensajeSuscripcion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20260930193316_ColumnsFechaNotificacionHermesIdMensajeSuscripcion', '10.0.14');
+    VALUES ('20260930193316_ColumnsFechaNotificacionHermesIdMensajeSuscripcion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3140,7 +3140,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261001143133_TableAccesoPermisoRecurso') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261001143133_TableAccesoPermisoRecurso', '10.0.14');
+    VALUES ('20261001143133_TableAccesoPermisoRecurso', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3165,7 +3165,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261001144330_UniqueIndexAcceso') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261001144330_UniqueIndexAcceso', '10.0.14');
+    VALUES ('20261001144330_UniqueIndexAcceso', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3214,7 +3214,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261004185215_TableAccesoDestinatario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261004185215_TableAccesoDestinatario', '10.0.14');
+    VALUES ('20261004185215_TableAccesoDestinatario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3233,7 +3233,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261013132806_ColumnWhatsappUsuario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261013132806_ColumnWhatsappUsuario', '10.0.14');
+    VALUES ('20261013132806_ColumnWhatsappUsuario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3282,7 +3282,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261017201652_TableWhatsappUsuario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261017201652_TableWhatsappUsuario', '10.0.14');
+    VALUES ('20261017201652_TableWhatsappUsuario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3300,7 +3300,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261017202144_IndexWhatsappUsuario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261017202144_IndexWhatsappUsuario', '10.0.14');
+    VALUES ('20261017202144_IndexWhatsappUsuario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3318,7 +3318,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261019193845_DropColumnWhatsappUsuario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261019193845_DropColumnWhatsappUsuario', '10.0.14');
+    VALUES ('20261019193845_DropColumnWhatsappUsuario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3336,7 +3336,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261019211451_ColumnOpcionalIdAccesoValidacionWhatsappUsuario') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261019211451_ColumnOpcionalIdAccesoValidacionWhatsappUsuario', '10.0.14');
+    VALUES ('20261019211451_ColumnOpcionalIdAccesoValidacionWhatsappUsuario', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3361,7 +3361,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261020205659_ColumnOpcionalCodigoValidacionDestinatarioNotificacion') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261020205659_ColumnOpcionalCodigoValidacionDestinatarioNotificacion', '10.0.14');
+    VALUES ('20261020205659_ColumnOpcionalCodigoValidacionDestinatarioNotificacion', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3518,7 +3518,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261021195149_TablasFinancieras') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261021195149_TablasFinancieras', '10.0.14');
+    VALUES ('20261021195149_TablasFinancieras', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3536,7 +3536,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261021210916_IndexCuentaFinanciera') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261021210916_IndexCuentaFinanciera', '10.0.14');
+    VALUES ('20261021210916_IndexCuentaFinanciera', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3568,7 +3568,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261022190150_AlterIndexMovimientoFinanciero') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261022190150_AlterIndexMovimientoFinanciero', '10.0.14');
+    VALUES ('20261022190150_AlterIndexMovimientoFinanciero', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3586,7 +3586,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261023185131_NullableIdHistorialNormaSuscritaDocumentoAdjunto') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261023185131_NullableIdHistorialNormaSuscritaDocumentoAdjunto', '10.0.14');
+    VALUES ('20261023185131_NullableIdHistorialNormaSuscritaDocumentoAdjunto', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3626,7 +3626,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261023192218_ColumnIdMovimientoFinancieroDocumentoAdjunto') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261023192218_ColumnIdMovimientoFinancieroDocumentoAdjunto', '10.0.14');
+    VALUES ('20261023192218_ColumnIdMovimientoFinancieroDocumentoAdjunto', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3659,7 +3659,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024183547_ColumnIdNegocioDocumentoAdjunto') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261024183547_ColumnIdNegocioDocumentoAdjunto', '10.0.14');
+    VALUES ('20261024183547_ColumnIdNegocioDocumentoAdjunto', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3679,7 +3679,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261025205059_IdNegocioNotNullableDocumentoAdjunto') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261025205059_IdNegocioNotNullableDocumentoAdjunto', '10.0.14');
+    VALUES ('20261025205059_IdNegocioNotNullableDocumentoAdjunto', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3698,7 +3698,7 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261029132538_ColumnEstadoMovimientoFinanciero') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261029132538_ColumnEstadoMovimientoFinanciero', '10.0.14');
+    VALUES ('20261029132538_ColumnEstadoMovimientoFinanciero', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
@@ -3716,7 +3716,247 @@ DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261122164703_ColumnSoloConfiguracionInicialPlan') THEN
     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-    VALUES ('20261122164703_ColumnSoloConfiguracionInicialPlan', '10.0.14');
+    VALUES ('20261122164703_ColumnSoloConfiguracionInicialPlan', '10.0.15');
+    END IF;
+END $EF$;
+COMMIT;
+
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE TABLE tanatos.cliente (
+        id bigint GENERATED BY DEFAULT AS IDENTITY,
+        sub text NOT NULL,
+        id_negocio bigint NOT NULL,
+        tipo_persona smallint NOT NULL,
+        tipo_cliente smallint NOT NULL,
+        rut text,
+        nombre text NOT NULL,
+        id_cliente_padre bigint,
+        observacion text,
+        fecha_creacion timestamp with time zone NOT NULL,
+        fecha_eliminacion timestamp with time zone,
+        vigencia boolean NOT NULL,
+        CONSTRAINT "PK_cliente" PRIMARY KEY (id),
+        CONSTRAINT "FK_cliente_cliente_id_cliente_padre" FOREIGN KEY (id_cliente_padre) REFERENCES tanatos.cliente (id) ON DELETE RESTRICT,
+        CONSTRAINT "FK_cliente_negocio_id_negocio" FOREIGN KEY (id_negocio) REFERENCES tanatos.negocio (id) ON DELETE RESTRICT
+    );
+    COMMENT ON TABLE tanatos.cliente IS 'Tabla que contiene los clientes pertenecientes a un usuario.';
+    COMMENT ON COLUMN tanatos.cliente.id IS 'Identificador del cliente.';
+    COMMENT ON COLUMN tanatos.cliente.sub IS 'Identificador del usuario al que pertenece el cliente.';
+    COMMENT ON COLUMN tanatos.cliente.id_negocio IS 'Identificador del negocio al que pertenece el cliente.';
+    COMMENT ON COLUMN tanatos.cliente.tipo_persona IS 'Tipo de persona a la que corresponde el cliente. 1: Persona natural - 2: Persona jurídica.';
+    COMMENT ON COLUMN tanatos.cliente.tipo_cliente IS 'Tipo de cliente. 1: Cliente - 2: Subcliente.';
+    COMMENT ON COLUMN tanatos.cliente.rut IS 'RUT del cliente.';
+    COMMENT ON COLUMN tanatos.cliente.nombre IS 'Nombre del cliente.';
+    COMMENT ON COLUMN tanatos.cliente.id_cliente_padre IS 'Identificador del cliente padre.';
+    COMMENT ON COLUMN tanatos.cliente.observacion IS 'Observación relacionada con el cliente.';
+    COMMENT ON COLUMN tanatos.cliente.fecha_creacion IS 'Fecha en que se creó el cliente.';
+    COMMENT ON COLUMN tanatos.cliente.fecha_eliminacion IS 'Fecha en que se eliminó el cliente.';
+    COMMENT ON COLUMN tanatos.cliente.vigencia IS 'Vigencia del cliente.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE TABLE tanatos.tipo_contacto (
+        id bigint NOT NULL,
+        nombre text NOT NULL,
+        regex_validacion text,
+        vigencia boolean NOT NULL,
+        CONSTRAINT "PK_tipo_contacto" PRIMARY KEY (id)
+    );
+    COMMENT ON TABLE tanatos.tipo_contacto IS 'Tabla que contiene los tipos de contactos.';
+    COMMENT ON COLUMN tanatos.tipo_contacto.id IS 'Identificador del tipo de contacto.';
+    COMMENT ON COLUMN tanatos.tipo_contacto.nombre IS 'Nombre del tipo de contacto.';
+    COMMENT ON COLUMN tanatos.tipo_contacto.regex_validacion IS 'Regex para validar el tipo de contacto.';
+    COMMENT ON COLUMN tanatos.tipo_contacto.vigencia IS 'Vigencia del tipo de contacto.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE TABLE tanatos.tipo_interaccion (
+        id bigint NOT NULL,
+        nombre text NOT NULL,
+        vigencia boolean NOT NULL,
+        CONSTRAINT "PK_tipo_interaccion" PRIMARY KEY (id)
+    );
+    COMMENT ON TABLE tanatos.tipo_interaccion IS 'Tabla que contiene los tipos de interacciones.';
+    COMMENT ON COLUMN tanatos.tipo_interaccion.id IS 'Identificador del tipo de interacción.';
+    COMMENT ON COLUMN tanatos.tipo_interaccion.nombre IS 'Nombre del tipo de interacción.';
+    COMMENT ON COLUMN tanatos.tipo_interaccion.vigencia IS 'Vigencia del tipo de interacción.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE TABLE tanatos.tarea (
+        id bigint GENERATED BY DEFAULT AS IDENTITY,
+        id_cliente bigint NOT NULL,
+        descripcion text NOT NULL,
+        fecha_vencimiento timestamp with time zone NOT NULL,
+        estado smallint NOT NULL,
+        fecha_completitud timestamp with time zone,
+        fecha_creacion timestamp with time zone NOT NULL,
+        fecha_eliminacion timestamp with time zone,
+        vigencia boolean NOT NULL,
+        CONSTRAINT "PK_tarea" PRIMARY KEY (id),
+        CONSTRAINT "FK_tarea_cliente_id_cliente" FOREIGN KEY (id_cliente) REFERENCES tanatos.cliente (id) ON DELETE RESTRICT
+    );
+    COMMENT ON TABLE tanatos.tarea IS 'Tabla que contiene las tareas relacionadas con un cliente.';
+    COMMENT ON COLUMN tanatos.tarea.id IS 'Identificador de la tarea.';
+    COMMENT ON COLUMN tanatos.tarea.id_cliente IS 'Identificador del cliente relacionado con la tarea.';
+    COMMENT ON COLUMN tanatos.tarea.descripcion IS 'Descripción de la tarea.';
+    COMMENT ON COLUMN tanatos.tarea.fecha_vencimiento IS 'Fecha en que vence la tarea';
+    COMMENT ON COLUMN tanatos.tarea.estado IS 'Estado de la tarea. 0: Pendiente - 1: Completada - 2: Cancelada.';
+    COMMENT ON COLUMN tanatos.tarea.fecha_completitud IS 'Fecha en que se completó la tarea.';
+    COMMENT ON COLUMN tanatos.tarea.fecha_creacion IS 'Fecha en que se creó la tarea.';
+    COMMENT ON COLUMN tanatos.tarea.fecha_eliminacion IS 'Fecha en que se eliminó la tarea.';
+    COMMENT ON COLUMN tanatos.tarea.vigencia IS 'Vigencia de la tarea.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE TABLE tanatos.contacto (
+        id bigint GENERATED BY DEFAULT AS IDENTITY,
+        id_cliente bigint NOT NULL,
+        id_tipo_contacto bigint NOT NULL,
+        valor text NOT NULL,
+        fecha_creacion timestamp with time zone NOT NULL,
+        fecha_eliminacion timestamp with time zone,
+        vigencia boolean NOT NULL,
+        CONSTRAINT "PK_contacto" PRIMARY KEY (id),
+        CONSTRAINT "FK_contacto_cliente_id_cliente" FOREIGN KEY (id_cliente) REFERENCES tanatos.cliente (id) ON DELETE RESTRICT,
+        CONSTRAINT "FK_contacto_tipo_contacto_id_tipo_contacto" FOREIGN KEY (id_tipo_contacto) REFERENCES tanatos.tipo_contacto (id) ON DELETE RESTRICT
+    );
+    COMMENT ON TABLE tanatos.contacto IS 'Tabla que contiene los datos de contacto pertenecientes a un cliente.';
+    COMMENT ON COLUMN tanatos.contacto.id IS 'Identificador del contacto.';
+    COMMENT ON COLUMN tanatos.contacto.id_cliente IS 'Identificador del cliente al que pertenece el contacto.';
+    COMMENT ON COLUMN tanatos.contacto.id_tipo_contacto IS 'Identificador del tipo de contacto.';
+    COMMENT ON COLUMN tanatos.contacto.valor IS 'Valor del dato de contacto.';
+    COMMENT ON COLUMN tanatos.contacto.fecha_creacion IS 'Fecha en que se creó el contacto.';
+    COMMENT ON COLUMN tanatos.contacto.fecha_eliminacion IS 'Fecha en que se eliminó el contacto.';
+    COMMENT ON COLUMN tanatos.contacto.vigencia IS 'Vigencia del contacto.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE TABLE tanatos.interaccion (
+        id bigint GENERATED BY DEFAULT AS IDENTITY,
+        id_cliente bigint NOT NULL,
+        id_cliente_relacionado bigint,
+        id_contacto_relacionado bigint,
+        id_tipo_interaccion bigint NOT NULL,
+        fecha_interaccion timestamp with time zone NOT NULL,
+        detalle text NOT NULL,
+        fecha_creacion timestamp with time zone NOT NULL,
+        fecha_eliminacion timestamp with time zone,
+        vigencia boolean NOT NULL,
+        CONSTRAINT "PK_interaccion" PRIMARY KEY (id),
+        CONSTRAINT "FK_interaccion_cliente_id_cliente" FOREIGN KEY (id_cliente) REFERENCES tanatos.cliente (id) ON DELETE RESTRICT,
+        CONSTRAINT "FK_interaccion_cliente_id_cliente_relacionado" FOREIGN KEY (id_cliente_relacionado) REFERENCES tanatos.cliente (id) ON DELETE RESTRICT,
+        CONSTRAINT "FK_interaccion_contacto_id_contacto_relacionado" FOREIGN KEY (id_contacto_relacionado) REFERENCES tanatos.contacto (id) ON DELETE RESTRICT,
+        CONSTRAINT "FK_interaccion_tipo_interaccion_id_tipo_interaccion" FOREIGN KEY (id_tipo_interaccion) REFERENCES tanatos.tipo_interaccion (id) ON DELETE RESTRICT
+    );
+    COMMENT ON TABLE tanatos.interaccion IS 'Tabla que contiene las interacciones que se han tenido con un cliente.';
+    COMMENT ON COLUMN tanatos.interaccion.id IS 'Identificador de la interacción.';
+    COMMENT ON COLUMN tanatos.interaccion.id_cliente IS 'Identificador del cliente al que pertenece la interacción.';
+    COMMENT ON COLUMN tanatos.interaccion.id_cliente_relacionado IS 'Identificador del subcliente relacionado con la interacción.';
+    COMMENT ON COLUMN tanatos.interaccion.id_contacto_relacionado IS 'Identificador del contacto relacionado con la interacción.';
+    COMMENT ON COLUMN tanatos.interaccion.id_tipo_interaccion IS 'Identificador del tipo de interacción.';
+    COMMENT ON COLUMN tanatos.interaccion.fecha_interaccion IS 'Fecha en que se llevó a cabo la interacción.';
+    COMMENT ON COLUMN tanatos.interaccion.detalle IS 'Detalle de la interacción.';
+    COMMENT ON COLUMN tanatos.interaccion.fecha_creacion IS 'Fecha en que se creó la interacción.';
+    COMMENT ON COLUMN tanatos.interaccion.fecha_eliminacion IS 'Fecha en que se eliminó la interacción.';
+    COMMENT ON COLUMN tanatos.interaccion.vigencia IS 'Vigencia de la interacción.';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE INDEX "IX_cliente_id_cliente_padre" ON tanatos.cliente (id_cliente_padre);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE INDEX "IX_cliente_id_negocio" ON tanatos.cliente (id_negocio);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE INDEX "IX_cliente_sub_id_negocio_tipo_cliente" ON tanatos.cliente (sub, id_negocio, tipo_cliente);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE INDEX "IX_contacto_id_cliente" ON tanatos.contacto (id_cliente);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE INDEX "IX_contacto_id_tipo_contacto" ON tanatos.contacto (id_tipo_contacto);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE INDEX "IX_interaccion_id_cliente" ON tanatos.interaccion (id_cliente);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE INDEX "IX_interaccion_id_cliente_relacionado" ON tanatos.interaccion (id_cliente_relacionado);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE INDEX "IX_interaccion_id_contacto_relacionado" ON tanatos.interaccion (id_contacto_relacionado);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE INDEX "IX_interaccion_id_tipo_interaccion" ON tanatos.interaccion (id_tipo_interaccion);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    CREATE INDEX "IX_tarea_id_cliente" ON tanatos.tarea (id_cliente);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261127230303_ModeloGestionClientes') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261127230303_ModeloGestionClientes', '10.0.15');
     END IF;
 END $EF$;
 COMMIT;
